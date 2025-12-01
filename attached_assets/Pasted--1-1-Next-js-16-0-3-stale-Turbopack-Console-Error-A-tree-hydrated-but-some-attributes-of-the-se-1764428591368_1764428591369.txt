@@ -1,0 +1,413 @@
+
+
+1/1
+
+Next.js 16.0.3 (stale)
+Turbopack
+Console Error
+
+A tree hydrated but some attributes of the server rendered HTML didn't match the client properties. This won't be patched up. This can happen if a SSR-ed Client Component used:
+- A server/client branch `if (typeof window !== 'undefined')`.
+- Variable input such as `Date.now()` or `Math.random()` which changes each time it's called.
+- Date formatting in a user's locale which doesn't match the server.
+- External changing data without sending a snapshot of it along with the HTML.
+- Invalid HTML tag nesting.
+
+It can also happen if the client has a browser extension installed which messes with the HTML before React loaded.
+
+See more info here: https://nextjs.org/docs/messages/react-hydration-error
+
+
+  ...
+    <SegmentViewNode type="page" pagePath="(main)/pag...">
+      <SegmentTrieNode>
+      <HomePage>
+        <div className="flex flex-...">
+          <section>
+          <section>
+          ...
+            <OfferGrid offers={[...]}>
+              <div className="grid gap-4...">
+                <OfferCard offer={{id:1,merchant_id:3, ...}} onClickTrack={undefined}>
+                  <_c className="elevated-c...">
+                    <div ref={null} className="rounded-lg...">
+                      <div>
+                      <div>
+                      <_c2 className="p-4 sm:p-5...">
+                        <div ref={null} className="flex flex-...">
+                          <div className="flex items...">
+                            <div className="relative h...">
+                              <img
+                                alt="Myntra"
+                                fetchPriority={undefined}
+                                loading="lazy"
+                                width={undefined}
+                                height={undefined}
+                                decoding="async"
+                                data-nimg="fill"
+                                className="object-contain"
+                                style={{position:"absolute",height:"100%",width:"100%",left:0,top:0,right:0,bottom:0,objectFit:undefined, ...}}
++                               sizes="(max-width: 640px) 56px, 64px"
+-                               sizes="64px"
+                                srcSet={"/_next/image?url=%2Fimages%2Fmerchants%2Fmyntra.png&w=32&q=75 32w, /_next/im..."}
+                                src={"/_next/image?url=%2Fimages%2Fmerchants%2Fmyntra.png&w=2000&q=75"}
+                                ref={function}
+                                onLoad={function onLoad}
+                                onError={function onError}
+                              >
+                            ...
+                      ...
+                <OfferCard offer={{id:4,merchant_id:5, ...}} onClickTrack={undefined}>
+                  <_c className="elevated-c...">
+                    <div ref={null} className="rounded-lg...">
+                      <div>
+                      <div>
+                      <_c2 className="p-4 sm:p-5...">
+                        <div ref={null} className="flex flex-...">
+                          <div className="flex items...">
+                            <div className="relative h...">
+                              <img
+                                alt="Uber"
+                                fetchPriority={undefined}
+                                loading="lazy"
+                                width={undefined}
+                                height={undefined}
+                                decoding="async"
+                                data-nimg="fill"
+                                className="object-contain"
+                                style={{position:"absolute",height:"100%",width:"100%",left:0,top:0,right:0,bottom:0,objectFit:undefined, ...}}
++                               sizes="(max-width: 640px) 56px, 64px"
+-                               sizes="64px"
+                                srcSet={"/_next/image?url=%2Fimages%2Fmerchants%2Fuber.png&w=32&q=75 32w, /_next/imag..."}
+                                src={"/_next/image?url=%2Fimages%2Fmerchants%2Fuber.png&w=2000&q=75"}
+                                ref={function}
+                                onLoad={function onLoad}
+                                onError={function onError}
+                              >
+                            ...
+                      ...
+                <OfferCard offer={{id:5,merchant_id:6, ...}} onClickTrack={undefined}>
+                  <_c className="elevated-c...">
+                    <div ref={null} className="rounded-lg...">
+                      <div>
+                      <div>
+                      <_c2 className="p-4 sm:p-5...">
+                        <div ref={null} className="flex flex-...">
+                          <div className="flex items...">
+                            <div className="relative h...">
+                              <img
+                                alt="BookMyShow"
+                                fetchPriority={undefined}
+                                loading="lazy"
+                                width={undefined}
+                                height={undefined}
+                                decoding="async"
+                                data-nimg="fill"
+                                className="object-contain"
+                                style={{position:"absolute",height:"100%",width:"100%",left:0,top:0,right:0,bottom:0,objectFit:undefined, ...}}
++                               sizes="(max-width: 640px) 56px, 64px"
+-                               sizes="64px"
+                                srcSet={"/_next/image?url=%2Fimages%2Fmerchants%2Fbookmyshow.png&w=32&q=75 32w, /_nex..."}
+                                src={"/_next/image?url=%2Fimages%2Fmerchants%2Fbookmyshow.png&w=2000&q=75"}
+                                ref={function}
+                                onLoad={function onLoad}
+                                onError={function onError}
+                              >
+                            ...
+                      ...
+                <OfferCard offer={{id:8,merchant_id:1, ...}} onClickTrack={undefined}>
+                  <_c className="elevated-c...">
+                    <div ref={null} className="rounded-lg...">
+                      <div>
+                      <div>
+                      <_c2 className="p-4 sm:p-5...">
+                        <div ref={null} className="flex flex-...">
+                          <div className="flex items...">
+                            <div className="relative h...">
+                              <img
+                                alt="Amazon"
+                                fetchPriority={undefined}
+                                loading="lazy"
+                                width={undefined}
+                                height={undefined}
+                                decoding="async"
+                                data-nimg="fill"
+                                className="object-contain"
+                                style={{position:"absolute",height:"100%",width:"100%",left:0,top:0,right:0,bottom:0,objectFit:undefined, ...}}
++                               sizes="(max-width: 640px) 56px, 64px"
+-                               sizes="64px"
+                                srcSet={"/_next/image?url=%2Fimages%2Fmerchants%2Famazon.jpg&w=32&q=75 32w, /_next/im..."}
+                                src={"/_next/image?url=%2Fimages%2Fmerchants%2Famazon.jpg&w=2000&q=75"}
+                                ref={function}
+                                onLoad={function onLoad}
+                                onError={function onError}
+                              >
+                            ...
+                      ...
+          <section className="container">
+            <div>
+            <OfferGrid offers={[...]}>
+              <div className="grid gap-4...">
+                <OfferCard offer={{id:1,merchant_id:3, ...}} onClickTrack={undefined}>
+                  <_c className="elevated-c...">
+                    <div ref={null} className="rounded-lg...">
+                      <div>
+                      <div>
+                      <_c2 className="p-4 sm:p-5...">
+                        <div ref={null} className="flex flex-...">
+                          <div className="flex items...">
+                            <div className="relative h...">
+                              <img
+                                alt="Myntra"
+                                fetchPriority={undefined}
+                                loading="lazy"
+                                width={undefined}
+                                height={undefined}
+                                decoding="async"
+                                data-nimg="fill"
+                                className="object-contain"
+                                style={{position:"absolute",height:"100%",width:"100%",left:0,top:0,right:0,bottom:0,objectFit:undefined, ...}}
++                               sizes="(max-width: 640px) 56px, 64px"
+-                               sizes="64px"
+                                srcSet={"/_next/image?url=%2Fimages%2Fmerchants%2Fmyntra.png&w=32&q=75 32w, /_next/im..."}
+                                src={"/_next/image?url=%2Fimages%2Fmerchants%2Fmyntra.png&w=2000&q=75"}
+                                ref={function}
+                                onLoad={function onLoad}
+                                onError={function onError}
+                              >
+                            ...
+                      ...
+                <OfferCard offer={{id:2,merchant_id:1, ...}} onClickTrack={undefined}>
+                  <_c className="elevated-c...">
+                    <div ref={null} className="rounded-lg...">
+                      <div>
+                      <div>
+                      <_c2 className="p-4 sm:p-5...">
+                        <div ref={null} className="flex flex-...">
+                          <div className="flex items...">
+                            <div className="relative h...">
+                              <img
+                                alt="Amazon"
+                                fetchPriority={undefined}
+                                loading="lazy"
+                                width={undefined}
+                                height={undefined}
+                                decoding="async"
+                                data-nimg="fill"
+                                className="object-contain"
+                                style={{position:"absolute",height:"100%",width:"100%",left:0,top:0,right:0,bottom:0,objectFit:undefined, ...}}
++                               sizes="(max-width: 640px) 56px, 64px"
+-                               sizes="64px"
+                                srcSet={"/_next/image?url=%2Fimages%2Fmerchants%2Famazon.jpg&w=32&q=75 32w, /_next/im..."}
+                                src={"/_next/image?url=%2Fimages%2Fmerchants%2Famazon.jpg&w=2000&q=75"}
+                                ref={function}
+                                onLoad={function onLoad}
+                                onError={function onError}
+                              >
+                            ...
+                      ...
+                <OfferCard offer={{id:3,merchant_id:4, ...}} onClickTrack={undefined}>
+                  <_c className="elevated-c...">
+                    <div ref={null} className="rounded-lg...">
+                      <div>
+                      <div>
+                      <_c2 className="p-4 sm:p-5...">
+                        <div ref={null} className="flex flex-...">
+                          <div className="flex items...">
+                            <div className="relative h...">
+                              <img
+                                alt="Swiggy"
+                                fetchPriority={undefined}
+                                loading="lazy"
+                                width={undefined}
+                                height={undefined}
+                                decoding="async"
+                                data-nimg="fill"
+                                className="object-contain"
+                                style={{position:"absolute",height:"100%",width:"100%",left:0,top:0,right:0,bottom:0,objectFit:undefined, ...}}
++                               sizes="(max-width: 640px) 56px, 64px"
+-                               sizes="64px"
+                                srcSet={"/_next/image?url=%2Fimages%2Fmerchants%2Fswiggy.png&w=32&q=75 32w, /_next/im..."}
+                                src={"/_next/image?url=%2Fimages%2Fmerchants%2Fswiggy.png&w=2000&q=75"}
+                                ref={function}
+                                onLoad={function onLoad}
+                                onError={function onError}
+                              >
+                            ...
+                      ...
+                <OfferCard offer={{id:4,merchant_id:5, ...}} onClickTrack={undefined}>
+                  <_c className="elevated-c...">
+                    <div ref={null} className="rounded-lg...">
+                      <div>
+                      <div>
+                      <_c2 className="p-4 sm:p-5...">
+                        <div ref={null} className="flex flex-...">
+                          <div className="flex items...">
+                            <div className="relative h...">
+                              <img
+                                alt="Uber"
+                                fetchPriority={undefined}
+                                loading="lazy"
+                                width={undefined}
+                                height={undefined}
+                                decoding="async"
+                                data-nimg="fill"
+                                className="object-contain"
+                                style={{position:"absolute",height:"100%",width:"100%",left:0,top:0,right:0,bottom:0,objectFit:undefined, ...}}
++                               sizes="(max-width: 640px) 56px, 64px"
+-                               sizes="64px"
+                                srcSet={"/_next/image?url=%2Fimages%2Fmerchants%2Fuber.png&w=32&q=75 32w, /_next/imag..."}
+                                src={"/_next/image?url=%2Fimages%2Fmerchants%2Fuber.png&w=2000&q=75"}
+                                ref={function}
+                                onLoad={function onLoad}
+                                onError={function onError}
+                              >
+                            ...
+                      ...
+                <OfferCard offer={{id:5,merchant_id:6, ...}} onClickTrack={undefined}>
+                  <_c className="elevated-c...">
+                    <div ref={null} className="rounded-lg...">
+                      <div>
+                      <div>
+                      <_c2 className="p-4 sm:p-5...">
+                        <div ref={null} className="flex flex-...">
+                          <div className="flex items...">
+                            <div className="relative h...">
+                              <img
+                                alt="BookMyShow"
+                                fetchPriority={undefined}
+                                loading="lazy"
+                                width={undefined}
+                                height={undefined}
+                                decoding="async"
+                                data-nimg="fill"
+                                className="object-contain"
+                                style={{position:"absolute",height:"100%",width:"100%",left:0,top:0,right:0,bottom:0,objectFit:undefined, ...}}
++                               sizes="(max-width: 640px) 56px, 64px"
+-                               sizes="64px"
+                                srcSet={"/_next/image?url=%2Fimages%2Fmerchants%2Fbookmyshow.png&w=32&q=75 32w, /_nex..."}
+                                src={"/_next/image?url=%2Fimages%2Fmerchants%2Fbookmyshow.png&w=2000&q=75"}
+                                ref={function}
+                                onLoad={function onLoad}
+                                onError={function onError}
+                              >
+                            ...
+                      ...
+                <OfferCard offer={{id:6,merchant_id:7, ...}} onClickTrack={undefined}>
+                  <_c className="elevated-c...">
+                    <div ref={null} className="rounded-lg...">
+                      <div>
+                      <div>
+                      <_c2 className="p-4 sm:p-5...">
+                        <div ref={null} className="flex flex-...">
+                          <div className="flex items...">
+                            <div className="relative h...">
+                              <img
+                                alt="Ajio"
+                                fetchPriority={undefined}
+                                loading="lazy"
+                                width={undefined}
+                                height={undefined}
+                                decoding="async"
+                                data-nimg="fill"
+                                className="object-contain"
+                                style={{position:"absolute",height:"100%",width:"100%",left:0,top:0,right:0,bottom:0,objectFit:undefined, ...}}
++                               sizes="(max-width: 640px) 56px, 64px"
+-                               sizes="64px"
+                                srcSet={"/_next/image?url=%2Fimages%2Fmerchants%2Fajio.png&w=32&q=75 32w, /_next/imag..."}
+                                src={"/_next/image?url=%2Fimages%2Fmerchants%2Fajio.png&w=2000&q=75"}
+                                ref={function}
+                                onLoad={function onLoad}
+                                onError={function onError}
+                              >
+                            ...
+                      ...
+                <OfferCard offer={{id:7,merchant_id:2, ...}} onClickTrack={undefined}>
+                  <_c className="elevated-c...">
+                    <div ref={null} className="rounded-lg...">
+                      <div>
+                      <div>
+                      <_c2 className="p-4 sm:p-5...">
+                        <div ref={null} className="flex flex-...">
+                          <div className="flex items...">
+                            <div className="relative h...">
+                              <img
+                                alt="Flipkart"
+                                fetchPriority={undefined}
+                                loading="lazy"
+                                width={undefined}
+                                height={undefined}
+                                decoding="async"
+                                data-nimg="fill"
+                                className="object-contain"
+                                style={{position:"absolute",height:"100%",width:"100%",left:0,top:0,right:0,bottom:0,objectFit:undefined, ...}}
++                               sizes="(max-width: 640px) 56px, 64px"
+-                               sizes="64px"
+                                srcSet={"/_next/image?url=%2Fimages%2Fmerchants%2Fflipkart.png&w=32&q=75 32w, /_next/..."}
+                                src={"/_next/image?url=%2Fimages%2Fmerchants%2Fflipkart.png&w=2000&q=75"}
+                                ref={function}
+                                onLoad={function onLoad}
+                                onError={function onError}
+                              >
+                            ...
+                      ...
+                <OfferCard offer={{id:8,merchant_id:1, ...}} onClickTrack={undefined}>
+                  <_c className="elevated-c...">
+                    <div ref={null} className="rounded-lg...">
+                      <div>
+                      <div>
+                      <_c2 className="p-4 sm:p-5...">
+                        <div ref={null} className="flex flex-...">
+                          <div className="flex items...">
+                            <div className="relative h...">
+                              <img
+                                alt="Amazon"
+                                fetchPriority={undefined}
+                                loading="lazy"
+                                width={undefined}
+                                height={undefined}
+                                decoding="async"
+                                data-nimg="fill"
+                                className="object-contain"
+                                style={{position:"absolute",height:"100%",width:"100%",left:0,top:0,right:0,bottom:0,objectFit:undefined, ...}}
++                               sizes="(max-width: 640px) 56px, 64px"
+-                               sizes="64px"
+                                srcSet={"/_next/image?url=%2Fimages%2Fmerchants%2Famazon.jpg&w=32&q=75 32w, /_next/im..."}
+                                src={"/_next/image?url=%2Fimages%2Fmerchants%2Famazon.jpg&w=2000&q=75"}
+                                ref={function}
+                                onLoad={function onLoad}
+                                onError={function onError}
+                              >
+                            ...
+                      ...
+          ...
+    ...
+src/components/offer/OfferCard.tsx (85:15) @ OfferCard
+
+
+  83 |           {offer.merchant?.logo_url ? (
+  84 |             <div className="relative h-14 w-14 sm:h-16 sm:w-16 shrink-0 rounded-lg border-2 border-gray-100 bg-white p-1.5 shadow-sm">
+> 85 |               <Image
+     |               ^
+  86 |                 src={offer.merchant.logo_url}
+  87 |                 alt={offer.merchant.name}
+  88 |                 fill
+Call Stack
+24
+
+Show 18 ignore-listed frame(s)
+img
+<anonymous>
+OfferCard
+src/components/offer/OfferCard.tsx (85:15)
+<unknown>
+src/components/offer/OfferGrid.tsx (54:9)
+Array.map
+<anonymous>
+OfferGrid
+src/components/offer/OfferGrid.tsx (53:15)
+HomePage
+src/app/(main)/page.tsx (92:13)
+1
+2
+Was this helpful?

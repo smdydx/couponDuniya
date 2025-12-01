@@ -1,0 +1,663 @@
+Console Error
+
+A tree hydrated but some attributes of the server rendered HTML didn't match the client properties. This won't be patched up. This can happen if a SSR-ed Client Component used:
+- A server/client branch `if (typeof window !== 'undefined')`.
+- Variable input such as `Date.now()` or `Math.random()` which changes each time it's called.
+- Date formatting in a user's locale which doesn't match the server.
+- External changing data without sending a snapshot of it along with the HTML.
+- Invalid HTML tag nesting.
+
+It can also happen if the client has a browser extension installed which messes with the HTML before React loaded.
+
+See more info here: https://nextjs.org/docs/messages/react-hydration-error
+
+
+  ...
+    <RedirectBoundary>
+      <RedirectErrorBoundary router={{...}}>
+        <InnerLayoutRouter url="/" tree={[...]} params={{}} cacheNode={{lazyData:null, ...}} segmentPath={[...]} ...>
+          <SegmentViewNode type="page" pagePath="(main)/pag...">
+            <SegmentTrieNode>
+            <HomePage>
+              <div className="flex flex-...">
+                <section>
+                <section className="container">
+                  <div>
+                  <MerchantGrid merchants={[...]}>
+                    <div className="grid gap-4...">
+                      <MerchantCard merchant={{id:1,name:"Amazon", ...}}>
+                        <LinkComponent href="/merchants..." className="block focu...">
+                          <a className="block focu..." ref={function} onClick={function onClick} ...>
+                            <_c className="elevated-c...">
+                              <div
+                                ref={null}
++                               className="rounded-lg border bg-card text-card-foreground shadow-sm elevated-card grou..."
+-                               className="rounded-lg border bg-card text-card-foreground shadow-sm elevated-card grou..."
+                              >
+                                <_c8 className="p-4">
+                                  <div ref={null} className="p-4">
+                                    <div
++                                     className="flex items-center gap-4"
+-                                     className="flex items-center gap-3"
+                                    >
+                                      <div
++                                       className="relative h-16 w-16 shrink-0 overflow-hidden rounded-lg border bg-wh..."
+-                                       className="relative h-20 w-20 shrink-0 overflow-hidden rounded-lg border bg-wh..."
+                                      >
+                                        <img
+                                          alt="Amazon"
+                                          fetchPriority={undefined}
+                                          loading="lazy"
+                                          width={undefined}
+                                          height={undefined}
+                                          decoding="async"
+                                          data-nimg="fill"
++                                         className="object-contain"
+-                                         className="object-contain p-1"
+                                          style={{position:"absolute",height:"100%",width:"100%",left:0,top:0,right:0,bottom:0,objectFit:undefined, ...}}
++                                         sizes="100vw"
+-                                         sizes="80px"
++                                         srcSet={"/_next/image?url=%2Fimages%2Fmerchants%2Famazon.jpg&w=360&q=75 360..."}
+-                                         srcSet={"/_next/image?url=%2Fimages%2Fmerchants%2Famazon.jpg&w=32&q=75 32w,..."}
+                                          src={"/_next/image?url=%2Fimages%2Fmerchants%2Famazon.jpg&w=2000&q=75"}
+                                          ref={function}
+                                          onLoad={function onLoad}
+                                          onError={function onError}
+                                        >
+                                      <div className="flex-1 min...">
+                                        <div
++                                         className="flex items-center gap-2"
+-                                         className="flex items-start gap-2 mb-2"
+                                        >
+                                          <h3
++                                           className="font-semibold truncate group-hover:text-primary transition-colors"
+-                                           className="font-semibold text-base truncate group-hover:text-primary trans..."
+                                          >
++                                           Amazon
+                                          <Badge variant="warning" className="shrink-0">
+                                            <div
++                                             className="inline-flex items-center rounded-full border px-2.5 py-0.5 te..."
+-                                             className="inline-flex items-center rounded-full border px-2.5 py-0.5 fo..."
+                                            >
++                                             Featured
+                                        <Badge variant="success" className="mt-1">
+                                          <div
++                                           className="inline-flex items-center rounded-full border px-2.5 py-0.5 text..."
+-                                           className="inline-flex items-center rounded-full border px-2.5 py-0.5 font..."
+                                          >
++                                           Up to 5% Cashback
+                                        <div
++                                         className="mt-2 flex items-center gap-1 text-sm text-muted-foreground"
+-                                         className="flex items-center gap-1 text-sm text-muted-foreground"
+                                        >
+                                          <Tag className="h-4 w-4">
+                                            <svg
+                                              ref={null}
+                                              xmlns="http://www.w3.org/2000/svg"
+                                              width={24}
+                                              height={24}
+                                              viewBox="0 0 24 24"
+                                              fill="none"
+                                              stroke="currentColor"
+                                              strokeWidth={2}
+                                              strokeLinecap="round"
+                                              strokeLinejoin="round"
++                                             className="lucide lucide-tag h-4 w-4"
+-                                             className="lucide lucide-tag h-3.5 w-3.5"
+                                              aria-hidden="true"
+                                            >
+                                          ...
+                                      ...
+                      <MerchantCard merchant={{id:2,name:"Fli...", ...}}>
+                        <LinkComponent href="/merchants..." className="block focu...">
+                          <a className="block focu..." ref={function} onClick={function onClick} ...>
+                            <_c className="elevated-c...">
+                              <div
+                                ref={null}
++                               className="rounded-lg border bg-card text-card-foreground shadow-sm elevated-card grou..."
+-                               className="rounded-lg border bg-card text-card-foreground shadow-sm elevated-card grou..."
+                              >
+                                <_c8 className="p-4">
+                                  <div ref={null} className="p-4">
+                                    <div
++                                     className="flex items-center gap-4"
+-                                     className="flex items-center gap-3"
+                                    >
+                                      <div
++                                       className="relative h-16 w-16 shrink-0 overflow-hidden rounded-lg border bg-wh..."
+-                                       className="relative h-20 w-20 shrink-0 overflow-hidden rounded-lg border bg-wh..."
+                                      >
+                                        <img
+                                          alt="Flipkart"
+                                          fetchPriority={undefined}
+                                          loading="lazy"
+                                          width={undefined}
+                                          height={undefined}
+                                          decoding="async"
+                                          data-nimg="fill"
++                                         className="object-contain"
+-                                         className="object-contain p-1"
+                                          style={{position:"absolute",height:"100%",width:"100%",left:0,top:0,right:0,bottom:0,objectFit:undefined, ...}}
++                                         sizes="100vw"
+-                                         sizes="80px"
++                                         srcSet={"/_next/image?url=%2Fimages%2Fmerchants%2Fflipkart.png&w=360&q=75 3..."}
+-                                         srcSet={"/_next/image?url=%2Fimages%2Fmerchants%2Fflipkart.png&w=32&q=75 32..."}
+                                          src={"/_next/image?url=%2Fimages%2Fmerchants%2Fflipkart.png&w=2000&q=75"}
+                                          ref={function}
+                                          onLoad={function onLoad}
+                                          onError={function onError}
+                                        >
+                                      <div className="flex-1 min...">
+                                        <div
++                                         className="flex items-center gap-2"
+-                                         className="flex items-start gap-2 mb-2"
+                                        >
+                                          <h3
++                                           className="font-semibold truncate group-hover:text-primary transition-colors"
+-                                           className="font-semibold text-base truncate group-hover:text-primary trans..."
+                                          >
++                                           Flipkart
+                                          <Badge variant="warning" className="shrink-0">
+                                            <div
++                                             className="inline-flex items-center rounded-full border px-2.5 py-0.5 te..."
+-                                             className="inline-flex items-center rounded-full border px-2.5 py-0.5 fo..."
+                                            >
++                                             Featured
+                                        <Badge variant="success" className="mt-1">
+                                          <div
++                                           className="inline-flex items-center rounded-full border px-2.5 py-0.5 text..."
+-                                           className="inline-flex items-center rounded-full border px-2.5 py-0.5 font..."
+                                          >
++                                           Up to 4.5% Cashback
+                                        <div
++                                         className="mt-2 flex items-center gap-1 text-sm text-muted-foreground"
+-                                         className="flex items-center gap-1 text-sm text-muted-foreground"
+                                        >
+                                          <Tag className="h-4 w-4">
+                                            <svg
+                                              ref={null}
+                                              xmlns="http://www.w3.org/2000/svg"
+                                              width={24}
+                                              height={24}
+                                              viewBox="0 0 24 24"
+                                              fill="none"
+                                              stroke="currentColor"
+                                              strokeWidth={2}
+                                              strokeLinecap="round"
+                                              strokeLinejoin="round"
++                                             className="lucide lucide-tag h-4 w-4"
+-                                             className="lucide lucide-tag h-3.5 w-3.5"
+                                              aria-hidden="true"
+                                            >
+                                          ...
+                                      ...
+                      <MerchantCard merchant={{id:3,name:"Myntra", ...}}>
+                        <LinkComponent href="/merchants..." className="block focu...">
+                          <a className="block focu..." ref={function} onClick={function onClick} ...>
+                            <_c className="elevated-c...">
+                              <div
+                                ref={null}
++                               className="rounded-lg border bg-card text-card-foreground shadow-sm elevated-card grou..."
+-                               className="rounded-lg border bg-card text-card-foreground shadow-sm elevated-card grou..."
+                              >
+                                <_c8 className="p-4">
+                                  <div ref={null} className="p-4">
+                                    <div
++                                     className="flex items-center gap-4"
+-                                     className="flex items-center gap-3"
+                                    >
+                                      <div
++                                       className="relative h-16 w-16 shrink-0 overflow-hidden rounded-lg border bg-wh..."
+-                                       className="relative h-20 w-20 shrink-0 overflow-hidden rounded-lg border bg-wh..."
+                                      >
+                                        <img
+                                          alt="Myntra"
+                                          fetchPriority={undefined}
+                                          loading="lazy"
+                                          width={undefined}
+                                          height={undefined}
+                                          decoding="async"
+                                          data-nimg="fill"
++                                         className="object-contain"
+-                                         className="object-contain p-1"
+                                          style={{position:"absolute",height:"100%",width:"100%",left:0,top:0,right:0,bottom:0,objectFit:undefined, ...}}
++                                         sizes="100vw"
+-                                         sizes="80px"
++                                         srcSet={"/_next/image?url=%2Fimages%2Fmerchants%2Fmyntra.png&w=360&q=75 360..."}
+-                                         srcSet={"/_next/image?url=%2Fimages%2Fmerchants%2Fmyntra.png&w=32&q=75 32w,..."}
+                                          src={"/_next/image?url=%2Fimages%2Fmerchants%2Fmyntra.png&w=2000&q=75"}
+                                          ref={function}
+                                          onLoad={function onLoad}
+                                          onError={function onError}
+                                        >
+                                      <div className="flex-1 min...">
+                                        <div
++                                         className="flex items-center gap-2"
+-                                         className="flex items-start gap-2 mb-2"
+                                        >
+                                          <h3
++                                           className="font-semibold truncate group-hover:text-primary transition-colors"
+-                                           className="font-semibold text-base truncate group-hover:text-primary trans..."
+                                          >
++                                           Myntra
+                                          <Badge variant="warning" className="shrink-0">
+                                            <div
++                                             className="inline-flex items-center rounded-full border px-2.5 py-0.5 te..."
+-                                             className="inline-flex items-center rounded-full border px-2.5 py-0.5 fo..."
+                                            >
++                                             Featured
+                                        <Badge variant="success" className="mt-1">
+                                          <div
++                                           className="inline-flex items-center rounded-full border px-2.5 py-0.5 text..."
+-                                           className="inline-flex items-center rounded-full border px-2.5 py-0.5 font..."
+                                          >
++                                           Up to 8% Cashback
+                                        <div
++                                         className="mt-2 flex items-center gap-1 text-sm text-muted-foreground"
+-                                         className="flex items-center gap-1 text-sm text-muted-foreground"
+                                        >
+                                          <Tag className="h-4 w-4">
+                                            <svg
+                                              ref={null}
+                                              xmlns="http://www.w3.org/2000/svg"
+                                              width={24}
+                                              height={24}
+                                              viewBox="0 0 24 24"
+                                              fill="none"
+                                              stroke="currentColor"
+                                              strokeWidth={2}
+                                              strokeLinecap="round"
+                                              strokeLinejoin="round"
++                                             className="lucide lucide-tag h-4 w-4"
+-                                             className="lucide lucide-tag h-3.5 w-3.5"
+                                              aria-hidden="true"
+                                            >
+                                          ...
+                                      ...
+                      <MerchantCard merchant={{id:4,name:"Swiggy", ...}}>
+                        <LinkComponent href="/merchants..." className="block focu...">
+                          <a className="block focu..." ref={function} onClick={function onClick} ...>
+                            <_c className="elevated-c...">
+                              <div
+                                ref={null}
++                               className="rounded-lg border bg-card text-card-foreground shadow-sm elevated-card grou..."
+-                               className="rounded-lg border bg-card text-card-foreground shadow-sm elevated-card grou..."
+                              >
+                                <_c8 className="p-4">
+                                  <div ref={null} className="p-4">
+                                    <div
++                                     className="flex items-center gap-4"
+-                                     className="flex items-center gap-3"
+                                    >
+                                      <div
++                                       className="relative h-16 w-16 shrink-0 overflow-hidden rounded-lg border bg-wh..."
+-                                       className="relative h-20 w-20 shrink-0 overflow-hidden rounded-lg border bg-wh..."
+                                      >
+                                        <img
+                                          alt="Swiggy"
+                                          fetchPriority={undefined}
+                                          loading="lazy"
+                                          width={undefined}
+                                          height={undefined}
+                                          decoding="async"
+                                          data-nimg="fill"
++                                         className="object-contain"
+-                                         className="object-contain p-1"
+                                          style={{position:"absolute",height:"100%",width:"100%",left:0,top:0,right:0,bottom:0,objectFit:undefined, ...}}
++                                         sizes="100vw"
+-                                         sizes="80px"
++                                         srcSet={"/_next/image?url=%2Fimages%2Fmerchants%2Fswiggy.png&w=360&q=75 360..."}
+-                                         srcSet={"/_next/image?url=%2Fimages%2Fmerchants%2Fswiggy.png&w=32&q=75 32w,..."}
+                                          src={"/_next/image?url=%2Fimages%2Fmerchants%2Fswiggy.png&w=2000&q=75"}
+                                          ref={function}
+                                          onLoad={function onLoad}
+                                          onError={function onError}
+                                        >
+                                      <div className="flex-1 min...">
+                                        <div
++                                         className="flex items-center gap-2"
+-                                         className="flex items-start gap-2 mb-2"
+                                        >
+                                          <h3
++                                           className="font-semibold truncate group-hover:text-primary transition-colors"
+-                                           className="font-semibold text-base truncate group-hover:text-primary trans..."
+                                          >
++                                           Swiggy
+                                          <Badge variant="warning" className="shrink-0">
+                                            <div
++                                             className="inline-flex items-center rounded-full border px-2.5 py-0.5 te..."
+-                                             className="inline-flex items-center rounded-full border px-2.5 py-0.5 fo..."
+                                            >
++                                             Featured
+                                        <Badge variant="success" className="mt-1">
+                                          <div
++                                           className="inline-flex items-center rounded-full border px-2.5 py-0.5 text..."
+-                                           className="inline-flex items-center rounded-full border px-2.5 py-0.5 font..."
+                                          >
++                                           Up to 3% Cashback
+                                        <div
++                                         className="mt-2 flex items-center gap-1 text-sm text-muted-foreground"
+-                                         className="flex items-center gap-1 text-sm text-muted-foreground"
+                                        >
+                                          <Tag className="h-4 w-4">
+                                            <svg
+                                              ref={null}
+                                              xmlns="http://www.w3.org/2000/svg"
+                                              width={24}
+                                              height={24}
+                                              viewBox="0 0 24 24"
+                                              fill="none"
+                                              stroke="currentColor"
+                                              strokeWidth={2}
+                                              strokeLinecap="round"
+                                              strokeLinejoin="round"
++                                             className="lucide lucide-tag h-4 w-4"
+-                                             className="lucide lucide-tag h-3.5 w-3.5"
+                                              aria-hidden="true"
+                                            >
+                                          ...
+                                      ...
+                      <MerchantCard merchant={{id:5,name:"Uber", ...}}>
+                        <LinkComponent href="/merchants..." className="block focu...">
+                          <a className="block focu..." ref={function} onClick={function onClick} ...>
+                            <_c className="elevated-c...">
+                              <div
+                                ref={null}
++                               className="rounded-lg border bg-card text-card-foreground shadow-sm elevated-card grou..."
+-                               className="rounded-lg border bg-card text-card-foreground shadow-sm elevated-card grou..."
+                              >
+                                <_c8 className="p-4">
+                                  <div ref={null} className="p-4">
+                                    <div
++                                     className="flex items-center gap-4"
+-                                     className="flex items-center gap-3"
+                                    >
+                                      <div
++                                       className="relative h-16 w-16 shrink-0 overflow-hidden rounded-lg border bg-wh..."
+-                                       className="relative h-20 w-20 shrink-0 overflow-hidden rounded-lg border bg-wh..."
+                                      >
+                                        <img
+                                          alt="Uber"
+                                          fetchPriority={undefined}
+                                          loading="lazy"
+                                          width={undefined}
+                                          height={undefined}
+                                          decoding="async"
+                                          data-nimg="fill"
++                                         className="object-contain"
+-                                         className="object-contain p-1"
+                                          style={{position:"absolute",height:"100%",width:"100%",left:0,top:0,right:0,bottom:0,objectFit:undefined, ...}}
++                                         sizes="100vw"
+-                                         sizes="80px"
++                                         srcSet={"/_next/image?url=%2Fimages%2Fmerchants%2Fuber.png&w=360&q=75 360w,..."}
+-                                         srcSet={"/_next/image?url=%2Fimages%2Fmerchants%2Fuber.png&w=32&q=75 32w, /..."}
+                                          src={"/_next/image?url=%2Fimages%2Fmerchants%2Fuber.png&w=2000&q=75"}
+                                          ref={function}
+                                          onLoad={function onLoad}
+                                          onError={function onError}
+                                        >
+                                      <div className="flex-1 min...">
+                                        <div
++                                         className="flex items-center gap-2"
+-                                         className="flex items-start gap-2 mb-2"
+                                        >
+                                          <h3
++                                           className="font-semibold truncate group-hover:text-primary transition-colors"
+-                                           className="font-semibold text-base truncate group-hover:text-primary trans..."
+                                          >
++                                           Uber
+                                          <Badge variant="warning" className="shrink-0">
+                                            <div
++                                             className="inline-flex items-center rounded-full border px-2.5 py-0.5 te..."
+-                                             className="inline-flex items-center rounded-full border px-2.5 py-0.5 fo..."
+                                            >
++                                             Featured
+                                        <Badge variant="success" className="mt-1">
+                                          <div
++                                           className="inline-flex items-center rounded-full border px-2.5 py-0.5 text..."
+-                                           className="inline-flex items-center rounded-full border px-2.5 py-0.5 font..."
+                                          >
++                                           Up to 2.5% Cashback
+                                        <div
++                                         className="mt-2 flex items-center gap-1 text-sm text-muted-foreground"
+-                                         className="flex items-center gap-1 text-sm text-muted-foreground"
+                                        >
+                                          <Tag className="h-4 w-4">
+                                            <svg
+                                              ref={null}
+                                              xmlns="http://www.w3.org/2000/svg"
+                                              width={24}
+                                              height={24}
+                                              viewBox="0 0 24 24"
+                                              fill="none"
+                                              stroke="currentColor"
+                                              strokeWidth={2}
+                                              strokeLinecap="round"
+                                              strokeLinejoin="round"
++                                             className="lucide lucide-tag h-4 w-4"
+-                                             className="lucide lucide-tag h-3.5 w-3.5"
+                                              aria-hidden="true"
+                                            >
+                                          ...
+                                      ...
+                      <MerchantCard merchant={{id:6,name:"Boo...", ...}}>
+                        <LinkComponent href="/merchants..." className="block focu...">
+                          <a className="block focu..." ref={function} onClick={function onClick} ...>
+                            <_c className="elevated-c...">
+                              <div
+                                ref={null}
++                               className="rounded-lg border bg-card text-card-foreground shadow-sm elevated-card grou..."
+-                               className="rounded-lg border bg-card text-card-foreground shadow-sm elevated-card grou..."
+                              >
+                                <_c8 className="p-4">
+                                  <div ref={null} className="p-4">
+                                    <div
++                                     className="flex items-center gap-4"
+-                                     className="flex items-center gap-3"
+                                    >
+                                      <div
++                                       className="relative h-16 w-16 shrink-0 overflow-hidden rounded-lg border bg-wh..."
+-                                       className="relative h-20 w-20 shrink-0 overflow-hidden rounded-lg border bg-wh..."
+                                      >
+                                        <img
+                                          alt="BookMyShow"
+                                          fetchPriority={undefined}
+                                          loading="lazy"
+                                          width={undefined}
+                                          height={undefined}
+                                          decoding="async"
+                                          data-nimg="fill"
++                                         className="object-contain"
+-                                         className="object-contain p-1"
+                                          style={{position:"absolute",height:"100%",width:"100%",left:0,top:0,right:0,bottom:0,objectFit:undefined, ...}}
++                                         sizes="100vw"
+-                                         sizes="80px"
++                                         srcSet={"/_next/image?url=%2Fimages%2Fmerchants%2Fbookmyshow.png&w=360&q=75..."}
+-                                         srcSet={"/_next/image?url=%2Fimages%2Fmerchants%2Fbookmyshow.png&w=32&q=75 ..."}
+                                          src={"/_next/image?url=%2Fimages%2Fmerchants%2Fbookmyshow.png&w=2000&q=75"}
+                                          ref={function}
+                                          onLoad={function onLoad}
+                                          onError={function onError}
+                                        >
+                                      <div className="flex-1 min...">
+                                        <div
++                                         className="flex items-center gap-2"
+-                                         className="flex items-start gap-2 mb-2"
+                                        >
+                                          <h3
++                                           className="font-semibold truncate group-hover:text-primary transition-colors"
+-                                           className="font-semibold text-base truncate group-hover:text-primary trans..."
+                                          >
++                                           BookMyShow
+                                          <Badge variant="warning" className="shrink-0">
+                                            <div
++                                             className="inline-flex items-center rounded-full border px-2.5 py-0.5 te..."
+-                                             className="inline-flex items-center rounded-full border px-2.5 py-0.5 fo..."
+                                            >
++                                             Featured
+                                        <Badge variant="success" className="mt-1">
+                                          <div
++                                           className="inline-flex items-center rounded-full border px-2.5 py-0.5 text..."
+-                                           className="inline-flex items-center rounded-full border px-2.5 py-0.5 font..."
+                                          >
++                                           Up to 6% Cashback
+                                        <div
++                                         className="mt-2 flex items-center gap-1 text-sm text-muted-foreground"
+-                                         className="flex items-center gap-1 text-sm text-muted-foreground"
+                                        >
+                                          <Tag className="h-4 w-4">
+                                            <svg
+                                              ref={null}
+                                              xmlns="http://www.w3.org/2000/svg"
+                                              width={24}
+                                              height={24}
+                                              viewBox="0 0 24 24"
+                                              fill="none"
+                                              stroke="currentColor"
+                                              strokeWidth={2}
+                                              strokeLinecap="round"
+                                              strokeLinejoin="round"
++                                             className="lucide lucide-tag h-4 w-4"
+-                                             className="lucide lucide-tag h-3.5 w-3.5"
+                                              aria-hidden="true"
+                                            >
+                                          ...
+                                      ...
+                      <MerchantCard merchant={{id:7,name:"Ajio", ...}}>
+                        <LinkComponent href="/merchants..." className="block focu...">
+                          <a className="block focu..." ref={function} onClick={function onClick} ...>
+                            <_c className="elevated-c...">
+                              <div
+                                ref={null}
++                               className="rounded-lg border bg-card text-card-foreground shadow-sm elevated-card grou..."
+-                               className="rounded-lg border bg-card text-card-foreground shadow-sm elevated-card grou..."
+                              >
+                                <_c8 className="p-4">
+                                  <div ref={null} className="p-4">
+                                    <div
++                                     className="flex items-center gap-4"
+-                                     className="flex items-center gap-3"
+                                    >
+                                      <div
++                                       className="relative h-16 w-16 shrink-0 overflow-hidden rounded-lg border bg-wh..."
+-                                       className="relative h-20 w-20 shrink-0 overflow-hidden rounded-lg border bg-wh..."
+                                      >
+                                        <img
+                                          alt="Ajio"
+                                          fetchPriority={undefined}
+                                          loading="lazy"
+                                          width={undefined}
+                                          height={undefined}
+                                          decoding="async"
+                                          data-nimg="fill"
++                                         className="object-contain"
+-                                         className="object-contain p-1"
+                                          style={{position:"absolute",height:"100%",width:"100%",left:0,top:0,right:0,bottom:0,objectFit:undefined, ...}}
++                                         sizes="100vw"
+-                                         sizes="80px"
++                                         srcSet={"/_next/image?url=%2Fimages%2Fmerchants%2Fajio.png&w=360&q=75 360w,..."}
+-                                         srcSet={"/_next/image?url=%2Fimages%2Fmerchants%2Fajio.png&w=32&q=75 32w, /..."}
+                                          src={"/_next/image?url=%2Fimages%2Fmerchants%2Fajio.png&w=2000&q=75"}
+                                          ref={function}
+                                          onLoad={function onLoad}
+                                          onError={function onError}
+                                        >
+                                      <div className="flex-1 min...">
+                                        <div
++                                         className="flex items-center gap-2"
+-                                         className="flex items-start gap-2 mb-2"
+                                        >
+                                          <h3
++                                           className="font-semibold truncate group-hover:text-primary transition-colors"
+-                                           className="font-semibold text-base truncate group-hover:text-primary trans..."
+                                          >
++                                           Ajio
+                                          <Badge variant="warning" className="shrink-0">
+                                            <div
++                                             className="inline-flex items-center rounded-full border px-2.5 py-0.5 te..."
+-                                             className="inline-flex items-center rounded-full border px-2.5 py-0.5 fo..."
+                                            >
++                                             Featured
+                                        <Badge variant="success" className="mt-1">
+                                          <div
++                                           className="inline-flex items-center rounded-full border px-2.5 py-0.5 text..."
+-                                           className="inline-flex items-center rounded-full border px-2.5 py-0.5 font..."
+                                          >
++                                           Up to 7% Cashback
+                                        <div
++                                         className="mt-2 flex items-center gap-1 text-sm text-muted-foreground"
+-                                         className="flex items-center gap-1 text-sm text-muted-foreground"
+                                        >
+                                          <Tag className="h-4 w-4">
+                                            <svg
+                                              ref={null}
+                                              xmlns="http://www.w3.org/2000/svg"
+                                              width={24}
+                                              height={24}
+                                              viewBox="0 0 24 24"
+                                              fill="none"
+                                              stroke="currentColor"
+                                              strokeWidth={2}
+                                              strokeLinecap="round"
+                                              strokeLinejoin="round"
++                                             className="lucide lucide-tag h-4 w-4"
+-                                             className="lucide lucide-tag h-3.5 w-3.5"
+                                              aria-hidden="true"
+                                            >
+                                          ...
+                                      ...
+                ...
+          ...
+        ...
+Call Stack
+24
+
+Show 1 ignore-listed frame(s)
+createConsoleError
+file:///home/runner/workspace/frontend/.next/dev/static/chunks/node_modules_next_dist_7a8122d0._.js (2189:71)
+handleConsoleError
+file:///home/runner/workspace/frontend/.next/dev/static/chunks/node_modules_next_dist_7a8122d0._.js (2970:54)
+console.error
+file:///home/runner/workspace/frontend/.next/dev/static/chunks/node_modules_next_dist_7a8122d0._.js (3114:57)
+<unknown>
+file:///home/runner/workspace/frontend/.next/dev/static/chunks/node_modules_next_dist_compiled_react-dom_1e674e59._.js (3463:25)
+runWithFiberInDEV
+file:///home/runner/workspace/frontend/.next/dev/static/chunks/node_modules_next_dist_compiled_react-dom_1e674e59._.js (959:74)
+emitPendingHydrationWarnings
+file:///home/runner/workspace/frontend/.next/dev/static/chunks/node_modules_next_dist_compiled_react-dom_1e674e59._.js (3462:13)
+completeWork
+file:///home/runner/workspace/frontend/.next/dev/static/chunks/node_modules_next_dist_compiled_react-dom_1e674e59._.js (6891:102)
+runWithFiberInDEV
+file:///home/runner/workspace/frontend/.next/dev/static/chunks/node_modules_next_dist_compiled_react-dom_1e674e59._.js (959:131)
+completeUnitOfWork
+file:///home/runner/workspace/frontend/.next/dev/static/chunks/node_modules_next_dist_compiled_react-dom_1e674e59._.js (9621:23)
+performUnitOfWork
+file:///home/runner/workspace/frontend/.next/dev/static/chunks/node_modules_next_dist_compiled_react-dom_1e674e59._.js (9558:28)
+workLoopConcurrentByScheduler
+file:///home/runner/workspace/frontend/.next/dev/static/chunks/node_modules_next_dist_compiled_react-dom_1e674e59._.js (9552:58)
+renderRootConcurrent
+file:///home/runner/workspace/frontend/.next/dev/static/chunks/node_modules_next_dist_compiled_react-dom_1e674e59._.js (9535:71)
+performWorkOnRoot
+file:///home/runner/workspace/frontend/.next/dev/static/chunks/node_modules_next_dist_compiled_react-dom_1e674e59._.js (9062:150)
+performWorkOnRootViaSchedulerTask
+file:///home/runner/workspace/frontend/.next/dev/static/chunks/node_modules_next_dist_compiled_react-dom_1e674e59._.js (10224:9)
+MessagePort.performWorkUntilDeadline
+file:///home/runner/workspace/frontend/.next/dev/static/chunks/node_modules_next_dist_compiled_a0e4c7b4._.js (2647:64)
+img
+<anonymous>
+<unknown>
+file:///home/runner/workspace/frontend/.next/dev/static/chunks/node_modules_773a138b._.js (11706:46)
+<unknown>
+file:///home/runner/workspace/frontend/.next/dev/static/chunks/node_modules_773a138b._.js (11822:47)
+MerchantCard
+file:///home/runner/workspace/frontend/.next/dev/static/chunks/src_components_edbeaa87._.js (145:261)
+<unknown>
+file:///home/runner/workspace/frontend/.next/dev/static/chunks/src_components_edbeaa87._.js (460:247)
+Array.map
+<anonymous>
+MerchantGrid
+file:///home/runner/workspace/frontend/.next/dev/static/chunks/src_components_edbeaa87._.js (460:29)
+HomePage
+about:/Server/file:///home/runner/workspace/frontend/.next/dev/server/chunks/ssr/%5Broot-of-the-server%5D__6ecfc0d1._.js (1322:300)
+1
+2

@@ -1,0 +1,27 @@
+{
+  "title": "Queue Health",
+  "uid": "queue-health",
+  "version": 1,
+  "schemaVersion": 38,
+  "refresh": "30s",
+  "panels": [
+    {
+      "type": "timeseries",
+      "title": "Jobs Enqueued",
+      "id": 10,
+      "datasource": "Prometheus",
+      "targets": [
+        {"expr": "rate(app_queue_jobs_enqueued_total[5m])", "legendFormat": "{{queue}}"}
+      ]
+    },
+    {
+      "type": "timeseries",
+      "title": "Dead Letter Depth",
+      "id": 11,
+      "datasource": "Prometheus",
+      "targets": [
+        {"expr": "app_queue_dead_letter_depth", "legendFormat": "{{queue}}"}
+      ]
+    }
+  ]
+}

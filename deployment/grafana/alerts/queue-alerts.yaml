@@ -1,0 +1,22 @@
+groups:
+  - name: queue-alerts
+    interval: 1m
+    rules:
+      - record: queue_dead_letter_depth_sum
+        expr: sum(app_queue_dead_letter_depth)
+      - alert: HighDeadLetterDepth
+        expr: sum(app_queue_dead_letter_depth) > 10
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: "Dead letter queue depth high"
+          description: "Dead letter depth exceeded 10 for more than 5 minutes"
+      - alert: ErrorRateHigh
+        expr: 100 * (sum(rate(app_http_requests_total{status=~\"5..|4..\"}[5m])))/(sum(rate(app_http_requests_total[5m]))) > 5
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: "HTTP error rate high"
+          description: "Error rate above 5% for 5 minutes"

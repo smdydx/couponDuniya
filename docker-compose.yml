@@ -1,0 +1,144 @@
+version: '3.8'
+
+services:
+  # PostgreSQL Database
+  postgres:
+    image: postgres:16-alpine
+    container_name: coupon-postgres
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:-coupon}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-coupon_secret}
+      POSTGRES_DB: ${POSTGRES_DB:-coupon_commerce}
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    ports:
+      - "5432:5432"
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-coupon}"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  # Redis (for caching and sessions)
+  redis:
+    image: redis:7-alpine
+    container_name: coupon-redis
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  # Click Tracking & Redirect Service (Bun)
+  redirector:
+    build: ./services/redirector
+    container_name: coupon-redirector
+    ports:
+      - "3001:3001"
+    environment:
+      DATABASE_URL: postgresql://${POSTGRES_USER:-coupon}:${POSTGRES_PASSWORD:-coupon_secret}@postgres:5432/${POSTGRES_DB:-coupon_commerce}
+      PORT: 3001
+    depends_on:
+      postgres:
+        condition: service_healthy
+    restart: unless-stopped
+
+  # Payment Webhooks Service (Bun)
+  webhooks:
+    build: ./services/webhooks
+    container_name: coupon-webhooks
+    ports:
+      - "3002:3002"
+    environment:
+      DATABASE_URL: postgresql://${POSTGRES_USER:-coupon}:${POSTGRES_PASSWORD:-coupon_secret}@postgres:5432/${POSTGRES_DB:-coupon_commerce}
+      RAZORPAY_WEBHOOK_SECRET: ${RAZORPAY_WEBHOOK_SECRET}
+      PORT: 3002
+    depends_on:
+      postgres:
+        condition: service_healthy
+    restart: unless-stopped
+
+  # Email Worker (Bun)
+  email-worker:
+    build: ./services/workers
+    container_name: coupon-email-worker
+    command: bun src/index.ts email
+    environment:
+      DATABASE_URL: postgresql://${POSTGRES_USER:-coupon}:${POSTGRES_PASSWORD:-coupon_secret}@postgres:5432/${POSTGRES_DB:-coupon_commerce}
+      SENDGRID_API_KEY: ${SENDGRID_API_KEY}
+    depends_on:
+      postgres:
+        condition: service_healthy
+    restart: unless-stopped
+
+  # SMS Worker (Bun)
+  sms-worker:
+    build: ./services/workers
+    container_name: coupon-sms-worker
+    command: bun src/index.ts sms
+    environment:
+      DATABASE_URL: postgresql://${POSTGRES_USER:-coupon}:${POSTGRES_PASSWORD:-coupon_secret}@postgres:5432/${POSTGRES_DB:-coupon_commerce}
+      MSG91_AUTH_KEY: ${MSG91_AUTH_KEY}
+      MSG91_SENDER_ID: ${MSG91_SENDER_ID:-COUPON}
+      MSG91_TEMPLATE_ID: ${MSG91_TEMPLATE_ID}
+    depends_on:
+      postgres:
+        condition: service_healthy
+    restart: unless-stopped
+
+  # Cashback Sync Worker (Bun)
+  cashback-worker:
+    build: ./services/workers
+    container_name: coupon-cashback-worker
+    command: bun src/index.ts cashback
+    environment:
+      DATABASE_URL: postgresql://${POSTGRES_USER:-coupon}:${POSTGRES_PASSWORD:-coupon_secret}@postgres:5432/${POSTGRES_DB:-coupon_commerce}
+      ADMITAD_ACCESS_TOKEN: ${ADMITAD_ACCESS_TOKEN}
+    depends_on:
+      postgres:
+        condition: service_healthy
+    restart: unless-stopped
+
+  # Next.js Frontend
+  frontend:
+    build: ./frontend
+    container_name: coupon-frontend
+    ports:
+      - "3000:3000"
+    environment:
+      NEXT_PUBLIC_API_URL: http://backend:8000/api/v1
+      NEXT_PUBLIC_RAZORPAY_KEY_ID: ${RAZORPAY_KEY_ID}
+    depends_on:
+      - backend
+    restart: unless-stopped
+
+  # FastAPI Backend (Elesiya)
+  backend:
+    build: ./backend
+    container_name: coupon-backend
+    ports:
+      - "8000:8000"
+    environment:
+      DATABASE_URL: postgresql://${POSTGRES_USER:-coupon}:${POSTGRES_PASSWORD:-coupon_secret}@postgres:5432/${POSTGRES_DB:-coupon_commerce}
+      REDIS_URL: redis://redis:6379
+      SECRET_KEY: ${SECRET_KEY:-change_this_in_production}
+      RAZORPAY_KEY_ID: ${RAZORPAY_KEY_ID}
+      RAZORPAY_KEY_SECRET: ${RAZORPAY_KEY_SECRET}
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    restart: unless-stopped
+
+volumes:
+  postgres_data:
+  redis_data:
+
+networks:
+  default:
+    name: coupon-network

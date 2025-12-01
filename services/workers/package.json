@@ -1,0 +1,21 @@
+{
+  "name": "coupon-workers",
+  "version": "1.0.0",
+  "description": "Background workers for email, SMS, and cashback sync",
+  "main": "src/index.ts",
+  "scripts": {
+    "dev": "bun --watch src/index.ts",
+    "start": "bun src/index.ts",
+    "email": "bun src/index.ts email",
+    "sms": "bun src/index.ts sms",
+    "cashback": "bun src/index.ts cashback",
+    "clicks": "bun src/index.ts clicks"
+  },
+  "dependencies": {
+    "postgres": "^3.4.3",
+    "ioredis": "^5.4.1"
+  },
+  "devDependencies": {
+    "@types/bun": "latest"
+  }
+}

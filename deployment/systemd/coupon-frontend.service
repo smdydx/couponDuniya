@@ -1,0 +1,20 @@
+[Unit]
+Description=Coupon Commerce Frontend (Next.js)
+After=network.target
+
+[Service]
+Type=simple
+User=www-data
+Group=www-data
+WorkingDirectory=/var/www/coupon-commerce/frontend
+Environment="NODE_ENV=production"
+Environment="PORT=3000"
+ExecStart=/usr/bin/npm start
+
+Restart=always
+RestartSec=10
+StandardOutput=append:/var/log/coupon-frontend.log
+StandardError=append:/var/log/coupon-frontend-error.log
+
+[Install]
+WantedBy=multi-user.target

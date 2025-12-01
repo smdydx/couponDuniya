@@ -1,0 +1,58 @@
+modules = ["nodejs-20", "python-3.12", "bash", "web"]
+[agent]
+expertMode = true
+
+[nix]
+channel = "stable-25_05"
+
+[userenv]
+
+[userenv.shared]
+NEXT_PUBLIC_API_URL = "https://46176b26-0165-4da1-bd2f-a0e7df2df1eb-00-2zvehwt0vwb65.pike.replit.dev/api/v1"
+SECRET_KEY = "dev-secret-key-change-in-production-12345"
+JWT_ALGORITHM = "HS256"
+ACCESS_TOKEN_EXPIRE_MINUTES = "1440"
+CORS_ORIGINS = "https://46176b26-0165-4da1-bd2f-a0e7df2df1eb-00-2zvehwt0vwb65.pike.replit.dev,http://localhost:5000"
+FRONTEND_BASE_URL = "https://46176b26-0165-4da1-bd2f-a0e7df2df1eb-00-2zvehwt0vwb65.pike.replit.dev"
+DEFAULT_PASSWORD = "hardik123"
+SMS_ENABLED = "False"
+EMAIL_ENABLED = "False"
+DEBUG = "True"
+APP_NAME = "CouponAli API"
+
+[workflows]
+runButton = "Project"
+
+[[workflows.workflow]]
+name = "Project"
+mode = "parallel"
+author = "agent"
+
+[[workflows.workflow.tasks]]
+task = "workflow.run"
+args = "Frontend"
+
+[[workflows.workflow]]
+name = "Frontend"
+author = "agent"
+
+[[workflows.workflow.tasks]]
+task = "shell.exec"
+args = "cd frontend && npm run dev"
+waitForPort = 5000
+
+[workflows.workflow.metadata]
+outputType = "webview"
+
+[[ports]]
+localPort = 5000
+externalPort = 80
+
+[[ports]]
+localPort = 41769
+externalPort = 3000
+
+[deployment]
+deploymentTarget = "static"
+build = ["bash", "-c", "cd frontend && npm run build && npm run export || npx next build"]
+publicDir = "frontend/out"

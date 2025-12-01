@@ -1,0 +1,13 @@
+body { font-family: Inter, system-ui, -apple-system, sans-serif; }
+.topbar { background: #111 !important; }
+.swagger-ui .scheme-container { background:#222; border-radius:6px; }
+.swagger-ui .opblock { border-radius:8px; }
+.swagger-ui .opblock.opblock-get { border-color:#3b82f6; }
+.swagger-ui .opblock.opblock-post { border-color:#10b981; }
+.swagger-ui .opblock.opblock-delete { border-color:#ef4444; }
+.swagger-ui .opblock-summary-method { text-transform:uppercase; font-weight:600; }
+.group-tag { font-size:12px; background:#333; color:#bbb; padding:2px 6px; border-radius:4px; margin-right:6px; }
+.dark-mode-toggle { position:fixed; top:12px; right:12px; background:#2563eb; color:#fff; padding:6px 12px; border-radius:6px; cursor:pointer; font-size:13px; }
+html.dark body { background:#0d1117; color:#e6edf3; }
+html.dark .topbar { background:#0d1117 !important; }
+html.dark .swagger-ui .info { color:#e6edf3; }

@@ -1,0 +1,17 @@
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.env
+venv/
+.tests_cache/
+.idea/
+.vscode/
+.git/
+.gitignore
+alembic/versions/__pycache__/
+# Exclude tests & local artifacts
+tests/
+*.db
+scripts/
+README.md

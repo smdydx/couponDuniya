@@ -1,0 +1,819 @@
+Console Error
+
+A tree hydrated but some attributes of the server rendered HTML didn't match the client properties. This won't be patched up. This can happen if a SSR-ed Client Component used:
+- A server/client branch `if (typeof window !== 'undefined')`.
+- Variable input such as `Date.now()` or `Math.random()` which changes each time it's called.
+- Date formatting in a user's locale which doesn't match the server.
+- External changing data without sending a snapshot of it along with the HTML.
+- Invalid HTML tag nesting.
+
+It can also happen if the client has a browser extension installed which messes with the HTML before React loaded.
+
+See more info here: https://nextjs.org/docs/messages/react-hydration-error
+
+
+  ...
+    <SegmentViewNode type="page" pagePath="(main)/pag...">
+      <SegmentTrieNode>
+      <HomePage>
+        <div className="flex flex-...">
+          <section>
+          ...
+            <div className="grid gap-3...">
+              ...
+                <a className="block focu..." ref={function} onClick={function onClick} ...>
+                  <_c className="elevated-c...">
+                    <div ref={null} className="rounded-lg...">
+                      <_c8 className="p-4 sm:p-5">
+                        <div ref={null} className="p-4 sm:p-5">
+                          <div className="flex items...">
+                            <div className="relative h...">
+                              <img
+                                alt="Amazon"
+                                fetchPriority={undefined}
+                                loading={undefined}
+                                width={undefined}
+                                height={undefined}
+                                decoding="async"
+                                data-nimg="fill"
+                                className="object-contain"
+                                style={{position:"absolute",height:"100%",width:"100%",left:0,top:0,right:0,bottom:0,objectFit:undefined, ...}}
++                               sizes="64px"
+-                               sizes="100vw"
++                               srcSet={"/_next/image?url=%2Fimages%2Fmerchants%2Famazon.jpg&w=32&q=75 32w, /_next/im..."}
+-                               srcSet={"/_next/image?url=%2Fimages%2Fmerchants%2Famazon.jpg&w=360&q=75 360w, /_next/..."}
+                                src={"/_next/image?url=%2Fimages%2Fmerchants%2Famazon.jpg&w=2000&q=75"}
+                                ref={function}
+                                onLoad={function onLoad}
+                                onError={function onError}
+                              >
+                              ...
+                            ...
+              ...
+                <a className="block focu..." ref={function} onClick={function onClick} ...>
+                  <_c className="elevated-c...">
+                    <div ref={null} className="rounded-lg...">
+                      <_c8 className="p-4 sm:p-5">
+                        <div ref={null} className="p-4 sm:p-5">
+                          <div className="flex items...">
+                            <div className="relative h...">
+                              <img
+                                alt="Flipkart"
+                                fetchPriority={undefined}
+                                loading={undefined}
+                                width={undefined}
+                                height={undefined}
+                                decoding="async"
+                                data-nimg="fill"
+                                className="object-contain"
+                                style={{position:"absolute",height:"100%",width:"100%",left:0,top:0,right:0,bottom:0,objectFit:undefined, ...}}
++                               sizes="64px"
+-                               sizes="100vw"
++                               srcSet={"/_next/image?url=%2Fimages%2Fmerchants%2Fflipkart.png&w=32&q=75 32w, /_next/..."}
+-                               srcSet={"/_next/image?url=%2Fimages%2Fmerchants%2Fflipkart.png&w=360&q=75 360w, /_nex..."}
+                                src={"/_next/image?url=%2Fimages%2Fmerchants%2Fflipkart.png&w=2000&q=75"}
+                                ref={function}
+                                onLoad={function onLoad}
+                                onError={function onError}
+                              >
+                              ...
+                            ...
+              ...
+                <a className="block focu..." ref={function} onClick={function onClick} ...>
+                  <_c className="elevated-c...">
+                    <div ref={null} className="rounded-lg...">
+                      <_c8 className="p-4 sm:p-5">
+                        <div ref={null} className="p-4 sm:p-5">
+                          <div className="flex items...">
+                            <div className="relative h...">
+                              <img
+                                alt="Myntra"
+                                fetchPriority={undefined}
+                                loading={undefined}
+                                width={undefined}
+                                height={undefined}
+                                decoding="async"
+                                data-nimg="fill"
+                                className="object-contain"
+                                style={{position:"absolute",height:"100%",width:"100%",left:0,top:0,right:0,bottom:0,objectFit:undefined, ...}}
++                               sizes="64px"
+-                               sizes="100vw"
++                               srcSet={"/_next/image?url=%2Fimages%2Fmerchants%2Fmyntra.png&w=32&q=75 32w, /_next/im..."}
+-                               srcSet={"/_next/image?url=%2Fimages%2Fmerchants%2Fmyntra.png&w=360&q=75 360w, /_next/..."}
+                                src={"/_next/image?url=%2Fimages%2Fmerchants%2Fmyntra.png&w=2000&q=75"}
+                                ref={function}
+                                onLoad={function onLoad}
+                                onError={function onError}
+                              >
+                              ...
+                            ...
+              ...
+                <a className="block focu..." ref={function} onClick={function onClick} ...>
+                  <_c className="elevated-c...">
+                    <div ref={null} className="rounded-lg...">
+                      <_c8 className="p-4 sm:p-5">
+                        <div ref={null} className="p-4 sm:p-5">
+                          <div className="flex items...">
+                            <div className="relative h...">
+                              <img
+                                alt="Swiggy"
+                                fetchPriority={undefined}
+                                loading={undefined}
+                                width={undefined}
+                                height={undefined}
+                                decoding="async"
+                                data-nimg="fill"
+                                className="object-contain"
+                                style={{position:"absolute",height:"100%",width:"100%",left:0,top:0,right:0,bottom:0,objectFit:undefined, ...}}
++                               sizes="64px"
+-                               sizes="100vw"
++                               srcSet={"/_next/image?url=%2Fimages%2Fmerchants%2Fswiggy.png&w=32&q=75 32w, /_next/im..."}
+-                               srcSet={"/_next/image?url=%2Fimages%2Fmerchants%2Fswiggy.png&w=360&q=75 360w, /_next/..."}
+                                src={"/_next/image?url=%2Fimages%2Fmerchants%2Fswiggy.png&w=2000&q=75"}
+                                ref={function}
+                                onLoad={function onLoad}
+                                onError={function onError}
+                              >
+                              ...
+                            ...
+              ...
+                <a className="block focu..." ref={function} onClick={function onClick} ...>
+                  <_c className="elevated-c...">
+                    <div ref={null} className="rounded-lg...">
+                      <_c8 className="p-4 sm:p-5">
+                        <div ref={null} className="p-4 sm:p-5">
+                          <div className="flex items...">
+                            <div className="relative h...">
+                              <img
+                                alt="Uber"
+                                fetchPriority={undefined}
+                                loading={undefined}
+                                width={undefined}
+                                height={undefined}
+                                decoding="async"
+                                data-nimg="fill"
+                                className="object-contain"
+                                style={{position:"absolute",height:"100%",width:"100%",left:0,top:0,right:0,bottom:0,objectFit:undefined, ...}}
++                               sizes="64px"
+-                               sizes="100vw"
++                               srcSet={"/_next/image?url=%2Fimages%2Fmerchants%2Fuber.png&w=32&q=75 32w, /_next/imag..."}
+-                               srcSet={"/_next/image?url=%2Fimages%2Fmerchants%2Fuber.png&w=360&q=75 360w, /_next/im..."}
+                                src={"/_next/image?url=%2Fimages%2Fmerchants%2Fuber.png&w=2000&q=75"}
+                                ref={function}
+                                onLoad={function onLoad}
+                                onError={function onError}
+                              >
+                              ...
+                            ...
+              ...
+                <a className="block focu..." ref={function} onClick={function onClick} ...>
+                  <_c className="elevated-c...">
+                    <div ref={null} className="rounded-lg...">
+                      <_c8 className="p-4 sm:p-5">
+                        <div ref={null} className="p-4 sm:p-5">
+                          <div className="flex items...">
+                            <div className="relative h...">
+                              <img
+                                alt="BookMyShow"
+                                fetchPriority={undefined}
+                                loading={undefined}
+                                width={undefined}
+                                height={undefined}
+                                decoding="async"
+                                data-nimg="fill"
+                                className="object-contain"
+                                style={{position:"absolute",height:"100%",width:"100%",left:0,top:0,right:0,bottom:0,objectFit:undefined, ...}}
++                               sizes="64px"
+-                               sizes="100vw"
++                               srcSet={"/_next/image?url=%2Fimages%2Fmerchants%2Fbookmyshow.png&w=32&q=75 32w, /_nex..."}
+-                               srcSet={"/_next/image?url=%2Fimages%2Fmerchants%2Fbookmyshow.png&w=360&q=75 360w, /_n..."}
+                                src={"/_next/image?url=%2Fimages%2Fmerchants%2Fbookmyshow.png&w=2000&q=75"}
+                                ref={function}
+                                onLoad={function onLoad}
+                                onError={function onError}
+                              >
+                              ...
+                            ...
+              ...
+                <a className="block focu..." ref={function} onClick={function onClick} ...>
+                  <_c className="elevated-c...">
+                    <div ref={null} className="rounded-lg...">
+                      <_c8 className="p-4 sm:p-5">
+                        <div ref={null} className="p-4 sm:p-5">
+                          <div className="flex items...">
+                            <div className="relative h...">
+                              <img
+                                alt="Ajio"
+                                fetchPriority={undefined}
+                                loading={undefined}
+                                width={undefined}
+                                height={undefined}
+                                decoding="async"
+                                data-nimg="fill"
+                                className="object-contain"
+                                style={{position:"absolute",height:"100%",width:"100%",left:0,top:0,right:0,bottom:0,objectFit:undefined, ...}}
++                               sizes="64px"
+-                               sizes="100vw"
++                               srcSet={"/_next/image?url=%2Fimages%2Fmerchants%2Fajio.png&w=32&q=75 32w, /_next/imag..."}
+-                               srcSet={"/_next/image?url=%2Fimages%2Fmerchants%2Fajio.png&w=360&q=75 360w, /_next/im..."}
+                                src={"/_next/image?url=%2Fimages%2Fmerchants%2Fajio.png&w=2000&q=75"}
+                                ref={function}
+                                onLoad={function onLoad}
+                                onError={function onError}
+                              >
+                              ...
+                            ...
+          ...
+            <OfferGrid offers={[...]}>
+              <div className="grid gap-4...">
+                <OfferCard offer={{id:1,merchant_id:3, ...}} onClickTrack={undefined}>
+                  <_c className="elevated-c...">
+                    <div ref={null} className="rounded-lg...">
+                      <div>
+                      <_c2 className="p-4 sm:p-5...">
+                        <div ref={null} className="flex flex-...">
+                          <div className="flex items...">
+                            <div className="relative h...">
+                              <img
+                                alt="Myntra"
+                                fetchPriority={undefined}
+                                loading="lazy"
+                                width={undefined}
+                                height={undefined}
+                                decoding="async"
+                                data-nimg="fill"
+                                className="object-contain"
+                                style={{position:"absolute",height:"100%",width:"100%",left:0,top:0,right:0,bottom:0,objectFit:undefined, ...}}
++                               sizes="(max-width: 640px) 56px, 64px"
+-                               sizes="64px"
+                                srcSet={"/_next/image?url=%2Fimages%2Fmerchants%2Fmyntra.png&w=32&q=75 32w, /_next/im..."}
+                                src={"/_next/image?url=%2Fimages%2Fmerchants%2Fmyntra.png&w=2000&q=75"}
+                                ref={function}
+                                onLoad={function onLoad}
+                                onError={function onError}
+                              >
+                            ...
+                      ...
+                <OfferCard offer={{id:4,merchant_id:5, ...}} onClickTrack={undefined}>
+                  <_c className="elevated-c...">
+                    <div ref={null} className="rounded-lg...">
+                      <div>
+                      <_c2 className="p-4 sm:p-5...">
+                        <div ref={null} className="flex flex-...">
+                          <div className="flex items...">
+                            <div className="relative h...">
+                              <img
+                                alt="Uber"
+                                fetchPriority={undefined}
+                                loading="lazy"
+                                width={undefined}
+                                height={undefined}
+                                decoding="async"
+                                data-nimg="fill"
+                                className="object-contain"
+                                style={{position:"absolute",height:"100%",width:"100%",left:0,top:0,right:0,bottom:0,objectFit:undefined, ...}}
++                               sizes="(max-width: 640px) 56px, 64px"
+-                               sizes="64px"
+                                srcSet={"/_next/image?url=%2Fimages%2Fmerchants%2Fuber.png&w=32&q=75 32w, /_next/imag..."}
+                                src={"/_next/image?url=%2Fimages%2Fmerchants%2Fuber.png&w=2000&q=75"}
+                                ref={function}
+                                onLoad={function onLoad}
+                                onError={function onError}
+                              >
+                            ...
+                      ...
+                <OfferCard offer={{id:5,merchant_id:6, ...}} onClickTrack={undefined}>
+                  <_c className="elevated-c...">
+                    <div ref={null} className="rounded-lg...">
+                      <div>
+                      <_c2 className="p-4 sm:p-5...">
+                        <div ref={null} className="flex flex-...">
+                          <div className="flex items...">
+                            <div className="relative h...">
+                              <img
+                                alt="BookMyShow"
+                                fetchPriority={undefined}
+                                loading="lazy"
+                                width={undefined}
+                                height={undefined}
+                                decoding="async"
+                                data-nimg="fill"
+                                className="object-contain"
+                                style={{position:"absolute",height:"100%",width:"100%",left:0,top:0,right:0,bottom:0,objectFit:undefined, ...}}
++                               sizes="(max-width: 640px) 56px, 64px"
+-                               sizes="64px"
+                                srcSet={"/_next/image?url=%2Fimages%2Fmerchants%2Fbookmyshow.png&w=32&q=75 32w, /_nex..."}
+                                src={"/_next/image?url=%2Fimages%2Fmerchants%2Fbookmyshow.png&w=2000&q=75"}
+                                ref={function}
+                                onLoad={function onLoad}
+                                onError={function onError}
+                              >
+                            ...
+                      ...
+                <OfferCard offer={{id:8,merchant_id:1, ...}} onClickTrack={undefined}>
+                  <_c className="elevated-c...">
+                    <div ref={null} className="rounded-lg...">
+                      <div>
+                      <_c2 className="p-4 sm:p-5...">
+                        <div ref={null} className="flex flex-...">
+                          <div className="flex items...">
+                            <div className="relative h...">
+                              <img
+                                alt="Amazon"
+                                fetchPriority={undefined}
+                                loading="lazy"
+                                width={undefined}
+                                height={undefined}
+                                decoding="async"
+                                data-nimg="fill"
+                                className="object-contain"
+                                style={{position:"absolute",height:"100%",width:"100%",left:0,top:0,right:0,bottom:0,objectFit:undefined, ...}}
++                               sizes="(max-width: 640px) 56px, 64px"
+-                               sizes="64px"
+                                srcSet={"/_next/image?url=%2Fimages%2Fmerchants%2Famazon.jpg&w=32&q=75 32w, /_next/im..."}
+                                src={"/_next/image?url=%2Fimages%2Fmerchants%2Famazon.jpg&w=2000&q=75"}
+                                ref={function}
+                                onLoad={function onLoad}
+                                onError={function onError}
+                              >
+                            ...
+                      ...
+          <section className="container">
+            <div>
+            <OfferGrid offers={[...]}>
+              <div className="grid gap-4...">
+                <OfferCard offer={{id:1,merchant_id:3, ...}} onClickTrack={undefined}>
+                  <_c className="elevated-c...">
+                    <div ref={null} className="rounded-lg...">
+                      <div>
+                      <_c2 className="p-4 sm:p-5...">
+                        <div ref={null} className="flex flex-...">
+                          <div className="flex items...">
+                            <div className="relative h...">
+                              <img
+                                alt="Myntra"
+                                fetchPriority={undefined}
+                                loading="lazy"
+                                width={undefined}
+                                height={undefined}
+                                decoding="async"
+                                data-nimg="fill"
+                                className="object-contain"
+                                style={{position:"absolute",height:"100%",width:"100%",left:0,top:0,right:0,bottom:0,objectFit:undefined, ...}}
++                               sizes="(max-width: 640px) 56px, 64px"
+-                               sizes="64px"
+                                srcSet={"/_next/image?url=%2Fimages%2Fmerchants%2Fmyntra.png&w=32&q=75 32w, /_next/im..."}
+                                src={"/_next/image?url=%2Fimages%2Fmerchants%2Fmyntra.png&w=2000&q=75"}
+                                ref={function}
+                                onLoad={function onLoad}
+                                onError={function onError}
+                              >
+                            ...
+                      ...
+                <OfferCard offer={{id:2,merchant_id:1, ...}} onClickTrack={undefined}>
+                  <_c className="elevated-c...">
+                    <div ref={null} className="rounded-lg...">
+                      <div>
+                      <_c2 className="p-4 sm:p-5...">
+                        <div ref={null} className="flex flex-...">
+                          <div className="flex items...">
+                            <div className="relative h...">
+                              <img
+                                alt="Amazon"
+                                fetchPriority={undefined}
+                                loading="lazy"
+                                width={undefined}
+                                height={undefined}
+                                decoding="async"
+                                data-nimg="fill"
+                                className="object-contain"
+                                style={{position:"absolute",height:"100%",width:"100%",left:0,top:0,right:0,bottom:0,objectFit:undefined, ...}}
++                               sizes="(max-width: 640px) 56px, 64px"
+-                               sizes="64px"
+                                srcSet={"/_next/image?url=%2Fimages%2Fmerchants%2Famazon.jpg&w=32&q=75 32w, /_next/im..."}
+                                src={"/_next/image?url=%2Fimages%2Fmerchants%2Famazon.jpg&w=2000&q=75"}
+                                ref={function}
+                                onLoad={function onLoad}
+                                onError={function onError}
+                              >
+                            ...
+                      ...
+                <OfferCard offer={{id:3,merchant_id:4, ...}} onClickTrack={undefined}>
+                  <_c className="elevated-c...">
+                    <div ref={null} className="rounded-lg...">
+                      <div>
+                      <_c2 className="p-4 sm:p-5...">
+                        <div ref={null} className="flex flex-...">
+                          <div className="flex items...">
+                            <div className="relative h...">
+                              <img
+                                alt="Swiggy"
+                                fetchPriority={undefined}
+                                loading="lazy"
+                                width={undefined}
+                                height={undefined}
+                                decoding="async"
+                                data-nimg="fill"
+                                className="object-contain"
+                                style={{position:"absolute",height:"100%",width:"100%",left:0,top:0,right:0,bottom:0,objectFit:undefined, ...}}
++                               sizes="(max-width: 640px) 56px, 64px"
+-                               sizes="64px"
+                                srcSet={"/_next/image?url=%2Fimages%2Fmerchants%2Fswiggy.png&w=32&q=75 32w, /_next/im..."}
+                                src={"/_next/image?url=%2Fimages%2Fmerchants%2Fswiggy.png&w=2000&q=75"}
+                                ref={function}
+                                onLoad={function onLoad}
+                                onError={function onError}
+                              >
+                            ...
+                      ...
+                <OfferCard offer={{id:4,merchant_id:5, ...}} onClickTrack={undefined}>
+                  <_c className="elevated-c...">
+                    <div ref={null} className="rounded-lg...">
+                      <div>
+                      <_c2 className="p-4 sm:p-5...">
+                        <div ref={null} className="flex flex-...">
+                          <div className="flex items...">
+                            <div className="relative h...">
+                              <img
+                                alt="Uber"
+                                fetchPriority={undefined}
+                                loading="lazy"
+                                width={undefined}
+                                height={undefined}
+                                decoding="async"
+                                data-nimg="fill"
+                                className="object-contain"
+                                style={{position:"absolute",height:"100%",width:"100%",left:0,top:0,right:0,bottom:0,objectFit:undefined, ...}}
++                               sizes="(max-width: 640px) 56px, 64px"
+-                               sizes="64px"
+                                srcSet={"/_next/image?url=%2Fimages%2Fmerchants%2Fuber.png&w=32&q=75 32w, /_next/imag..."}
+                                src={"/_next/image?url=%2Fimages%2Fmerchants%2Fuber.png&w=2000&q=75"}
+                                ref={function}
+                                onLoad={function onLoad}
+                                onError={function onError}
+                              >
+                            ...
+                      ...
+                <OfferCard offer={{id:5,merchant_id:6, ...}} onClickTrack={undefined}>
+                  <_c className="elevated-c...">
+                    <div ref={null} className="rounded-lg...">
+                      <div>
+                      <_c2 className="p-4 sm:p-5...">
+                        <div ref={null} className="flex flex-...">
+                          <div className="flex items...">
+                            <div className="relative h...">
+                              <img
+                                alt="BookMyShow"
+                                fetchPriority={undefined}
+                                loading="lazy"
+                                width={undefined}
+                                height={undefined}
+                                decoding="async"
+                                data-nimg="fill"
+                                className="object-contain"
+                                style={{position:"absolute",height:"100%",width:"100%",left:0,top:0,right:0,bottom:0,objectFit:undefined, ...}}
++                               sizes="(max-width: 640px) 56px, 64px"
+-                               sizes="64px"
+                                srcSet={"/_next/image?url=%2Fimages%2Fmerchants%2Fbookmyshow.png&w=32&q=75 32w, /_nex..."}
+                                src={"/_next/image?url=%2Fimages%2Fmerchants%2Fbookmyshow.png&w=2000&q=75"}
+                                ref={function}
+                                onLoad={function onLoad}
+                                onError={function onError}
+                              >
+                            ...
+                      ...
+                <OfferCard offer={{id:6,merchant_id:7, ...}} onClickTrack={undefined}>
+                  <_c className="elevated-c...">
+                    <div ref={null} className="rounded-lg...">
+                      <div>
+                      <_c2 className="p-4 sm:p-5...">
+                        <div ref={null} className="flex flex-...">
+                          <div className="flex items...">
+                            <div className="relative h...">
+                              <img
+                                alt="Ajio"
+                                fetchPriority={undefined}
+                                loading="lazy"
+                                width={undefined}
+                                height={undefined}
+                                decoding="async"
+                                data-nimg="fill"
+                                className="object-contain"
+                                style={{position:"absolute",height:"100%",width:"100%",left:0,top:0,right:0,bottom:0,objectFit:undefined, ...}}
++                               sizes="(max-width: 640px) 56px, 64px"
+-                               sizes="64px"
+                                srcSet={"/_next/image?url=%2Fimages%2Fmerchants%2Fajio.png&w=32&q=75 32w, /_next/imag..."}
+                                src={"/_next/image?url=%2Fimages%2Fmerchants%2Fajio.png&w=2000&q=75"}
+                                ref={function}
+                                onLoad={function onLoad}
+                                onError={function onError}
+                              >
+                            ...
+                      ...
+                <OfferCard offer={{id:7,merchant_id:2, ...}} onClickTrack={undefined}>
+                  <_c className="elevated-c...">
+                    <div ref={null} className="rounded-lg...">
+                      <div>
+                      <_c2 className="p-4 sm:p-5...">
+                        <div ref={null} className="flex flex-...">
+                          <div className="flex items...">
+                            <div className="relative h...">
+                              <img
+                                alt="Flipkart"
+                                fetchPriority={undefined}
+                                loading="lazy"
+                                width={undefined}
+                                height={undefined}
+                                decoding="async"
+                                data-nimg="fill"
+                                className="object-contain"
+                                style={{position:"absolute",height:"100%",width:"100%",left:0,top:0,right:0,bottom:0,objectFit:undefined, ...}}
++                               sizes="(max-width: 640px) 56px, 64px"
+-                               sizes="64px"
+                                srcSet={"/_next/image?url=%2Fimages%2Fmerchants%2Fflipkart.png&w=32&q=75 32w, /_next/..."}
+                                src={"/_next/image?url=%2Fimages%2Fmerchants%2Fflipkart.png&w=2000&q=75"}
+                                ref={function}
+                                onLoad={function onLoad}
+                                onError={function onError}
+                              >
+                            ...
+                      ...
+                <OfferCard offer={{id:8,merchant_id:1, ...}} onClickTrack={undefined}>
+                  <_c className="elevated-c...">
+                    <div ref={null} className="rounded-lg...">
+                      <div>
+                      <_c2 className="p-4 sm:p-5...">
+                        <div ref={null} className="flex flex-...">
+                          <div className="flex items...">
+                            <div className="relative h...">
+                              <img
+                                alt="Amazon"
+                                fetchPriority={undefined}
+                                loading="lazy"
+                                width={undefined}
+                                height={undefined}
+                                decoding="async"
+                                data-nimg="fill"
+                                className="object-contain"
+                                style={{position:"absolute",height:"100%",width:"100%",left:0,top:0,right:0,bottom:0,objectFit:undefined, ...}}
++                               sizes="(max-width: 640px) 56px, 64px"
+-                               sizes="64px"
+                                srcSet={"/_next/image?url=%2Fimages%2Fmerchants%2Famazon.jpg&w=32&q=75 32w, /_next/im..."}
+                                src={"/_next/image?url=%2Fimages%2Fmerchants%2Famazon.jpg&w=2000&q=75"}
+                                ref={function}
+                                onLoad={function onLoad}
+                                onError={function onError}
+                              >
+                            ...
+                      ...
+          ...
+            <div className="grid gap-4...">
+              ...
+                <div ref={null} className="rounded-lg...">
+                  <Badge>
+                  <_c2 className="p-0">
+                    <div ref={null} className="flex flex-...">
+                      <LinkComponent href="/products/...">
+                        <a ref={function} onClick={function onClick} onMouseEnter={function onMouseEnter} ...>
+                          <div className="relative a...">
+                            <img
+                              alt="Amazon Gift Card"
+                              fetchPriority={undefined}
+                              loading={undefined}
+                              width={undefined}
+                              height={undefined}
+                              decoding="async"
+                              data-nimg="fill"
+                              className="object-cover transition-transform duration-300 group-hover:scale-105"
+                              style={{position:"absolute",height:"100%",width:"100%",left:0,top:0,right:0,bottom:0,objectFit:undefined, ...}}
++                             sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, (max-width: 1280px) 33vw, 300px"
+-                             sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 25vw"
++                             srcSet={"/_next/image?url=%2Fimages%2Fgift-cards%2Famazon.jpg&w=128&q=75 128w, /_next/i..."}
+-                             srcSet={"/_next/image?url=%2Fimages%2Fgift-cards%2Famazon.jpg&w=96&q=75 96w, /_next/ima..."}
+                              src={"/_next/image?url=%2Fimages%2Fgift-cards%2Famazon.jpg&w=2000&q=75"}
+                              ref={function}
+                              onLoad={function onLoad}
+                              onError={function onError}
+                            >
+                            ...
+                  ...
+              ...
+                <div ref={null} className="rounded-lg...">
+                  <Badge>
+                  <_c2 className="p-0">
+                    <div ref={null} className="flex flex-...">
+                      <LinkComponent href="/products/...">
+                        <a ref={function} onClick={function onClick} onMouseEnter={function onMouseEnter} ...>
+                          <div className="relative a...">
+                            <img
+                              alt="Flipkart Gift Card"
+                              fetchPriority={undefined}
+                              loading={undefined}
+                              width={undefined}
+                              height={undefined}
+                              decoding="async"
+                              data-nimg="fill"
+                              className="object-cover transition-transform duration-300 group-hover:scale-105"
+                              style={{position:"absolute",height:"100%",width:"100%",left:0,top:0,right:0,bottom:0,objectFit:undefined, ...}}
++                             sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, (max-width: 1280px) 33vw, 300px"
+-                             sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 25vw"
++                             srcSet={"/_next/image?url=%2Fimages%2Fgift-cards%2Fflipkart.png&w=128&q=75 128w, /_next..."}
+-                             srcSet={"/_next/image?url=%2Fimages%2Fgift-cards%2Fflipkart.png&w=96&q=75 96w, /_next/i..."}
+                              src={"/_next/image?url=%2Fimages%2Fgift-cards%2Fflipkart.png&w=2000&q=75"}
+                              ref={function}
+                              onLoad={function onLoad}
+                              onError={function onError}
+                            >
+                            ...
+                  ...
+              ...
+                <div ref={null} className="rounded-lg...">
+                  <_c2 className="p-0">
+                    <div ref={null} className="flex flex-...">
+                      <LinkComponent href="/products/...">
+                        <a ref={function} onClick={function onClick} onMouseEnter={function onMouseEnter} ...>
+                          <div className="relative a...">
+                            <img
+                              alt="Myntra Gift Card"
+                              fetchPriority={undefined}
+                              loading="lazy"
+                              width={undefined}
+                              height={undefined}
+                              decoding="async"
+                              data-nimg="fill"
+                              className="object-cover transition-transform duration-300 group-hover:scale-105"
+                              style={{position:"absolute",height:"100%",width:"100%",left:0,top:0,right:0,bottom:0,objectFit:undefined, ...}}
++                             sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, (max-width: 1280px) 33vw, 300px"
+-                             sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 25vw"
++                             srcSet={"/_next/image?url=%2Fimages%2Fgift-cards%2Fmyntra.png&w=128&q=75 128w, /_next/i..."}
+-                             srcSet={"/_next/image?url=%2Fimages%2Fgift-cards%2Fmyntra.png&w=96&q=75 96w, /_next/ima..."}
+                              src={"/_next/image?url=%2Fimages%2Fgift-cards%2Fmyntra.png&w=2000&q=75"}
+                              ref={function}
+                              onLoad={function onLoad}
+                              onError={function onError}
+                            >
+                  ...
+              ...
+                <div ref={null} className="rounded-lg...">
+                  <_c2 className="p-0">
+                    <div ref={null} className="flex flex-...">
+                      <LinkComponent href="/products/...">
+                        <a ref={function} onClick={function onClick} onMouseEnter={function onMouseEnter} ...>
+                          <div className="relative a...">
+                            <img
+                              alt="Swiggy Gift Card"
+                              fetchPriority={undefined}
+                              loading="lazy"
+                              width={undefined}
+                              height={undefined}
+                              decoding="async"
+                              data-nimg="fill"
+                              className="object-cover transition-transform duration-300 group-hover:scale-105"
+                              style={{position:"absolute",height:"100%",width:"100%",left:0,top:0,right:0,bottom:0,objectFit:undefined, ...}}
++                             sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, (max-width: 1280px) 33vw, 300px"
+-                             sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 25vw"
++                             srcSet={"/_next/image?url=%2Fimages%2Fgift-cards%2Fswiggy.png&w=128&q=75 128w, /_next/i..."}
+-                             srcSet={"/_next/image?url=%2Fimages%2Fgift-cards%2Fswiggy.png&w=96&q=75 96w, /_next/ima..."}
+                              src={"/_next/image?url=%2Fimages%2Fgift-cards%2Fswiggy.png&w=2000&q=75"}
+                              ref={function}
+                              onLoad={function onLoad}
+                              onError={function onError}
+                            >
+                  ...
+              ...
+                <div ref={null} className="rounded-lg...">
+                  <Badge>
+                  <_c2 className="p-0">
+                    <div ref={null} className="flex flex-...">
+                      <LinkComponent href="/products/...">
+                        <a ref={function} onClick={function onClick} onMouseEnter={function onMouseEnter} ...>
+                          <div className="relative a...">
+                            <img
+                              alt="BookMyShow Gift Card"
+                              fetchPriority={undefined}
+                              loading={undefined}
+                              width={undefined}
+                              height={undefined}
+                              decoding="async"
+                              data-nimg="fill"
+                              className="object-cover transition-transform duration-300 group-hover:scale-105"
+                              style={{position:"absolute",height:"100%",width:"100%",left:0,top:0,right:0,bottom:0,objectFit:undefined, ...}}
++                             sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, (max-width: 1280px) 33vw, 300px"
+-                             sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 25vw"
++                             srcSet={"/_next/image?url=%2Fimages%2Fgift-cards%2Fbookmyshow.png&w=128&q=75 128w, /_ne..."}
+-                             srcSet={"/_next/image?url=%2Fimages%2Fgift-cards%2Fbookmyshow.png&w=96&q=75 96w, /_next..."}
+                              src={"/_next/image?url=%2Fimages%2Fgift-cards%2Fbookmyshow.png&w=2000&q=75"}
+                              ref={function}
+                              onLoad={function onLoad}
+                              onError={function onError}
+                            >
+                            ...
+                  ...
+              ...
+                <div ref={null} className="rounded-lg...">
+                  <_c2 className="p-0">
+                    <div ref={null} className="flex flex-...">
+                      <LinkComponent href="/products/...">
+                        <a ref={function} onClick={function onClick} onMouseEnter={function onMouseEnter} ...>
+                          <div className="relative a...">
+                            <img
+                              alt="Uber Gift Card"
+                              fetchPriority={undefined}
+                              loading="lazy"
+                              width={undefined}
+                              height={undefined}
+                              decoding="async"
+                              data-nimg="fill"
+                              className="object-cover transition-transform duration-300 group-hover:scale-105"
+                              style={{position:"absolute",height:"100%",width:"100%",left:0,top:0,right:0,bottom:0,objectFit:undefined, ...}}
++                             sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, (max-width: 1280px) 33vw, 300px"
+-                             sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 25vw"
++                             srcSet={"/_next/image?url=%2Fimages%2Fgift-cards%2Fuber.png&w=128&q=75 128w, /_next/ima..."}
+-                             srcSet={"/_next/image?url=%2Fimages%2Fgift-cards%2Fuber.png&w=96&q=75 96w, /_next/image..."}
+                              src={"/_next/image?url=%2Fimages%2Fgift-cards%2Fuber.png&w=2000&q=75"}
+                              ref={function}
+                              onLoad={function onLoad}
+                              onError={function onError}
+                            >
+                  ...
+              ...
+                <div ref={null} className="rounded-lg...">
+                  <_c2 className="p-0">
+                    <div ref={null} className="flex flex-...">
+                      <LinkComponent href="/products/...">
+                        <a ref={function} onClick={function onClick} onMouseEnter={function onMouseEnter} ...>
+                          <div className="relative a...">
+                            <img
+                              alt="Ajio Gift Card"
+                              fetchPriority={undefined}
+                              loading="lazy"
+                              width={undefined}
+                              height={undefined}
+                              decoding="async"
+                              data-nimg="fill"
+                              className="object-cover transition-transform duration-300 group-hover:scale-105"
+                              style={{position:"absolute",height:"100%",width:"100%",left:0,top:0,right:0,bottom:0,objectFit:undefined, ...}}
++                             sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, (max-width: 1280px) 33vw, 300px"
+-                             sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 25vw"
++                             srcSet={"/_next/image?url=%2Fimages%2Fgift-cards%2Fajio.png&w=128&q=75 128w, /_next/ima..."}
+-                             srcSet={"/_next/image?url=%2Fimages%2Fgift-cards%2Fajio.png&w=96&q=75 96w, /_next/image..."}
+                              src={"/_next/image?url=%2Fimages%2Fgift-cards%2Fajio.png&w=2000&q=75"}
+                              ref={function}
+                              onLoad={function onLoad}
+                              onError={function onError}
+                            >
+                  ...
+    ...
+Call Stack
+24
+
+Show 1 ignore-listed frame(s)
+createConsoleError
+file:///home/runner/workspace/frontend/.next/dev/static/chunks/node_modules_next_dist_7a8122d0._.js (2189:71)
+handleConsoleError
+file:///home/runner/workspace/frontend/.next/dev/static/chunks/node_modules_next_dist_7a8122d0._.js (2970:54)
+console.error
+file:///home/runner/workspace/frontend/.next/dev/static/chunks/node_modules_next_dist_7a8122d0._.js (3114:57)
+<unknown>
+file:///home/runner/workspace/frontend/.next/dev/static/chunks/node_modules_next_dist_compiled_react-dom_1e674e59._.js (3463:25)
+runWithFiberInDEV
+file:///home/runner/workspace/frontend/.next/dev/static/chunks/node_modules_next_dist_compiled_react-dom_1e674e59._.js (959:74)
+emitPendingHydrationWarnings
+file:///home/runner/workspace/frontend/.next/dev/static/chunks/node_modules_next_dist_compiled_react-dom_1e674e59._.js (3462:13)
+completeWork
+file:///home/runner/workspace/frontend/.next/dev/static/chunks/node_modules_next_dist_compiled_react-dom_1e674e59._.js (6891:102)
+runWithFiberInDEV
+file:///home/runner/workspace/frontend/.next/dev/static/chunks/node_modules_next_dist_compiled_react-dom_1e674e59._.js (959:131)
+completeUnitOfWork
+file:///home/runner/workspace/frontend/.next/dev/static/chunks/node_modules_next_dist_compiled_react-dom_1e674e59._.js (9621:23)
+performUnitOfWork
+file:///home/runner/workspace/frontend/.next/dev/static/chunks/node_modules_next_dist_compiled_react-dom_1e674e59._.js (9558:28)
+workLoopConcurrentByScheduler
+file:///home/runner/workspace/frontend/.next/dev/static/chunks/node_modules_next_dist_compiled_react-dom_1e674e59._.js (9552:58)
+renderRootConcurrent
+file:///home/runner/workspace/frontend/.next/dev/static/chunks/node_modules_next_dist_compiled_react-dom_1e674e59._.js (9535:71)
+performWorkOnRoot
+file:///home/runner/workspace/frontend/.next/dev/static/chunks/node_modules_next_dist_compiled_react-dom_1e674e59._.js (9062:150)
+performWorkOnRootViaSchedulerTask
+file:///home/runner/workspace/frontend/.next/dev/static/chunks/node_modules_next_dist_compiled_react-dom_1e674e59._.js (10224:9)
+MessagePort.performWorkUntilDeadline
+file:///home/runner/workspace/frontend/.next/dev/static/chunks/node_modules_next_dist_compiled_a0e4c7b4._.js (2647:64)
+img
+<anonymous>
+<unknown>
+file:///home/runner/workspace/frontend/.next/dev/static/chunks/node_modules_773a138b._.js (11706:46)
+<unknown>
+file:///home/runner/workspace/frontend/.next/dev/static/chunks/node_modules_773a138b._.js (11822:47)
+MerchantCard
+file:///home/runner/workspace/frontend/.next/dev/static/chunks/src_components_22171018._.js (144:261)
+<unknown>
+file:///home/runner/workspace/frontend/.next/dev/static/chunks/src_components_22171018._.js (465:247)
+Array.map
+<anonymous>
+MerchantGrid
+file:///home/runner/workspace/frontend/.next/dev/static/chunks/src_components_22171018._.js (465:29)
+HomePage
+about:/Server/file:///home/runner/workspace/frontend/.next/dev/server/chunks/ssr/%5Broot-of-the-server%5D__6ecfc0d1._.js (1322:300)
+1
+2
+Was

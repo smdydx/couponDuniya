@@ -1,0 +1,19 @@
+[Unit]
+Description=Coupon Commerce Workers (email, sms, cashback, click)
+After=network.target redis.service postgresql.service
+
+[Service]
+Type=simple
+User=www-data
+Group=www-data
+WorkingDirectory=/var/www/coupon-commerce/services/workers
+Environment="PATH=/usr/bin:/usr/local/bin"
+EnvironmentFile=/var/www/coupon-commerce/services/workers/.env
+ExecStart=/usr/local/bin/bun src/index.ts
+Restart=always
+RestartSec=5
+StandardOutput=append:/var/log/coupon-workers.log
+StandardError=append:/var/log/coupon-workers-error.log
+
+[Install]
+WantedBy=multi-user.target

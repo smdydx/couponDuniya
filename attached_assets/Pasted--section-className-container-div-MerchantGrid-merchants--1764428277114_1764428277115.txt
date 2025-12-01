@@ -1,0 +1,208 @@
+ ...
+    <section className="container">
+      <div>
+      <MerchantGrid merchants={[...]}>
+        <div className="grid gap-3...">
+          <MerchantCard merchant={{id:1,name:"Amazon", ...}}>
+            <LinkComponent href="/merchants..." className="block focu...">
+              <a className="block focu..." ref={function} onClick={function onClick} onMouseEnter={function onMouseEnter} ...>
+                <_c className="elevated-c...">
+                  <div ref={null} className="rounded-lg...">
+                    <_c8 className="p-4 sm:p-5">
+                      <div ref={null} className="p-4 sm:p-5">
+                        <div className="flex items...">
+                          <div className="relative h...">
+                            <img
+                              alt="Amazon"
+                              fetchPriority={undefined}
+                              loading={undefined}
+                              width={undefined}
+                              height={undefined}
+                              decoding="async"
+                              data-nimg="fill"
+                              className="object-contain"
+                              style={{position:"absolute",height:"100%",width:"100%",left:0,top:0,right:0,bottom:0,objectFit:undefined, ...}}
++                             sizes="64px"
+-                             sizes="(max-width: 640px) 56px, 64px"
+                              srcSet={"/_next/image?url=%2Fimages%2Fmerchants%2Famazon.jpg&w=32&q=75 32w, /_next/imag..."}
+                              src={"/_next/image?url=%2Fimages%2Fmerchants%2Famazon.jpg&w=2000&q=75"}
+                              ref={function}
+                              onLoad={function onLoad}
+                              onError={function onError}
+                            >
+                            ...
+                          ...
+          <MerchantCard merchant={{id:2,name:"Fli...", ...}}>
+            <LinkComponent href="/merchants..." className="block focu...">
+              <a className="block focu..." ref={function} onClick={function onClick} onMouseEnter={function onMouseEnter} ...>
+                <_c className="elevated-c...">
+                  <div ref={null} className="rounded-lg...">
+                    <_c8 className="p-4 sm:p-5">
+                      <div ref={null} className="p-4 sm:p-5">
+                        <div className="flex items...">
+                          <div className="relative h...">
+                            <img
+                              alt="Flipkart"
+                              fetchPriority={undefined}
+                              loading={undefined}
+                              width={undefined}
+                              height={undefined}
+                              decoding="async"
+                              data-nimg="fill"
+                              className="object-contain"
+                              style={{position:"absolute",height:"100%",width:"100%",left:0,top:0,right:0,bottom:0,objectFit:undefined, ...}}
++                             sizes="64px"
+-                             sizes="(max-width: 640px) 56px, 64px"
+                              srcSet={"/_next/image?url=%2Fimages%2Fmerchants%2Fflipkart.png&w=32&q=75 32w, /_next/im..."}
+                              src={"/_next/image?url=%2Fimages%2Fmerchants%2Fflipkart.png&w=2000&q=75"}
+                              ref={function}
+                              onLoad={function onLoad}
+                              onError={function onError}
+                            >
+                            ...
+                          ...
+          <MerchantCard merchant={{id:3,name:"Myntra", ...}}>
+            <LinkComponent href="/merchants..." className="block focu...">
+              <a className="block focu..." ref={function} onClick={function onClick} onMouseEnter={function onMouseEnter} ...>
+                <_c className="elevated-c...">
+                  <div ref={null} className="rounded-lg...">
+                    <_c8 className="p-4 sm:p-5">
+                      <div ref={null} className="p-4 sm:p-5">
+                        <div className="flex items...">
+                          <div className="relative h...">
+                            <img
+                              alt="Myntra"
+                              fetchPriority={undefined}
+                              loading={undefined}
+                              width={undefined}
+                              height={undefined}
+                              decoding="async"
+                              data-nimg="fill"
+                              className="object-contain"
+                              style={{position:"absolute",height:"100%",width:"100%",left:0,top:0,right:0,bottom:0,objectFit:undefined, ...}}
++                             sizes="64px"
+-                             sizes="(max-width: 640px) 56px, 64px"
+                              srcSet={"/_next/image?url=%2Fimages%2Fmerchants%2Fmyntra.png&w=32&q=75 32w, /_next/imag..."}
+                              src={"/_next/image?url=%2Fimages%2Fmerchants%2Fmyntra.png&w=2000&q=75"}
+                              ref={function}
+                              onLoad={function onLoad}
+                              onError={function onError}
+                            >
+                            ...
+                          ...
+          <MerchantCard merchant={{id:4,name:"Swiggy", ...}}>
+            <LinkComponent href="/merchants..." className="block focu...">
+              <a className="block focu..." ref={function} onClick={function onClick} onMouseEnter={function onMouseEnter} ...>
+                <_c className="elevated-c...">
+                  <div ref={null} className="rounded-lg...">
+                    <_c8 className="p-4 sm:p-5">
+                      <div ref={null} className="p-4 sm:p-5">
+                        <div className="flex items...">
+                          <div className="relative h...">
+                            <img
+                              alt="Swiggy"
+                              fetchPriority={undefined}
+                              loading={undefined}
+                              width={undefined}
+                              height={undefined}
+                              decoding="async"
+                              data-nimg="fill"
+                              className="object-contain"
+                              style={{position:"absolute",height:"100%",width:"100%",left:0,top:0,right:0,bottom:0,objectFit:undefined, ...}}
++                             sizes="64px"
+-                             sizes="(max-width: 640px) 56px, 64px"
+                              srcSet={"/_next/image?url=%2Fimages%2Fmerchants%2Fswiggy.png&w=32&q=75 32w, /_next/imag..."}
+                              src={"/_next/image?url=%2Fimages%2Fmerchants%2Fswiggy.png&w=2000&q=75"}
+                              ref={function}
+                              onLoad={function onLoad}
+                              onError={function onError}
+                            >
+                            ...
+                          ...
+          <MerchantCard merchant={{id:5,name:"Uber", ...}}>
+            <LinkComponent href="/merchants..." className="block focu...">
+              <a className="block focu..." ref={function} onClick={function onClick} onMouseEnter={function onMouseEnter} ...>
+                <_c className="elevated-c...">
+                  <div ref={null} className="rounded-lg...">
+                    <_c8 className="p-4 sm:p-5">
+                      <div ref={null} className="p-4 sm:p-5">
+                        <div className="flex items...">
+                          <div className="relative h...">
+                            <img
+                              alt="Uber"
+                              fetchPriority={undefined}
+                              loading={undefined}
+                              width={undefined}
+                              height={undefined}
+                              decoding="async"
+                              data-nimg="fill"
+                              className="object-contain"
+                              style={{position:"absolute",height:"100%",width:"100%",left:0,top:0,right:0,bottom:0,objectFit:undefined, ...}}
++                             sizes="64px"
+-                             sizes="(max-width: 640px) 56px, 64px"
+                              srcSet={"/_next/image?url=%2Fimages%2Fmerchants%2Fuber.png&w=32&q=75 32w, /_next/image?..."}
+                              src={"/_next/image?url=%2Fimages%2Fmerchants%2Fuber.png&w=2000&q=75"}
+                              ref={function}
+                              onLoad={function onLoad}
+                              onError={function onError}
+                            >
+                            ...
+                          ...
+          <MerchantCard merchant={{id:6,name:"Boo...", ...}}>
+            <LinkComponent href="/merchants..." className="block focu...">
+              <a className="block focu..." ref={function} onClick={function onClick} onMouseEnter={function onMouseEnter} ...>
+                <_c className="elevated-c...">
+                  <div ref={null} className="rounded-lg...">
+                    <_c8 className="p-4 sm:p-5">
+                      <div ref={null} className="p-4 sm:p-5">
+                        <div className="flex items...">
+                          <div className="relative h...">
+                            <img
+                              alt="BookMyShow"
+                              fetchPriority={undefined}
+                              loading={undefined}
+                              width={undefined}
+                              height={undefined}
+                              decoding="async"
+                              data-nimg="fill"
+                              className="object-contain"
+                              style={{position:"absolute",height:"100%",width:"100%",left:0,top:0,right:0,bottom:0,objectFit:undefined, ...}}
++                             sizes="64px"
+-                             sizes="(max-width: 640px) 56px, 64px"
+                              srcSet={"/_next/image?url=%2Fimages%2Fmerchants%2Fbookmyshow.png&w=32&q=75 32w, /_next/..."}
+                              src={"/_next/image?url=%2Fimages%2Fmerchants%2Fbookmyshow.png&w=2000&q=75"}
+                              ref={function}
+                              onLoad={function onLoad}
+                              onError={function onError}
+                            >
+                            ...
+                          ...
+          <MerchantCard merchant={{id:7,name:"Ajio", ...}}>
+            <LinkComponent href="/merchants..." className="block focu...">
+              <a className="block focu..." ref={function} onClick={function onClick} onMouseEnter={function onMouseEnter} ...>
+                <_c className="elevated-c...">
+                  <div ref={null} className="rounded-lg...">
+                    <_c8 className="p-4 sm:p-5">
+                      <div ref={null} className="p-4 sm:p-5">
+                        <div className="flex items...">
+                          <div className="relative h...">
+                            <img
+                              alt="Ajio"
+                              fetchPriority={undefined}
+                              loading={undefined}
+                              width={undefined}
+                              height={undefined}
+                              decoding="async"
+                              data-nimg="fill"
+                              className="object-contain"
+                              style={{position:"absolute",height:"100%",width:"100%",left:0,top:0,right:0,bottom:0,objectFit:undefined, ...}}
++                             sizes="64px"
+-                             sizes="(max-width: 640px) 56px, 64px"
+                              srcSet={"/_next/image?url=%2Fimages%2Fmerchants%2Fajio.png&w=32&q=75 32w, /_next/image?..."}
+                              src={"/_next/image?url=%2Fimages%2Fmerchants%2Fajio.png&w=2000&q=75"}
+                              ref={function}
+                              onLoad={function onLoad}
+                              onError={function onError}
+                            >
+                            ...
+                          ...

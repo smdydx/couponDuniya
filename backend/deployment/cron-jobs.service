@@ -1,0 +1,42 @@
+[Unit]
+Description=CouponAli Cron Jobs Service
+After=network.target redis.service postgresql.service
+Wants=redis.service postgresql.service
+
+[Service]
+Type=simple
+User=appuser
+Group=appuser
+WorkingDirectory=/app/backend
+Environment="PYTHONPATH=/app/backend"
+Environment="REDIS_URL=redis://localhost:6379"
+Environment="DATABASE_URL=postgresql://user:password@localhost/couponali"
+EnvironmentFile=/app/backend/.env
+
+# Run cron jobs
+ExecStart=/usr/bin/python3 -m workers.cron_jobs
+
+# Restart policy
+Restart=always
+RestartSec=10
+StartLimitInterval=5min
+StartLimitBurst=3
+
+# Resource limits
+MemoryLimit=256M
+CPUQuota=50%
+
+# Logging
+StandardOutput=journal
+StandardError=journal
+SyslogIdentifier=couponali-cron
+
+# Security
+NoNewPrivileges=true
+PrivateTmp=true
+ProtectSystem=strict
+ProtectHome=true
+ReadWritePaths=/app/backend/logs
+
+[Install]
+WantedBy=multi-user.target
