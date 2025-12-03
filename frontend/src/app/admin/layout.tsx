@@ -1,43 +1,35 @@
 "use client";
 
-import { useRouter } from "next/navigation";
-import { useEffect } from "react";
-import { Sidebar } from "@/components/layout/Sidebar";
-import { useAuthStore } from "@/store/authStore";
-import { useUIStore } from "@/store/uiStore";
+import { useState } from "react";
+import { AdminSidebar } from "@/components/layout/AdminSidebar";
 import { cn } from "@/lib/utils";
-import { Bell, Search, User, LogOut } from "lucide-react";
+import { Bell, Search, LogOut, ChevronLeft, ChevronRight } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { getInitials } from "@/lib/utils";
 import { ThemeToggle } from "@/components/theme/ThemeToggle";
 
+const mockAdminUser = {
+  id: 1,
+  first_name: "Admin",
+  last_name: "User",
+  email: "admin@example.com",
+  role: "super_admin" as const,
+  avatar_url: "",
+};
+
 export default function AdminLayout({
   children,
 }: {
   children: React.ReactNode;
 }) {
-  const router = useRouter();
-  const { user, isAuthenticated, logout } = useAuthStore();
-  const { isSidebarOpen } = useUIStore();
-
-  // Redirect non-admin users
-  useEffect(() => {
-    if (!isAuthenticated) {
-      router.push("/login?redirect=/admin/dashboard");
-    } else if (user && user.role !== "admin" && user.role !== "super_admin") {
-      router.push("/");
-    }
-  }, [isAuthenticated, user, router]);
-
-  if (!isAuthenticated || !user || (user.role !== "admin" && user.role !== "super_admin")) {
-    return null;
-  }
+  const [isSidebarOpen, setIsSidebarOpen] = useState(true);
+  const user = mockAdminUser;
 
   return (
     <div className="min-h-screen bg-muted/30">
-      <Sidebar />
+      <AdminSidebar isOpen={isSidebarOpen} onToggle={() => setIsSidebarOpen(!isSidebarOpen)} />
 
       <div
         className={cn(
@@ -77,7 +69,7 @@ export default function AdminLayout({
                   </div>
                 </div>
 
-                <Button variant="ghost" size="icon" onClick={logout}>
+                <Button variant="ghost" size="icon" onClick={() => {}}>
                   <LogOut className="h-5 w-5" />
                 </Button>
               </>
