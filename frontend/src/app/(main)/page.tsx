@@ -7,11 +7,8 @@ import { ProductGrid } from "@/components/product/ProductGrid";
 import { ROUTES } from "@/lib/constants";
 
 async function getHomepageData() {
-  // Use the Replit dev domain with backend port
-  const REPLIT_DEV_DOMAIN = process.env.REPLIT_DEV_DOMAIN || process.env.NEXT_PUBLIC_REPLIT_DEV_DOMAIN;
-  const base = REPLIT_DEV_DOMAIN 
-    ? `https://${REPLIT_DEV_DOMAIN.replace(':5000', ':8000')}/api/v1`
-    : (process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000/api/v1');
+  // Use the correct API URL
+  const base = process.env.NEXT_PUBLIC_API_URL || 'http://0.0.0.0:8000/api/v1';
   
   try {
     const res = await fetch(`${base}/homepage/?limit_merchants=12&limit_featured_offers=8&limit_exclusive_offers=6&limit_products=8`, {
