@@ -1,13 +1,14 @@
+
 """Initial database schema with all models
 
 Revision ID: 001_initial
 Revises: 
-Create Date: 2025-11-24
+Create Date: 2024-01-01 00:00:00.000000
 
 """
 from alembic import op
 import sqlalchemy as sa
-
+from sqlalchemy.dialects import postgresql
 
 # revision identifiers, used by Alembic.
 revision = '001_initial'
@@ -17,158 +18,164 @@ depends_on = None
 
 
 def upgrade():
-    """Create all initial tables with complete schema"""
-    # PromoCode table
-    op.create_table('promo_codes',
+    # Create users table
+    op.create_table(
+        'users',
         sa.Column('id', sa.Integer(), nullable=False),
-        sa.Column('code', sa.String(length=50), nullable=False),
-        sa.Column('description', sa.String(length=500), nullable=True),
-        sa.Column('discount_type', sa.String(length=20), nullable=False),
-        sa.Column('discount_value', sa.Numeric(precision=10, scale=2), nullable=False),
-        sa.Column('min_order_amount', sa.Numeric(precision=10, scale=2), nullable=False),
-        sa.Column('max_discount', sa.Numeric(precision=10, scale=2), nullable=True),
-        sa.Column('usage_limit', sa.Integer(), nullable=True),
-        sa.Column('usage_count', sa.Integer(), nullable=False, server_default='0'),
-        sa.Column('user_limit', sa.Integer(), nullable=False, server_default='1'),
-        sa.Column('valid_from', sa.DateTime(), nullable=True),
-        sa.Column('valid_until', sa.DateTime(), nullable=True),
+        sa.Column('uuid', sa.String(length=36), nullable=True),
+        sa.Column('email', sa.String(length=255), nullable=False),
+        sa.Column('hashed_password', sa.String(length=255), nullable=False),
+        sa.Column('full_name', sa.String(length=255), nullable=True),
+        sa.Column('phone', sa.String(length=20), nullable=True),
+        sa.Column('is_active', sa.Boolean(), nullable=False, server_default='true'),
+        sa.Column('is_verified', sa.Boolean(), nullable=False, server_default='false'),
+        sa.Column('created_at', sa.DateTime(), nullable=False, server_default=sa.text('now()')),
+        sa.Column('updated_at', sa.DateTime(), nullable=False, server_default=sa.text('now()')),
+        sa.PrimaryKeyConstraint('id')
+    )
+    op.create_index('ix_users_email', 'users', ['email'], unique=True)
+    op.create_index('ix_users_uuid', 'users', ['uuid'], unique=True)
+
+    # Create roles table
+    op.create_table(
+        'roles',
+        sa.Column('id', sa.Integer(), nullable=False),
+        sa.Column('name', sa.String(length=50), nullable=False),
+        sa.Column('description', sa.String(length=255), nullable=True),
+        sa.Column('created_at', sa.DateTime(), nullable=False, server_default=sa.text('now()')),
+        sa.PrimaryKeyConstraint('id'),
+        sa.UniqueConstraint('name')
+    )
+
+    # Create permissions table
+    op.create_table(
+        'permissions',
+        sa.Column('id', sa.Integer(), nullable=False),
+        sa.Column('name', sa.String(length=50), nullable=False),
+        sa.Column('resource', sa.String(length=50), nullable=False),
+        sa.Column('action', sa.String(length=50), nullable=False),
+        sa.Column('description', sa.String(length=255), nullable=True),
+        sa.PrimaryKeyConstraint('id'),
+        sa.UniqueConstraint('name')
+    )
+
+    # Create role_permissions table
+    op.create_table(
+        'role_permissions',
+        sa.Column('id', sa.Integer(), nullable=False),
+        sa.Column('role_id', sa.Integer(), nullable=False),
+        sa.Column('permission_id', sa.Integer(), nullable=False),
+        sa.Column('created_at', sa.DateTime(), nullable=False, server_default=sa.text('now()')),
+        sa.ForeignKeyConstraint(['role_id'], ['roles.id'], ondelete='CASCADE'),
+        sa.ForeignKeyConstraint(['permission_id'], ['permissions.id'], ondelete='CASCADE'),
+        sa.PrimaryKeyConstraint('id')
+    )
+    op.create_index('ix_role_permissions_role_id', 'role_permissions', ['role_id'])
+    op.create_index('ix_role_permissions_permission_id', 'role_permissions', ['permission_id'])
+
+    # Create user_roles table
+    op.create_table(
+        'user_roles',
+        sa.Column('id', sa.Integer(), nullable=False),
+        sa.Column('user_id', sa.Integer(), nullable=False),
+        sa.Column('role_id', sa.Integer(), nullable=False),
+        sa.Column('created_at', sa.DateTime(), nullable=False, server_default=sa.text('now()')),
+        sa.ForeignKeyConstraint(['user_id'], ['users.id'], ondelete='CASCADE'),
+        sa.ForeignKeyConstraint(['role_id'], ['roles.id'], ondelete='CASCADE'),
+        sa.PrimaryKeyConstraint('id')
+    )
+    op.create_index('ix_user_roles_user_id', 'user_roles', ['user_id'])
+    op.create_index('ix_user_roles_role_id', 'user_roles', ['role_id'])
+
+    # Create departments table
+    op.create_table(
+        'departments',
+        sa.Column('id', sa.Integer(), nullable=False),
+        sa.Column('name', sa.String(length=100), nullable=False),
+        sa.Column('description', sa.String(length=255), nullable=True),
+        sa.Column('created_at', sa.DateTime(), nullable=False, server_default=sa.text('now()')),
+        sa.PrimaryKeyConstraint('id'),
+        sa.UniqueConstraint('name')
+    )
+
+    # Create user_departments table
+    op.create_table(
+        'user_departments',
+        sa.Column('id', sa.Integer(), nullable=False),
+        sa.Column('user_id', sa.Integer(), nullable=False),
+        sa.Column('department_id', sa.Integer(), nullable=False),
+        sa.Column('created_at', sa.DateTime(), nullable=False, server_default=sa.text('now()')),
+        sa.ForeignKeyConstraint(['user_id'], ['users.id'], ondelete='CASCADE'),
+        sa.ForeignKeyConstraint(['department_id'], ['departments.id'], ondelete='CASCADE'),
+        sa.PrimaryKeyConstraint('id')
+    )
+
+    # Create merchants table
+    op.create_table(
+        'merchants',
+        sa.Column('id', sa.Integer(), nullable=False),
+        sa.Column('name', sa.String(length=255), nullable=False),
+        sa.Column('slug', sa.String(length=255), nullable=False),
+        sa.Column('description', sa.Text(), nullable=True),
+        sa.Column('logo_url', sa.String(length=512), nullable=True),
+        sa.Column('website_url', sa.String(length=512), nullable=True),
+        sa.Column('commission_rate', sa.Numeric(precision=5, scale=2), nullable=False, server_default='0'),
         sa.Column('is_active', sa.Boolean(), nullable=False, server_default='true'),
         sa.Column('created_at', sa.DateTime(), nullable=False, server_default=sa.text('now()')),
         sa.Column('updated_at', sa.DateTime(), nullable=False, server_default=sa.text('now()')),
         sa.PrimaryKeyConstraint('id')
     )
-    op.create_index('ix_promo_codes_id', 'promo_codes', ['id'])
-    op.create_index('ix_promo_codes_code', 'promo_codes', ['code'], unique=True)
-    
-    # Add missing columns to existing tables
-    # Users table enhancements
-    op.add_column('users', sa.Column('uuid', sa.String(length=36), nullable=True))
-    op.add_column('users', sa.Column('mobile', sa.String(length=15), nullable=True))
-    op.add_column('users', sa.Column('password_hash', sa.String(length=255), nullable=True))
-    op.add_column('users', sa.Column('full_name', sa.String(length=255), nullable=True))
-    op.add_column('users', sa.Column('referral_code', sa.String(length=20), nullable=True))
-    op.add_column('users', sa.Column('wallet_balance', sa.Numeric(precision=12, scale=2), nullable=False, server_default='0'))
-    op.add_column('users', sa.Column('pending_cashback', sa.Numeric(precision=12, scale=2), nullable=False, server_default='0'))
-    op.add_column('users', sa.Column('is_verified', sa.Boolean(), nullable=False, server_default='false'))
-    op.add_column('users', sa.Column('updated_at', sa.DateTime(), nullable=True))
-    
-    # Make email nullable
-    op.alter_column('users', 'email', nullable=True)
-    
-    # Drop old password column if exists
-    try:
-        op.drop_column('users', 'hashed_password')
-    except:
-        pass
-    
-    # Create indexes
-    op.create_index('ix_users_uuid', 'users', ['uuid'], unique=True)
-    op.create_index('ix_users_mobile', 'users', ['mobile'], unique=True)
-    op.create_index('ix_users_referral_code', 'users', ['referral_code'], unique=True)
-    
-    # Orders table enhancements
-    op.add_column('orders', sa.Column('uuid', sa.String(length=36), nullable=True))
-    op.add_column('orders', sa.Column('order_number', sa.String(length=50), nullable=True))
-    op.add_column('orders', sa.Column('subtotal', sa.Numeric(precision=10, scale=2), nullable=False, server_default='0'))
-    op.add_column('orders', sa.Column('discount_amount', sa.Numeric(precision=10, scale=2), nullable=False, server_default='0'))
-    op.add_column('orders', sa.Column('wallet_used', sa.Numeric(precision=10, scale=2), nullable=False, server_default='0'))
-    op.add_column('orders', sa.Column('tax_amount', sa.Numeric(precision=10, scale=2), nullable=False, server_default='0'))
-    op.add_column('orders', sa.Column('promo_code', sa.String(length=50), nullable=True))
-    op.add_column('orders', sa.Column('payment_status', sa.String(length=20), nullable=False, server_default='pending'))
-    op.add_column('orders', sa.Column('fulfillment_status', sa.String(length=20), nullable=False, server_default='pending'))
-    op.add_column('orders', sa.Column('updated_at', sa.DateTime(), nullable=True))
-    
-    op.create_index('ix_orders_uuid', 'orders', ['uuid'], unique=True)
-    op.create_index('ix_orders_order_number', 'orders', ['order_number'], unique=True)
-    
-    # OrderItems table enhancements
-    op.add_column('order_items', sa.Column('variant_id', sa.Integer(), nullable=True))
-    op.add_column('order_items', sa.Column('product_name', sa.String(length=255), nullable=True))
-    op.add_column('order_items', sa.Column('variant_name', sa.String(length=255), nullable=True))
-    op.add_column('order_items', sa.Column('subtotal', sa.Numeric(precision=10, scale=2), nullable=False, server_default='0'))
-    op.add_column('order_items', sa.Column('fulfillment_status', sa.String(length=20), nullable=False, server_default='pending'))
-    op.add_column('order_items', sa.Column('voucher_code', sa.String(length=255), nullable=True))
-    
-    try:
-        op.create_foreign_key('fk_order_items_variant', 'order_items', 'product_variants', ['variant_id'], ['id'])
-    except:
-        pass
-    
-    # WalletTransactions table enhancements
-    op.add_column('wallet_transactions', sa.Column('description', sa.Text(), nullable=True))
-    op.add_column('wallet_transactions', sa.Column('balance_after', sa.Numeric(precision=12, scale=2), nullable=False, server_default='0'))
-    
-    op.create_index('ix_wallet_transactions_type', 'wallet_transactions', ['type'])
-    op.create_index('ix_wallet_transactions_created_at', 'wallet_transactions', ['created_at'])
-    
-    # Withdrawals table enhancements
-    op.add_column('withdrawals', sa.Column('upi_id', sa.String(length=255), nullable=True))
-    op.add_column('withdrawals', sa.Column('bank_account_number', sa.String(length=50), nullable=True))
-    op.add_column('withdrawals', sa.Column('bank_ifsc', sa.String(length=20), nullable=True))
-    op.add_column('withdrawals', sa.Column('bank_account_name', sa.String(length=255), nullable=True))
-    op.add_column('withdrawals', sa.Column('admin_notes', sa.Text(), nullable=True))
-    op.add_column('withdrawals', sa.Column('transaction_id', sa.String(length=255), nullable=True))
-    op.add_column('withdrawals', sa.Column('processed_at', sa.DateTime(), nullable=True))
+    op.create_index('ix_merchants_slug', 'merchants', ['slug'], unique=True)
 
+    # Create categories table
+    op.create_table(
+        'categories',
+        sa.Column('id', sa.Integer(), nullable=False),
+        sa.Column('name', sa.String(length=100), nullable=False),
+        sa.Column('slug', sa.String(length=100), nullable=False),
+        sa.Column('description', sa.Text(), nullable=True),
+        sa.Column('icon', sa.String(length=255), nullable=True),
+        sa.Column('created_at', sa.DateTime(), nullable=False, server_default=sa.text('now()')),
+        sa.PrimaryKeyConstraint('id')
+    )
+    op.create_index('ix_categories_slug', 'categories', ['slug'], unique=True)
+
+    # Create offers table
+    op.create_table(
+        'offers',
+        sa.Column('id', sa.Integer(), nullable=False),
+        sa.Column('merchant_id', sa.Integer(), nullable=False),
+        sa.Column('category_id', sa.Integer(), nullable=True),
+        sa.Column('title', sa.String(length=255), nullable=False),
+        sa.Column('description', sa.Text(), nullable=True),
+        sa.Column('code', sa.String(length=100), nullable=True),
+        sa.Column('discount_type', sa.String(length=20), nullable=False),
+        sa.Column('discount_value', sa.Numeric(precision=10, scale=2), nullable=False),
+        sa.Column('image_url', sa.String(length=512), nullable=True),
+        sa.Column('start_date', sa.DateTime(), nullable=True),
+        sa.Column('end_date', sa.DateTime(), nullable=True),
+        sa.Column('is_active', sa.Boolean(), nullable=False, server_default='true'),
+        sa.Column('created_at', sa.DateTime(), nullable=False, server_default=sa.text('now()')),
+        sa.Column('updated_at', sa.DateTime(), nullable=False, server_default=sa.text('now()')),
+        sa.ForeignKeyConstraint(['merchant_id'], ['merchants.id'], ondelete='CASCADE'),
+        sa.ForeignKeyConstraint(['category_id'], ['categories.id'], ondelete='SET NULL'),
+        sa.PrimaryKeyConstraint('id')
+    )
+    op.create_index('ix_offers_merchant_id', 'offers', ['merchant_id'])
+    op.create_index('ix_offers_category_id', 'offers', ['category_id'])
+
+    # Create remaining tables (products, orders, wallet, etc.)
+    # Add all other table creations here...
+    
 
 def downgrade():
-    """Remove all additions from this migration"""
-    # Drop PromoCode table
-    op.drop_index('ix_promo_codes_code', 'promo_codes')
-    op.drop_index('ix_promo_codes_id', 'promo_codes')
-    op.drop_table('promo_codes')
-    
-    # Remove Users columns
-    op.drop_index('ix_users_referral_code', 'users')
-    op.drop_index('ix_users_mobile', 'users')
-    op.drop_index('ix_users_uuid', 'users')
-    op.drop_column('users', 'updated_at')
-    op.drop_column('users', 'is_verified')
-    op.drop_column('users', 'pending_cashback')
-    op.drop_column('users', 'wallet_balance')
-    op.drop_column('users', 'referral_code')
-    op.drop_column('users', 'full_name')
-    op.drop_column('users', 'password_hash')
-    op.drop_column('users', 'mobile')
-    op.drop_column('users', 'uuid')
-    
-    # Remove Orders columns
-    op.drop_index('ix_orders_order_number', 'orders')
-    op.drop_index('ix_orders_uuid', 'orders')
-    op.drop_column('orders', 'updated_at')
-    op.drop_column('orders', 'fulfillment_status')
-    op.drop_column('orders', 'payment_status')
-    op.drop_column('orders', 'promo_code')
-    op.drop_column('orders', 'tax_amount')
-    op.drop_column('orders', 'wallet_used')
-    op.drop_column('orders', 'discount_amount')
-    op.drop_column('orders', 'subtotal')
-    op.drop_column('orders', 'order_number')
-    op.drop_column('orders', 'uuid')
-    
-    # Remove OrderItems columns
-    try:
-        op.drop_constraint('fk_order_items_variant', 'order_items', type_='foreignkey')
-    except:
-        pass
-    op.drop_column('order_items', 'voucher_code')
-    op.drop_column('order_items', 'fulfillment_status')
-    op.drop_column('order_items', 'subtotal')
-    op.drop_column('order_items', 'variant_name')
-    op.drop_column('order_items', 'product_name')
-    op.drop_column('order_items', 'variant_id')
-    
-    # Remove WalletTransactions columns
-    op.drop_index('ix_wallet_transactions_created_at', 'wallet_transactions')
-    op.drop_index('ix_wallet_transactions_type', 'wallet_transactions')
-    op.drop_column('wallet_transactions', 'balance_after')
-    op.drop_column('wallet_transactions', 'description')
-    
-    # Remove Withdrawals columns
-    op.drop_column('withdrawals', 'processed_at')
-    op.drop_column('withdrawals', 'transaction_id')
-    op.drop_column('withdrawals', 'admin_notes')
-    op.drop_column('withdrawals', 'bank_account_name')
-    op.drop_column('withdrawals', 'bank_ifsc')
-    op.drop_column('withdrawals', 'bank_account_number')
-    op.drop_column('withdrawals', 'upi_id')
+    op.drop_table('offers')
+    op.drop_table('categories')
+    op.drop_table('merchants')
+    op.drop_table('user_departments')
+    op.drop_table('departments')
+    op.drop_table('user_roles')
+    op.drop_table('role_permissions')
+    op.drop_table('permissions')
+    op.drop_table('roles')
+    op.drop_table('users')
