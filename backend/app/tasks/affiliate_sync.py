@@ -29,17 +29,20 @@ STATUS_MAP = {
     "declined": "rejected",
 }
 
+async def async_sync_affiliate_transactions(db: Session) -> dict:
+    """Async version for use when event loop is already running."""
+    results = await fetch_all()
+    return _process_results(db, results)
+
 def sync_affiliate_transactions(db: Session) -> dict:
+    """Sync version - only use when no event loop is running."""
     try:
-        # Use asyncio.run in thread context where no loop exists
         results = asyncio.run(fetch_all())
     except RuntimeError:
-        loop = asyncio.new_event_loop()
-        asyncio.set_event_loop(loop)
-        try:
-            results = loop.run_until_complete(fetch_all())
-        finally:
-            loop.close()
+        results = []
+    return _process_results(db, results)
+
+def _process_results(db: Session, results: list) -> dict:
     imported = 0
     updated = 0
     for network, raw in results:

@@ -137,7 +137,7 @@ except Exception:
 
 # Periodic affiliate sync scheduler (simple loop). Interval configurable via AFFILIATE_SYNC_INTERVAL_MINUTES.
 try:
-    from .tasks.affiliate_sync import sync_affiliate_transactions
+    from .tasks.affiliate_sync import async_sync_affiliate_transactions
     from .database import SessionLocal
     AFFILIATE_INTERVAL_MINUTES = float(os.getenv("AFFILIATE_SYNC_INTERVAL_MINUTES", "1440"))  # default daily
 
@@ -146,7 +146,7 @@ try:
             start_ts = time.time()
             session = SessionLocal()
             try:
-                result = sync_affiliate_transactions(session)
+                result = await async_sync_affiliate_transactions(session)
                 log.info(f"Affiliate periodic sync imported={result['imported']} updated={result['updated']} total={result['total']}")
             except Exception as e:
                 log.error(f"Affiliate periodic sync failed: {e}")
