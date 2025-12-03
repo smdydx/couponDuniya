@@ -15,8 +15,8 @@ class Offer(Base):
     is_featured: Mapped[bool] = mapped_column(Boolean, default=False)
     is_exclusive: Mapped[bool] = mapped_column(Boolean, default=False)
     priority: Mapped[int] = mapped_column(Integer, default=0)
-    starts_at: Mapped[datetime | None] = mapped_column(DateTime)
-    ends_at: Mapped[datetime | None] = mapped_column(DateTime)
+    start_date: Mapped[datetime | None] = mapped_column(DateTime)
+    end_date: Mapped[datetime | None] = mapped_column(DateTime)
     created_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow)
 
     merchant = relationship("Merchant")

@@ -46,10 +46,9 @@ class MerchantPayload(BaseModel):
     name: str = Field(..., min_length=1, max_length=255)
     slug: str = Field(..., min_length=1, max_length=255)
     description: str | None = None
-    website_url: str | None = None
     logo_url: str | None = None
     is_active: bool = True
-    commission_rate: float = Field(default=0.0, ge=0, le=100)
+    is_featured: bool = False
 
 
 class OfferPayload(BaseModel):
@@ -99,10 +98,9 @@ def create_merchant(
         name=payload.name,
         slug=payload.slug,
         description=payload.description,
-        website_url=payload.website_url,
         logo_url=payload.logo_url,
         is_active=payload.is_active,
-        commission_rate=payload.commission_rate
+        is_featured=payload.is_featured
     )
     db.add(merchant)
     db.commit()
