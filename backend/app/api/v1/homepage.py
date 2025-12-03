@@ -89,6 +89,6 @@ def get_homepage_data(
     }
 
     # Cache for 5 minutes
-    cache_set(cache_key, result, ex=300)
+    cache_set(cache_key, result, ttl=300)
 
     return {"success": True, "data": result, "cached": False}
