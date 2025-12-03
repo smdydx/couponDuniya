@@ -15,16 +15,25 @@ This is a full-stack e-commerce platform for coupons, cashback offers, and gift 
 
 ✅ **Completed:**
 - Python dependencies installed
-- Node.js dependencies installed
+- Node.js dependencies installed (using Bun)
 - Frontend workflow configured and running on port 5000
+- Backend workflow configured and running on port 8000
+- PostgreSQL database created and configured
+- Database migrations completed
 - Environment variables configured
 - Next.js configured for Replit proxy (0.0.0.0:5000 with allowed dev origins)
+- Redis gracefully mocked for development (app works without Redis)
 - Git ignore file created
 
-⚠️ **Requires User Action:**
-- **PostgreSQL Database**: Must be created through Replit UI (Database tool)
-- **Redis**: May need to be configured or use Upstash integration
-- **Backend Workflow**: Cannot start until database and Redis are available
+🚀 **Running Services:**
+- **Frontend**: http://localhost:5000 (Next.js 16)
+- **Backend API**: http://localhost:8000 (FastAPI)
+- **API Docs**: http://localhost:8000/docs (Swagger UI)
+
+⚠️ **Optional Configuration:**
+- **Redis**: For production, set up Upstash for caching/rate limiting
+- **Payment Gateway**: Configure Razorpay keys for payments
+- **Email/SMS**: Enable for production with SendGrid/MSG91
 
 ## Setup Instructions
 
