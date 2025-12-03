@@ -102,20 +102,6 @@ def upgrade() -> None:
         sa.ForeignKeyConstraint(['merchant_id'], ['merchants.id'])
     )
     
-    # Product Variants table
-    op.create_table('product_variants',
-        sa.Column('id', sa.Integer(), nullable=False),
-        sa.Column('product_id', sa.Integer(), nullable=False),
-        sa.Column('sku', sa.String(120), nullable=False),
-        sa.Column('name', sa.String(255), nullable=False),
-        sa.Column('price', sa.Numeric(10, 2), nullable=False),
-        sa.Column('stock', sa.Integer(), default=0),
-        sa.Column('is_available', sa.Boolean(), default=True),
-        sa.PrimaryKeyConstraint('id'),
-        sa.UniqueConstraint('sku'),
-        sa.ForeignKeyConstraint(['product_id'], ['products.id'])
-    )
-    
     # Wallet Balances table
     op.create_table('wallet_balances',
         sa.Column('id', sa.Integer(), nullable=False),
