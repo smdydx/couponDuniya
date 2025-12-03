@@ -1,21 +1,20 @@
 // User Types
 export interface User {
   id: number;
+  uuid?: string;
   email: string;
   mobile?: string;
+  full_name?: string;
   first_name?: string;
   last_name?: string;
-  role: 'customer' | 'admin' | 'super_admin';
-  is_email_verified: boolean;
-  is_mobile_verified: boolean;
-  kyc_status: 'pending' | 'submitted' | 'verified' | 'rejected';
-  referral_code: string;
-  referred_by_code?: string;
   avatar_url?: string;
-  date_of_birth?: string;
-  gender?: 'male' | 'female' | 'other';
-  created_at: string;
-  updated_at: string;
+  wallet_balance: number;
+  pending_cashback?: number;
+  referral_code?: string;
+  role: string;
+  is_admin?: boolean;
+  is_verified?: boolean;
+  created_at?: string;
 }
 
 export interface UserProfile extends User {

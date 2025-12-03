@@ -90,12 +90,17 @@ def seed_admin_user(session: Session):
             referral_code=f"ADMIN{uuid.uuid4().hex[:6].upper()}",
             is_active=True,
             is_admin=True,
+            is_verified=True,
+            role="admin",
         )
         session.add(admin)
         session.commit()
         print("✓ Admin user created (admin@couponali.com / admin123)")
     else:
         admin.password_hash = get_password_hash("admin123")
+        admin.role = "admin"
+        admin.is_admin = True
+        admin.is_verified = True
         session.commit()
         print("✓ Admin user password updated")
     return admin

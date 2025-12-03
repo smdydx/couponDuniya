@@ -67,17 +67,17 @@ def register(payload: RegisterRequest, db: Session = Depends(get_db)):
     # Validate that at least email or mobile is provided
     if not payload.email and not payload.mobile:
         raise HTTPException(status_code=400, detail="Email or mobile is required")
-    
+
     # Check if user exists
     existing_user = None
     if payload.email:
         existing_user = db.query(User).filter(User.email == payload.email).first()
     if not existing_user and payload.mobile:
         existing_user = db.query(User).filter(User.mobile == payload.mobile).first()
-    
+
     if existing_user:
         raise HTTPException(status_code=400, detail="User already exists")
-    
+
     # Create new user
     user = User(
         email=payload.email,
@@ -87,19 +87,20 @@ def register(payload: RegisterRequest, db: Session = Depends(get_db)):
         referral_code=f"USER{str(uuid.uuid4())[:8].upper()}",
         is_active=True,
         is_verified=False,  # Needs email/mobile verification
+        role="customer", # Default role
     )
-    
+
     # Handle referral
     if payload.referral_code:
         referrer = db.query(User).filter(User.referral_code == payload.referral_code).first()
         if referrer:
             # TODO: Create referral record
             pass
-    
+
     db.add(user)
     db.commit()
     db.refresh(user)
-    
+
     # Queue welcome email
     if settings.EMAIL_ENABLED and user.email:
         push_email_job(
@@ -111,7 +112,7 @@ def register(payload: RegisterRequest, db: Session = Depends(get_db)):
                 "app_url": "https://app.example.com"  # TODO: Get from settings
             }
         )
-    
+
     return RegisterResponse(
         message="User registered successfully. Please verify your email/mobile.",
         data={
@@ -129,33 +130,33 @@ def login(payload: LoginRequest, db: Session = Depends(get_db)):
     """Login with email/mobile and password."""
     if not payload.identifier or not payload.password:
         raise HTTPException(status_code=400, detail="Missing credentials")
-    
+
     allowed, remaining, ttl = rate_limit(f"login:{payload.identifier}", 5, 300)
     if not allowed:
         raise HTTPException(status_code=429, detail=f"Too many attempts. Try again in {ttl}s")
-    
+
     # Find user by email or mobile
     user = db.query(User).filter(
         (User.email == payload.identifier) | (User.mobile == payload.identifier)
     ).first()
-    
+
     if not user:
         raise HTTPException(status_code=401, detail="Invalid credentials")
-    
+
     # Verify password
     if not user.password_hash:
         raise HTTPException(status_code=401, detail="Password not set. Please use OTP login.")
-    
+
     if not verify_password(payload.password, user.password_hash):
         raise HTTPException(status_code=401, detail="Invalid credentials")
-    
+
     if not user.is_active:
         raise HTTPException(status_code=403, detail="Account is disabled")
-    
+
     # Create session
     access_token = create_access_token(str(user.id))
     session_key = rk("session", access_token)
-    
+
     user_data = {
         "id": user.id,
         "uuid": str(user.uuid),
@@ -165,11 +166,14 @@ def login(payload: LoginRequest, db: Session = Depends(get_db)):
         "wallet_balance": float(user.wallet_balance or 0),
         "pending_cashback": float(user.pending_cashback or 0),
         "referral_code": user.referral_code,
+        "role": user.role if hasattr(user, 'role') else ("admin" if user.is_admin else "customer"),
+        "is_admin": user.is_admin,
+        "is_verified": user.is_verified,
     }
-    
+
     session_payload = {"user": user_data, "login_at": int(time.time())}
     cache_set(session_key, session_payload, 86400)  # 24h
-    
+
     return {
         "success": True,
         "data": {
@@ -189,24 +193,24 @@ def request_otp_endpoint(payload: OTPRequest, db: Session = Depends(get_db)):
     mobile = payload.mobile.strip()
     if not mobile.startswith("+"):
         mobile = "+91" + mobile  # Default to India
-    
+
     allowed, remaining, ttl = rate_limit(f"otp:{mobile}", 5, 300)
     if not allowed:
         raise HTTPException(status_code=429, detail=f"OTP limit reached. Try again in {ttl}s")
-    
+
     # Generate OTP
     otp_code, message = create_otp(mobile)
-    
+
     if not otp_code:
         raise HTTPException(status_code=429, detail=message)
-    
+
     # Send SMS
     sms_success, sms_message = send_otp_sms(mobile, otp_code)
-    
+
     if not sms_success:
         # Still return success in dev mode
         pass
-    
+
     return {
         "success": True,
         "message": sms_message if not sms_success else message,
@@ -224,16 +228,16 @@ def verify_otp_endpoint(payload: VerifyOTPRequest, db: Session = Depends(get_db)
     mobile = payload.mobile.strip()
     if not mobile.startswith("+"):
         mobile = "+91" + mobile
-    
+
     # Verify OTP
     is_valid, message = verify_and_consume_otp(mobile, payload.otp)
-    
+
     if not is_valid:
         raise HTTPException(status_code=400, detail=message)
-    
+
     # Find or create user
     user = db.query(User).filter(User.mobile == mobile).first()
-    
+
     if not user:
         # Auto-register new user
         user = User(
@@ -242,15 +246,16 @@ def verify_otp_endpoint(payload: VerifyOTPRequest, db: Session = Depends(get_db)
             is_active=True,
             is_verified=True,  # Mobile verified via OTP
             referral_code=f"USER{str(uuid.uuid4())[:8].upper()}",
+            role="customer", # Default role
         )
         db.add(user)
         db.commit()
         db.refresh(user)
-    
+
     # Create session
     access_token = create_access_token(str(user.id))
     session_key = rk("session", access_token)
-    
+
     user_data = {
         "id": user.id,
         "uuid": str(user.uuid),
@@ -260,11 +265,14 @@ def verify_otp_endpoint(payload: VerifyOTPRequest, db: Session = Depends(get_db)
         "wallet_balance": float(user.wallet_balance or 0),
         "pending_cashback": float(user.pending_cashback or 0),
         "referral_code": user.referral_code,
+        "role": user.role if hasattr(user, 'role') else ("admin" if user.is_admin else "customer"),
+        "is_admin": user.is_admin,
+        "is_verified": user.is_verified,
     }
-    
+
     session_payload = {"user": user_data, "login_at": int(time.time())}
     cache_set(session_key, session_payload, 86400)  # 24h
-    
+
     return {
         "success": True,
         "message": "Login successful",
@@ -347,10 +355,10 @@ def send_verification_email(
     from ...verification import generate_verification_token, resend_verification_throttle
     from ...email import send_welcome_email
     from ...config import get_settings
-    
+
     settings = get_settings()
     email = request.email
-    
+
     # Check throttle
     can_send, wait_time = resend_verification_throttle(email)
     if not can_send:
@@ -358,20 +366,20 @@ def send_verification_email(
             status_code=429,
             detail=f"Please wait {wait_time} seconds before resending"
         )
-    
+
     # Generate token
     token = generate_verification_token(email)
-    
+
     # Create verification link
     verification_url = f"http://localhost:3000/auth/verify-email?token={token}"
-    
+
     # Send email
     if settings.EMAIL_ENABLED:
         send_welcome_email(email, verification_url)
     else:
         # Dev mode: log the link
         print(f"[DEV] Verification link for {email}: {verification_url}")
-    
+
     return {
         "success": True,
         "message": "Verification email sent successfully",
@@ -394,22 +402,22 @@ def verify_email(
     """Verify email using token"""
     from ...verification import verify_email_token
     from sqlalchemy import select
-    
+
     # Verify token
     is_valid, email = verify_email_token(request.token)
-    
+
     if not is_valid:
         raise HTTPException(
             status_code=400,
             detail="Invalid or expired verification token"
         )
-    
+
     # Update user's verification status
     user = db.scalar(select(User).where(User.email == email))
     if user:
         user.is_verified = True
         db.commit()
-    
+
     return {
         "success": True,
         "message": "Email verified successfully",
@@ -469,4 +477,14 @@ def me(authorization: str | None = Header(None), db: Session = Depends(get_db)):
     user = db.query(User).filter(User.id == int(user_id)).first() if user_id else None
     if not user:
         raise HTTPException(status_code=404, detail="User not found")
-    return {"success": True, "data": {"id": user.id, "email": user.email, "full_name": user.full_name}}
+    return {
+        "success": True,
+        "data": {
+            "id": user.id,
+            "email": user.email,
+            "full_name": user.full_name,
+            "role": user.role if hasattr(user, 'role') else ("admin" if user.is_admin else "customer"),
+            "is_admin": user.is_admin,
+            "is_verified": user.is_verified,
+        }
+    }
