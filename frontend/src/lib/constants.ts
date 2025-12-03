@@ -1,4 +1,8 @@
-export const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000/api/v1';
+// In Replit, use the dev domain with backend port, otherwise localhost
+const REPLIT_DEV_DOMAIN = process.env.NEXT_PUBLIC_REPLIT_DEV_DOMAIN || process.env.REPLIT_DEV_DOMAIN;
+export const API_BASE_URL = REPLIT_DEV_DOMAIN 
+  ? `https://${REPLIT_DEV_DOMAIN.replace(':5000', ':8000')}/api/v1`
+  : (process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000/api/v1');
 
 export const SITE_NAME = 'BIDUA Coupons';
 export const SITE_DESCRIPTION = 'Save money with verified coupons, cashback offers, and discounted gift cards';
