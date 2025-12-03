@@ -86,14 +86,15 @@ def list_offers(
             }
         })
     
+    total_count = total or 0
     response = {
         "success": True,
         "data": offers,
         "pagination": {
             "page": page,
             "limit": limit,
-            "total": total,
-            "pages": (total + limit - 1) // limit
+            "total": total_count,
+            "pages": (total_count + limit - 1) // limit if total_count else 0
         }
     }
     cache_set(cache_key, response, 300)
