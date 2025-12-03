@@ -75,8 +75,8 @@ def list_offers(
             "merchant_id": offer.merchant_id,
             "is_active": offer.is_active,
             "priority": offer.priority,
-            "starts_at": offer.starts_at.isoformat() if offer.starts_at else None,
-            "ends_at": offer.ends_at.isoformat() if offer.ends_at else None,
+            "start_date": offer.start_date.isoformat() if offer.start_date else None,
+            "end_date": offer.end_date.isoformat() if offer.end_date else None,
             "created_at": offer.created_at.isoformat(),
             "merchant": {
                 "id": merchant.id,
@@ -177,8 +177,8 @@ def get_offer(offer_id: int, db: Session = Depends(get_db)):
             "merchant_id": offer.merchant_id,
             "is_active": offer.is_active,
             "priority": offer.priority,
-            "starts_at": offer.starts_at.isoformat() if offer.starts_at else None,
-            "ends_at": offer.ends_at.isoformat() if offer.ends_at else None,
+            "start_date": offer.start_date.isoformat() if offer.start_date else None,
+            "end_date": offer.end_date.isoformat() if offer.end_date else None,
             "created_at": offer.created_at.isoformat(),
             "merchant": {
                 "id": merchant.id,

@@ -86,6 +86,8 @@ def seed_admin_user(session: Session):
         admin = User(
             email="admin@couponali.com",
             password_hash=get_password_hash("admin123"),
+            full_name="Admin User",
+            referral_code=f"ADMIN{uuid.uuid4().hex[:6].upper()}",
             is_active=True,
             is_admin=True,
         )
@@ -93,7 +95,6 @@ def seed_admin_user(session: Session):
         session.commit()
         print("✓ Admin user created (admin@couponali.com / admin123)")
     else:
-        # Ensure password is set for existing admin (force set for dev)
         admin.password_hash = get_password_hash("admin123")
         session.commit()
         print("✓ Admin user password updated")
@@ -150,14 +151,15 @@ def seed_merchants(session: Session):
             merch = Merchant(
                 name=merch_data["name"],
                 slug=merch_data["slug"],
-                logo_url=f"/images/merchants/merchant-{idx}.png",
+                logo_url=f"/images/merchants/merchant-{idx % 10 + 1}.png",
                 description=merch_data.get("description", f"{merch_data['name']} - Great deals and offers"),
-                is_active=True
+                is_active=True,
+                is_featured=idx <= 12
             )
             session.add(merch)
         else:
-            # Update existing merchant with logo
-            merch.logo_url = f"/images/merchants/merchant-{idx}.png"
+            merch.logo_url = f"/images/merchants/merchant-{idx % 10 + 1}.png"
+            merch.is_featured = idx <= 12
     session.commit()
     print(f"✓ {len(MERCHANTS_DATA)} merchants seeded")
 
@@ -181,9 +183,10 @@ def seed_offers(session: Session):
             code=f"{merchant.slug.upper()}50",
             image_url=offer_images[(offers_created * 2) % len(offer_images)],
             is_active=True,
+            is_featured=True,
             priority=10,
-            starts_at=datetime.utcnow(),
-            ends_at=datetime.utcnow() + timedelta(days=30)
+            start_date=datetime.utcnow(),
+            end_date=datetime.utcnow() + timedelta(days=30)
         )
         session.add(offer1)
         offers_created += 1
@@ -191,12 +194,13 @@ def seed_offers(session: Session):
         offer2 = Offer(
             merchant_id=merchant.id,
             title=f"Exclusive {merchant.name} Deal",
-            code=None,  # No code required
+            code=None,
             image_url=offer_images[(offers_created * 2 + 1) % len(offer_images)],
             is_active=True,
+            is_exclusive=True,
             priority=5,
-            starts_at=datetime.utcnow(),
-            ends_at=datetime.utcnow() + timedelta(days=15)
+            start_date=datetime.utcnow(),
+            end_date=datetime.utcnow() + timedelta(days=15)
         )
         session.add(offer2)
         offers_created += 1
@@ -207,9 +211,10 @@ def seed_offers(session: Session):
             code=f"{merchant.slug.upper()}CASH",
             image_url=offer_images[(offers_created * 2 + 2) % len(offer_images)],
             is_active=True,
+            is_featured=True,
             priority=7,
-            starts_at=datetime.utcnow(),
-            ends_at=datetime.utcnow() + timedelta(days=45)
+            start_date=datetime.utcnow(),
+            end_date=datetime.utcnow() + timedelta(days=45)
         )
         session.add(offer3)
         offers_created += 1
@@ -239,9 +244,11 @@ def seed_gift_cards(session: Session):
                 name=gc_data["name"],
                 slug=gc_data["slug"],
                 image_url=gc_images[idx % len(gc_images)],
-                price=1000.0,  # Base price
+                price=1000.0,
                 stock=1000,
-                is_active=True
+                is_active=True,
+                is_featured=idx < 8,
+                is_bestseller=idx < 4
             )
             session.add(gc)
             session.flush()
