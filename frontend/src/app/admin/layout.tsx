@@ -23,17 +23,17 @@ export default function AdminLayout({
   const { isSidebarOpen } = useUIStore();
 
   // Redirect non-admin users
-  // useEffect(() => {
-  //   if (!isAuthenticated) {
-  //     router.push("/login?redirect=/admin/dashboard");
-  //   } else if (user && user.role !== "admin" && user.role !== "super_admin") {
-  //     router.push("/");
-  //   }
-  // }, [isAuthenticated, user, router]);
+  useEffect(() => {
+    if (!isAuthenticated) {
+      router.push("/login?redirect=/admin/dashboard");
+    } else if (user && user.role !== "admin" && user.role !== "super_admin") {
+      router.push("/");
+    }
+  }, [isAuthenticated, user, router]);
 
-  // if (!isAuthenticated || !user || (user.role !== "admin" && user.role !== "super_admin")) {
-  //   return null;
-  // }
+  if (!isAuthenticated || !user || (user.role !== "admin" && user.role !== "super_admin")) {
+    return null;
+  }
 
   return (
     <div className="min-h-screen bg-muted/30">
@@ -58,26 +58,30 @@ export default function AdminLayout({
               <Bell className="h-5 w-5" />
             </Button>
 
-            <div className="flex items-center gap-2">
-              <Avatar className="h-8 w-8">
-                <AvatarImage src={user.avatar_url} />
-                <AvatarFallback>
-                  {getInitials(user.first_name, user.last_name)}
-                </AvatarFallback>
-              </Avatar>
-              <div className="hidden md:block">
-                <p className="text-sm font-medium">
-                  {user.first_name} {user.last_name}
-                </p>
-                <p className="text-xs text-muted-foreground capitalize">
-                  {user.role.replace("_", " ")}
-                </p>
-              </div>
-            </div>
+            {user && (
+              <>
+                <div className="flex items-center gap-2">
+                  <Avatar className="h-8 w-8">
+                    <AvatarImage src={user.avatar_url} />
+                    <AvatarFallback>
+                      {getInitials(user.first_name, user.last_name)}
+                    </AvatarFallback>
+                  </Avatar>
+                  <div className="hidden md:block">
+                    <p className="text-sm font-medium">
+                      {user.first_name} {user.last_name}
+                    </p>
+                    <p className="text-xs text-muted-foreground capitalize">
+                      {user.role?.replace("_", " ") || "User"}
+                    </p>
+                  </div>
+                </div>
 
-            <Button variant="ghost" size="icon" onClick={logout}>
-              <LogOut className="h-5 w-5" />
-            </Button>
+                <Button variant="ghost" size="icon" onClick={logout}>
+                  <LogOut className="h-5 w-5" />
+                </Button>
+              </>
+            )}
           </div>
         </header>
 

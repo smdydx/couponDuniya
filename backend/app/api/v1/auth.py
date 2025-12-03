@@ -477,12 +477,20 @@ def me(authorization: str | None = Header(None), db: Session = Depends(get_db)):
     user = db.query(User).filter(User.id == int(user_id)).first() if user_id else None
     if not user:
         raise HTTPException(status_code=404, detail="User not found")
+
+    # Split full_name into first_name and last_name
+    name_parts = user.full_name.split(' ', 1) if user.full_name else ['', '']
+    first_name = name_parts[0] if len(name_parts) > 0 else ''
+    last_name = name_parts[1] if len(name_parts) > 1 else ''
+
     return {
         "success": True,
         "data": {
             "id": user.id,
             "email": user.email,
             "full_name": user.full_name,
+            "first_name": first_name,
+            "last_name": last_name,
             "role": user.role if hasattr(user, 'role') else ("admin" if user.is_admin else "customer"),
             "is_admin": user.is_admin,
             "is_verified": user.is_verified,

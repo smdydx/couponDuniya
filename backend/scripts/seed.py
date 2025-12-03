@@ -113,29 +113,29 @@ def seed_roles_permissions(session: Session):
         "offers.read", "offers.write", "orders.read", "orders.write",
         "analytics.read", "finance.read", "finance.write"
     ]
-    
+
     for perm_code in permissions_data:
         perm = session.scalar(select(Permission).where(Permission.code == perm_code))
         if not perm:
             perm = Permission(code=perm_code, description=f"Permission for {perm_code}")
             session.add(perm)
-    
+
     session.commit()
-    
+
     # Roles
     admin_role = session.scalar(select(Role).where(Role.name == "Admin"))
     if not admin_role:
         admin_role = Role(name="Admin", slug="admin", description="Full system access", is_system=True)
         session.add(admin_role)
         session.commit()
-        
+
         # Assign all permissions to admin
         all_perms = session.scalars(select(Permission)).all()
         for perm in all_perms:
             rp = RolePermission(role_id=admin_role.id, permission_id=perm.id)
             session.add(rp)
         session.commit()
-    
+
     print(f"✓ Roles and permissions seeded")
 
 def seed_categories(session: Session):
@@ -171,17 +171,17 @@ def seed_merchants(session: Session):
 def seed_offers(session: Session):
     """Seed offers for merchants"""
     merchants = session.scalars(select(Merchant)).all()
-    
+
     offers_created = 0
     for merchant in merchants:
         # Check if offers already exist for this merchant
         existing = session.scalar(select(Offer).where(Offer.merchant_id == merchant.id))
         if existing:
             continue
-            
+
         # Create 3 offers per merchant with images
         offer_images = [f"/images/offers/{i}.png" for i in [8, 9, 10, 11, 12, 13, 14, 16, 18, 20, 22, 23, 24, 25, 26, 27, 29, 30, 33, 34, 35, 37, 38, 39, 41, 42, 49, 55, 60, 62, 63]]
-        
+
         offer1 = Offer(
             merchant_id=merchant.id,
             title=f"{merchant.name} - Flat 50% Off",
@@ -195,7 +195,7 @@ def seed_offers(session: Session):
         )
         session.add(offer1)
         offers_created += 1
-        
+
         offer2 = Offer(
             merchant_id=merchant.id,
             title=f"Exclusive {merchant.name} Deal",
@@ -209,7 +209,7 @@ def seed_offers(session: Session):
         )
         session.add(offer2)
         offers_created += 1
-        
+
         offer3 = Offer(
             merchant_id=merchant.id,
             title=f"{merchant.name} Cashback Fiesta",
@@ -223,25 +223,25 @@ def seed_offers(session: Session):
         )
         session.add(offer3)
         offers_created += 1
-    
+
     session.commit()
     print(f"✓ {offers_created} offers seeded")
 
 def seed_gift_cards(session: Session):
     """Seed gift card products"""
     merchants = {m.slug: m for m in session.scalars(select(Merchant)).all()}
-    
+
     # Gift card images available
     gc_images = [f"/images/gift-cards/{i}.png" for i in range(1, 64)]
-    
+
     giftcards_created = 0
     for idx, gc_data in enumerate(GIFT_CARDS_DATA):
         merchant_slug = gc_data["slug"].split("-")[0]  # Extract merchant from slug
         merchant = merchants.get(merchant_slug)
-        
+
         if not merchant:
             continue
-        
+
         gc = session.scalar(select(Product).where(Product.slug == gc_data["slug"]))
         if not gc:
             gc = Product(
@@ -258,7 +258,7 @@ def seed_gift_cards(session: Session):
             session.add(gc)
             session.flush()
             giftcards_created += 1
-            
+
             # Add variants (denominations) with mix of smaller and bigger values
             denominations = [100, 250, 500, 750, 1000, 2000, 3000, 5000, 7500, 10000, 15000]
             for idx, denom in enumerate(denominations):
@@ -271,17 +271,17 @@ def seed_gift_cards(session: Session):
                         stock=1000
                     )
                     session.add(variant)
-    
+
     session.commit()
     print(f"✓ {giftcards_created} gift cards with variants seeded")
 
-    
+
     session.commit()
     print(f"✓ {len(GIFT_CARDS_DATA)} gift cards with variants seeded")
 
 def main():
     print("🌱 Starting database seeding...\n")
-    
+
     with Session(engine) as session:
         try:
             seed_admin_user(session)
@@ -290,7 +290,7 @@ def main():
             seed_merchants(session)
             seed_offers(session)
             seed_gift_cards(session)
-            
+
             print("\n✅ Database seeding completed successfully!")
             print("\n📊 Summary:")
             print(f"   - Admin user: admin@couponali.com / admin123")
@@ -299,7 +299,7 @@ def main():
             print(f"   - Offers: {len(session.scalars(select(Offer)).all())}")
             print(f"   - Gift Cards/Products: {len(session.scalars(select(Product)).all())}")
             print(f"   - Variants: {len(session.scalars(select(ProductVariant)).all())}")
-            
+
         except Exception as e:
             print(f"\n❌ Error during seeding: {e}")
             session.rollback()
