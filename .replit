@@ -1,4 +1,4 @@
-modules = ["nodejs-20", "python-3.12", "bash", "web"]
+modules = ["nodejs-20", "bash", "web", "python-3.11", "bun-1.2"]
 [agent]
 expertMode = true
 
@@ -36,20 +36,20 @@ args = "Frontend"
 name = "Frontend"
 author = "agent"
 
-[[workflows.workflow.tasks]]
-task = "shell.exec"
-args = "cd frontend && npm run dev"
-waitForPort = 5000
-
 [workflows.workflow.metadata]
 outputType = "webview"
+
+[[workflows.workflow.tasks]]
+task = "shell.exec"
+args = "cd frontend && bun run dev"
+waitForPort = 5000
 
 [[ports]]
 localPort = 5000
 externalPort = 80
 
 [[ports]]
-localPort = 41769
+localPort = 44355
 externalPort = 3000
 
 [deployment]
