@@ -1,28 +1,28 @@
-# BIDUA Coupon Commerce - Replit Setup
+# CouponAli - Replit Setup
 
 ## Project Overview
 
-This is a full-stack e-commerce platform for coupons, cashback offers, and gift cards. The project is a GitHub import that has been configured to run in the Replit environment.
+This is a full-stack e-commerce platform for coupons, cashback offers, and gift cards. The project has been fully configured and is running in the Replit environment.
 
 **Architecture:**
 - **Frontend**: Next.js 16 + React 19 + TypeScript (Port 5000)
-- **Backend**: FastAPI + Python 3.12 (Port 8000 - to be configured)
-- **Database**: PostgreSQL (via Replit Database)
-- **Cache**: Redis (required for sessions, rate limiting)
+- **Backend**: FastAPI + Python 3.11 (Port 8000)
+- **Database**: SQLite (./couponali.db - lightweight, no external setup needed)
+- **Cache**: Redis gracefully mocked (works without Redis in development)
 - **Additional Services**: Bun-based microservices (redirector, webhooks)
 
 ## Current Status
 
-✅ **Completed:**
+✅ **Fully Operational:**
 - Python dependencies installed
 - Node.js dependencies installed (using Bun)
 - Frontend workflow configured and running on port 5000
 - Backend workflow configured and running on port 8000
-- PostgreSQL database created and configured
-- Database migrations completed
-- Environment variables configured
-- Next.js configured for Replit proxy (0.0.0.0:5000 with allowed dev origins)
-- Redis gracefully mocked for development (app works without Redis)
+- SQLite database created and seeded with real data
+- All API endpoints tested and working
+- Frontend successfully fetching and displaying backend data
+- Next.js configured for Replit proxy (0.0.0.0:5000 with dynamic allowed origins)
+- Redis gracefully mocked for development
 - Git ignore file created
 
 🚀 **Running Services:**
@@ -30,7 +30,13 @@ This is a full-stack e-commerce platform for coupons, cashback offers, and gift 
 - **Backend API**: http://localhost:8000 (FastAPI)
 - **API Docs**: http://localhost:8000/docs (Swagger UI)
 
-⚠️ **Optional Configuration:**
+📊 **Seeded Data:**
+- 18 merchants (Amazon, Flipkart, Myntra, Swiggy, etc.)
+- 54 coupon offers with real discount codes
+- 15 gift cards with 109 price variants
+- Admin user: admin@couponali.com / admin123
+
+⚠️ **Optional Configuration (for production):**
 - **Redis**: For production, set up Upstash for caching/rate limiting
 - **Payment Gateway**: Configure Razorpay keys for payments
 - **Email/SMS**: Enable for production with SendGrid/MSG91
