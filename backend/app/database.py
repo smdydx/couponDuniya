@@ -10,7 +10,16 @@ database_url = settings.DATABASE_URL
 if database_url.startswith("postgresql://"):
     database_url = database_url.replace("postgresql://", "postgresql+psycopg://", 1)
 
-engine = create_engine(database_url, echo=settings.DEBUG, pool_pre_ping=True)
+# Configure engine based on database type
+if database_url.startswith("sqlite"):
+    engine = create_engine(
+        database_url, 
+        echo=settings.DEBUG, 
+        connect_args={"check_same_thread": False}
+    )
+else:
+    engine = create_engine(database_url, echo=settings.DEBUG, pool_pre_ping=True)
+
 SessionLocal = sessionmaker(bind=engine, autoflush=False, autocommit=False, expire_on_commit=False)
 
 class Base(DeclarativeBase):

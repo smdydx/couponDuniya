@@ -4,8 +4,8 @@ from functools import lru_cache
 class Settings(BaseSettings):
     APP_NAME: str = "CouponAli API"
     DEBUG: bool = True
-    # Use psycopg (psycopg3) driver explicitly to avoid psycopg2 import
-    DATABASE_URL: str = "postgresql+psycopg://postgres:hardik123@localhost:5432/couponali"
+    # Use SQLite by default for Replit environment
+    DATABASE_URL: str = "sqlite:///./couponali.db"
     REDIS_URL: str = "redis://localhost:6379"
     SECRET_KEY: str = "dev-secret"
     JWT_ALGORITHM: str = "HS256"
