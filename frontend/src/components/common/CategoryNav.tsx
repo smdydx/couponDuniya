@@ -4,7 +4,7 @@ import { Suspense } from "react";
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
 import { cn } from "@/lib/utils";
-import { CATEGORIES, ROUTES } from "@/lib/constants";
+import { ROUTES } from "@/lib/constants";
 import { Skeleton } from "@/components/ui/skeleton";
 
 interface CategoryNavProps {

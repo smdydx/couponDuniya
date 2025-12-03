@@ -98,40 +98,49 @@ def _get_catalog():
 
 @router.get("/", response_model=dict)
 def list_products(
-    filters: ProductFilters = ProductFilters(),
+    page: int = 1,
+    limit: int = 20,
+    category_id: int | None = None,
+    merchant_id: int | None = None,
+    is_featured: bool | None = None,
+    search: str | None = None,
+    sort_by: str | None = None,
     _: dict = Depends(rate_limit_dependency("products:list", limit=100, window_seconds=60)),
 ):
     catalog = _get_catalog()
     # basic filtering
     items = catalog
-    if filters.category_id:
-        items = [p for p in items if p["category"]["id"] == filters.category_id]
-    if filters.merchant_id:
-        items = [p for p in items if p["merchant"]["id"] == filters.merchant_id]
-    if filters.is_bestseller:
-        # treat top sales_count as bestseller
-        threshold = sorted([p["sales_count"] for p in catalog], reverse=True)[len(catalog)//4]
-        items = [p for p in items if p["sales_count"] >= threshold]
-    if filters.is_featured:
+    if category_id:
+        items = [p for p in items if p["category"]["id"] == category_id]
+    if merchant_id:
+        items = [p for p in items if p["merchant"]["id"] == merchant_id]
+    if is_featured:
         items = [p for p in items if p["is_featured"]]
-    if filters.search:
-        q = filters.search.lower()
+    if search:
+        q = search.lower()
         items = [p for p in items if q in p["name"].lower()]
+    # Apply sorting
+    if sort_by == "price_low":
+        items = sorted(items, key=lambda x: x["variants"][0]["selling_price"] if x["variants"] else 0)
+    elif sort_by == "price_high":
+        items = sorted(items, key=lambda x: x["variants"][0]["selling_price"] if x["variants"] else 0, reverse=True)
+    elif sort_by == "discount":
+        items = sorted(items, key=lambda x: x["variants"][0]["discount_percentage"] if x["variants"] else 0, reverse=True)
+    elif sort_by == "popular":
+        items = sorted(items, key=lambda x: x["sales_count"], reverse=True)
 
     total = len(items)
-    start = (filters.page - 1) * filters.limit
-    end = start + filters.limit
+    start = (page - 1) * limit
+    end = start + limit
     page_items = items[start:end]
     return {
         "success": True,
-        "data": {
-            "products": page_items,
-            "pagination": {
-                "current_page": filters.page,
-                "total_pages": max(1, (total + filters.limit - 1) // filters.limit),
-                "total_items": total,
-                "per_page": filters.limit,
-            },
+        "data": page_items,
+        "pagination": {
+            "current_page": page,
+            "total_pages": max(1, (total + limit - 1) // limit),
+            "total_items": total,
+            "per_page": limit,
         },
     }
 

@@ -1,6 +1,7 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import { useSearchParams } from "next/navigation";
 import { OfferGrid } from "@/components/offer/OfferGrid";
 import { OfferFilters } from "@/components/offer/OfferFilters";
 import { CategoryNav } from "@/components/common/CategoryNav";
@@ -11,16 +12,35 @@ import { Button } from "@/components/ui/button";
 import { Search, SlidersHorizontal } from "lucide-react";
 import { useOffers } from "@/lib/hooks/use-offers";
 import { LoadingSpinner } from "@/components/common/LoadingSpinner";
+import api from "@/lib/api/client";
 
 export default function CouponsPage() {
+  const searchParams = useSearchParams();
   const [searchQuery, setSearchQuery] = useState("");
   const [showFilters, setShowFilters] = useState(false);
   const [currentPage, setCurrentPage] = useState(1);
+  const [categoryId, setCategoryId] = useState<number | undefined>();
+
+  // Get category from URL and convert to ID
+  useEffect(() => {
+    const categorySlug = searchParams.get("category");
+    if (categorySlug) {
+      api.get("/categories/").then((res) => {
+        if (res.data.success) {
+          const category = res.data.data.categories.find((c: any) => c.slug === categorySlug);
+          setCategoryId(category?.id);
+        }
+      });
+    } else {
+      setCategoryId(undefined);
+    }
+  }, [searchParams]);
 
   const { data, isLoading, error } = useOffers({
     page: currentPage,
     limit: 20,
-    search: searchQuery,
+    search: searchQuery || undefined,
+    category_id: categoryId,
   });
 
   const offers = data?.data || [];

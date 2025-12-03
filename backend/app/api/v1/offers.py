@@ -22,7 +22,12 @@ def list_offers(
     page: int = 1,
     limit: int = 20,
     merchant_id: int | None = None,
+    category_id: int | None = None,
     search: str | None = None,
+    sort_by: str | None = None,
+    is_exclusive: bool | None = None,
+    is_verified: bool | None = None,
+    has_cashback: bool | None = None,
     db: Session = Depends(get_db),
     _: dict = Depends(rate_limit_dependency("offers:list", limit=100, window_seconds=60))
 ):
@@ -32,7 +37,8 @@ def list_offers(
         "offers",
         hashlib.md5(
             json.dumps(
-                {"page": page, "limit": limit, "merchant_id": merchant_id, "search": search},
+                {"page": page, "limit": limit, "merchant_id": merchant_id, "category_id": category_id, 
+                 "search": search, "sort_by": sort_by, "is_exclusive": is_exclusive},
                 sort_keys=True,
             ).encode()
         ).hexdigest(),
@@ -45,11 +51,22 @@ def list_offers(
     
     if merchant_id:
         query = query.where(Offer.merchant_id == merchant_id)
+    if category_id:
+        query = query.where(Offer.category_id == category_id)
+    if is_exclusive:
+        query = query.where(Offer.is_exclusive == True)
     if search:
         query = query.where(Offer.title.ilike(f"%{search}%"))
     
-    # Order by priority and created date
-    query = query.order_by(Offer.priority.desc(), Offer.created_at.desc())
+    # Apply sorting
+    if sort_by == "newest":
+        query = query.order_by(Offer.created_at.desc())
+    elif sort_by == "popular":
+        query = query.order_by(Offer.priority.desc())
+    elif sort_by == "expiring_soon":
+        query = query.where(Offer.end_date.isnot(None)).order_by(Offer.end_date.asc())
+    else:
+        query = query.order_by(Offer.priority.desc(), Offer.created_at.desc())
     
     # Count total
     count_query = select(func.count()).select_from(Offer).where(Offer.is_active == True)
