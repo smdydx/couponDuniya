@@ -24,6 +24,31 @@ This is a full-stack e-commerce platform for coupons, cashback offers, and gift 
 - Next.js configured for Replit proxy (0.0.0.0:5000 with dynamic allowed origins)
 - Redis gracefully mocked for development
 - Git ignore file created
+- Admin dashboard accessible without login (no authentication required)
+
+## Recent Changes (December 2024)
+
+### Admin Dashboard Fix - Zustand Hydration Issue
+The admin dashboard was failing with "getServerSnapshot should be cached" and hydration errors. Fixed by:
+
+1. **Isolated Admin Routes**: Moved `Providers` and `MobileNav` from root `layout.tsx` to `(main)/layout.tsx` and `(auth)/layout.tsx`. Admin routes now bypass Zustand stores entirely.
+
+2. **Store Updates**: 
+   - Changed stores to use `createWithEqualityFn` from `zustand/traditional` with `shallow` equality
+   - Added `skipHydration: true` to persist middleware config
+   - Manual rehydration in `Providers` on client mount
+
+3. **ThemeToggle**: Updated to use local state instead of uiStore to avoid SSR issues in admin section
+
+**Key Files Changed:**
+- `frontend/src/app/layout.tsx` - Removed Providers wrapper
+- `frontend/src/app/(main)/layout.tsx` - Added Providers and MobileNav
+- `frontend/src/app/(auth)/layout.tsx` - Added Providers
+- `frontend/src/store/authStore.ts` - Using createWithEqualityFn + skipHydration
+- `frontend/src/store/cartStore.ts` - Using createWithEqualityFn + skipHydration
+- `frontend/src/components/theme/ThemeToggle.tsx` - Uses local state only
+
+**Note:** WebSocket HMR errors in console are expected in Replit's proxy environment and don't affect functionality.
 
 🚀 **Running Services:**
 - **Frontend**: http://localhost:5000 (Next.js 16)

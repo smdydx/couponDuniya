@@ -1,5 +1,6 @@
-import { create } from 'zustand';
+import { createWithEqualityFn } from 'zustand/traditional';
 import { persist } from 'zustand/middleware';
+import { shallow } from 'zustand/shallow';
 import type { CartItem } from '@/types';
 import { MAXIMUM_CART_QUANTITY } from '@/lib/constants';
 
@@ -10,12 +11,10 @@ interface CartState {
   useWalletBalance: boolean;
   walletAmountToUse: number;
 
-  // Computed
   itemCount: number;
   subtotal: number;
   total: number;
 
-  // Actions
   addItem: (item: CartItem) => void;
   removeItem: (variantId: number) => void;
   updateQuantity: (variantId: number, quantity: number) => void;
@@ -25,7 +24,7 @@ interface CartState {
   getItemByVariantId: (variantId: number) => CartItem | undefined;
 }
 
-export const useCartStore = create<CartState>()(
+export const useCartStore = createWithEqualityFn<CartState>()(
   persist(
     (set, get) => ({
       items: [],
@@ -110,6 +109,8 @@ export const useCartStore = create<CartState>()(
         promoCode: state.promoCode,
         promoDiscount: state.promoDiscount,
       }),
+      skipHydration: true,
     }
-  )
+  ),
+  shallow
 );

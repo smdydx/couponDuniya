@@ -41,7 +41,7 @@ export const useUIStore = create<UIState>()((set) => ({
   isMobileMenuOpen: false,
   isCartDrawerOpen: false,
   isSearchOpen: false,
-  theme: (typeof window !== "undefined" && (localStorage.getItem("theme") as "light" | "dark")) || "light",
+  theme: "light",
   toasts: [],
   isPageLoading: false,
 

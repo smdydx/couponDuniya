@@ -1,5 +1,6 @@
-import { create } from 'zustand';
+import { createWithEqualityFn } from 'zustand/traditional';
 import { persist } from 'zustand/middleware';
+import { shallow } from 'zustand/shallow';
 import type { User, LoginCredentials, RegisterData, AuthResponse } from '@/types';
 import { authAPI } from '@/lib/api/auth';
 
@@ -11,7 +12,6 @@ interface AuthState {
   isLoading: boolean;
   error: string | null;
 
-  // Actions
   login: (credentials: LoginCredentials) => Promise<void>;
   register: (data: RegisterData) => Promise<void>;
   logout: () => void;
@@ -21,7 +21,7 @@ interface AuthState {
   refreshAccessToken: () => Promise<void>;
 }
 
-export const useAuthStore = create<AuthState>()(
+export const useAuthStore = createWithEqualityFn<AuthState>()(
   persist(
     (set, get) => ({
       user: null,
@@ -120,6 +120,8 @@ export const useAuthStore = create<AuthState>()(
         refreshToken: state.refreshToken,
         isAuthenticated: state.isAuthenticated,
       }),
+      skipHydration: true,
     }
-  )
+  ),
+  shallow
 );

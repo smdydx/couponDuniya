@@ -25,11 +25,18 @@ const baseMoreItems = [
 ] as const;
 
 export function MobileNav() {
+  const [mounted, setMounted] = useState(false);
   const pathname = usePathname();
-  const { isAuthenticated, user, logout } = useAuthStore();
   const [moreOpen, setMoreOpen] = useState(false);
 
-  // Lock body scroll while the More menu is open
+  const isAuthenticated = useAuthStore((s) => s.isAuthenticated);
+  const user = useAuthStore((s) => s.user);
+  const logout = useAuthStore((s) => s.logout);
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
+
   useEffect(() => {
     if (moreOpen) {
       const original = document.body.style.overflow;
@@ -39,6 +46,8 @@ export function MobileNav() {
       };
     }
   }, [moreOpen]);
+
+  if (!mounted) return null;
 
   return (
     <>

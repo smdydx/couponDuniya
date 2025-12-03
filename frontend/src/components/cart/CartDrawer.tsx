@@ -1,10 +1,10 @@
 "use client";
 
+import { useState, useEffect } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { X, ShoppingCart, Trash2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { Separator } from "@/components/ui/separator";
 import { CartItem } from "./CartItem";
 import { useCartStore } from "@/store/cartStore";
 import { useUIStore } from "@/store/uiStore";
@@ -12,9 +12,19 @@ import { formatCurrency } from "@/lib/utils";
 import { ROUTES } from "@/lib/constants";
 
 export function CartDrawer() {
+  const [mounted, setMounted] = useState(false);
   const router = useRouter();
-  const { items, clearCart } = useCartStore();
-  const { isCartDrawerOpen, setCartDrawerOpen } = useUIStore();
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
+
+  const items = useCartStore((s) => s.items);
+  const clearCart = useCartStore((s) => s.clearCart);
+  const isCartDrawerOpen = useUIStore((s) => s.isCartDrawerOpen);
+  const setCartDrawerOpen = useUIStore((s) => s.setCartDrawerOpen);
+
+  if (!mounted) return null;
 
   const subtotal = items.reduce((sum, item) => sum + item.sellingPrice * item.quantity, 0);
   const itemCount = items.reduce((sum, item) => sum + item.quantity, 0);

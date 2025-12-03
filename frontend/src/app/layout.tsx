@@ -1,8 +1,6 @@
 import type { Metadata, Viewport } from "next";
 import { Inter } from "next/font/google";
 import "./globals.css";
-import { Providers } from "./providers";
-import { MobileNav } from "@/components/layout/MobileNav";
 
 const inter = Inter({
   subsets: ["latin"],
@@ -44,10 +42,8 @@ export default function RootLayout({
           Skip to main content
         </a>
         <div id="main-content">
-          <Providers>{children}</Providers>
+          {children}
         </div>
-        {/* Global mobile bottom nav so tabs remain consistent across routes */}
-        <MobileNav />
       </body>
     </html>
   );
