@@ -34,7 +34,7 @@ def verify_admin_ip(request: Request):
 settings = get_settings()
 
 
-def require_admin(authorization: str | None = Header(None), request: Request = Depends()):
+def require_admin(authorization: str | None = Header(None), request: Request = None):
     if not authorization or not authorization.startswith("Bearer "):
         raise HTTPException(status_code=401, detail="Not authenticated")
     if request:
