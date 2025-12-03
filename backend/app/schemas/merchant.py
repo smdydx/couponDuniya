@@ -7,6 +7,7 @@ class MerchantRead(BaseModel):
     slug: str
     description: str | None
     is_active: bool
+    is_featured: bool
     created_at: datetime
 
     class Config:
