@@ -52,7 +52,12 @@ def run_migrations_offline():
 
 
 def run_migrations_online():
-    connectable = create_engine(settings.DATABASE_URL, poolclass=pool.NullPool)
+    # Use psycopg (version 3) instead of psycopg2
+    database_url = settings.DATABASE_URL
+    if database_url.startswith("postgresql://"):
+        database_url = database_url.replace("postgresql://", "postgresql+psycopg://", 1)
+    
+    connectable = create_engine(database_url, poolclass=pool.NullPool)
 
     with connectable.connect() as connection:
         context.configure(
