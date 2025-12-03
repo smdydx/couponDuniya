@@ -1,7 +1,7 @@
 from fastapi import APIRouter, Header, HTTPException, Depends, Request
 from sqlalchemy.orm import Session
-from sqlalchemy import select, func, desc, and_
-from datetime import datetime
+from sqlalchemy import select, func, desc, and_, or_
+from datetime import datetime, timedelta
 from typing import Optional
 
 from ...redis_client import cache_invalidate, cache_invalidate_prefix, rk, redis_client, publish
@@ -34,10 +34,11 @@ def verify_admin_ip(request: Request):
 settings = get_settings()
 
 
-def require_admin(authorization: str | None = Header(None), request: Request = None):
+def require_admin(authorization: str | None = Header(None), request: Request = Depends()):
     if not authorization or not authorization.startswith("Bearer "):
         raise HTTPException(status_code=401, detail="Not authenticated")
-    verify_admin_ip(request)
+    if request:
+        verify_admin_ip(request)
     return True
 
 
@@ -45,8 +46,10 @@ class MerchantPayload(BaseModel):
     name: str = Field(..., min_length=1, max_length=255)
     slug: str = Field(..., min_length=1, max_length=255)
     description: str | None = None
+    website_url: str | None = None
     logo_url: str | None = None
     is_active: bool = True
+    commission_rate: float = Field(default=0.0, ge=0, le=100)
 
 
 class OfferPayload(BaseModel):
@@ -70,11 +73,10 @@ class ProductPayload(BaseModel):
 
 class ProductVariantPayload(BaseModel):
     product_id: int
-    name: str | None = None
-    denomination: float = Field(..., gt=0)
-    selling_price: float = Field(..., gt=0)
+    sku: str = Field(..., min_length=1, max_length=120)
+    name: str = Field(..., min_length=1, max_length=255)
+    price: float = Field(..., gt=0)
     stock: int = Field(default=0, ge=0)
-    is_available: bool = True
 
 
 class OrderStatusUpdate(BaseModel):
@@ -437,11 +439,10 @@ def add_variant(
     
     variant = ProductVariant(
         product_id=product_id,
+        sku=payload.sku,
         name=payload.name,
-        denomination=payload.denomination,
-        selling_price=payload.selling_price,
-        stock=payload.stock,
-        is_available=payload.is_available
+        price=payload.price,
+        stock=payload.stock
     )
     db.add(variant)
     db.commit()
@@ -455,7 +456,8 @@ def add_variant(
         "data": {
             "variant_id": variant.id,
             "product_id": product_id,
-            "denomination": float(variant.denomination)
+            "sku": variant.sku,
+            "price": float(variant.price)
         }
     }
 
@@ -579,12 +581,12 @@ def approve_withdrawal(
     db.refresh(withdrawal)
     
     # Queue approval notification
-    if settings.EMAIL_ENABLED:
+    if settings.EMAIL_ENABLED and user.email:
         push_email_job(
             "withdrawal_processed",
             user.email,
             {
-                "user_name": user.name or user.email.split('@')[0],
+                "user_name": user.full_name or (user.email.split('@')[0] if user.email else "User"),
                 "amount": withdrawal.amount,
                 "method": withdrawal.method,
                 "transaction_id": withdrawal.transaction_id or "N/A",
@@ -661,12 +663,12 @@ def reject_withdrawal(
     db.refresh(withdrawal)
     
     # Queue rejection notification
-    if settings.EMAIL_ENABLED:
+    if settings.EMAIL_ENABLED and user.email:
         push_email_job(
             "withdrawal_rejected",
             user.email,
             {
-                "user_name": user.name or user.email.split('@')[0],
+                "user_name": user.full_name or (user.email.split('@')[0] if user.email else "User"),
                 "amount": withdrawal.amount,
                 "method": withdrawal.method,
                 "reason": payload.admin_notes or "Not specified",

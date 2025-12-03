@@ -4,20 +4,25 @@ from ..services.affiliate_clients import AdmitadClient, VCommissionClient, CueLi
 from ..config import get_settings
 from typing import List
 import asyncio
+from datetime import datetime, timedelta
 from ..metrics import observe_affiliate_sync
 
 settings = get_settings()
 
 async def fetch_all():
+    """Fetch transactions from all affiliate networks for the last 30 days."""
+    end_date = datetime.now()
+    start_date = end_date - timedelta(days=30)
+    
     admitad = AdmitadClient(settings.ADMITAD_CLIENT_ID, settings.ADMITAD_CLIENT_SECRET, settings.ADMITAD_TOKEN)
     vcom = VCommissionClient(settings.VCOMMISSION_API_KEY)
     cuelinks = CueLinksClient(settings.CUELINKS_API_KEY)
     results = []
-    async for tx in admitad.fetch_transactions():
+    async for tx in admitad.fetch_transactions(start_date, end_date):
         results.append(("admitad", tx))
-    async for tx in vcom.fetch_transactions():
+    async for tx in vcom.fetch_transactions(start_date, end_date):
         results.append(("vcommission", tx))
-    async for tx in cuelinks.fetch_transactions():
+    async for tx in cuelinks.fetch_transactions(start_date, end_date):
         results.append(("cuelinks", tx))
     return results
 

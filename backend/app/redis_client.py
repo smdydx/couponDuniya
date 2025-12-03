@@ -11,21 +11,23 @@ settings = get_settings()
 
 class MockRedis:
     """Mock Redis client that does nothing but doesn't break the app."""
-    def get(self, key): return None
-    def set(self, key, value, **kwargs): return True
-    def setex(self, key, ttl, value): return True
-    def delete(self, *keys): return 0
-    def incr(self, key, amount=1): return 1
-    def expire(self, key, ttl): return True
-    def ttl(self, key): return -1
+    def get(self, key) -> str | None: return None
+    def set(self, key, value, **kwargs) -> bool: return True
+    def setex(self, key, ttl, value) -> bool: return True
+    def delete(self, *keys) -> int: return 0
+    def incr(self, key, amount=1) -> int: return 1
+    def expire(self, key, ttl) -> bool: return True
+    def ttl(self, key) -> int: return -1
     def pipeline(self): return MockPipeline()
-    def zincrby(self, key, amount, member): return amount
-    def zrevrange(self, key, start, end, withscores=False): return []
-    def sadd(self, key, *members): return 0
+    def zincrby(self, key, amount, member) -> float: return float(amount)
+    def zrevrange(self, key, start, end, withscores=False) -> list: return []
+    def sadd(self, key, *members) -> int: return 0
     def scan_iter(self, match=None): return iter([])
-    def lpush(self, key, *values): return 0
-    def publish(self, channel, message): return 0
-    def info(self): return {}
+    def lpush(self, key, *values) -> int: return 0
+    def llen(self, key) -> int: return 0
+    def publish(self, channel, message) -> int: return 0
+    def info(self) -> dict: return {}
+    def ping(self) -> bool: return True
 
 class MockPipeline:
     def __init__(self):
@@ -65,7 +67,7 @@ def cache_get(key: str) -> Any:
     if raw is None:
         return None
     try:
-        return json.loads(raw)
+        return json.loads(str(raw))
     except Exception:
         return raw
 

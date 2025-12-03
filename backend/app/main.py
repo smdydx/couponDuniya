@@ -52,14 +52,18 @@ settings = get_settings()
 app = FastAPI(title=settings.APP_NAME)
 # Ensure tables exist in development (no-op if already migrated)
 try:
+
     @app.on_event("startup")
     async def ensure_database_schema():
-        Base.metadata.create_all(bind=engine)
+        if engine is not None:
+            Base.metadata.create_all(bind=engine)
 except Exception:
     pass
 
 # CORS configuration to allow frontend on port 3000
-origins = [o.strip() for o in (settings.CORS_ORIGINS or "").split(",") if o.strip()]
+origins = [
+    o.strip() for o in (settings.CORS_ORIGINS or "").split(",") if o.strip()
+]
 app.add_middleware(
     CORSMiddleware,
     allow_origins=origins if origins else ["http://localhost:3000"],
@@ -75,23 +79,29 @@ import time, uuid, logging, os
 from .logging_config import log, with_request_id
 from .metrics import observe_request, set_redis_memory, set_dead_letter
 from .config import get_settings
+
 settings = get_settings()
+
 
 @app.middleware("http")
 async def rate_limit_middleware(request: Request, call_next):
     if request.url.path == "/health" or request.url.path.startswith("/docs"):
         return await call_next(request)
-    client_ip = request.client.host or "unknown"
+    client_ip = request.client.host if request.client else "unknown"
     start = time.time()
-    allowed, remaining, ttl = rate_limit(client_ip, limit=100, window_seconds=60)
+    allowed, remaining, ttl = rate_limit(client_ip,
+                                         limit=100,
+                                         window_seconds=60)
     if not allowed:
-        raise HTTPException(status_code=429, detail="Too many requests. Slow down.")
+        raise HTTPException(status_code=429,
+                            detail="Too many requests. Slow down.")
     request_id = request.headers.get("X-Request-ID") or uuid.uuid4().hex
     logger = with_request_id(log, request_id)
     response = await call_next(request)
     duration = time.time() - start
     try:
-        observe_request(request.method, request.url.path, response.status_code, duration)
+        observe_request(request.method, request.url.path, response.status_code,
+                        duration)
     except Exception:
         pass
     response.headers["X-Request-ID"] = request_id
@@ -100,21 +110,39 @@ async def rate_limit_middleware(request: Request, call_next):
     response.headers["X-RateLimit-Reset"] = str(ttl)
     return response
 
+
 # Security headers middleware
 @app.middleware("http")
 async def security_headers_middleware(request: Request, call_next):
     response = await call_next(request)
     response.headers.setdefault("X-Content-Type-Options", "nosniff")
     response.headers.setdefault("X-Frame-Options", "DENY")
-    response.headers.setdefault("Referrer-Policy", "strict-origin-when-cross-origin")
-    response.headers.setdefault("X-XSS-Protection", "0")  # Modern browsers ignore; CSP recommended
-    # Minimal CSP (adjust as needed)
-    response.headers.setdefault("Content-Security-Policy", "default-src 'self'; img-src 'self' data:; script-src 'self'; style-src 'self' 'unsafe-inline'")
+    response.headers.setdefault("Referrer-Policy",
+                                "strict-origin-when-cross-origin")
+    response.headers.setdefault("X-XSS-Protection",
+                                "0")  # Modern browsers ignore; CSP recommended
+
+    # Relaxed CSP for /docs endpoint to allow Swagger UI CDN resources
+    if request.url.path == "/docs":
+        response.headers.setdefault(
+            "Content-Security-Policy", "default-src 'self'; "
+            "img-src 'self' data: https://fastapi.tiangolo.com; "
+            "script-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net; "
+            "style-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net; "
+            "font-src 'self' https://cdn.jsdelivr.net")
+    else:
+        # Minimal CSP for other endpoints
+        response.headers.setdefault(
+            "Content-Security-Policy",
+            "default-src 'self'; img-src 'self' data:; script-src 'self'; style-src 'self' 'unsafe-inline'"
+        )
     return response
+
 
 # Periodic metrics update task (Redis stats, DLQ depth)
 try:
     import asyncio
+
     async def metrics_refresher():
         while True:
             try:
@@ -129,29 +157,37 @@ try:
             except Exception:
                 pass
             await asyncio.sleep(15)
+
     @app.on_event("startup")
     async def start_metrics_refresher():
         asyncio.create_task(metrics_refresher())
 except Exception:
     pass
 
-# Periodic affiliate sync scheduler (simple loop). Interval configurable via AFFILIATE_SYNC_INTERVAL_MINUTES.
+# Periodic affiliate sync scheduler (disabled for Replit to avoid event loop conflicts)
+# To enable, set AFFILIATE_SYNC_ENABLED=true and ensure sync_affiliate_transactions is async
 try:
-    from .tasks.affiliate_sync import async_sync_affiliate_transactions
+    from .tasks.affiliate_sync import sync_affiliate_transactions
     from .database import SessionLocal
-    AFFILIATE_INTERVAL_MINUTES = float(os.getenv("AFFILIATE_SYNC_INTERVAL_MINUTES", "1440"))  # default daily
+    AFFILIATE_INTERVAL_MINUTES = float(
+        os.getenv("AFFILIATE_SYNC_INTERVAL_MINUTES", "1440"))  # default daily
+    AFFILIATE_SYNC_ENABLED = os.getenv("AFFILIATE_SYNC_ENABLED",
+                                       "false").lower() == "true"
 
     async def affiliate_sync_scheduler():
         while True:
             start_ts = time.time()
-            session = SessionLocal()
-            try:
-                result = await async_sync_affiliate_transactions(session)
-                log.info(f"Affiliate periodic sync imported={result['imported']} updated={result['updated']} total={result['total']}")
-            except Exception as e:
-                log.error(f"Affiliate periodic sync failed: {e}")
-            finally:
-                session.close()
+            if SessionLocal is not None:
+                session = SessionLocal()
+                try:
+                    result = sync_affiliate_transactions(session)
+                    log.info(
+                        f"Affiliate periodic sync imported={result['imported']} updated={result['updated']} total={result['total']}"
+                    )
+                except Exception as e:
+                    log.error(f"Affiliate periodic sync failed: {e}")
+                finally:
+                    session.close()
             # Sleep remaining interval (convert minutes to seconds)
             elapsed = time.time() - start_ts
             sleep_for = max(5.0, AFFILIATE_INTERVAL_MINUTES * 60 - elapsed)
@@ -159,8 +195,8 @@ try:
 
     @app.on_event("startup")
     async def start_affiliate_scheduler():
-        # Skip if interval set to 0 or negative
-        if AFFILIATE_INTERVAL_MINUTES > 0:
+        # Skip if disabled or interval set to 0 or negative
+        if AFFILIATE_SYNC_ENABLED and AFFILIATE_INTERVAL_MINUTES > 0:
             asyncio.create_task(affiliate_sync_scheduler())
 except Exception:
     pass
@@ -219,7 +255,6 @@ app.include_router(blog.router, prefix="/api/v1")
 app.include_router(blog_uploads.router, prefix="/api/v1")
 app.include_router(homepage.router, prefix="/api/v1")
 
-
 GROUP_ORDER = [
     ("Auth", ["Auth"]),
     ("Users", ["Users"]),
@@ -250,6 +285,7 @@ GROUP_ORDER = [
     ("CMS", ["CMS"]),
 ]
 
+
 def custom_openapi():
     if app.openapi_schema:
         return app.openapi_schema
@@ -267,6 +303,7 @@ def custom_openapi():
     app.openapi_schema = openapi_schema
     return app.openapi_schema
 
+
 app.openapi = custom_openapi
 
 app.mount("/static", StaticFiles(directory="app/static"), name="static")
@@ -274,19 +311,30 @@ app.mount("/static", StaticFiles(directory="app/static"), name="static")
 app.mount("/images", StaticFiles(directory="app/images"), name="images")
 # Serve uploads directory for blog images
 from pathlib import Path
+
 Path("uploads/blog").mkdir(parents=True, exist_ok=True)
 app.mount("/uploads", StaticFiles(directory="uploads"), name="uploads")
 
+
 @app.get("/docs", include_in_schema=False)
 def custom_docs():
-    html = get_swagger_ui_html(openapi_url=app.openapi_url, title=f"{settings.APP_NAME} Docs", swagger_css_url="/static/swagger.css")
+    openapi_url = app.openapi_url or "/openapi.json"
+    html = get_swagger_ui_html(openapi_url=openapi_url,
+                               title=f"{settings.APP_NAME} Docs",
+                               swagger_css_url="/static/swagger.css")
     # Inject dark mode toggle
-    injected = html.body.decode().replace("</body>", "<button class='dark-mode-toggle' onclick=\"document.documentElement.classList.toggle('dark');\">Toggle Dark</button></body>")
+    body_content = html.body.decode("utf-8") if isinstance(html.body, bytes) else str(html.body)
+    injected = body_content.replace(
+        "</body>",
+        "<button class='dark-mode-toggle' onclick=\"document.documentElement.classList.toggle('dark');\">Toggle Dark</button></body>"
+    )
     return HTMLResponse(injected)
+
 
 @app.get("/health", tags=["System"])
 def health():
     return {"status": "ok"}
+
 
 # Prometheus instrumentation
 try:
