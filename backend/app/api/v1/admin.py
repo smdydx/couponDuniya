@@ -469,9 +469,254 @@ def invalidate_merchant_cache(slug: str):
     return {"success": True, "message": f"Cache invalidated for merchant {slug}"}
 
 
+@router.get("/users", response_model=dict)
+def list_users(
+    page: int = 1,
+    limit: int = 20,
+    search: str | None = None,
+    role: str | None = None,
+    is_active: bool | None = None,
+    db: Session = Depends(get_db)
+):
+    """List all users with pagination and filters (admin)"""
+    query = select(User)
+    
+    if search:
+        query = query.where(
+            or_(
+                User.email.ilike(f"%{search}%"),
+                User.full_name.ilike(f"%{search}%"),
+                User.mobile.ilike(f"%{search}%") if search.isdigit() else False
+            )
+        )
+    
+    if role:
+        query = query.where(User.role == role)
+    
+    if is_active is not None:
+        query = query.where(User.is_active == is_active)
+    
+    total_count = db.scalar(select(func.count()).select_from(query.subquery()))
+    
+    query = query.order_by(desc(User.created_at))
+    query = query.offset((page - 1) * limit).limit(limit)
+    
+    users = db.scalars(query).all()
+    
+    return {
+        "success": True,
+        "data": {
+            "users": [
+                {
+                    "id": u.id,
+                    "email": u.email,
+                    "mobile": u.mobile,
+                    "full_name": u.full_name,
+                    "first_name": getattr(u, 'first_name', None),
+                    "last_name": getattr(u, 'last_name', None),
+                    "avatar_url": getattr(u, 'avatar_url', None),
+                    "wallet_balance": float(u.wallet_balance) if u.wallet_balance else 0,
+                    "is_active": u.is_active,
+                    "is_verified": getattr(u, 'is_verified', False),
+                    "role": u.role,
+                    "created_at": u.created_at.isoformat() if u.created_at else None
+                }
+                for u in users
+            ],
+            "pagination": {
+                "current_page": page,
+                "total_pages": (total_count + limit - 1) // limit if total_count else 1,
+                "total_items": total_count or 0,
+                "per_page": limit
+            }
+        }
+    }
+
+
+@router.get("/offers", response_model=dict)
+def list_admin_offers(
+    page: int = 1,
+    limit: int = 20,
+    search: str | None = None,
+    merchant_id: int | None = None,
+    is_active: bool | None = None,
+    db: Session = Depends(get_db)
+):
+    """List all offers with pagination (admin - includes inactive)"""
+    query = select(Offer, Merchant).outerjoin(Merchant, Offer.merchant_id == Merchant.id)
+    
+    if search:
+        query = query.where(Offer.title.ilike(f"%{search}%"))
+    
+    if merchant_id:
+        query = query.where(Offer.merchant_id == merchant_id)
+    
+    if is_active is not None:
+        query = query.where(Offer.is_active == is_active)
+    
+    count_query = select(func.count()).select_from(Offer)
+    if search:
+        count_query = count_query.where(Offer.title.ilike(f"%{search}%"))
+    if merchant_id:
+        count_query = count_query.where(Offer.merchant_id == merchant_id)
+    if is_active is not None:
+        count_query = count_query.where(Offer.is_active == is_active)
+    
+    total_count = db.scalar(count_query)
+    
+    query = query.order_by(desc(Offer.created_at))
+    query = query.offset((page - 1) * limit).limit(limit)
+    
+    results = db.execute(query).all()
+    
+    return {
+        "success": True,
+        "data": {
+            "offers": [
+                {
+                    "id": offer.id,
+                    "merchant_id": offer.merchant_id,
+                    "merchant_name": merchant.name if merchant else None,
+                    "title": offer.title,
+                    "description": getattr(offer, 'description', None),
+                    "code": offer.code,
+                    "image_url": offer.image_url,
+                    "priority": offer.priority,
+                    "is_active": offer.is_active,
+                    "created_at": offer.created_at.isoformat() if offer.created_at else None
+                }
+                for offer, merchant in results
+            ],
+            "pagination": {
+                "current_page": page,
+                "total_pages": (total_count + limit - 1) // limit if total_count else 1,
+                "total_items": total_count or 0,
+                "per_page": limit
+            }
+        }
+    }
+
+
+@router.get("/products", response_model=dict)
+def list_admin_products(
+    page: int = 1,
+    limit: int = 20,
+    search: str | None = None,
+    merchant_id: int | None = None,
+    is_active: bool | None = None,
+    db: Session = Depends(get_db)
+):
+    """List all products with pagination (admin - includes inactive)"""
+    query = select(Product, Merchant).outerjoin(Merchant, Product.merchant_id == Merchant.id)
+    
+    if search:
+        query = query.where(or_(
+            Product.name.ilike(f"%{search}%"),
+            Product.slug.ilike(f"%{search}%")
+        ))
+    
+    if merchant_id:
+        query = query.where(Product.merchant_id == merchant_id)
+    
+    if is_active is not None:
+        query = query.where(Product.is_active == is_active)
+    
+    count_query = select(func.count()).select_from(Product)
+    if search:
+        count_query = count_query.where(or_(
+            Product.name.ilike(f"%{search}%"),
+            Product.slug.ilike(f"%{search}%")
+        ))
+    if merchant_id:
+        count_query = count_query.where(Product.merchant_id == merchant_id)
+    if is_active is not None:
+        count_query = count_query.where(Product.is_active == is_active)
+    
+    total_count = db.scalar(count_query)
+    
+    query = query.order_by(desc(Product.created_at))
+    query = query.offset((page - 1) * limit).limit(limit)
+    
+    results = db.execute(query).all()
+    
+    return {
+        "success": True,
+        "data": {
+            "products": [
+                {
+                    "id": product.id,
+                    "merchant_id": product.merchant_id,
+                    "merchant_name": merchant.name if merchant else None,
+                    "name": product.name,
+                    "slug": product.slug,
+                    "description": getattr(product, 'description', None),
+                    "image_url": product.image_url,
+                    "price": float(product.price) if product.price else 0,
+                    "stock": product.stock or 0,
+                    "is_active": product.is_active,
+                    "created_at": product.created_at.isoformat() if product.created_at else None
+                }
+                for product, merchant in results
+            ],
+            "pagination": {
+                "current_page": page,
+                "total_pages": (total_count + limit - 1) // limit if total_count else 1,
+                "total_items": total_count or 0,
+                "per_page": limit
+            }
+        }
+    }
+
+
 @router.get("/orders", response_model=dict)
-def list_orders(_: bool = Depends(require_admin)):
-    return {"success": True, "data": {"orders": [], "pagination": {"current_page": 1, "total_pages": 1, "total_items": 0, "per_page": 20}}}
+def list_orders(
+    page: int = 1,
+    limit: int = 20,
+    status: str | None = None,
+    db: Session = Depends(get_db)
+):
+    """List all orders with pagination (admin)"""
+    query = select(Order, User).outerjoin(User, Order.user_id == User.id)
+    
+    if status:
+        query = query.where(Order.status == status)
+    
+    count_query = select(func.count()).select_from(Order)
+    if status:
+        count_query = count_query.where(Order.status == status)
+    
+    total_count = db.scalar(count_query)
+    
+    query = query.order_by(desc(Order.created_at))
+    query = query.offset((page - 1) * limit).limit(limit)
+    
+    results = db.execute(query).all()
+    
+    return {
+        "success": True,
+        "data": {
+            "orders": [
+                {
+                    "id": order.id,
+                    "order_number": getattr(order, 'order_number', f"ORD-{order.id:06d}"),
+                    "user_id": order.user_id,
+                    "user_email": user.email if user else None,
+                    "total_amount": float(order.total_amount) if order.total_amount else 0,
+                    "status": order.status,
+                    "payment_status": getattr(order, 'payment_status', 'unknown'),
+                    "items_count": getattr(order, 'items_count', 0),
+                    "created_at": order.created_at.isoformat() if order.created_at else None
+                }
+                for order, user in results
+            ],
+            "pagination": {
+                "current_page": page,
+                "total_pages": (total_count + limit - 1) // limit if total_count else 1,
+                "total_items": total_count or 0,
+                "per_page": limit
+            }
+        }
+    }
 
 
 @router.patch("/orders/{id}/status", response_model=dict)
