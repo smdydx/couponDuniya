@@ -59,13 +59,10 @@ export function ProductCard({ product }: ProductCardProps) {
         <Link href={ROUTES.productDetail(product.slug)}>
           <div className="relative aspect-[4/3] overflow-hidden">
             {product.image_url ? (
-              <Image
+              <img
                 src={product.image_url}
                 alt={product.name}
-                fill
-                sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, (max-width: 1280px) 33vw, 300px"
-                priority={product.is_bestseller}
-                className="object-cover transition-transform duration-300 group-hover:scale-105"
+                className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105"
               />
             ) : (
               <div className="flex h-full w-full items-center justify-center bg-muted text-4xl font-bold text-muted-foreground">

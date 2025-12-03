@@ -44,13 +44,10 @@ export function OfferCard({ offer, onClickTrack }: OfferCardProps) {
       {/* Offer Image with Gradient Overlay */}
       {offer.image_url && (
         <div className="relative h-40 sm:h-48 w-full overflow-hidden">
-          <Image
+          <img
             src={offer.image_url}
             alt={offer.title}
-            fill
-            className="object-cover transition-transform duration-500 group-hover:scale-110"
-            sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, (max-width: 1280px) 33vw, 400px"
-            priority={offer.is_featured}
+            className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
           />
           <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-black/20 to-transparent" />
         </div>
@@ -81,13 +78,11 @@ export function OfferCard({ offer, onClickTrack }: OfferCardProps) {
         <div className="flex items-start gap-3">
           {/* Merchant Logo */}
           {offer.merchant?.logo_url ? (
-            <div className="relative h-14 w-14 sm:h-16 sm:w-16 shrink-0 rounded-lg border-2 border-gray-100 bg-white p-1.5 shadow-sm">
-              <Image
+            <div className="relative h-14 w-14 sm:h-16 sm:w-16 shrink-0 rounded-lg border-2 border-gray-100 bg-white p-1.5 shadow-sm flex items-center justify-center">
+              <img
                 src={offer.merchant.logo_url}
                 alt={offer.merchant.name}
-                fill
-                className="object-contain"
-                sizes="(max-width: 640px) 56px, 64px"
+                className="w-full h-full object-contain"
               />
             </div>
           ) : (

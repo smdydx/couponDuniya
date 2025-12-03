@@ -64,13 +64,10 @@ export function Header() {
 
           {/* Logo */}
           <Link href={ROUTES.home} className="flex items-center gap-2">
-            <Image 
+            <img 
               src="/images/logos/logo.png" 
               alt={SITE_NAME}
-              width={120}
-              height={40}
               className="h-8 w-auto"
-              priority
             />
           </Link>
 

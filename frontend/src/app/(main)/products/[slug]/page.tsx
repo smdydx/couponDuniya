@@ -114,13 +114,10 @@ export default function ProductDetailPage({
           <div className="sticky top-24">
             <div className="relative aspect-square w-full overflow-hidden rounded-lg border bg-white shadow-sm">
               {product.image_url ? (
-                <Image
+                <img
                   src={product.image_url}
                   alt={product.name}
-                  fill
-                  sizes="(max-width: 768px) 100vw, (max-width: 1024px) 50vw, 600px"
-                  priority
-                  className="object-contain p-4"
+                  className="w-full h-full object-contain p-4"
                 />
               ) : (
                 <div className="flex h-full w-full items-center justify-center text-4xl sm:text-6xl font-bold text-primary/20">

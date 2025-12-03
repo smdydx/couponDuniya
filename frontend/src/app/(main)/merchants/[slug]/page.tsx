@@ -131,12 +131,10 @@ export default function MerchantDetailPage({
           {/* Logo */}
           <div className="flex h-24 w-24 shrink-0 items-center justify-center rounded-lg border bg-white p-4">
             {merchant.logo_url ? (
-              <Image
+              <img
                 src={merchant.logo_url}
                 alt={merchant.name}
-                width={80}
-                height={80}
-                className="object-contain"
+                className="w-full h-full object-contain"
               />
             ) : (
               <span className="text-4xl font-bold text-primary">

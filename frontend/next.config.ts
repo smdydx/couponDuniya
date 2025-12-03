@@ -18,13 +18,9 @@ const nextConfig: NextConfig = {
     },
     optimizePackageImports: ["lucide-react"],
   },
-  // Hide the floating Next.js dev indicator ("N" button) in development
-  // If Next.js adds more dev tool UI elements, they can be disabled here.
-  devIndicators: {
-    buildActivity: false,
-  },
+  // Disable image optimization in development to avoid sharp dependency issues
   images: {
-    unoptimized: !isProd,
+    unoptimized: true,
     remotePatterns: [
       {
         protocol: "https",
