@@ -911,3 +911,246 @@ def analytics_top_merchants(
             "merchants": merchants
         }
     }
+
+
+# ========== GIFT CARD MANAGEMENT ENDPOINTS ==========
+
+from ...models import GiftCard
+from ...schemas.gift_card import GiftCardRead
+
+
+@router.get("/gift-cards", response_model=dict)
+def list_all_gift_cards(
+    page: int = 1,
+    limit: int = 50,
+    search: str | None = None,
+    status: str | None = None,
+    _: bool = Depends(require_admin),
+    db: Session = Depends(get_db)
+):
+    """List all gift cards with filters (admin only)"""
+    from sqlalchemy import or_
+    
+    query = select(GiftCard)
+    
+    # Search by code
+    if search:
+        query = query.where(GiftCard.code.ilike(f"%{search}%"))
+    
+    # Filter by status
+    if status:
+        if status == "active":
+            query = query.where(
+                and_(
+                    GiftCard.is_active == True,
+                    GiftCard.remaining_value > 0
+                )
+            )
+        elif status == "used":
+            query = query.where(GiftCard.remaining_value == 0)
+        elif status == "expired":
+            query = query.where(
+                and_(
+                    GiftCard.expires_at.isnot(None),
+                    GiftCard.expires_at < datetime.utcnow()
+                )
+            )
+        elif status == "inactive":
+            query = query.where(GiftCard.is_active == False)
+    
+    # Get total count
+    total_count = db.scalar(select(func.count()).select_from(query.subquery()))
+    
+    # Apply pagination
+    query = query.order_by(desc(GiftCard.created_at))
+    query = query.offset((page - 1) * limit).limit(limit)
+    
+    gift_cards = db.scalars(query).all()
+    
+    return {
+        "success": True,
+        "data": {
+            "gift_cards": [GiftCardRead.model_validate(gc) for gc in gift_cards],
+            "pagination": {
+                "current_page": page,
+                "total_pages": (total_count + limit - 1) // limit,
+                "total_items": total_count,
+                "per_page": limit
+            }
+        }
+    }
+
+
+class GiftCardBulkCreateRequest(BaseModel):
+    count: int = Field(..., ge=1, le=1000)
+    value: float = Field(..., gt=0)
+    expires_in_days: int | None = None
+
+
+@router.post("/gift-cards/bulk-create", response_model=dict)
+def bulk_create_gift_cards(
+    payload: GiftCardBulkCreateRequest,
+    _: bool = Depends(require_admin),
+    db: Session = Depends(get_db)
+):
+    """Bulk create gift cards with auto-generated codes"""
+    import secrets
+    
+    expires_at = None
+    if payload.expires_in_days:
+        expires_at = datetime.utcnow() + timedelta(days=payload.expires_in_days)
+    
+    created_cards = []
+    
+    for _ in range(payload.count):
+        # Generate unique code
+        for attempt in range(10):
+            code = secrets.token_hex(8).upper()
+            if not db.scalar(select(GiftCard).where(GiftCard.code == code)):
+                break
+        else:
+            raise HTTPException(
+                status_code=500,
+                detail="Failed to generate unique gift card code"
+            )
+        
+        gc = GiftCard(
+            code=code,
+            initial_value=payload.value,
+            remaining_value=payload.value,
+            expires_at=expires_at,
+            is_active=True
+        )
+        db.add(gc)
+        created_cards.append(gc)
+    
+    db.commit()
+    
+    for gc in created_cards:
+        db.refresh(gc)
+    
+    # Invalidate cache
+    cache_invalidate_prefix(rk("cache", "gift-cards"))
+    
+    return {
+        "success": True,
+        "message": f"Created {len(created_cards)} gift cards successfully",
+        "data": {
+            "created_count": len(created_cards),
+            "gift_cards": [GiftCardRead.model_validate(gc) for gc in created_cards]
+        }
+    }
+
+
+class GiftCardUpdateRequest(BaseModel):
+    is_active: bool | None = None
+    remaining_value: float | None = None
+    expires_at: datetime | None = None
+
+
+@router.patch("/gift-cards/{gift_card_id}", response_model=dict)
+def update_gift_card(
+    gift_card_id: int,
+    payload: GiftCardUpdateRequest,
+    _: bool = Depends(require_admin),
+    db: Session = Depends(get_db)
+):
+    """Update gift card details"""
+    gc = db.scalar(select(GiftCard).where(GiftCard.id == gift_card_id))
+    if not gc:
+        raise HTTPException(status_code=404, detail="Gift card not found")
+    
+    if payload.is_active is not None:
+        gc.is_active = payload.is_active
+    
+    if payload.remaining_value is not None:
+        if payload.remaining_value < 0 or payload.remaining_value > gc.initial_value:
+            raise HTTPException(
+                status_code=400,
+                detail="Invalid remaining value"
+            )
+        gc.remaining_value = payload.remaining_value
+    
+    if payload.expires_at is not None:
+        gc.expires_at = payload.expires_at
+    
+    db.commit()
+    db.refresh(gc)
+    
+    cache_invalidate_prefix(rk("cache", "gift-cards"))
+    
+    return {
+        "success": True,
+        "message": "Gift card updated successfully",
+        "data": GiftCardRead.model_validate(gc)
+    }
+
+
+@router.delete("/gift-cards/{gift_card_id}", response_model=dict)
+def delete_gift_card(
+    gift_card_id: int,
+    _: bool = Depends(require_admin),
+    db: Session = Depends(get_db)
+):
+    """Deactivate a gift card (soft delete)"""
+    gc = db.scalar(select(GiftCard).where(GiftCard.id == gift_card_id))
+    if not gc:
+        raise HTTPException(status_code=404, detail="Gift card not found")
+    
+    gc.is_active = False
+    db.commit()
+    
+    cache_invalidate_prefix(rk("cache", "gift-cards"))
+    
+    return {
+        "success": True,
+        "message": f"Gift card {gc.code} deactivated successfully"
+    }
+
+
+@router.get("/gift-cards/stats", response_model=dict)
+def gift_card_statistics(
+    _: bool = Depends(require_admin),
+    db: Session = Depends(get_db)
+):
+    """Get gift card statistics"""
+    
+    total_cards = db.scalar(select(func.count()).select_from(GiftCard)) or 0
+    
+    active_cards = db.scalar(
+        select(func.count())
+        .select_from(GiftCard)
+        .where(
+            and_(
+                GiftCard.is_active == True,
+                GiftCard.remaining_value > 0
+            )
+        )
+    ) or 0
+    
+    total_value = db.scalar(
+        select(func.coalesce(func.sum(GiftCard.initial_value), 0))
+        .where(GiftCard.is_active == True)
+    ) or 0.0
+    
+    redeemed_value = db.scalar(
+        select(func.coalesce(func.sum(GiftCard.initial_value - GiftCard.remaining_value), 0))
+    ) or 0.0
+    
+    assigned_cards = db.scalar(
+        select(func.count())
+        .select_from(GiftCard)
+        .where(GiftCard.user_id.isnot(None))
+    ) or 0
+    
+    return {
+        "success": True,
+        "data": {
+            "total_cards": total_cards,
+            "active_cards": active_cards,
+            "assigned_cards": assigned_cards,
+            "total_value": float(total_value),
+            "redeemed_value": float(redeemed_value),
+            "available_value": float(total_value - redeemed_value)
+        }
+    }

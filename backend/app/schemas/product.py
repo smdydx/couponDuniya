@@ -8,6 +8,8 @@ class ProductRead(BaseModel):
     slug: str
     price: float
     stock: int
+    is_bestseller: bool
+    is_featured: bool
     is_active: bool
     created_at: datetime
 

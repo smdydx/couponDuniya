@@ -13,6 +13,8 @@ class Product(Base):
     image_url: Mapped[str | None] = mapped_column(String(500))
     price: Mapped[float] = mapped_column(Numeric(10,2))
     stock: Mapped[int] = mapped_column(Integer, default=0)
+    is_bestseller: Mapped[bool] = mapped_column(Boolean, default=False)
+    is_featured: Mapped[bool] = mapped_column(Boolean, default=False)
     is_active: Mapped[bool] = mapped_column(Boolean, default=True)
     created_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow)
 
