@@ -24,6 +24,7 @@ const nextConfig: NextConfig = {
     buildActivity: false,
   },
   images: {
+    unoptimized: !isProd,
     remotePatterns: [
       {
         protocol: "https",

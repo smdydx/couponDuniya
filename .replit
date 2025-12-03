@@ -1,9 +1,10 @@
-modules = ["nodejs-20", "bash", "web", "python-3.11", "bun-1.2"]
+modules = ["nodejs-20", "bash", "web", "python-3.11", "bun-1.2", "postgresql-16"]
 [agent]
 expertMode = true
 
 [nix]
 channel = "stable-25_05"
+packages = ["gcc", "glibc"]
 
 [userenv]
 
@@ -47,6 +48,10 @@ waitForPort = 5000
 [[ports]]
 localPort = 5000
 externalPort = 80
+
+[[ports]]
+localPort = 43687
+externalPort = 3000
 
 [deployment]
 deploymentTarget = "static"
