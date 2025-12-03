@@ -12,6 +12,8 @@ class Offer(Base):
     code: Mapped[str | None] = mapped_column(String(100), index=True)
     image_url: Mapped[str | None] = mapped_column(String(500))
     is_active: Mapped[bool] = mapped_column(Boolean, default=True)
+    is_featured: Mapped[bool] = mapped_column(Boolean, default=False)
+    is_exclusive: Mapped[bool] = mapped_column(Boolean, default=False)
     priority: Mapped[int] = mapped_column(Integer, default=0)
     starts_at: Mapped[datetime | None] = mapped_column(DateTime)
     ends_at: Mapped[datetime | None] = mapped_column(DateTime)
