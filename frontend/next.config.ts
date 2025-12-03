@@ -3,15 +3,12 @@ import type { NextConfig } from "next";
 const isProd = process.env.NODE_ENV === "production";
 
 const replitDevDomain = process.env.REPLIT_DEV_DOMAIN || process.env.REPLIT_DOMAINS;
-const allowedOrigins = replitDevDomain
-  ? [`https://${replitDevDomain}`, replitDevDomain]
-  : [];
 
 const nextConfig: NextConfig = {
   reactStrictMode: true,
   compress: true,
   poweredByHeader: false,
-  allowedDevOrigins: allowedOrigins,
+  allowedDevOrigins: ['*'],
   experimental: {
     serverActions: {
       allowedOrigins: ['*'],
