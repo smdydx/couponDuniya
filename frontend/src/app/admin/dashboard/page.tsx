@@ -80,28 +80,24 @@ export default function AdminDashboardPage() {
     );
   }
 
-  if (error || !stats) {
-    return (
-      <div className="flex items-center justify-center min-h-screen bg-gradient-to-br from-red-50 to-orange-50 dark:from-gray-900 dark:to-gray-800">
-        <div className="text-center space-y-4">
-          <p className="text-red-600 dark:text-red-400 font-semibold">Error: {error || "No data available"}</p>
-          <Button onClick={fetchDashboardData} className="bg-emerald-600 hover:bg-emerald-700 dark:bg-emerald-500 dark:hover:bg-emerald-600">
-            <RefreshCw className="h-4 w-4 mr-2" />
-            Retry
-          </Button>
-        </div>
-      </div>
-    );
-  }
+  // Use default data structure if no stats available
+  const displayStats: DashboardStats = stats || {
+    orders: { total: 0, today: 0 },
+    revenue: { total: 0, today: 0 },
+    users: { total: 0, new_this_week: 0 },
+    withdrawals: { pending_count: 0, pending_amount: 0 },
+    catalog: { active_merchants: 0, active_offers: 0, available_products: 0 },
+    redis: { connected: false, keys_count: 0, memory_used: "0 MB", connected_clients: 0 }
+  };
 
   const statCards = [
     {
       title: "Total Revenue",
-      value: formatCurrency(stats.revenue.total),
-      subtitle: `${formatCurrency(stats.revenue.today)} today`,
+      value: formatCurrency(displayStats.revenue.total),
+      subtitle: `${formatCurrency(displayStats.revenue.today)} today`,
       icon: DollarSign,
-      trend: stats.revenue.today > 0 ? "up" : "down",
-      change: stats.revenue.today > 0 ? `+${((stats.revenue.today / (stats.revenue.total || 1)) * 100).toFixed(1)}%` : "0%",
+      trend: displayStats.revenue.today > 0 ? "up" : "down",
+      change: displayStats.revenue.today > 0 ? `+${((displayStats.revenue.today / (displayStats.revenue.total || 1)) * 100).toFixed(1)}%` : "0%",
       gradient: "from-emerald-400 via-green-500 to-teal-600",
       bgPattern: "bg-[radial-gradient(circle_at_30%_20%,rgba(16,185,129,0.15),transparent_50%)]",
       iconBg: "bg-gradient-to-br from-emerald-100 to-green-200 dark:from-emerald-900/40 dark:to-green-900/40",
@@ -110,11 +106,11 @@ export default function AdminDashboardPage() {
     },
     {
       title: "Total Orders",
-      value: stats.orders.total.toLocaleString(),
-      subtitle: `${stats.orders.today} today`,
+      value: displayStats.orders.total.toLocaleString(),
+      subtitle: `${displayStats.orders.today} today`,
       icon: ShoppingCart,
-      trend: stats.orders.today > 0 ? "up" : "down",
-      change: stats.orders.today > 0 ? `+${stats.orders.today}` : "0",
+      trend: displayStats.orders.today > 0 ? "up" : "down",
+      change: displayStats.orders.today > 0 ? `+${displayStats.orders.today}` : "0",
       gradient: "from-blue-400 via-cyan-500 to-teal-600",
       bgPattern: "bg-[radial-gradient(circle_at_70%_30%,rgba(6,182,212,0.15),transparent_50%)]",
       iconBg: "bg-gradient-to-br from-blue-100 to-cyan-200 dark:from-blue-900/40 dark:to-cyan-900/40",
@@ -123,11 +119,11 @@ export default function AdminDashboardPage() {
     },
     {
       title: "Active Users",
-      value: stats.users.total.toLocaleString(),
-      subtitle: `${stats.users.new_this_week} new this week`,
+      value: displayStats.users.total.toLocaleString(),
+      subtitle: `${displayStats.users.new_this_week} new this week`,
       icon: Users,
-      trend: stats.users.new_this_week > 0 ? "up" : "down",
-      change: `+${stats.users.new_this_week}`,
+      trend: displayStats.users.new_this_week > 0 ? "up" : "down",
+      change: `+${displayStats.users.new_this_week}`,
       gradient: "from-purple-400 via-pink-500 to-rose-600",
       bgPattern: "bg-[radial-gradient(circle_at_50%_50%,rgba(168,85,247,0.15),transparent_50%)]",
       iconBg: "bg-gradient-to-br from-purple-100 to-pink-200 dark:from-purple-900/40 dark:to-pink-900/40",
@@ -136,11 +132,11 @@ export default function AdminDashboardPage() {
     },
     {
       title: "Pending Withdrawals",
-      value: formatCurrency(stats.withdrawals.pending_amount),
-      subtitle: `${stats.withdrawals.pending_count} requests`,
+      value: formatCurrency(displayStats.withdrawals.pending_amount),
+      subtitle: `${displayStats.withdrawals.pending_count} requests`,
       icon: Wallet,
       trend: "neutral",
-      change: `${stats.withdrawals.pending_count} pending`,
+      change: `${displayStats.withdrawals.pending_count} pending`,
       gradient: "from-orange-400 via-amber-500 to-yellow-600",
       bgPattern: "bg-[radial-gradient(circle_at_20%_80%,rgba(251,146,60,0.15),transparent_50%)]",
       iconBg: "bg-gradient-to-br from-orange-100 to-amber-200 dark:from-orange-900/40 dark:to-amber-900/40",
@@ -152,7 +148,7 @@ export default function AdminDashboardPage() {
   const catalogStats = [
     {
       title: "Active Merchants",
-      value: stats.catalog.active_merchants,
+      value: displayStats.catalog.active_merchants,
       icon: Store,
       href: "/admin/merchants",
       gradient: "from-indigo-400 via-purple-500 to-pink-600",
@@ -161,7 +157,7 @@ export default function AdminDashboardPage() {
     },
     {
       title: "Active Offers",
-      value: stats.catalog.active_offers,
+      value: displayStats.catalog.active_offers,
       icon: Tag,
       href: "/admin/offers",
       gradient: "from-pink-400 via-rose-500 to-red-600",
@@ -170,7 +166,7 @@ export default function AdminDashboardPage() {
     },
     {
       title: "Available Products",
-      value: stats.catalog.available_products,
+      value: displayStats.catalog.available_products,
       icon: Gift,
       href: "/admin/products",
       gradient: "from-cyan-400 via-teal-500 to-emerald-600",
@@ -181,6 +177,26 @@ export default function AdminDashboardPage() {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-green-50/50 via-emerald-50/30 to-teal-50/50 dark:from-gray-950 dark:via-gray-900 dark:to-gray-950 p-6">
+      {error && (
+        <div className="mb-4 rounded-xl border-2 border-red-300 dark:border-red-700 bg-red-50 dark:bg-red-950/30 p-4">
+          <div className="flex items-center gap-3">
+            <AlertCircle className="h-5 w-5 text-red-600 dark:text-red-400 flex-shrink-0" />
+            <div className="flex-1">
+              <p className="text-sm font-semibold text-red-800 dark:text-red-200">Failed to load dashboard data</p>
+              <p className="text-xs text-red-600 dark:text-red-400 mt-1">{error}</p>
+            </div>
+            <Button 
+              onClick={fetchDashboardData} 
+              size="sm"
+              variant="outline"
+              className="border-red-400 dark:border-red-600 text-red-700 dark:text-red-300 hover:bg-red-100 dark:hover:bg-red-900/50"
+            >
+              <RefreshCw className="h-3 w-3 mr-1" />
+              Retry
+            </Button>
+          </div>
+        </div>
+      )}
       <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between mb-6">
         <div>
           <h1 className="text-4xl font-bold tracking-tight bg-gradient-to-r from-emerald-600 via-green-600 to-teal-600 dark:from-emerald-400 dark:via-green-400 dark:to-teal-400 bg-clip-text text-transparent flex items-center gap-3">
@@ -255,7 +271,7 @@ export default function AdminDashboardPage() {
                   <div className="absolute inset-0 bg-blue-500 dark:bg-blue-400 blur-xl opacity-20 animate-pulse"></div>
                 </div>
                 <p className="text-muted-foreground font-medium">Revenue chart visualization coming soon</p>
-                <p className="text-sm text-muted-foreground mt-1">Total Revenue: {formatCurrency(stats.revenue.total)}</p>
+                <p className="text-sm text-muted-foreground mt-1">Total Revenue: {formatCurrency(displayStats.revenue.total)}</p>
               </div>
             </div>
           </CardContent>
@@ -295,13 +311,13 @@ export default function AdminDashboardPage() {
                   </div>
                   <div>
                     <p className="font-semibold text-lg text-gray-900 dark:text-white">Redis Cache</p>
-                    <p className="text-xs text-muted-foreground">{stats.redis.keys_count} keys | {stats.redis.memory_used}</p>
+                    <p className="text-xs text-muted-foreground">{displayStats.redis.keys_count} keys | {displayStats.redis.memory_used}</p>
                   </div>
                 </div>
                 <Badge 
-                  className={stats.redis.connected ? "bg-gradient-to-r from-green-500 to-emerald-600 dark:from-green-600 dark:to-emerald-700 text-white shadow-md" : "bg-red-500 dark:bg-red-600"}
+                  className={displayStats.redis.connected ? "bg-gradient-to-r from-green-500 to-emerald-600 dark:from-green-600 dark:to-emerald-700 text-white shadow-md" : "bg-red-500 dark:bg-red-600"}
                 >
-                  {stats.redis.connected ? "● Connected" : "● Offline"}
+                  {displayStats.redis.connected ? "● Connected" : "● Offline"}
                 </Badge>
               </div>
             </div>
@@ -373,7 +389,7 @@ export default function AdminDashboardPage() {
                 </div>
                 <div>
                   <p className="font-bold text-base text-gray-900 dark:text-white">Process Withdrawals</p>
-                  <p className="text-xs text-muted-foreground">{stats.withdrawals.pending_count} pending</p>
+                  <p className="text-xs text-muted-foreground">{displayStats.withdrawals.pending_count} pending</p>
                 </div>
               </button>
             </Link>
