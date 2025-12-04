@@ -1,13 +1,14 @@
 import axios, { AxiosError, InternalAxiosRequestConfig } from 'axios';
 import { API_BASE_URL } from '@/lib/constants';
 
+const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://127.0.0.1:8000';
+
 const apiClient = axios.create({
-  baseURL: API_BASE_URL,
+  baseURL: `${API_URL}/api/v1`,
   headers: {
     'Content-Type': 'application/json',
-    'Accept': 'application/json',
   },
-  withCredentials: false,
+  withCredentials: true,
 });
 
 // Request interceptor to add auth token
@@ -47,7 +48,7 @@ apiClient.interceptors.response.use(
         if (authStorage) {
           const { state } = JSON.parse(authStorage);
           if (state?.refreshToken) {
-            const response = await axios.post(`${API_BASE_URL}/auth/refresh-token`, {
+            const response = await axios.post(`${API_URL}/auth/refresh-token`, {
               refresh_token: state.refreshToken,
             });
 
