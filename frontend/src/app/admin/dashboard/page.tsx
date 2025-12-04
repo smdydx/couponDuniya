@@ -21,6 +21,7 @@ import {
   Zap,
   TrendingDown,
   Database,
+  Leaf,
 } from "lucide-react";
 import Link from "next/link";
 import adminApi from "@/lib/api/admin";
@@ -67,10 +68,13 @@ export default function AdminDashboardPage() {
 
   if (loading) {
     return (
-      <div className="flex items-center justify-center min-h-screen">
+      <div className="flex items-center justify-center min-h-screen bg-gradient-to-br from-green-50 via-emerald-50 to-teal-50 dark:from-gray-900 dark:via-gray-800 dark:to-gray-900">
         <div className="text-center space-y-4">
-          <RefreshCw className="h-12 w-12 animate-spin mx-auto text-purple-600" />
-          <p className="text-muted-foreground">Loading dashboard...</p>
+          <div className="relative">
+            <RefreshCw className="h-16 w-16 animate-spin mx-auto text-emerald-600 dark:text-emerald-400" />
+            <Leaf className="h-8 w-8 absolute top-0 right-0 text-green-500 dark:text-green-400 animate-pulse" />
+          </div>
+          <p className="text-muted-foreground font-medium">Loading dashboard...</p>
         </div>
       </div>
     );
@@ -78,10 +82,13 @@ export default function AdminDashboardPage() {
 
   if (error || !stats) {
     return (
-      <div className="flex items-center justify-center min-h-screen">
+      <div className="flex items-center justify-center min-h-screen bg-gradient-to-br from-red-50 to-orange-50 dark:from-gray-900 dark:to-gray-800">
         <div className="text-center space-y-4">
-          <p className="text-red-600">Error: {error || "No data available"}</p>
-          <Button onClick={fetchDashboardData}>Retry</Button>
+          <p className="text-red-600 dark:text-red-400 font-semibold">Error: {error || "No data available"}</p>
+          <Button onClick={fetchDashboardData} className="bg-emerald-600 hover:bg-emerald-700 dark:bg-emerald-500 dark:hover:bg-emerald-600">
+            <RefreshCw className="h-4 w-4 mr-2" />
+            Retry
+          </Button>
         </div>
       </div>
     );
@@ -95,9 +102,11 @@ export default function AdminDashboardPage() {
       icon: DollarSign,
       trend: stats.revenue.today > 0 ? "up" : "down",
       change: stats.revenue.today > 0 ? `+${((stats.revenue.today / (stats.revenue.total || 1)) * 100).toFixed(1)}%` : "0%",
-      color: "from-emerald-500 via-green-500 to-teal-600",
-      iconBg: "bg-gradient-to-br from-emerald-100 to-teal-100 dark:from-emerald-900/30 dark:to-teal-900/30",
-      iconColor: "text-emerald-600 dark:text-emerald-400",
+      gradient: "from-emerald-400 via-green-500 to-teal-600",
+      bgPattern: "bg-[radial-gradient(circle_at_30%_20%,rgba(16,185,129,0.15),transparent_50%)]",
+      iconBg: "bg-gradient-to-br from-emerald-100 to-green-200 dark:from-emerald-900/40 dark:to-green-900/40",
+      iconColor: "text-emerald-700 dark:text-emerald-300",
+      leafColor: "text-green-600 dark:text-green-400",
     },
     {
       title: "Total Orders",
@@ -106,9 +115,11 @@ export default function AdminDashboardPage() {
       icon: ShoppingCart,
       trend: stats.orders.today > 0 ? "up" : "down",
       change: stats.orders.today > 0 ? `+${stats.orders.today}` : "0",
-      color: "from-blue-500 via-sky-500 to-indigo-600",
-      iconBg: "bg-gradient-to-br from-blue-100 to-indigo-100 dark:from-blue-900/30 dark:to-indigo-900/30",
-      iconColor: "text-blue-600 dark:text-blue-400",
+      gradient: "from-blue-400 via-cyan-500 to-teal-600",
+      bgPattern: "bg-[radial-gradient(circle_at_70%_30%,rgba(6,182,212,0.15),transparent_50%)]",
+      iconBg: "bg-gradient-to-br from-blue-100 to-cyan-200 dark:from-blue-900/40 dark:to-cyan-900/40",
+      iconColor: "text-blue-700 dark:text-blue-300",
+      leafColor: "text-cyan-600 dark:text-cyan-400",
     },
     {
       title: "Active Users",
@@ -117,9 +128,11 @@ export default function AdminDashboardPage() {
       icon: Users,
       trend: stats.users.new_this_week > 0 ? "up" : "down",
       change: `+${stats.users.new_this_week}`,
-      color: "from-purple-500 via-pink-500 to-rose-600",
-      iconBg: "bg-gradient-to-br from-purple-100 to-pink-100 dark:from-purple-900/30 dark:to-pink-900/30",
-      iconColor: "text-purple-600 dark:text-purple-400",
+      gradient: "from-purple-400 via-pink-500 to-rose-600",
+      bgPattern: "bg-[radial-gradient(circle_at_50%_50%,rgba(168,85,247,0.15),transparent_50%)]",
+      iconBg: "bg-gradient-to-br from-purple-100 to-pink-200 dark:from-purple-900/40 dark:to-pink-900/40",
+      iconColor: "text-purple-700 dark:text-purple-300",
+      leafColor: "text-pink-600 dark:text-pink-400",
     },
     {
       title: "Pending Withdrawals",
@@ -128,9 +141,11 @@ export default function AdminDashboardPage() {
       icon: Wallet,
       trend: "neutral",
       change: `${stats.withdrawals.pending_count} pending`,
-      color: "from-orange-500 via-amber-500 to-yellow-600",
-      iconBg: "bg-gradient-to-br from-orange-100 to-yellow-100 dark:from-orange-900/30 dark:to-yellow-900/30",
-      iconColor: "text-orange-600 dark:text-orange-400",
+      gradient: "from-orange-400 via-amber-500 to-yellow-600",
+      bgPattern: "bg-[radial-gradient(circle_at_20%_80%,rgba(251,146,60,0.15),transparent_50%)]",
+      iconBg: "bg-gradient-to-br from-orange-100 to-amber-200 dark:from-orange-900/40 dark:to-amber-900/40",
+      iconColor: "text-orange-700 dark:text-orange-300",
+      leafColor: "text-amber-600 dark:text-amber-400",
     },
   ];
 
@@ -140,72 +155,80 @@ export default function AdminDashboardPage() {
       value: stats.catalog.active_merchants,
       icon: Store,
       href: "/admin/merchants",
-      gradient: "from-indigo-500 via-purple-500 to-pink-500",
-      iconColor: "text-indigo-600 dark:text-indigo-400",
+      gradient: "from-indigo-400 via-purple-500 to-pink-600",
+      iconColor: "text-indigo-700 dark:text-indigo-300",
+      bgPattern: "bg-[radial-gradient(circle_at_top_right,rgba(99,102,241,0.1),transparent)]",
     },
     {
       title: "Active Offers",
       value: stats.catalog.active_offers,
       icon: Tag,
       href: "/admin/offers",
-      gradient: "from-pink-500 via-rose-500 to-red-500",
-      iconColor: "text-pink-600 dark:text-pink-400",
+      gradient: "from-pink-400 via-rose-500 to-red-600",
+      iconColor: "text-pink-700 dark:text-pink-300",
+      bgPattern: "bg-[radial-gradient(circle_at_bottom_left,rgba(236,72,153,0.1),transparent)]",
     },
     {
       title: "Available Products",
       value: stats.catalog.available_products,
       icon: Gift,
       href: "/admin/products",
-      gradient: "from-cyan-500 via-blue-500 to-indigo-500",
-      iconColor: "text-cyan-600 dark:text-cyan-400",
+      gradient: "from-cyan-400 via-teal-500 to-emerald-600",
+      iconColor: "text-cyan-700 dark:text-cyan-300",
+      bgPattern: "bg-[radial-gradient(circle_at_center,rgba(6,182,212,0.1),transparent)]",
     },
   ];
 
   return (
-    <div className="space-y-6 p-6">
-      <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+    <div className="min-h-screen bg-gradient-to-br from-green-50/50 via-emerald-50/30 to-teal-50/50 dark:from-gray-950 dark:via-gray-900 dark:to-gray-950 p-6">
+      <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between mb-6">
         <div>
-          <h1 className="text-4xl font-bold tracking-tight bg-gradient-to-r from-purple-600 via-pink-600 to-orange-500 bg-clip-text text-transparent">
+          <h1 className="text-4xl font-bold tracking-tight bg-gradient-to-r from-emerald-600 via-green-600 to-teal-600 dark:from-emerald-400 dark:via-green-400 dark:to-teal-400 bg-clip-text text-transparent flex items-center gap-3">
+            <Leaf className="h-10 w-10 text-green-600 dark:text-green-400" />
             Dashboard
           </h1>
-          <p className="text-muted-foreground mt-1">
+          <p className="text-muted-foreground mt-2 flex items-center gap-2">
+            <Sparkles className="h-4 w-4 text-yellow-500" />
             Welcome back! Here&apos;s what&apos;s happening with your platform.
           </p>
         </div>
         <Button 
           variant="outline" 
           size="sm" 
-          className="gap-2 hover:bg-gradient-to-r hover:from-purple-50 hover:to-pink-50 dark:hover:from-purple-950/20 dark:hover:to-pink-950/20"
+          className="gap-2 border-2 border-emerald-300 dark:border-emerald-700 hover:bg-emerald-50 dark:hover:bg-emerald-950/30 hover:border-emerald-400 dark:hover:border-emerald-600 transition-all"
           onClick={fetchDashboardData}
         >
-          <RefreshCw className="h-4 w-4" />
+          <RefreshCw className="h-4 w-4 text-emerald-600 dark:text-emerald-400" />
           Refresh
         </Button>
       </div>
 
-      {/* Main Stats Cards with Gradients */}
-      <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-4">
+      {/* Main Stats Cards with Nature Theme */}
+      <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-4 mb-6">
         {statCards.map((stat) => (
-          <Card key={stat.title} className="relative overflow-hidden border-2 hover:shadow-2xl transition-all duration-300 hover:-translate-y-1">
-            <div className={`absolute inset-0 bg-gradient-to-br ${stat.color} opacity-10`} />
-            <CardContent className="p-6 relative">
+          <Card key={stat.title} className="relative overflow-hidden border-2 border-gray-200 dark:border-gray-700 hover:shadow-2xl transition-all duration-300 hover:-translate-y-1 hover:border-green-300 dark:hover:border-green-700 bg-white dark:bg-gray-900">
+            <div className={`absolute inset-0 ${stat.bgPattern}`} />
+            <div className="absolute top-2 right-2 opacity-20">
+              <Leaf className={`h-24 w-24 ${stat.leafColor} transform rotate-12`} />
+            </div>
+            <CardContent className="p-6 relative z-10">
               <div className="flex items-center justify-between mb-4">
-                <div className={`flex h-14 w-14 items-center justify-center rounded-2xl ${stat.iconBg} shadow-lg`}>
+                <div className={`flex h-14 w-14 items-center justify-center rounded-2xl ${stat.iconBg} shadow-lg ring-2 ring-white dark:ring-gray-800`}>
                   <stat.icon className={`h-7 w-7 ${stat.iconColor}`} />
                 </div>
                 <Badge 
                   variant={stat.trend === "up" ? "default" : stat.trend === "down" ? "secondary" : "outline"} 
-                  className={`gap-1 ${stat.trend === "up" ? 'bg-gradient-to-r from-green-500 to-emerald-600 hover:from-green-600 hover:to-emerald-700' : stat.trend === "down" ? 'bg-gray-500' : 'bg-blue-500'}`}
+                  className={`gap-1 ${stat.trend === "up" ? 'bg-gradient-to-r from-green-500 to-emerald-600 dark:from-green-600 dark:to-emerald-700 text-white' : stat.trend === "down" ? 'bg-gray-500 dark:bg-gray-600' : 'bg-blue-500 dark:bg-blue-600'}`}
                 >
                   {stat.trend === "up" ? <ArrowUpRight className="h-3 w-3" /> : stat.trend === "down" ? <TrendingDown className="h-3 w-3" /> : null}
                   {stat.change}
                 </Badge>
               </div>
               <div>
-                <p className="text-3xl font-bold bg-gradient-to-br from-gray-900 to-gray-700 dark:from-white dark:to-gray-300 bg-clip-text text-transparent">{stat.value}</p>
-                <p className="text-sm font-medium text-muted-foreground mt-1">{stat.title}</p>
+                <p className="text-3xl font-bold text-gray-900 dark:text-white">{stat.value}</p>
+                <p className="text-sm font-medium text-gray-600 dark:text-gray-400 mt-1">{stat.title}</p>
                 <p className="text-xs text-muted-foreground mt-2 flex items-center gap-1">
-                  <Sparkles className="h-3 w-3" />
+                  <Sparkles className="h-3 w-3 text-yellow-500 dark:text-yellow-400" />
                   {stat.subtitle}
                 </p>
               </div>
@@ -214,22 +237,22 @@ export default function AdminDashboardPage() {
         ))}
       </div>
 
-      <div className="grid gap-6 lg:grid-cols-3">
+      <div className="grid gap-6 lg:grid-cols-3 mb-6">
         {/* Revenue Chart Placeholder */}
-        <Card className="lg:col-span-2 border-2 hover:shadow-xl transition-shadow bg-gradient-to-br from-blue-50/50 to-indigo-50/50 dark:from-blue-950/10 dark:to-indigo-950/10">
-          <CardHeader className="flex flex-row items-center justify-between border-b bg-gradient-to-r from-blue-100/50 to-indigo-100/50 dark:from-blue-950/20 dark:to-indigo-950/20">
-            <CardTitle className="text-lg flex items-center gap-2">
-              <TrendingUp className="h-5 w-5 text-blue-600" />
+        <Card className="lg:col-span-2 border-2 border-gray-200 dark:border-gray-700 hover:shadow-xl transition-shadow bg-gradient-to-br from-blue-50/50 to-indigo-50/50 dark:from-blue-950/20 dark:to-indigo-950/20">
+          <CardHeader className="flex flex-row items-center justify-between border-b border-gray-200 dark:border-gray-700 bg-gradient-to-r from-blue-100/50 to-indigo-100/50 dark:from-blue-950/30 dark:to-indigo-950/30">
+            <CardTitle className="text-lg flex items-center gap-2 text-gray-900 dark:text-white">
+              <TrendingUp className="h-5 w-5 text-blue-600 dark:text-blue-400" />
               Revenue Overview (Last 7 Days)
             </CardTitle>
-            <Sparkles className="h-5 w-5 text-yellow-500 animate-pulse" />
+            <Leaf className="h-5 w-5 text-green-500 dark:text-green-400 animate-pulse" />
           </CardHeader>
           <CardContent className="pt-6">
             <div className="flex h-[200px] items-center justify-center">
               <div className="text-center">
                 <div className="relative">
-                  <Activity className="h-16 w-16 text-blue-500 mx-auto mb-3 animate-pulse" />
-                  <div className="absolute inset-0 bg-blue-500 blur-xl opacity-20 animate-pulse"></div>
+                  <Activity className="h-16 w-16 text-blue-500 dark:text-blue-400 mx-auto mb-3 animate-pulse" />
+                  <div className="absolute inset-0 bg-blue-500 dark:bg-blue-400 blur-xl opacity-20 animate-pulse"></div>
                 </div>
                 <p className="text-muted-foreground font-medium">Revenue chart visualization coming soon</p>
                 <p className="text-sm text-muted-foreground mt-1">Total Revenue: {formatCurrency(stats.revenue.total)}</p>
@@ -239,45 +262,44 @@ export default function AdminDashboardPage() {
         </Card>
 
         {/* System Status */}
-        <Card className="border-2 hover:shadow-xl transition-shadow bg-gradient-to-br from-green-50/50 to-emerald-50/50 dark:from-green-950/10 dark:to-emerald-950/10">
-          <CardHeader className="border-b bg-gradient-to-r from-green-100/50 to-emerald-100/50 dark:from-green-950/20 dark:to-emerald-950/20">
-            <CardTitle className="text-lg flex items-center gap-2">
-              <Zap className="h-5 w-5 text-green-600" />
+        <Card className="border-2 border-gray-200 dark:border-gray-700 hover:shadow-xl transition-shadow bg-gradient-to-br from-green-50/50 to-emerald-50/50 dark:from-green-950/20 dark:to-emerald-950/20">
+          <CardHeader className="border-b border-gray-200 dark:border-gray-700 bg-gradient-to-r from-green-100/50 to-emerald-100/50 dark:from-green-950/30 dark:to-emerald-950/30">
+            <CardTitle className="text-lg flex items-center gap-2 text-gray-900 dark:text-white">
+              <Zap className="h-5 w-5 text-green-600 dark:text-green-400" />
               System Status
             </CardTitle>
           </CardHeader>
           <CardContent className="space-y-4 pt-6">
-            <div className="rounded-xl border-2 border-green-200 dark:border-green-800 p-4 bg-gradient-to-r from-green-50 to-emerald-50 dark:from-green-950/20 dark:to-emerald-950/20 shadow-md">
+            <div className="rounded-xl border-2 border-green-200 dark:border-green-800 p-4 bg-gradient-to-r from-green-50 to-emerald-50 dark:from-green-950/30 dark:to-emerald-950/30 shadow-md">
               <div className="flex items-center justify-between mb-3">
                 <div className="flex items-center gap-3">
-                  <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-gradient-to-br from-green-100 to-emerald-100 dark:from-green-900/30 dark:to-emerald-900/30 shadow-lg">
+                  <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-gradient-to-br from-green-100 to-emerald-100 dark:from-green-900/40 dark:to-emerald-900/40 shadow-lg">
                     <Activity className="h-6 w-6 text-green-600 dark:text-green-400 animate-pulse" />
                   </div>
                   <div>
-                    <p className="font-semibold text-lg">API Server</p>
+                    <p className="font-semibold text-lg text-gray-900 dark:text-white">API Server</p>
                     <p className="text-xs text-muted-foreground">FastAPI Backend</p>
                   </div>
                 </div>
-                <Badge variant="default" className="bg-gradient-to-r from-green-500 to-emerald-600 hover:from-green-600 hover:to-emerald-700 shadow-md">
+                <Badge className="bg-gradient-to-r from-green-500 to-emerald-600 dark:from-green-600 dark:to-emerald-700 text-white shadow-md">
                   ● Online
                 </Badge>
               </div>
             </div>
 
-            <div className="rounded-xl border-2 border-blue-200 dark:border-blue-800 p-4 bg-gradient-to-r from-blue-50 to-sky-50 dark:from-blue-950/20 dark:to-sky-950/20 shadow-md">
+            <div className="rounded-xl border-2 border-blue-200 dark:border-blue-800 p-4 bg-gradient-to-r from-blue-50 to-sky-50 dark:from-blue-950/30 dark:to-sky-950/30 shadow-md">
               <div className="flex items-center justify-between mb-3">
                 <div className="flex items-center gap-3">
-                  <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-gradient-to-br from-blue-100 to-sky-100 dark:from-blue-900/30 dark:to-sky-900/30 shadow-lg">
+                  <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-gradient-to-br from-blue-100 to-sky-100 dark:from-blue-900/40 dark:to-sky-900/40 shadow-lg">
                     <Database className="h-6 w-6 text-blue-600 dark:text-blue-400" />
                   </div>
                   <div>
-                    <p className="font-semibold text-lg">Redis Cache</p>
+                    <p className="font-semibold text-lg text-gray-900 dark:text-white">Redis Cache</p>
                     <p className="text-xs text-muted-foreground">{stats.redis.keys_count} keys | {stats.redis.memory_used}</p>
                   </div>
                 </div>
                 <Badge 
-                  variant={stats.redis.connected ? "default" : "destructive"} 
-                  className={stats.redis.connected ? "bg-gradient-to-r from-green-500 to-emerald-600 shadow-md" : ""}
+                  className={stats.redis.connected ? "bg-gradient-to-r from-green-500 to-emerald-600 dark:from-green-600 dark:to-emerald-700 text-white shadow-md" : "bg-red-500 dark:bg-red-600"}
                 >
                   {stats.redis.connected ? "● Connected" : "● Offline"}
                 </Badge>
@@ -287,21 +309,24 @@ export default function AdminDashboardPage() {
         </Card>
       </div>
 
-      {/* Catalog Stats with Gradient Borders */}
-      <div className="grid gap-6 md:grid-cols-3">
+      {/* Catalog Stats with Nature Theme */}
+      <div className="grid gap-6 md:grid-cols-3 mb-6">
         {catalogStats.map((stat) => (
           <Link key={stat.title} href={stat.href}>
-            <Card className="cursor-pointer transition-all hover:shadow-2xl hover:scale-105 duration-300 border-2 relative overflow-hidden group">
-              <div className={`absolute inset-0 bg-gradient-to-r ${stat.gradient} opacity-0 group-hover:opacity-20 transition-opacity`} />
-              <CardContent className="flex items-center gap-4 p-6 relative">
-                <div className={`flex h-20 w-20 items-center justify-center rounded-2xl bg-gradient-to-br ${stat.gradient} shadow-2xl group-hover:scale-110 transition-transform`}>
+            <Card className="cursor-pointer transition-all hover:shadow-2xl hover:scale-105 duration-300 border-2 border-gray-200 dark:border-gray-700 relative overflow-hidden group bg-white dark:bg-gray-900">
+              <div className={`absolute inset-0 ${stat.bgPattern}`} />
+              <div className="absolute top-0 right-0 opacity-10 group-hover:opacity-20 transition-opacity">
+                <Leaf className="h-32 w-32 text-green-600 dark:text-green-400 transform rotate-45" />
+              </div>
+              <CardContent className="flex items-center gap-4 p-6 relative z-10">
+                <div className={`flex h-20 w-20 items-center justify-center rounded-2xl bg-gradient-to-br ${stat.gradient} shadow-2xl group-hover:scale-110 transition-transform ring-4 ring-white dark:ring-gray-800`}>
                   <stat.icon className="h-10 w-10 text-white" />
                 </div>
                 <div>
-                  <p className="text-5xl font-bold bg-gradient-to-r from-gray-900 to-gray-600 dark:from-gray-100 dark:to-gray-400 bg-clip-text text-transparent">
+                  <p className="text-5xl font-bold text-gray-900 dark:text-white">
                     {stat.value.toLocaleString()}
                   </p>
-                  <p className="text-sm text-muted-foreground font-medium mt-1">{stat.title}</p>
+                  <p className="text-sm text-gray-600 dark:text-gray-400 font-medium mt-1">{stat.title}</p>
                 </div>
               </CardContent>
             </Card>
@@ -310,55 +335,55 @@ export default function AdminDashboardPage() {
       </div>
 
       {/* Quick Actions */}
-      <Card className="border-2 bg-gradient-to-br from-purple-50/30 to-pink-50/30 dark:from-purple-950/10 dark:to-pink-950/10">
-        <CardHeader className="border-b bg-gradient-to-r from-purple-100/50 to-pink-100/50 dark:from-purple-950/20 dark:to-pink-950/20">
-          <CardTitle className="text-lg flex items-center gap-2">
-            <Sparkles className="h-5 w-5 text-purple-600" />
+      <Card className="border-2 border-gray-200 dark:border-gray-700 bg-gradient-to-br from-purple-50/30 to-pink-50/30 dark:from-purple-950/20 dark:to-pink-950/20">
+        <CardHeader className="border-b border-gray-200 dark:border-gray-700 bg-gradient-to-r from-purple-100/50 to-pink-100/50 dark:from-purple-950/30 dark:to-pink-950/30">
+          <CardTitle className="text-lg flex items-center gap-2 text-gray-900 dark:text-white">
+            <Sparkles className="h-5 w-5 text-purple-600 dark:text-purple-400" />
             Quick Actions
           </CardTitle>
         </CardHeader>
         <CardContent className="pt-6">
           <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
             <Link href="/admin/offers">
-              <button className="flex w-full items-center gap-3 rounded-2xl border-2 p-4 text-left transition-all hover:bg-gradient-to-r hover:from-blue-50 hover:to-indigo-50 dark:hover:from-blue-950/20 dark:hover:to-indigo-950/20 hover:border-blue-400 hover:shadow-xl hover:-translate-y-1">
-                <div className="flex h-14 w-14 items-center justify-center rounded-xl bg-gradient-to-br from-blue-100 to-indigo-100 dark:from-blue-900/30 dark:to-indigo-900/30 shadow-md">
+              <button className="flex w-full items-center gap-3 rounded-2xl border-2 border-gray-200 dark:border-gray-700 p-4 text-left transition-all hover:bg-gradient-to-r hover:from-blue-50 hover:to-indigo-50 dark:hover:from-blue-950/30 dark:hover:to-indigo-950/30 hover:border-blue-400 dark:hover:border-blue-600 hover:shadow-xl hover:-translate-y-1 bg-white dark:bg-gray-900">
+                <div className="flex h-14 w-14 items-center justify-center rounded-xl bg-gradient-to-br from-blue-100 to-indigo-100 dark:from-blue-900/40 dark:to-indigo-900/40 shadow-md">
                   <Tag className="h-7 w-7 text-blue-600 dark:text-blue-400" />
                 </div>
                 <div>
-                  <p className="font-bold text-base">Add New Offer</p>
+                  <p className="font-bold text-base text-gray-900 dark:text-white">Add New Offer</p>
                   <p className="text-xs text-muted-foreground">Create coupon or deal</p>
                 </div>
               </button>
             </Link>
             <Link href="/admin/merchants">
-              <button className="flex w-full items-center gap-3 rounded-2xl border-2 p-4 text-left transition-all hover:bg-gradient-to-r hover:from-green-50 hover:to-emerald-50 dark:hover:from-green-950/20 dark:hover:to-emerald-950/20 hover:border-green-400 hover:shadow-xl hover:-translate-y-1">
-                <div className="flex h-14 w-14 items-center justify-center rounded-xl bg-gradient-to-br from-green-100 to-emerald-100 dark:from-green-900/30 dark:to-emerald-900/30 shadow-md">
+              <button className="flex w-full items-center gap-3 rounded-2xl border-2 border-gray-200 dark:border-gray-700 p-4 text-left transition-all hover:bg-gradient-to-r hover:from-green-50 hover:to-emerald-50 dark:hover:from-green-950/30 dark:hover:to-emerald-950/30 hover:border-green-400 dark:hover:border-green-600 hover:shadow-xl hover:-translate-y-1 bg-white dark:bg-gray-900">
+                <div className="flex h-14 w-14 items-center justify-center rounded-xl bg-gradient-to-br from-green-100 to-emerald-100 dark:from-green-900/40 dark:to-emerald-900/40 shadow-md">
                   <Store className="h-7 w-7 text-green-600 dark:text-green-400" />
                 </div>
                 <div>
-                  <p className="font-bold text-base">Add Merchant</p>
+                  <p className="font-bold text-base text-gray-900 dark:text-white">Add Merchant</p>
                   <p className="text-xs text-muted-foreground">New partner store</p>
                 </div>
               </button>
             </Link>
             <Link href="/admin/withdrawals">
-              <button className="flex w-full items-center gap-3 rounded-2xl border-2 p-4 text-left transition-all hover:bg-gradient-to-r hover:from-purple-50 hover:to-pink-50 dark:hover:from-purple-950/20 dark:hover:to-pink-950/20 hover:border-purple-400 hover:shadow-xl hover:-translate-y-1">
-                <div className="flex h-14 w-14 items-center justify-center rounded-xl bg-gradient-to-br from-purple-100 to-pink-100 dark:from-purple-900/30 dark:to-pink-900/30 shadow-md">
+              <button className="flex w-full items-center gap-3 rounded-2xl border-2 border-gray-200 dark:border-gray-700 p-4 text-left transition-all hover:bg-gradient-to-r hover:from-purple-50 hover:to-pink-50 dark:hover:from-purple-950/30 dark:hover:to-pink-950/30 hover:border-purple-400 dark:hover:border-purple-600 hover:shadow-xl hover:-translate-y-1 bg-white dark:bg-gray-900">
+                <div className="flex h-14 w-14 items-center justify-center rounded-xl bg-gradient-to-br from-purple-100 to-pink-100 dark:from-purple-900/40 dark:to-pink-900/40 shadow-md">
                   <Wallet className="h-7 w-7 text-purple-600 dark:text-purple-400" />
                 </div>
                 <div>
-                  <p className="font-bold text-base">Process Withdrawals</p>
+                  <p className="font-bold text-base text-gray-900 dark:text-white">Process Withdrawals</p>
                   <p className="text-xs text-muted-foreground">{stats.withdrawals.pending_count} pending</p>
                 </div>
               </button>
             </Link>
             <Link href="/admin/analytics">
-              <button className="flex w-full items-center gap-3 rounded-2xl border-2 p-4 text-left transition-all hover:bg-gradient-to-r hover:from-orange-50 hover:to-red-50 dark:hover:from-orange-950/20 dark:hover:to-red-950/20 hover:border-orange-400 hover:shadow-xl hover:-translate-y-1">
-                <div className="flex h-14 w-14 items-center justify-center rounded-xl bg-gradient-to-br from-orange-100 to-red-100 dark:from-orange-900/30 dark:to-red-900/30 shadow-md">
+              <button className="flex w-full items-center gap-3 rounded-2xl border-2 border-gray-200 dark:border-gray-700 p-4 text-left transition-all hover:bg-gradient-to-r hover:from-orange-50 hover:to-red-50 dark:hover:from-orange-950/30 dark:hover:to-red-950/30 hover:border-orange-400 dark:hover:border-orange-600 hover:shadow-xl hover:-translate-y-1 bg-white dark:bg-gray-900">
+                <div className="flex h-14 w-14 items-center justify-center rounded-xl bg-gradient-to-br from-orange-100 to-red-100 dark:from-orange-900/40 dark:to-red-900/40 shadow-md">
                   <TrendingUp className="h-7 w-7 text-orange-600 dark:text-orange-400" />
                 </div>
                 <div>
-                  <p className="font-bold text-base">View Analytics</p>
+                  <p className="font-bold text-base text-gray-900 dark:text-white">View Analytics</p>
                   <p className="text-xs text-muted-foreground">Reports & insights</p>
                 </div>
               </button>
