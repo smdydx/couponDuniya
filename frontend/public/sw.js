@@ -1,23 +1,18 @@
-// Service Worker Disabled
-// This service worker is intentionally empty to prevent caching issues
 
-self.addEventListener('install', (event) => {
+// Service Worker - Disabled
+self.addEventListener('install', () => {
   self.skipWaiting();
 });
 
 self.addEventListener('activate', (event) => {
   event.waitUntil(
-    caches.keys().then((cacheNames) => {
-      return Promise.all(
-        cacheNames.map((cacheName) => {
-          return caches.delete(cacheName);
-        })
-      );
-    }).then(() => self.clients.claim())
+    caches.keys().then((keys) => 
+      Promise.all(keys.map((key) => caches.delete(key)))
+    ).then(() => self.clients.claim())
   );
 });
 
-self.addEventListener('fetch', (event) => {
-  // Pass through all requests without caching
-  event.respondWith(fetch(event.request));
+// Don't intercept any requests
+self.addEventListener('fetch', () => {
+  // Do nothing - let requests pass through normally
 });

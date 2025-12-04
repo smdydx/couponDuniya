@@ -5,6 +5,7 @@ import { useEffect, useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import Link from "next/link";
 import {
   DollarSign,
   ShoppingCart,
@@ -24,7 +25,6 @@ import {
   Leaf,
   AlertCircle,
 } from "lucide-react";
-import Link from "next/link";
 import adminApi from "@/lib/api/admin";
 
 interface DashboardStats {
