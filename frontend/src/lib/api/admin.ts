@@ -115,15 +115,18 @@ const adminApi = {
   getDashboard: async (): Promise<DashboardStats> => {
     try {
       const response = await apiClient.get('/admin/analytics/dashboard');
-      return response.data?.data || response.data;
-    } catch (error: any) {
-      console.error("Dashboard API error:", error);
-      if (error.response?.status === 401) {
-        // Redirect to login if not authenticated
-        if (typeof window !== 'undefined') {
-          window.location.href = '/login';
-        }
+      console.log("Dashboard response:", response.data);
+      
+      if (response.data?.data) {
+        return response.data.data;
+      } else if (response.data) {
+        return response.data;
       }
+      
+      throw new Error("Invalid response format");
+    } catch (error: any) {
+      console.error("Dashboard API error:", error.message, error.response?.data);
+      
       // Return empty data structure on error instead of throwing
       return {
         orders: { total: 0, today: 0 },

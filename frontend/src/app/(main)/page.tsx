@@ -277,21 +277,27 @@ export default function HomePage() {
 
   useEffect(() => {
     async function fetchData() {
+      setIsLoading(true);
       try {
+        const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000/api/v1";
         const res = await fetch(
-          `/backend-api/homepage/?limit_merchants=12&limit_featured_offers=8&limit_exclusive_offers=6&limit_products=12&limit_banners=5`,
+          `${API_URL}/homepage/?limit_merchants=12&limit_featured_offers=8&limit_exclusive_offers=6&limit_products=12&limit_banners=5`,
           {
-            method: "GET",
+            method: 'GET',
             headers: {
-              "Content-Type": "application/json",
+              'Content-Type': 'application/json',
             },
-          },
+          }
         );
+
         if (res.ok) {
           const json = await res.json();
-          setData(json.data || null);
+          console.log("Homepage data:", json);
+          setData(json.data || json || null);
         } else {
           console.error("Homepage API error:", res.status, res.statusText);
+          const errorText = await res.text();
+          console.error("Error response:", errorText);
         }
       } catch (error) {
         console.error("Failed to fetch homepage data:", error);

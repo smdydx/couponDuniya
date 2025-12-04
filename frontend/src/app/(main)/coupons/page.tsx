@@ -1,6 +1,7 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useEffect, useState } from "react";
+import apiClient from "@/lib/api/client";
 import { useSearchParams } from "next/navigation";
 import { OfferGrid } from "@/components/offer/OfferGrid";
 import { OfferFilters } from "@/components/offer/OfferFilters";
@@ -12,7 +13,6 @@ import { Button } from "@/components/ui/button";
 import { Search, SlidersHorizontal } from "lucide-react";
 import { useOffers } from "@/lib/hooks/use-offers";
 import { LoadingSpinner } from "@/components/common/LoadingSpinner";
-import api from "@/lib/api/client";
 
 export default function CouponsPage() {
   const searchParams = useSearchParams();
@@ -25,7 +25,7 @@ export default function CouponsPage() {
   useEffect(() => {
     const categorySlug = searchParams.get("category");
     if (categorySlug) {
-      api.get("/categories/").then((res) => {
+      apiClient.get("/categories/").then((res) => {
         if (res.data.success) {
           const category = res.data.data.categories.find((c: any) => c.slug === categorySlug);
           setCategoryId(category?.id);
