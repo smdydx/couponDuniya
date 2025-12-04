@@ -154,7 +154,7 @@ const adminApi = {
     if (params.is_active !== undefined) queryParams.append('is_active', String(params.is_active));
 
     const response = await apiClient.get(`/admin/merchants?${queryParams.toString()}`);
-    return response.data?.data || response.data;
+    return response.data?.data || { merchants: [], pagination: { current_page: 1, total_pages: 1, total_items: 0, per_page: 20 } };
   },
 
   createMerchant: async (data: Omit<Merchant, 'id' | 'created_at'>): Promise<Merchant> => {

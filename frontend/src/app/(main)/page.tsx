@@ -1,4 +1,3 @@
-
 "use client";
 
 import React, { useEffect, useState, useRef } from "react";
@@ -154,7 +153,7 @@ function PromoSlider() {
       >
         <ChevronLeft className="h-5 w-5 sm:h-6 sm:w-6 text-gray-800" />
       </button>
-      
+
       <button
         onClick={handleNext}
         disabled={promoIndex >= maxIndex}
@@ -167,7 +166,7 @@ function PromoSlider() {
       </button>
 
       {/* Slider Container */}
-      <div 
+      <div
         ref={containerRef}
         className="flex gap-3 sm:gap-4 overflow-x-auto scrollbar-hide snap-x snap-mandatory pb-2 px-6 sm:px-10"
         style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}
@@ -310,39 +309,34 @@ export default function HomePage() {
         </div>
       </section>
 
-      {/* Stats Section - Above Slider */}
-      <section className="bg-white dark:bg-gray-900 py-8 border-y">
-        <div className="container">
-          <div className="grid gap-8 grid-cols-1 sm:grid-cols-3 text-center">
-            <div className="flex flex-col items-center">
-              <div className="mb-3 flex h-16 w-16 items-center justify-center rounded-full bg-purple-100 dark:bg-purple-900/30">
-                <TrendingUp className="h-8 w-8 text-purple-600 dark:text-purple-400" />
-              </div>
-              <h3 className="text-3xl sm:text-4xl font-bold text-purple-600 dark:text-purple-400">50,000+</h3>
-              <p className="mt-2 text-sm sm:text-base text-muted-foreground">Verified Coupons</p>
-            </div>
-            <div className="flex flex-col items-center">
-              <div className="mb-3 flex h-16 w-16 items-center justify-center rounded-full bg-purple-100 dark:bg-purple-900/30">
-                <Store className="h-8 w-8 text-purple-600 dark:text-purple-400" />
-              </div>
-              <h3 className="text-3xl sm:text-4xl font-bold text-purple-600 dark:text-purple-400">1000+</h3>
-              <p className="mt-2 text-sm sm:text-base text-muted-foreground">Partner Stores</p>
-            </div>
-            <div className="flex flex-col items-center">
-              <div className="mb-3 flex h-16 w-16 items-center justify-center rounded-full bg-purple-100 dark:bg-purple-900/30">
-                <Gift className="h-8 w-8 text-purple-600 dark:text-purple-400" />
-              </div>
-              <h3 className="text-3xl sm:text-4xl font-bold text-purple-600 dark:text-purple-400">₹50 Cr+</h3>
-              <p className="mt-2 text-sm sm:text-base text-muted-foreground">Cashback Given</p>
-            </div>
-          </div>
-        </div>
-      </section>
-
       {/* Promotional Offers Slider - 6 Cards with Navigation */}
       <section className="bg-gradient-to-r from-blue-50 to-purple-50 dark:from-gray-900 dark:to-gray-800 py-4 sm:py-6">
         <div className="container">
           <PromoSlider />
+        </div>
+      </section>
+
+      {/* Stats Section */}
+      <section className="container py-8 sm:py-12">
+        <div className="grid gap-6 sm:gap-8 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3">
+          <div className="bg-gradient-to-br from-purple-50 to-purple-100 dark:from-purple-950/30 dark:to-purple-900/20 rounded-xl p-6 sm:p-8 text-center">
+            <h3 className="text-3xl sm:text-4xl font-bold text-purple-600 dark:text-purple-400 mb-2">
+              50,000+
+            </h3>
+            <p className="text-sm sm:text-base text-gray-600 dark:text-gray-300">Verified Coupons</p>
+          </div>
+          <div className="bg-gradient-to-br from-blue-50 to-blue-100 dark:from-blue-950/30 dark:to-blue-900/20 rounded-xl p-6 sm:p-8 text-center">
+            <h3 className="text-3xl sm:text-4xl font-bold text-blue-600 dark:text-blue-400 mb-2">
+              1000+
+            </h3>
+            <p className="text-sm sm:text-base text-gray-600 dark:text-gray-300">Partner Stores</p>
+          </div>
+          <div className="bg-gradient-to-br from-green-50 to-green-100 dark:from-green-950/30 dark:to-green-900/20 rounded-xl p-6 sm:p-8 text-center sm:col-span-2 lg:col-span-1">
+            <h3 className="text-3xl sm:text-4xl font-bold text-green-600 dark:text-green-400 mb-2">
+              ₹50 Cr+
+            </h3>
+            <p className="text-sm sm:text-base text-gray-600 dark:text-gray-300">Cashback Given</p>
+          </div>
         </div>
       </section>
 
