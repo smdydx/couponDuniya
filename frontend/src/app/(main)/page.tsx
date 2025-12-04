@@ -371,6 +371,32 @@ export default function HomePage() {
         </section>
       )}
 
+      {/* Stats Bar - At the Very Top */}
+      <section className="bg-gradient-to-r from-purple-600 via-purple-700 to-blue-600 dark:from-purple-900 dark:via-purple-800 dark:to-blue-900 py-6 sm:py-8">
+        <div className="container">
+          <div className="grid gap-4 sm:gap-6 grid-cols-1 sm:grid-cols-3 max-w-5xl mx-auto">
+            <div className="text-center">
+              <h3 className="text-3xl sm:text-4xl lg:text-5xl font-bold text-white mb-1">
+                50,000+
+              </h3>
+              <p className="text-sm sm:text-base text-purple-100 dark:text-purple-200">Verified Coupons</p>
+            </div>
+            <div className="text-center">
+              <h3 className="text-3xl sm:text-4xl lg:text-5xl font-bold text-white mb-1">
+                1000+
+              </h3>
+              <p className="text-sm sm:text-base text-purple-100 dark:text-purple-200">Partner Stores</p>
+            </div>
+            <div className="text-center">
+              <h3 className="text-3xl sm:text-4xl lg:text-5xl font-bold text-white mb-1">
+                ₹50 Cr+
+              </h3>
+              <p className="text-sm sm:text-base text-purple-100 dark:text-purple-200">Cashback Given</p>
+            </div>
+          </div>
+        </div>
+      </section>
+
       {/* Hero Section - CouponDunia Style */}
       <section className="bg-gradient-to-b from-white to-purple-50 dark:from-gray-900 dark:to-gray-800 py-12 sm:py-16">
         <div className="container text-center">
@@ -383,7 +409,7 @@ export default function HomePage() {
           <p className="text-base sm:text-lg text-muted-foreground mb-8 max-w-3xl mx-auto">
             Get the best deals, exclusive coupons, and instant cashback from 1000+ top brands. Start saving today!
           </p>
-          <div className="flex flex-col sm:flex-row gap-4 justify-center items-center mb-12">
+          <div className="flex flex-col sm:flex-row gap-4 justify-center items-center">
             <Button size="lg" className="bg-purple-600 hover:bg-purple-700 text-white px-8" asChild>
               <Link href={ROUTES.coupons}>
                 Browse Coupons
@@ -395,28 +421,6 @@ export default function HomePage() {
                 View All Stores
               </Link>
             </Button>
-          </div>
-
-          {/* Stats Section - Now Inside Hero */}
-          <div className="grid gap-6 sm:gap-8 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 max-w-5xl mx-auto">
-            <div className="bg-gradient-to-br from-purple-50 to-purple-100 dark:from-purple-950/30 dark:to-purple-900/20 rounded-xl p-6 sm:p-8 text-center">
-              <h3 className="text-3xl sm:text-4xl font-bold text-purple-600 dark:text-purple-400 mb-2">
-                50,000+
-              </h3>
-              <p className="text-sm sm:text-base text-gray-600 dark:text-gray-300">Verified Coupons</p>
-            </div>
-            <div className="bg-gradient-to-br from-blue-50 to-blue-100 dark:from-blue-950/30 dark:to-blue-900/20 rounded-xl p-6 sm:p-8 text-center">
-              <h3 className="text-3xl sm:text-4xl font-bold text-blue-600 dark:text-blue-400 mb-2">
-                1000+
-              </h3>
-              <p className="text-sm sm:text-base text-gray-600 dark:text-gray-300">Partner Stores</p>
-            </div>
-            <div className="bg-gradient-to-br from-green-50 to-green-100 dark:from-green-950/30 dark:to-green-900/20 rounded-xl p-6 sm:p-8 text-center sm:col-span-2 lg:col-span-1">
-              <h3 className="text-3xl sm:text-4xl font-bold text-green-600 dark:text-green-400 mb-2">
-                ₹50 Cr+
-              </h3>
-              <p className="text-sm sm:text-base text-gray-600 dark:text-gray-300">Cashback Given</p>
-            </div>
           </div>
         </div>
       </section>
