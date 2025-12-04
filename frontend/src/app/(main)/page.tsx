@@ -46,7 +46,8 @@ export default function HomePage() {
   useEffect(() => {
     async function fetchData() {
       try {
-        const res = await fetch('http://0.0.0.0:8000/api/v1/homepage/?limit_merchants=12&limit_featured_offers=8&limit_exclusive_offers=6&limit_products=12&limit_banners=5');
+        const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000';
+        const res = await fetch(`${apiUrl}/api/v1/homepage/?limit_merchants=12&limit_featured_offers=8&limit_exclusive_offers=6&limit_products=12&limit_banners=5`);
         if (res.ok) {
           const json = await res.json();
           setData(json.data || null);
@@ -289,7 +290,7 @@ export default function HomePage() {
 
       {/* CTA Section */}
       <section className="container py-8 sm:py-12">
-        <Card className="bg-gradient-to-r from-primary to-green-600 text-white border-0">
+        <Card className="bg-gradient-to-r from-primary to-purple-600 text-white border-0">
           <CardContent className="p-6 sm:p-8 md:p-12 text-center">
             <h2 className="text-2xl sm:text-3xl font-bold mb-3">Start Saving Today!</h2>
             <p className="text-white/80 mb-6 max-w-xl mx-auto">
