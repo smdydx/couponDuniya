@@ -943,7 +943,9 @@ def complete_withdrawal(id: int, _: bool = Depends(require_admin)):
 
 
 @router.get("/analytics/dashboard", response_model=dict)
-def analytics_dashboard(db: Session = Depends(get_db)):
+def analytics_dashboard(
+    db: Session = Depends(get_db)
+):
     """Get admin dashboard metrics - No auth required for demo"""
     from datetime import datetime, timedelta
     
