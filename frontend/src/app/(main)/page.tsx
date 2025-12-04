@@ -128,40 +128,92 @@ function PromoSlider() {
     }
   };
 
+  const nextSlide = () => {
+    const newIndex = promoIndex < maxIndex ? promoIndex + 1 : 0;
+    setPromoIndex(newIndex);
+    scrollToIndex(newIndex);
+  };
+
+  const prevSlide = () => {
+    const newIndex = promoIndex > 0 ? promoIndex - 1 : maxIndex;
+    setPromoIndex(newIndex);
+    scrollToIndex(newIndex);
+  };
+
   return (
     <div className="relative">
-      {/* Slider Container */}
-      <div
-        ref={containerRef}
-        className="flex gap-3 sm:gap-4 overflow-x-auto scrollbar-hide snap-x snap-mandatory pb-2"
-        style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}
-      >
-        {promoOffers.map((offer) => (
-          <div key={offer.id} className="min-w-[280px] sm:min-w-[320px] md:min-w-[380px] flex-shrink-0 snap-start">
-            <div className={`bg-gradient-to-r ${offer.gradient} rounded-xl p-4 sm:p-5 shadow-lg hover:shadow-xl transition-all cursor-pointer hover:scale-[1.02]`}>
-              <div className="flex items-center justify-between">
-                <div className="flex-1">
-                  <div className="flex items-center gap-2 mb-2">
-                    <div className="bg-white px-3 py-1 rounded-md">
-                      <span className={`text-xs font-semibold ${offer.brandColor}`}>{offer.brand}</span>
+      <div className="flex items-center gap-4">
+        {/* Left Navigation Button */}
+        <button
+          onClick={prevSlide}
+          className="hidden md:flex flex-shrink-0 items-center justify-center w-10 h-10 rounded-full bg-white dark:bg-gray-800 shadow-lg hover:shadow-xl transition-all hover:scale-110 z-10"
+          aria-label="Previous offers"
+        >
+          <ChevronLeft className="h-6 w-6 text-gray-800 dark:text-white" />
+        </button>
+
+        {/* Slider Container */}
+        <div className="flex-1 overflow-hidden">
+          <div
+            ref={containerRef}
+            className="flex gap-3 sm:gap-4 overflow-x-auto scrollbar-hide snap-x snap-mandatory pb-2"
+            style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}
+          >
+            {promoOffers.map((offer) => (
+              <div key={offer.id} className="min-w-[280px] sm:min-w-[320px] md:min-w-[380px] flex-shrink-0 snap-start">
+                <div className={`bg-gradient-to-r ${offer.gradient} rounded-xl p-4 sm:p-5 shadow-lg hover:shadow-xl transition-all cursor-pointer hover:scale-[1.02]`}>
+                  <div className="flex items-center justify-between">
+                    <div className="flex-1">
+                      <div className="flex items-center gap-2 mb-2">
+                        <div className="bg-white px-3 py-1 rounded-md">
+                          <span className={`text-xs font-semibold ${offer.brandColor}`}>{offer.brand}</span>
+                        </div>
+                        <Badge className={`${offer.badgeColor} text-xs`}>{offer.badge}</Badge>
+                      </div>
+                      <h3 className="text-white font-bold text-lg sm:text-xl mb-1">{offer.title}</h3>
+                      <p className="text-white/80 text-sm line-clamp-1">{offer.subtitle}</p>
+                      <div className="mt-3 flex items-center gap-2 bg-white rounded-lg px-3 py-2">
+                        <Tag className="h-4 w-4 text-red-500 flex-shrink-0" />
+                        <span className="text-sm font-semibold text-gray-800 truncate">{offer.code}</span>
+                        <ArrowRight className="h-4 w-4 ml-auto text-gray-600 flex-shrink-0" />
+                      </div>
                     </div>
-                    <Badge className={`${offer.badgeColor} text-xs`}>{offer.badge}</Badge>
+                    <div className="hidden sm:block ml-4">
+                      <div className="text-5xl">{offer.emoji}</div>
+                    </div>
                   </div>
-                  <h3 className="text-white font-bold text-lg sm:text-xl mb-1">{offer.title}</h3>
-                  <p className="text-white/80 text-sm line-clamp-1">{offer.subtitle}</p>
-                  <div className="mt-3 flex items-center gap-2 bg-white rounded-lg px-3 py-2">
-                    <Tag className="h-4 w-4 text-red-500 flex-shrink-0" />
-                    <span className="text-sm font-semibold text-gray-800 truncate">{offer.code}</span>
-                    <ArrowRight className="h-4 w-4 ml-auto text-gray-600 flex-shrink-0" />
-                  </div>
-                </div>
-                <div className="hidden sm:block ml-4">
-                  <div className="text-5xl">{offer.emoji}</div>
                 </div>
               </div>
-            </div>
+            ))}
           </div>
-        ))}
+        </div>
+
+        {/* Right Navigation Button */}
+        <button
+          onClick={nextSlide}
+          className="hidden md:flex flex-shrink-0 items-center justify-center w-10 h-10 rounded-full bg-white dark:bg-gray-800 shadow-lg hover:shadow-xl transition-all hover:scale-110 z-10"
+          aria-label="Next offers"
+        >
+          <ChevronRight className="h-6 w-6 text-gray-800 dark:text-white" />
+        </button>
+      </div>
+
+      {/* Mobile Navigation Buttons */}
+      <div className="flex md:hidden justify-center gap-4 mt-4">
+        <button
+          onClick={prevSlide}
+          className="flex items-center justify-center w-10 h-10 rounded-full bg-white dark:bg-gray-800 shadow-lg hover:shadow-xl transition-all"
+          aria-label="Previous offers"
+        >
+          <ChevronLeft className="h-5 w-5 text-gray-800 dark:text-white" />
+        </button>
+        <button
+          onClick={nextSlide}
+          className="flex items-center justify-center w-10 h-10 rounded-full bg-white dark:bg-gray-800 shadow-lg hover:shadow-xl transition-all"
+          aria-label="Next offers"
+        >
+          <ChevronRight className="h-5 w-5 text-gray-800 dark:text-white" />
+        </button>
       </div>
 
       {/* Dots Indicator */}
@@ -246,7 +298,7 @@ export default function HomePage() {
 
   return (
     <div className="flex flex-col">
-      {/* Hero Slider Section - Moved to Top */}
+      {/* Hero Slider Section - At the Very Top */}
       {banners.length > 0 && (
         <section className="relative w-full bg-gradient-to-b from-primary/5 to-transparent">
           <div className="container mx-auto px-4 py-4 sm:py-6">
@@ -347,13 +399,6 @@ export default function HomePage() {
         </div>
       </section>
 
-      {/* Promotional Offers Slider - 6 Cards without Navigation Buttons */}
-      <section className="bg-gradient-to-r from-blue-50 to-purple-50 dark:from-gray-900 dark:to-gray-800 py-4 sm:py-6">
-        <div className="container">
-          <PromoSlider />
-        </div>
-      </section>
-
       {/* Stats Section */}
       <section className="container py-8 sm:py-12">
         <div className="grid gap-6 sm:gap-8 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3">
@@ -375,6 +420,13 @@ export default function HomePage() {
             </h3>
             <p className="text-sm sm:text-base text-gray-600 dark:text-gray-300">Cashback Given</p>
           </div>
+        </div>
+      </section>
+
+      {/* Promotional Offers Slider - After Stats Section */}
+      <section className="bg-gradient-to-r from-blue-50 to-purple-50 dark:from-gray-900 dark:to-gray-800 py-8 sm:py-12">
+        <div className="container">
+          <PromoSlider />
         </div>
       </section>
 
