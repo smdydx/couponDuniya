@@ -9,7 +9,7 @@ import { Input } from "@/components/ui/input";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { getInitials } from "@/lib/utils";
 import { ThemeToggle } from "@/components/theme/ThemeToggle";
-import Sidebar from "@/components/layout/Sidebar";
+import { Sidebar } from "@/components/layout/Sidebar";
 
 const mockAdminUser = {
   id: 1,
@@ -45,7 +45,7 @@ export default function AdminLayout({
       )}
 
       {/* Sidebar */}
-      <Sidebar isOpen={isSidebarOpen} onClose={() => setIsSidebarOpen(false)} />
+      <Sidebar />
 
       {/* Main Content */}
       <div className="lg:pl-64">
