@@ -48,6 +48,7 @@ export default function AdminDashboardPage() {
   const [stats, setStats] = useState<DashboardStats | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [mounted, setMounted] = useState(false);
 
   const fetchDashboardData = async () => {
     setLoading(true);
@@ -74,8 +75,13 @@ export default function AdminDashboardPage() {
   };
 
   useEffect(() => {
+    setMounted(true);
     fetchDashboardData();
   }, []);
+
+  if (!mounted) {
+    return null;
+  }
 
   if (loading) {
     return (

@@ -9,22 +9,26 @@ import { ROUTES } from "@/lib/constants";
 async function getHomepageData() {
   // Use the correct API URL
   const base = process.env.NEXT_PUBLIC_API_URL || 'http://0.0.0.0:8000/api/v1';
-  
+
   try {
     const res = await fetch(`${base}/homepage?limit_merchants=12&limit_featured_offers=8&limit_exclusive_offers=6&limit_products=8`, {
       next: { revalidate: 300 },
       headers: {
         'Content-Type': 'application/json',
+        'Accept': 'application/json', // Added Accept header for clarity
       }
     });
     if (!res.ok) {
-      console.error('Homepage API error:', res.status);
+      console.error('Homepage API error:', res.status, res.statusText);
+      // Return empty arrays on error as per the intent of the changes
       return { featured_merchants: [], featured_offers: [], exclusive_offers: [], featured_products: [] };
     }
     const json = await res.json();
+    // Ensure data is not null and return default empty arrays if necessary
     return json.data || { featured_merchants: [], featured_offers: [], exclusive_offers: [], featured_products: [] };
   } catch (error) {
     console.error('Failed to fetch homepage data:', error);
+    // Return empty arrays on error
     return { featured_merchants: [], featured_offers: [], exclusive_offers: [], featured_products: [] };
   }
 }
