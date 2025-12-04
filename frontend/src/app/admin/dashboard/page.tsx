@@ -22,6 +22,7 @@ import {
   TrendingDown,
   Database,
   Leaf,
+  AlertCircle,
 } from "lucide-react";
 import Link from "next/link";
 import adminApi from "@/lib/api/admin";
@@ -54,9 +55,19 @@ export default function AdminDashboardPage() {
     try {
       const data = await adminApi.getDashboard();
       setStats(data);
+      setError(null);
     } catch (err: any) {
       console.error("Failed to fetch dashboard data:", err);
       setError(err.message || "Failed to load dashboard data");
+      // Set default stats even on error so UI still renders
+      setStats({
+        orders: { total: 0, today: 0 },
+        revenue: { total: 0, today: 0 },
+        users: { total: 0, new_this_week: 0 },
+        withdrawals: { pending_count: 0, pending_amount: 0 },
+        catalog: { active_merchants: 0, active_offers: 0, available_products: 0 },
+        redis: { connected: false, keys_count: 0, memory_used: "0 MB", connected_clients: 0 }
+      });
     } finally {
       setLoading(false);
     }

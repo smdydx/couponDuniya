@@ -113,8 +113,21 @@ export interface RevenueSeries {
 
 const adminApi = {
   getDashboard: async (): Promise<DashboardStats> => {
-    const response = await apiClient.get('/admin/analytics/dashboard');
-    return response.data?.data || response.data;
+    try {
+      const response = await apiClient.get('/admin/analytics/dashboard');
+      return response.data?.data || response.data;
+    } catch (error: any) {
+      console.error("Dashboard API error:", error);
+      // Return empty data structure on error instead of throwing
+      return {
+        orders: { total: 0, today: 0 },
+        revenue: { total: 0, today: 0 },
+        users: { total: 0, new_this_week: 0 },
+        withdrawals: { pending_count: 0, pending_amount: 0 },
+        catalog: { active_merchants: 0, active_offers: 0, available_products: 0 },
+        redis: { connected: false, keys_count: 0, memory_used: "0 MB", connected_clients: 0 }
+      };
+    }
   },
 
   getRevenueAnalytics: async (days: number = 30): Promise<{ series: RevenueSeries[]; period_days: number }> => {
@@ -133,7 +146,7 @@ const adminApi = {
     if (params.limit) queryParams.append('limit', String(params.limit));
     if (params.search) queryParams.append('search', params.search);
     if (params.is_active !== undefined) queryParams.append('is_active', String(params.is_active));
-    
+
     const response = await apiClient.get(`/admin/merchants?${queryParams.toString()}`);
     return response.data?.data || response.data;
   },
@@ -158,7 +171,7 @@ const adminApi = {
     if (params.limit) queryParams.append('limit', String(params.limit));
     if (params.search) queryParams.append('search', params.search);
     if (params.merchant_id) queryParams.append('merchant_id', String(params.merchant_id));
-    
+
     const response = await apiClient.get(`/offers?${queryParams.toString()}`);
     return response.data?.data || { offers: response.data?.data?.items || [], pagination: { current_page: 1, total_pages: 1, total_items: 0, per_page: 20 } };
   },
@@ -182,7 +195,7 @@ const adminApi = {
     if (params.page) queryParams.append('page', String(params.page));
     if (params.limit) queryParams.append('limit', String(params.limit));
     if (params.search) queryParams.append('search', params.search);
-    
+
     const response = await apiClient.get(`/products?${queryParams.toString()}`);
     return response.data?.data || { products: response.data?.data?.items || [], pagination: { current_page: 1, total_pages: 1, total_items: 0, per_page: 20 } };
   },
@@ -203,7 +216,7 @@ const adminApi = {
     if (params.limit) queryParams.append('limit', String(params.limit));
     if (params.search) queryParams.append('search', params.search);
     if (params.role) queryParams.append('role', params.role);
-    
+
     const response = await apiClient.get(`/admin/users?${queryParams.toString()}`);
     return response.data?.data || { users: [], pagination: { current_page: 1, total_pages: 1, total_items: 0, per_page: 20 } };
   },
@@ -213,7 +226,7 @@ const adminApi = {
     if (params.page) queryParams.append('page', String(params.page));
     if (params.limit) queryParams.append('limit', String(params.limit));
     if (params.status) queryParams.append('status', params.status);
-    
+
     const response = await apiClient.get(`/orders?${queryParams.toString()}`);
     return response.data?.data || { orders: response.data?.data?.items || [], pagination: { current_page: 1, total_pages: 1, total_items: 0, per_page: 20 } };
   },
@@ -231,7 +244,7 @@ const adminApi = {
     if (params.page) queryParams.append('page', String(params.page));
     if (params.limit) queryParams.append('limit', String(params.limit));
     if (params.status) queryParams.append('status_filter', params.status);
-    
+
     const response = await apiClient.get(`/admin/withdrawals?${queryParams.toString()}`);
     return response.data?.data || { withdrawals: [], pagination: { current_page: 1, total_pages: 1, total_items: 0, per_page: 20 } };
   },
@@ -250,7 +263,7 @@ const adminApi = {
     if (params.limit) queryParams.append('limit', String(params.limit));
     if (params.search) queryParams.append('search', params.search);
     if (params.status) queryParams.append('status', params.status);
-    
+
     const response = await apiClient.get(`/admin/gift-cards?${queryParams.toString()}`);
     return response.data?.data || { gift_cards: [], pagination: { current_page: 1, total_pages: 1, total_items: 0, per_page: 50 } };
   },
