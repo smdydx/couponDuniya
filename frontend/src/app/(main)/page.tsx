@@ -46,7 +46,7 @@ export default function HomePage() {
   useEffect(() => {
     async function fetchData() {
       try {
-        const res = await fetch('http://127.0.0.1:8000/api/v1/homepage/?limit_merchants=12&limit_featured_offers=8&limit_exclusive_offers=6&limit_products=12&limit_banners=5');
+        const res = await fetch('http://0.0.0.0:8000/api/v1/homepage/?limit_merchants=12&limit_featured_offers=8&limit_exclusive_offers=6&limit_products=12&limit_banners=5');
         if (res.ok) {
           const json = await res.json();
           setData(json.data || null);
@@ -166,34 +166,34 @@ export default function HomePage() {
         </section>
       )}
 
-      {/* Stats Section */}
-      <section className="container py-8 sm:py-12">
-        <div className="grid gap-4 sm:gap-6 grid-cols-3">
-          <Card className="text-center border-0 shadow-lg bg-gradient-to-br from-blue-50 to-blue-100 dark:from-blue-950/30 dark:to-blue-900/20">
-            <CardContent className="p-4 sm:p-6">
-              <div className="mx-auto mb-3 flex h-10 w-10 sm:h-12 sm:w-12 items-center justify-center rounded-full bg-blue-500/10">
-                <TrendingUp className="h-5 w-5 sm:h-6 sm:w-6 text-blue-500" />
+      {/* Stats Section - Enhanced */}
+      <section className="container py-8 sm:py-12 lg:py-16">
+        <div className="grid gap-4 sm:gap-6 grid-cols-1 sm:grid-cols-3">
+          <Card className="text-center border-0 shadow-xl hover:shadow-2xl transition-all duration-300 bg-gradient-to-br from-blue-50 via-blue-100 to-blue-50 dark:from-blue-950/40 dark:via-blue-900/30 dark:to-blue-950/40 hover:scale-105">
+            <CardContent className="p-6 sm:p-8">
+              <div className="mx-auto mb-4 flex h-14 w-14 sm:h-16 sm:w-16 items-center justify-center rounded-2xl bg-gradient-to-br from-blue-500 to-blue-600 shadow-lg">
+                <TrendingUp className="h-7 w-7 sm:h-8 sm:w-8 text-white" />
               </div>
-              <h3 className="text-xl sm:text-2xl lg:text-3xl font-bold">50,000+</h3>
-              <p className="mt-1 text-xs sm:text-sm text-muted-foreground">Verified Coupons</p>
+              <h3 className="text-2xl sm:text-3xl lg:text-4xl font-bold bg-gradient-to-r from-blue-600 to-blue-800 dark:from-blue-400 dark:to-blue-200 bg-clip-text text-transparent">50,000+</h3>
+              <p className="mt-2 text-sm sm:text-base font-medium text-muted-foreground">Verified Coupons</p>
             </CardContent>
           </Card>
-          <Card className="text-center border-0 shadow-lg bg-gradient-to-br from-green-50 to-green-100 dark:from-green-950/30 dark:to-green-900/20">
-            <CardContent className="p-4 sm:p-6">
-              <div className="mx-auto mb-3 flex h-10 w-10 sm:h-12 sm:w-12 items-center justify-center rounded-full bg-green-500/10">
-                <Sparkles className="h-5 w-5 sm:h-6 sm:w-6 text-green-500" />
+          <Card className="text-center border-0 shadow-xl hover:shadow-2xl transition-all duration-300 bg-gradient-to-br from-green-50 via-green-100 to-green-50 dark:from-green-950/40 dark:via-green-900/30 dark:to-green-950/40 hover:scale-105">
+            <CardContent className="p-6 sm:p-8">
+              <div className="mx-auto mb-4 flex h-14 w-14 sm:h-16 sm:w-16 items-center justify-center rounded-2xl bg-gradient-to-br from-green-500 to-green-600 shadow-lg">
+                <Store className="h-7 w-7 sm:h-8 sm:w-8 text-white" />
               </div>
-              <h3 className="text-xl sm:text-2xl lg:text-3xl font-bold">1000+</h3>
-              <p className="mt-1 text-xs sm:text-sm text-muted-foreground">Partner Stores</p>
+              <h3 className="text-2xl sm:text-3xl lg:text-4xl font-bold bg-gradient-to-r from-green-600 to-green-800 dark:from-green-400 dark:to-green-200 bg-clip-text text-transparent">1000+</h3>
+              <p className="mt-2 text-sm sm:text-base font-medium text-muted-foreground">Partner Stores</p>
             </CardContent>
           </Card>
-          <Card className="text-center border-0 shadow-lg bg-gradient-to-br from-orange-50 to-orange-100 dark:from-orange-950/30 dark:to-orange-900/20">
-            <CardContent className="p-4 sm:p-6">
-              <div className="mx-auto mb-3 flex h-10 w-10 sm:h-12 sm:w-12 items-center justify-center rounded-full bg-orange-500/10">
-                <Gift className="h-5 w-5 sm:h-6 sm:w-6 text-orange-500" />
+          <Card className="text-center border-0 shadow-xl hover:shadow-2xl transition-all duration-300 bg-gradient-to-br from-orange-50 via-orange-100 to-orange-50 dark:from-orange-950/40 dark:via-orange-900/30 dark:to-orange-950/40 hover:scale-105">
+            <CardContent className="p-6 sm:p-8">
+              <div className="mx-auto mb-4 flex h-14 w-14 sm:h-16 sm:w-16 items-center justify-center rounded-2xl bg-gradient-to-br from-orange-500 to-orange-600 shadow-lg">
+                <Gift className="h-7 w-7 sm:h-8 sm:w-8 text-white" />
               </div>
-              <h3 className="text-xl sm:text-2xl lg:text-3xl font-bold">₹50 Cr+</h3>
-              <p className="mt-1 text-xs sm:text-sm text-muted-foreground">Cashback Given</p>
+              <h3 className="text-2xl sm:text-3xl lg:text-4xl font-bold bg-gradient-to-r from-orange-600 to-orange-800 dark:from-orange-400 dark:to-orange-200 bg-clip-text text-transparent">₹50 Cr+</h3>
+              <p className="mt-2 text-sm sm:text-base font-medium text-muted-foreground">Cashback Given</p>
             </CardContent>
           </Card>
         </div>

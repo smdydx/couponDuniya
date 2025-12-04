@@ -192,7 +192,7 @@ button[aria-label*="Next.js"],
 }
 
 /* Smooth scrolling */
-html {
+html[data-scroll-behavior="smooth"] {
   scroll-behavior: smooth;
 }
 
