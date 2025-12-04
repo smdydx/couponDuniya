@@ -19,6 +19,19 @@ import {
 } from "lucide-react";
 import adminApi, { type DashboardStats } from "@/lib/api/admin";
 
+// Helper function to format currency (assuming it's needed for revenue/withdrawal amounts)
+// This function was present in the original changes but not in the original code.
+// Assuming it's a utility function that should be available.
+function formatCurrency(amount: number): string {
+  // Simple formatting, adjust as needed for your currency and locale
+  if (amount >= 100000) {
+    return `₹${(amount / 100000).toFixed(1)}L`;
+  } else if (amount >= 1000) {
+    return `₹${(amount / 1000).toFixed(1)}K`;
+  }
+  return `₹${amount.toLocaleString()}`;
+}
+
 export default function AdminDashboard() {
   const [stats, setStats] = useState<DashboardStats | null>(null);
   const [loading, setLoading] = useState(true);
@@ -42,6 +55,9 @@ export default function AdminDashboard() {
     fetchDashboardData();
   }, []);
 
+  // This part of the original code was replaced by the changes.
+  // The changes define `statCards` differently and more inline.
+  // Keeping this as is from the original code.
   const statCards = stats ? [
     {
       title: "Total Users",
@@ -159,74 +175,170 @@ export default function AdminDashboard() {
 
         {/* Stats Grid - Responsive */}
         {!loading && stats && (
-          <div className="grid gap-4 sm:gap-6 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3">
-            {statCards.map((stat, index) => (
-              <Card 
-                key={index} 
-                className={`border-0 shadow-lg hover:shadow-xl transition-all duration-300 bg-gradient-to-br ${stat.bgGradient} hover:scale-105 cursor-pointer`}
-              >
-                <CardContent className="p-6">
-                  <div className="flex items-start justify-between mb-4">
-                    <div className={`flex h-12 w-12 sm:h-14 sm:w-14 items-center justify-center rounded-xl bg-gradient-to-br ${stat.gradient} shadow-lg`}>
-                      <stat.icon className="h-6 w-6 sm:h-7 sm:w-7 text-white" />
-                    </div>
-                    <div className={`flex items-center gap-1 text-xs sm:text-sm font-medium ${stat.positive ? 'text-green-600 dark:text-green-400' : 'text-red-600 dark:text-red-400'}`}>
-                      {stat.positive ? <ArrowUpRight className="h-4 w-4" /> : <ArrowDownRight className="h-4 w-4" />}
-                      {stat.change}
-                    </div>
-                  </div>
+          <div className="grid gap-4 md:gap-6 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3">
+            {/* Total Users */}
+            <Card className="bg-gradient-to-br from-blue-50 to-blue-100 dark:from-purple-950/40 dark:to-purple-900/30 border-blue-200 dark:border-purple-800/50">
+              <CardContent className="p-6">
+                <div className="flex items-center justify-between">
                   <div>
-                    <p className="text-sm font-medium text-gray-600 dark:text-gray-400 mb-1">{stat.title}</p>
-                    <h3 className="text-2xl sm:text-3xl font-bold text-gray-900 dark:text-white">{stat.value}</h3>
-                    {stat.subtitle && (
-                      <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">{stat.subtitle}</p>
-                    )}
+                    <p className="text-sm text-blue-700 dark:text-purple-300">Total Users</p>
+                    <p className="text-2xl font-bold mt-1 text-blue-900 dark:text-white">{stats.users?.total?.toLocaleString() || "0"}</p>
+                    <p className="text-xs text-blue-600 dark:text-purple-400 mt-1">
+                      {(stats.users?.new_this_week || 0) > 0 ? '+' : ''}{(stats.users?.new_this_week || 0)} new this week
+                    </p>
                   </div>
-                </CardContent>
-              </Card>
-            ))}
+                  <div className="bg-blue-200 dark:bg-purple-800/50 p-3 rounded-lg">
+                    <Users className="h-6 w-6 text-blue-600 dark:text-purple-300" />
+                  </div>
+                </div>
+                {(stats.users?.new_this_week || 0) > 0 && (
+                  <div className="mt-4 flex items-center gap-1 text-xs text-green-600 dark:text-green-400">
+                    <TrendingUp className="h-3 w-3" />
+                    +{Math.round(((stats.users?.new_this_week || 0) / (stats.users?.total || 1)) * 100)}%
+                  </div>
+                )}
+              </CardContent>
+            </Card>
+
+            {/* Active Merchants */}
+            <Card className="bg-gradient-to-br from-green-50 to-green-100 dark:from-purple-950/40 dark:to-purple-900/30 border-green-200 dark:border-purple-800/50">
+              <CardContent className="p-6">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <p className="text-sm text-green-700 dark:text-purple-300">Active Merchants</p>
+                    <p className="text-2xl font-bold mt-1 text-green-900 dark:text-white">{stats.catalog?.active_merchants?.toLocaleString() || "0"}</p>
+                    <p className="text-xs text-green-600 dark:text-purple-400 mt-1">Partner stores</p>
+                  </div>
+                  <div className="bg-green-200 dark:bg-purple-800/50 p-3 rounded-lg">
+                    <Store className="h-6 w-6 text-green-600 dark:text-purple-300" />
+                  </div>
+                </div>
+                <div className="mt-4 flex items-center gap-1 text-xs text-green-600 dark:text-green-400">
+                  <TrendingUp className="h-3 w-3" />
+                  +8%
+                </div>
+              </CardContent>
+            </Card>
+
+            {/* Active Offers */}
+            <Card className="bg-gradient-to-br from-purple-50 to-purple-100 dark:from-purple-950/40 dark:to-purple-900/30 border-purple-200 dark:border-purple-800/50">
+              <CardContent className="p-6">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <p className="text-sm text-purple-700 dark:text-purple-300">Active Offers</p>
+                    <p className="text-2xl font-bold mt-1 text-purple-900 dark:text-white">{stats.catalog?.active_offers?.toLocaleString() || "0"}</p>
+                    <p className="text-xs text-purple-600 dark:text-purple-400 mt-1">Live deals</p>
+                  </div>
+                  <div className="bg-purple-200 dark:bg-purple-800/50 p-3 rounded-lg">
+                    <Tag className="h-6 w-6 text-purple-600 dark:text-purple-300" />
+                  </div>
+                </div>
+                <div className="mt-4 flex items-center gap-1 text-xs text-green-600 dark:text-green-400">
+                  <TrendingUp className="h-3 w-3" />
+                  +15%
+                </div>
+              </CardContent>
+            </Card>
+
+            {/* Total Orders */}
+            <Card className="bg-gradient-to-br from-orange-50 to-orange-100 dark:from-purple-950/40 dark:to-purple-900/30 border-orange-200 dark:border-purple-800/50">
+              <CardContent className="p-6">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <p className="text-sm text-orange-700 dark:text-purple-300">Total Orders</p>
+                    <p className="text-2xl font-bold mt-1 text-orange-900 dark:text-white">{stats.orders?.total?.toLocaleString() || "0"}</p>
+                    <p className="text-xs text-orange-600 dark:text-purple-400 mt-1">
+                      {(stats.orders?.today || 0) > 0 ? '+' : ''}{(stats.orders?.today || 0)} today
+                    </p>
+                  </div>
+                  <div className="bg-orange-200 dark:bg-purple-800/50 p-3 rounded-lg">
+                    <ShoppingCart className="h-6 w-6 text-orange-600 dark:text-purple-300" />
+                  </div>
+                </div>
+                <div className="mt-4 flex items-center gap-1 text-xs text-green-600 dark:text-green-400">
+                  <TrendingUp className="h-3 w-3" />
+                  +23%
+                </div>
+              </CardContent>
+            </Card>
+
+            {/* Total Revenue */}
+            <Card className="bg-gradient-to-br from-emerald-50 to-emerald-100 dark:from-purple-950/40 dark:to-purple-900/30 border-emerald-200 dark:border-purple-800/50">
+              <CardContent className="p-6">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <p className="text-sm text-emerald-700 dark:text-purple-300">Total Revenue</p>
+                    <p className="text-2xl font-bold mt-1 text-emerald-900 dark:text-white">{formatCurrency(stats.revenue?.total || 0)}</p>
+                    <p className="text-xs text-emerald-600 dark:text-purple-400 mt-1">
+                      {formatCurrency(stats.revenue?.today || 0)} today
+                    </p>
+                  </div>
+                  <div className="bg-emerald-200 dark:bg-purple-800/50 p-3 rounded-lg">
+                    <DollarSign className="h-6 w-6 text-emerald-600 dark:text-purple-300" />
+                  </div>
+                </div>
+                <div className="mt-4 flex items-center gap-1 text-xs text-green-600 dark:text-green-400">
+                  <TrendingUp className="h-3 w-3" />
+                  +18%
+                </div>
+              </CardContent>
+            </Card>
+
+            {/* Pending Withdrawals */}
+            <Card className="bg-gradient-to-br from-red-50 to-red-100 dark:from-purple-950/40 dark:to-purple-900/30 border-red-200 dark:border-purple-800/50">
+              <CardContent className="p-6">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <p className="text-sm text-red-700 dark:text-purple-300">Pending Withdrawals</p>
+                    <p className="text-2xl font-bold mt-1 text-red-900 dark:text-white">{stats.withdrawals?.pending_count?.toLocaleString() || "0"}</p>
+                    <p className="text-xs text-red-600 dark:text-purple-400 mt-1">
+                      {formatCurrency(stats.withdrawals?.pending_amount || 0)} pending
+                    </p>
+                  </div>
+                  <div className="bg-red-200 dark:bg-purple-800/50 p-3 rounded-lg">
+                    <Wallet className="h-6 w-6 text-red-600 dark:text-purple-300" />
+                  </div>
+                </div>
+                <div className="mt-4 flex items-center gap-1 text-xs text-red-600 dark:text-red-400">
+                  <AlertCircle className="h-3 w-3" />
+                  -5%
+                </div>
+              </CardContent>
+            </Card>
           </div>
         )}
 
         {/* Quick Actions - Responsive */}
-        <div className="grid gap-4 sm:gap-6 grid-cols-1 md:grid-cols-2 lg:grid-cols-4">
-          <Card className="hover:shadow-lg transition-shadow cursor-pointer">
-            <CardHeader className="pb-3">
-              <CardTitle className="text-base sm:text-lg">Recent Orders</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <p className="text-2xl sm:text-3xl font-bold">24</p>
-              <p className="text-xs sm:text-sm text-muted-foreground mt-1">Last 24 hours</p>
+        <div className="grid gap-4 md:gap-6 grid-cols-1 sm:grid-cols-2 lg:grid-cols-4">
+          <Card className="bg-gradient-to-br from-slate-900 to-slate-800 dark:from-purple-950 dark:to-purple-900 text-white border-slate-700 dark:border-purple-800">
+            <CardContent className="p-6">
+              <h3 className="text-sm font-medium text-slate-300 dark:text-purple-200">Recent Orders</h3>
+              <p className="text-3xl font-bold mt-2">24</p>
+              <p className="text-xs text-slate-400 dark:text-purple-300 mt-1">Last 24 hours</p>
             </CardContent>
           </Card>
 
-          <Card className="hover:shadow-lg transition-shadow cursor-pointer">
-            <CardHeader className="pb-3">
-              <CardTitle className="text-base sm:text-lg">New Users</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <p className="text-2xl sm:text-3xl font-bold">156</p>
-              <p className="text-xs sm:text-sm text-muted-foreground mt-1">This week</p>
+          <Card className="bg-gradient-to-br from-slate-900 to-slate-800 dark:from-purple-950 dark:to-purple-900 text-white border-slate-700 dark:border-purple-800">
+            <CardContent className="p-6">
+              <h3 className="text-sm font-medium text-slate-300 dark:text-purple-200">New Users</h3>
+              <p className="text-3xl font-bold mt-2">156</p>
+              <p className="text-xs text-slate-400 dark:text-purple-300 mt-1">This week</p>
             </CardContent>
           </Card>
 
-          <Card className="hover:shadow-lg transition-shadow cursor-pointer">
-            <CardHeader className="pb-3">
-              <CardTitle className="text-base sm:text-lg">Active Coupons</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <p className="text-2xl sm:text-3xl font-bold">{stats?.catalog?.active_offers || 0}</p>
-              <p className="text-xs sm:text-sm text-muted-foreground mt-1">Currently live</p>
+          <Card className="bg-gradient-to-br from-slate-900 to-slate-800 dark:from-purple-950 dark:to-purple-900 text-white border-slate-700 dark:border-purple-800">
+            <CardContent className="p-6">
+              <h3 className="text-sm font-medium text-slate-300 dark:text-purple-200">Active Coupons</h3>
+              <p className="text-3xl font-bold mt-2">{stats?.catalog?.active_offers || 0}</p>
+              <p className="text-xs text-slate-400 dark:text-purple-300 mt-1">Currently live</p>
             </CardContent>
           </Card>
 
-          <Card className="hover:shadow-lg transition-shadow cursor-pointer">
-            <CardHeader className="pb-3">
-              <CardTitle className="text-base sm:text-lg">Cashback Pending</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <p className="text-2xl sm:text-3xl font-bold">₹2.4L</p>
-              <p className="text-xs sm:text-sm text-muted-foreground mt-1">To be processed</p>
+          <Card className="bg-gradient-to-br from-slate-900 to-slate-800 dark:from-purple-950 dark:to-purple-900 text-white border-slate-700 dark:border-purple-800">
+            <CardContent className="p-6">
+              <h3 className="text-sm font-medium text-slate-300 dark:text-purple-200">Cashback Pending</h3>
+              <p className="text-3xl font-bold mt-2">₹2.4L</p>
+              <p className="text-xs text-slate-400 dark:text-purple-300 mt-1">To be processed</p>
             </CardContent>
           </Card>
         </div>
