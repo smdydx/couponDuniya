@@ -1,0 +1,52 @@
+e "<string>", line 8, in create_table
+  File "<string>", line 3, in create_table
+  File "/home/runner/workspace/.pythonlibs/lib/python3.11/site-packages/alembic/operations/ops.py", line 1318, in create_table
+    return operations.invoke(op)
+           ^^^^^^^^^^^^^^^^^^^^^
+  File "/home/runner/workspace/.pythonlibs/lib/python3.11/site-packages/alembic/operations/base.py", line 442, in invoke
+    return fn(self, operation)
+           ^^^^^^^^^^^^^^^^^^^
+  File "/home/runner/workspace/.pythonlibs/lib/python3.11/site-packages/alembic/operations/toimpl.py", line 143, in create_table
+    operations.impl.create_table(table, **kw)
+  File "/home/runner/workspace/.pythonlibs/lib/python3.11/site-packages/alembic/ddl/impl.py", line 406, in create_table
+    self._exec(schema.CreateTable(table, **kw))
+  File "/home/runner/workspace/.pythonlibs/lib/python3.11/site-packages/alembic/ddl/impl.py", line 247, in _exec
+    return conn.execute(construct, params)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/runner/workspace/.pythonlibs/lib/python3.11/site-packages/sqlalchemy/engine/base.py", line 1418, in execute
+    return meth(
+           ^^^^^
+  File "/home/runner/workspace/.pythonlibs/lib/python3.11/site-packages/sqlalchemy/sql/ddl.py", line 180, in _execute_on_connection
+    return connection._execute_ddl(
+           ^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/runner/workspace/.pythonlibs/lib/python3.11/site-packages/sqlalchemy/engine/base.py", line 1529, in _execute_ddl
+    ret = self._execute_context(
+          ^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/runner/workspace/.pythonlibs/lib/python3.11/site-packages/sqlalchemy/engine/base.py", line 1846, in _execute_context
+    return self._exec_single_context(
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/runner/workspace/.pythonlibs/lib/python3.11/site-packages/sqlalchemy/engine/base.py", line 1986, in _exec_single_context
+    self._handle_dbapi_exception(
+  File "/home/runner/workspace/.pythonlibs/lib/python3.11/site-packages/sqlalchemy/engine/base.py", line 2355, in _handle_dbapi_exception
+    raise sqlalchemy_exception.with_traceback(exc_info[2]) from e
+  File "/home/runner/workspace/.pythonlibs/lib/python3.11/site-packages/sqlalchemy/engine/base.py", line 1967, in _exec_single_context
+    self.dialect.do_execute(
+  File "/home/runner/workspace/.pythonlibs/lib/python3.11/site-packages/sqlalchemy/engine/default.py", line 941, in do_execute
+    cursor.execute(statement, parameters)
+sqlalchemy.exc.OperationalError: (sqlite3.OperationalError) table product_variants already exists
+[SQL: 
+CREATE TABLE product_variants (
+    id INTEGER NOT NULL, 
+    product_id INTEGER NOT NULL, 
+    sku VARCHAR(100), 
+    price NUMERIC(10, 2) NOT NULL, 
+    discount_price NUMERIC(10, 2), 
+    stock INTEGER NOT NULL, 
+    created_at DATETIME, 
+    updated_at DATETIME, 
+    PRIMARY KEY (id)
+)
+
+]
+(Background on this error at: https://sqlalche.me/e/20/e3q8)
+~/workspace/backend$ 
