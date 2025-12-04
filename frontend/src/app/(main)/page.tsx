@@ -1,3 +1,5 @@
+"use client";
+
 import Link from "next/link";
 import { ArrowRight, TrendingUp, Sparkles, Gift } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -5,40 +7,53 @@ import { MerchantGrid } from "@/components/merchant/MerchantGrid";
 import { OfferGrid } from "@/components/offer/OfferGrid";
 import { ProductGrid } from "@/components/product/ProductGrid";
 import { ROUTES } from "@/lib/constants";
+import { useEffect, useState } from "react";
 
-async function getHomepageData() {
-  // Use the correct API URL
-  const base = process.env.NEXT_PUBLIC_API_URL || 'http://0.0.0.0:8000/api/v1';
+export default function HomePage() {
+  const [data, setData] = useState<any>({
+    featured_merchants: [],
+    featured_offers: [],
+    exclusive_offers: [],
+    featured_products: []
+  });
+  const [loading, setLoading] = useState(true);
 
-  try {
-    const res = await fetch(`${base}/homepage/?limit_merchants=12&limit_featured_offers=8&limit_exclusive_offers=6&limit_products=8`, {
-      next: { revalidate: 300 },
-      headers: {
-        'Content-Type': 'application/json',
-        'Accept': 'application/json', // Added Accept header for clarity
+  useEffect(() => {
+    const fetchData = async () => {
+      try {
+        const base = process.env.NEXT_PUBLIC_API_URL || 'http://0.0.0.0:8000/api/v1';
+        const res = await fetch(`${base}/homepage/?limit_merchants=12&limit_featured_offers=8&limit_exclusive_offers=6&limit_products=8`, {
+          headers: {
+            'Content-Type': 'application/json',
+            'Accept': 'application/json',
+          }
+        });
+        if (res.ok) {
+          const json = await res.json();
+          setData(json.data || {
+            featured_merchants: [],
+            featured_offers: [],
+            exclusive_offers: [],
+            featured_products: []
+          });
+        }
+      } catch (error) {
+        console.error('Failed to fetch homepage data:', error);
+      } finally {
+        setLoading(false);
       }
-    });
-    if (!res.ok) {
-      console.error('Homepage API error:', res.status, res.statusText);
-      // Return empty arrays on error as per the intent of the changes
-      return { featured_merchants: [], featured_offers: [], exclusive_offers: [], featured_products: [] };
-    }
-    const json = await res.json();
-    // Ensure data is not null and return default empty arrays if necessary
-    return json.data || { featured_merchants: [], featured_offers: [], exclusive_offers: [], featured_products: [] };
-  } catch (error) {
-    console.error('Failed to fetch homepage data:', error);
-    // Return empty arrays on error
-    return { featured_merchants: [], featured_offers: [], exclusive_offers: [], featured_products: [] };
-  }
-}
+    };
+    fetchData();
+  }, []);
 
-export default async function HomePage() {
-  const data = await getHomepageData();
-  const featured_merchants = data?.featured_merchants || [];
-  const featured_offers = data?.featured_offers || [];
-  const exclusive_offers = data?.exclusive_offers || [];
-  const featured_products = data?.featured_products || [];
+  const featured_merchants = data.featured_merchants || [];
+  const featured_offers = data.featured_offers || [];
+  const exclusive_offers = data.exclusive_offers || [];
+  const featured_products = data.featured_products || [];
+
+  if (loading) {
+    return <div className="flex items-center justify-center min-h-screen">Loading...</div>;
+  }
 
   return (
     <div className="flex flex-col gap-12 py-8">

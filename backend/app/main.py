@@ -63,7 +63,12 @@ except Exception:
 # CORS - Allow all origins for Replit development
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],  # Allow all origins
+    allow_origins=[
+        "*",
+        "https://b9df0ce0-80cb-4d8d-83a2-e12bcc6f831c-00-7l6kkbk0zswa.kirk.replit.dev",
+        "http://localhost:5000",
+        "http://0.0.0.0:5000"
+    ],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
