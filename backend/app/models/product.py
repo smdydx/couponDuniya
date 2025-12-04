@@ -1,4 +1,4 @@
-from sqlalchemy import String, Boolean, DateTime, ForeignKey, Integer, Numeric
+from sqlalchemy import String, Boolean, DateTime, ForeignKey, Integer, Numeric, Text
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 from datetime import datetime
 from ..database import Base
@@ -10,7 +10,7 @@ class Product(Base):
     merchant_id: Mapped[int] = mapped_column(ForeignKey("merchants.id"), index=True)
     name: Mapped[str] = mapped_column(String(255), index=True)
     slug: Mapped[str] = mapped_column(String(255), unique=True, index=True)
-    description: Mapped[str | None] = mapped_column(String(1000))
+    description: Mapped[str | None] = mapped_column(Text)
     image_url: Mapped[str | None] = mapped_column(String(500))
     price: Mapped[float] = mapped_column(Numeric(10,2))
     stock: Mapped[int] = mapped_column(Integer, default=0)

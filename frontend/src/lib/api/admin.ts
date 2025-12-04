@@ -118,6 +118,12 @@ const adminApi = {
       return response.data?.data || response.data;
     } catch (error: any) {
       console.error("Dashboard API error:", error);
+      if (error.response?.status === 401) {
+        // Redirect to login if not authenticated
+        if (typeof window !== 'undefined') {
+          window.location.href = '/login';
+        }
+      }
       // Return empty data structure on error instead of throwing
       return {
         orders: { total: 0, today: 0 },

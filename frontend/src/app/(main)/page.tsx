@@ -34,7 +34,11 @@ async function getHomepageData() {
 }
 
 export default async function HomePage() {
-  const { featured_merchants, featured_offers, exclusive_offers, featured_products } = await getHomepageData();
+  const data = await getHomepageData();
+  const featured_merchants = data?.featured_merchants || [];
+  const featured_offers = data?.featured_offers || [];
+  const exclusive_offers = data?.exclusive_offers || [];
+  const featured_products = data?.featured_products || [];
 
   return (
     <div className="flex flex-col gap-12 py-8">

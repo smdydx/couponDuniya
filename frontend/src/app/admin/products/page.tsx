@@ -42,6 +42,7 @@ export default function AdminProductsPage() {
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState("");
   const [page, setPage] = useState(1);
+  const [categoryFilter, setCategoryFilter] = useState<number | undefined>();
 
   const [dialogOpen, setDialogOpen] = useState(false);
   const [editingProduct, setEditingProduct] = useState<Product | null>(null);
@@ -67,8 +68,11 @@ export default function AdminProductsPage() {
       setProducts(productsData.products || []);
       setPagination(productsData.pagination);
       setMerchants(merchantsData.merchants || []);
-    } catch (error) {
+    } catch (error: any) {
       console.error("Failed to fetch products:", error);
+      if (error.response?.status === 401) {
+        window.location.href = '/login';
+      }
       setProducts([]);
     } finally {
       setLoading(false);
