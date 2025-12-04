@@ -15,11 +15,13 @@ def get_homepage_data(
     limit_merchants: int = 12,
     limit_featured_offers: int = 8,
     limit_exclusive_offers: int = 6,
-    limit_products: int = 8,
+    limit_products: int = 12,
+    limit_banners: int = 5,
     db: Session = Depends(get_db)
 ):
     """
     Get data for the homepage:
+    - Hero banners/slider
     - Featured merchants
     - Featured offers
     - Exclusive offers
@@ -28,10 +30,20 @@ def get_homepage_data(
 
     try:
         # Try cache first
-        cache_key = rk("cache", "homepage", f"m{limit_merchants}_fo{limit_featured_offers}_eo{limit_exclusive_offers}_p{limit_products}")
+        cache_key = rk("cache", "homepage", f"b{limit_banners}_m{limit_merchants}_fo{limit_featured_offers}_eo{limit_exclusive_offers}_p{limit_products}")
         cached = cache_get(cache_key)
         if cached:
             return {"success": True, "data": cached, "cached": True}
+
+        # Fetch active banners
+        from ...models import Banner
+        banners_stmt = (
+            select(Banner)
+            .where(Banner.is_active == True)
+            .order_by(Banner.order_index.asc())
+            .limit(limit_banners)
+        )
+        banners = db.scalars(banners_stmt).all()
 
         # Fetch featured merchants
         merchants_stmt = (
@@ -85,6 +97,7 @@ def get_homepage_data(
         featured_products = db.scalars(products_stmt).unique().all()
 
         result = {
+            "banners": [{"id": b.id, "title": b.title, "image_url": b.image_url, "link_url": b.link_url, "order_index": b.order_index} for b in banners],
             "featured_merchants": [MerchantRead.model_validate(m) for m in featured_merchants],
             "featured_offers": [OfferRead.model_validate(o) for o in featured_offers],
             "exclusive_offers": [OfferRead.model_validate(o) for o in exclusive_offers],

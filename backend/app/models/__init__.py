@@ -33,3 +33,4 @@ from .affiliate_transaction import AffiliateTransaction
 from .affiliate_merchant_map import AffiliateMerchantMap
 from .cashback_rule import CashbackRule
 from .blog_post import BlogPost
+from .banner import Banner
