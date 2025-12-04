@@ -6,7 +6,7 @@ from typing import Optional
 
 from ...redis_client import cache_invalidate, cache_invalidate_prefix, rk, redis_client, publish
 from ...database import get_db
-from ...models import User, Withdrawal, WalletTransaction, Order, Merchant, Offer, Product, ProductVariant
+from ...models import User, Withdrawal, WalletTransaction, Order, Merchant, Offer, Product, ProductVariant, Category
 from ...schemas.wallet_transaction import WithdrawalRead, WithdrawalStatusUpdate
 from ...queue import push_email_job, push_sms_job
 from ...config import get_settings

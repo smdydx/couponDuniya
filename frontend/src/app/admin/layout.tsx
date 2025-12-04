@@ -1,14 +1,15 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { AdminSidebar } from "@/components/layout/AdminSidebar";
 import { cn } from "@/lib/utils";
-import { Bell, Search, LogOut, ChevronLeft, ChevronRight } from "lucide-react";
+import { Bell, Search, LogOut, ChevronLeft, ChevronRight, Menu } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { getInitials } from "@/lib/utils";
 import { ThemeToggle } from "@/components/theme/ThemeToggle";
+import Sidebar from "@/components/layout/Sidebar";
 
 const mockAdminUser = {
   id: 1,
@@ -24,20 +25,31 @@ export default function AdminLayout({
 }: {
   children: React.ReactNode;
 }) {
-  const [isSidebarOpen, setIsSidebarOpen] = useState(true);
+  const [isSidebarOpen, setIsSidebarOpen] = useState(false);
+  const [mounted, setMounted] = useState(false);
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
+
   const user = mockAdminUser;
 
   return (
     <div className="min-h-screen bg-muted/30">
-      <AdminSidebar isOpen={isSidebarOpen} onToggle={() => setIsSidebarOpen(!isSidebarOpen)} />
+      {/* Mobile Sidebar Overlay */}
+      {mounted && isSidebarOpen && (
+        <div
+          className="fixed inset-0 z-40 bg-black/50 lg:hidden"
+          onClick={() => setIsSidebarOpen(false)}
+        />
+      )}
 
-      <div
-        className={cn(
-          "transition-all duration-300",
-          isSidebarOpen ? "ml-64" : "ml-16"
-        )}
-      >
-        {/* Admin Header */}
+      {/* Sidebar */}
+      <Sidebar isOpen={isSidebarOpen} onClose={() => setIsSidebarOpen(false)} />
+
+      {/* Main Content */}
+      <div className="lg:pl-64">
+        {/* Top Bar */}
         <header className="sticky top-0 z-30 flex h-16 items-center justify-between border-b bg-background px-6">
           <div className="relative w-64">
             <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
@@ -45,7 +57,7 @@ export default function AdminLayout({
           </div>
 
           <div className="flex items-center gap-4">
-            <ThemeToggle />
+            {mounted && <ThemeToggle />}
             <Button variant="ghost" size="icon">
               <Bell className="h-5 w-5" />
             </Button>

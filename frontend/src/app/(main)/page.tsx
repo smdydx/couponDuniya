@@ -6,6 +6,7 @@ import { Badge } from "@/components/ui/badge";
 import { MerchantGrid } from "@/components/merchant/MerchantGrid";
 import { OfferGrid } from "@/components/offer/OfferGrid";
 import { ProductGrid } from "@/components/product/ProductGrid";
+import { ProductCard } from "@/components/product/ProductCard"; // Assuming ProductCard is needed for the new grid
 import { ROUTES } from "@/lib/constants";
 
 interface SectionHeaderProps {
@@ -39,12 +40,12 @@ async function getHomepageData() {
     const res = await fetch('http://127.0.0.1:8000/api/v1/homepage/?limit_merchants=12&limit_featured_offers=8&limit_exclusive_offers=6&limit_products=12', {
       cache: 'no-store',
     });
-    
+
     if (!res.ok) {
       console.error('Homepage API returned:', res.status);
       return null;
     }
-    
+
     const json = await res.json();
     return json.data || null;
   } catch (error) {
@@ -55,7 +56,7 @@ async function getHomepageData() {
 
 export default async function HomePage() {
   const data = await getHomepageData();
-  
+
   const featured_merchants = data?.featured_merchants || [];
   const featured_offers = data?.featured_offers || [];
   const exclusive_offers = data?.exclusive_offers || [];
@@ -89,7 +90,7 @@ export default async function HomePage() {
             </Button>
           </div>
         </div>
-        
+
         <div className="mt-10 sm:mt-16 grid gap-4 sm:gap-6 grid-cols-3">
           <Card className="text-center border-0 shadow-none bg-gradient-to-br from-blue-50 to-blue-100 dark:from-blue-950/30 dark:to-blue-900/20">
             <CardContent className="p-4 sm:p-6">
@@ -172,21 +173,49 @@ export default async function HomePage() {
         )}
       </section>
 
-      <section className="container">
-        <SectionHeader
-          title="Featured Gift Cards"
-          subtitle="Top discounted gift cards - 6x2 Grid Layout"
-          viewAllLink={ROUTES.products}
-        />
-        {featured_products.length > 0 ? (
-          <ProductGrid products={featured_products} columns={6} showTwoRows />
-        ) : (
-          <div className="text-center py-12 bg-muted/30 rounded-lg">
-            <Gift className="h-12 w-12 mx-auto text-muted-foreground mb-3" />
-            <p className="text-muted-foreground">No featured gift cards available</p>
+      {/* Featured Products - 6+6 Grid */}
+      {featured_products.length > 0 && (
+        <section className="mb-12 container">
+          <div className="flex items-center justify-between mb-6">
+            <div>
+              <h2 className="text-xl font-bold sm:text-2xl lg:text-3xl">Featured Gift Cards</h2>
+              <p className="text-sm text-muted-foreground mt-1">Best selling gift cards at amazing prices</p>
+            </div>
+            <Button variant="outline" asChild className="gap-2">
+              <Link href={ROUTES.products}>
+                View All
+                <ChevronRight className="h-4 w-4" />
+              </Link>
+            </Button>
           </div>
-        )}
-      </section>
+
+          {/* First Row - 6 Products */}
+          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-3 md:gap-4 mb-3 md:mb-4">
+            {featured_products.slice(0, 6).map((product) => (
+              <ProductCard key={product.id} product={product} compact />
+            ))}
+          </div>
+
+          {/* Second Row - 6 Products */}
+          {featured_products.length > 6 && (
+            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-3 md:gap-4">
+              {featured_products.slice(6, 12).map((product) => (
+                <ProductCard key={product.id} product={product} compact />
+              ))}
+            </div>
+          )}
+
+          {/* View All Button for Mobile */}
+          <div className="mt-6 text-center lg:hidden">
+            <Button size="lg" asChild>
+              <Link href={ROUTES.products}>
+                View All Gift Cards
+                <ArrowRight className="ml-2 h-4 w-4" />
+              </Link>
+            </Button>
+          </div>
+        </section>
+      )}
 
       <section className="container">
         <Card className="bg-gradient-to-r from-primary to-green-600 text-white border-0">
