@@ -25,12 +25,11 @@ def upgrade():
     columns = [col['name'] for col in inspector.get_columns('users')]
     
     if 'role' not in columns:
-        # Add role column to users table with default value
-        op.add_column('users', sa.Column('role', sa.String(20), nullable=True, server_default='customer'))
+        # Add role column to users table with default value 'customer'
+        op.add_column('users', sa.Column('role', sa.String(20), nullable=False, server_default='customer'))
         
-        # Update existing users to have role based on is_admin
-        op.execute("UPDATE users SET role = 'admin' WHERE is_admin = 1")
-        op.execute("UPDATE users SET role = 'customer' WHERE is_admin = 0 OR is_admin IS NULL")
+        # All existing users default to 'customer' role
+        # Admin users can be promoted manually after migration
 
 
 def downgrade():
