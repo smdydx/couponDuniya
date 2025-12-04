@@ -61,7 +61,7 @@ export function OfferCard({ offer, onClickTrack }: OfferCardProps) {
           </Badge>
         )}
         {offer.is_verified && (
-          <Badge variant="success" className="gap-1 text-xs font-semibold shadow-lg backdrop-blur-sm bg-green-600/90">
+          <Badge className="gap-1 text-xs font-semibold shadow-lg backdrop-blur-sm bg-purple-600/90 text-white">
             <CheckCircle className="h-3 w-3" />
             Verified
           </Badge>
@@ -124,7 +124,7 @@ export function OfferCard({ offer, onClickTrack }: OfferCardProps) {
             </Badge>
           )}
           {offer.cashback_value && (
-            <Badge variant="success" className="text-xs sm:text-sm px-3 py-1 font-bold">
+            <Badge className="bg-purple-100 text-purple-700 hover:bg-purple-200 text-xs sm:text-sm px-3 py-1 font-bold">
               {offer.cashback_type === "percentage"
                 ? `${offer.cashback_value}% Cashback`
                 : `${formatCurrency(offer.cashback_value)} Cashback`}

@@ -16,55 +16,56 @@ interface MerchantCardProps {
 export function MerchantCard({ merchant }: MerchantCardProps) {
   return (
     <Link href={ROUTES.merchantDetail(merchant.slug)} className="block focus:outline-none">
-      <Card className="elevated-card group overflow-hidden h-full transition-all hover:shadow-lg hover:border-primary/50">
-        <CardContent className="p-4 sm:p-5">
-          <div className="flex items-center gap-4">
-            {/* Logo Section */}
-            <div className="relative h-16 w-16 shrink-0 overflow-hidden rounded-lg border bg-white transition-transform duration-200 group-hover:scale-105">
+      <Card className="elevated-card group relative overflow-hidden h-full transition-all duration-300 hover:shadow-xl hover:-translate-y-1 hover:border-primary/50">
+        {merchant.is_featured && (
+          <div className="absolute top-2 right-2 z-10">
+            <Badge variant="warning" className="text-xs font-semibold shadow-lg">
+              ⭐ Featured
+            </Badge>
+          </div>
+        )}
+        
+        <CardContent className="p-5 sm:p-6">
+          <div className="flex flex-col items-center text-center gap-4">
+            {/* Logo Section - Centered */}
+            <div className="relative h-20 w-20 sm:h-24 sm:w-24 shrink-0 overflow-hidden rounded-xl border-2 border-gray-100 bg-white shadow-sm transition-all duration-300 group-hover:scale-110 group-hover:shadow-md">
               {merchant.logo_url ? (
                 <Image
                   src={merchant.logo_url}
                   alt={merchant.name}
                   fill
-                  className="object-contain"
-                  sizes="64px"
+                  className="object-contain p-2"
+                  sizes="96px"
                   priority={merchant.is_featured}
                 />
               ) : (
-                <div className="flex h-full w-full items-center justify-center text-2xl font-bold text-muted-foreground bg-gradient-to-br from-primary/10 to-primary/5 rounded-lg">
+                <div className="flex h-full w-full items-center justify-center text-3xl font-bold text-primary bg-gradient-to-br from-primary/10 to-primary/5 rounded-xl">
                   {merchant.name.charAt(0)}
                 </div>
               )}
             </div>
 
-            {/* Info Section */}
-            <div className="flex-1 min-w-0">
-              {/* Title and Featured Badge */}
-              <div className="flex items-center gap-2">
-                <h3 className="font-semibold truncate group-hover:text-primary transition-colors">
-                  {merchant.name}
-                </h3>
-                {merchant.is_featured && (
-                  <Badge variant="warning" className="shrink-0 text-xs">
-                    ⭐ Featured
-                  </Badge>
-                )}
-              </div>
+            {/* Info Section - Centered */}
+            <div className="w-full space-y-2">
+              {/* Title */}
+              <h3 className="font-bold text-base sm:text-lg line-clamp-2 group-hover:text-primary transition-colors min-h-[3rem]">
+                {merchant.name}
+              </h3>
 
               {/* Cashback Info */}
               {merchant.default_cashback_value > 0 && (
-                <Badge variant="success" className="mt-1 text-xs">
+                <Badge variant="default" className="bg-purple-100 text-purple-700 hover:bg-purple-200 font-semibold px-3 py-1">
                   {merchant.default_cashback_type === "percentage"
-                    ? `Up to ${merchant.default_cashback_value}% Cashback`
+                    ? `${merchant.default_cashback_value}% Cashback`
                     : `₹${merchant.default_cashback_value} Cashback`}
                 </Badge>
               )}
 
               {/* Offers Count */}
               {merchant.total_offers !== undefined && merchant.total_offers > 0 && (
-                <div className="mt-2 flex items-center gap-1 text-sm text-muted-foreground">
+                <div className="flex items-center justify-center gap-1.5 text-sm text-muted-foreground pt-1">
                   <Tag className="h-4 w-4" />
-                  <span className="font-medium">{merchant.total_offers} offer{merchant.total_offers > 1 ? 's' : ''} available</span>
+                  <span className="font-medium">{merchant.total_offers} offer{merchant.total_offers > 1 ? 's' : ''}</span>
                 </div>
               )}
             </div>

@@ -185,7 +185,7 @@ export function ProductCard({ product, compact = false }: ProductCardProps) {
                   {formatCurrency(selectedVariant.selling_price)}
                 </span>
                 {discount > 0 && (
-                  <Badge variant="success" className="text-xs">
+                  <Badge className="bg-purple-100 text-purple-700 font-semibold text-xs">
                     {discount}% off
                   </Badge>
                 )}

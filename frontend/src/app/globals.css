@@ -1,4 +1,3 @@
-
 @import "tailwindcss";
 
 @theme {
@@ -8,7 +7,7 @@
   --color-card-foreground: #0a0a0a;
   --color-popover: #ffffff;
   --color-popover-foreground: #0a0a0a;
-  --color-primary: #6d28d9;
+  --color-primary: #7c3aed;
   --color-primary-foreground: #faf5ff;
   --color-secondary: #f4f4f5;
   --color-secondary-foreground: #18181b;
@@ -20,11 +19,7 @@
   --color-destructive-foreground: #fafafa;
   --color-border: #e4e4e7;
   --color-input: #e4e4e7;
-  --color-ring: #6d28d9;
-
-  --radius-lg: 0.5rem;
-  --radius-md: calc(var(--radius-lg) - 2px);
-  --radius-sm: calc(var(--radius-lg) - 4px);
+  --color-ring: #7c3aed;
 }
 
 .dark {
@@ -34,7 +29,7 @@
   --color-card-foreground: #fafafa;
   --color-popover: #111111;
   --color-popover-foreground: #fafafa;
-  --color-primary: #6d28d9;
+  --color-primary: #7c3aed;
   --color-primary-foreground: #faf5ff;
   --color-secondary: #27272a;
   --color-secondary-foreground: #fafafa;
@@ -46,7 +41,7 @@
   --color-destructive-foreground: #fef2f2;
   --color-border: #27272a;
   --color-input: #27272a;
-  --color-ring: #6d28d9;
+  --color-ring: #7c3aed;
 }
 
 @layer base {
@@ -86,11 +81,11 @@
   .elevated-card {
     @apply rounded-xl border bg-white/80 backdrop-blur-sm shadow-sm transition-all duration-200;
   }
-  
+
   .elevated-card:hover {
     @apply shadow-md;
   }
-  
+
   .elevated-card:focus-visible {
     outline: 2px solid var(--color-primary);
     outline-offset: 2px;
