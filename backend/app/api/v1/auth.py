@@ -166,7 +166,7 @@ def login(payload: LoginRequest, db: Session = Depends(get_db)):
         "wallet_balance": float(user.wallet_balance or 0),
         "pending_cashback": float(user.pending_cashback or 0),
         "referral_code": user.referral_code,
-        "role": user.role if hasattr(user, 'role') else ("admin" if user.is_admin else "customer"),
+        "role": user.role,
         "is_admin": user.is_admin,
         "is_verified": user.is_verified,
     }
@@ -265,7 +265,7 @@ def verify_otp_endpoint(payload: VerifyOTPRequest, db: Session = Depends(get_db)
         "wallet_balance": float(user.wallet_balance or 0),
         "pending_cashback": float(user.pending_cashback or 0),
         "referral_code": user.referral_code,
-        "role": user.role if hasattr(user, 'role') else ("admin" if user.is_admin else "customer"),
+        "role": user.role,
         "is_admin": user.is_admin,
         "is_verified": user.is_verified,
     }
@@ -491,7 +491,7 @@ def me(authorization: str | None = Header(None), db: Session = Depends(get_db)):
             "full_name": user.full_name,
             "first_name": first_name,
             "last_name": last_name,
-            "role": user.role if hasattr(user, 'role') else ("admin" if user.is_admin else "customer"),
+            "role": user.role,
             "is_admin": user.is_admin,
             "is_verified": user.is_verified,
         }
