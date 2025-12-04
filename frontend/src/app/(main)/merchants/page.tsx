@@ -32,7 +32,7 @@ export default function MerchantsPage() {
     is_featured: sortBy === "featured" ? true : undefined,
   });
 
-  const merchants = data?.data || [];
+  const merchants = Array.isArray(data?.data) ? data.data : [];
   const pagination = data?.pagination;
 
   return (

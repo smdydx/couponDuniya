@@ -1,8 +1,8 @@
-// In Replit, use the dev domain with backend port, otherwise localhost
-const REPLIT_DEV_DOMAIN = process.env.NEXT_PUBLIC_REPLIT_DEV_DOMAIN || process.env.REPLIT_DEV_DOMAIN;
-export const API_BASE_URL = REPLIT_DEV_DOMAIN 
-  ? `https://${REPLIT_DEV_DOMAIN.replace(':5000', ':8000')}/api/v1`
-  : (process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000/api/v1');
+// For client-side (browser), use the Next.js proxy at /api
+// For server-side, use the internal backend URL
+export const API_BASE_URL = typeof window === 'undefined'
+  ? (process.env.NEXT_PUBLIC_API_URL || 'http://127.0.0.1:8000/api/v1')
+  : '/api';
 
 export const SITE_NAME = 'BIDUA Coupons';
 export const SITE_DESCRIPTION = 'Save money with verified coupons, cashback offers, and discounted gift cards';

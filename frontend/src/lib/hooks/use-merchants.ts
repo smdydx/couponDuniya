@@ -30,7 +30,16 @@ export function useMerchants(filters: MerchantsFilters = {}) {
       if (filters.search) params.append("search", filters.search);
 
       const response = await api.get(`/merchants/?${params.toString()}`);
-      return response.data;
+      const result = response.data?.data || response.data;
+      return {
+        data: result?.merchants || [],
+        pagination: result?.pagination || {
+          current_page: 1,
+          total_pages: 1,
+          total_items: 0,
+          items_per_page: 20,
+        },
+      };
     },
   });
 }
