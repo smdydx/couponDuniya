@@ -5,3 +5,4 @@ export { offersAPI } from './offers';
 export { productsAPI } from './products';
 export { ordersAPI } from './orders';
 export { walletAPI } from './wallet';
+export { default as adminApi } from './admin';

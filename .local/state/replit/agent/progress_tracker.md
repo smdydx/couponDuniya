@@ -1,4 +1,6 @@
-[x] 1. Install the required packages
-[x] 2. Restart the workflow to see if the project is working
-[x] 3. Verify the project is working using the feedback tool
-[x] 4. Inform user the import is completed and they can start building, mark the import as completed using the complete_project_import tool
+[x] 1. Install the required packages (Node.js frontend deps + Python backend deps)
+[x] 2. Fix API client configuration to use correct base URL
+[x] 3. Fix missing adminApi export in API index
+[x] 4. Restart workflows and verify the project is working
+[x] 5. Confirm both frontend and backend are running successfully
+[x] 6. Mark the import as completed

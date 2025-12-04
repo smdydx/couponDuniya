@@ -9,7 +9,6 @@ packages = ["cargo", "freetype", "gcc", "glibc", "lcms2", "libiconv", "libimageq
 [userenv]
 
 [userenv.shared]
-NEXT_PUBLIC_API_URL = "http://127.0.0.1:8000/api/v1"
 SECRET_KEY = "dev-secret-key-change-in-production-12345"
 JWT_ALGORITHM = "HS256"
 ACCESS_TOKEN_EXPIRE_MINUTES = "1440"
@@ -21,6 +20,7 @@ EMAIL_ENABLED = "False"
 DEBUG = "True"
 APP_NAME = "CouponAli API"
 DATABASE_URL = "sqlite:///./couponali.db"
+NEXT_PUBLIC_API_URL = "/backend-api"
 
 [workflows]
 runButton = "Project"
@@ -69,6 +69,10 @@ externalPort = 80
 [[ports]]
 localPort = 8000
 externalPort = 8000
+
+[[ports]]
+localPort = 34275
+externalPort = 3001
 
 [[ports]]
 localPort = 43687

@@ -1,10 +1,10 @@
 import axios, { AxiosError, InternalAxiosRequestConfig } from 'axios';
 import { API_BASE_URL } from '@/lib/constants';
 
-const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://127.0.0.1:8000';
+const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://127.0.0.1:8000/api/v1';
 
 const apiClient = axios.create({
-  baseURL: `${API_URL}/api/v1`,
+  baseURL: API_URL,
   headers: {
     'Content-Type': 'application/json',
   },
