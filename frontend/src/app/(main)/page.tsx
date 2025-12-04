@@ -101,6 +101,63 @@ export default function HomePage() {
 
   return (
     <div className="flex flex-col">
+      {/* Hero Section - CouponDunia Style */}
+      <section className="bg-gradient-to-b from-white to-purple-50 dark:from-gray-900 dark:to-gray-800 py-12 sm:py-16">
+        <div className="container text-center">
+          <h1 className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-bold mb-4">
+            Save Money with Verified
+          </h1>
+          <h2 className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-bold mb-6 bg-gradient-to-r from-purple-600 to-purple-800 dark:from-purple-400 dark:to-purple-600 bg-clip-text text-transparent">
+            Coupons & Cashback
+          </h2>
+          <p className="text-base sm:text-lg text-muted-foreground mb-8 max-w-3xl mx-auto">
+            Get the best deals, exclusive coupons, and instant cashback from 1000+ top brands. Start saving today!
+          </p>
+          <div className="flex flex-col sm:flex-row gap-4 justify-center items-center">
+            <Button size="lg" className="bg-purple-600 hover:bg-purple-700 text-white px-8" asChild>
+              <Link href={ROUTES.coupons}>
+                Browse Coupons
+                <ArrowRight className="ml-2 h-5 w-5" />
+              </Link>
+            </Button>
+            <Button size="lg" variant="outline" asChild>
+              <Link href={ROUTES.merchants}>
+                View All Stores
+              </Link>
+            </Button>
+          </div>
+        </div>
+      </section>
+
+      {/* Stats Section - Above Slider */}
+      <section className="bg-white dark:bg-gray-900 py-8 border-y">
+        <div className="container">
+          <div className="grid gap-8 grid-cols-1 sm:grid-cols-3 text-center">
+            <div className="flex flex-col items-center">
+              <div className="mb-3 flex h-16 w-16 items-center justify-center rounded-full bg-purple-100 dark:bg-purple-900/30">
+                <TrendingUp className="h-8 w-8 text-purple-600 dark:text-purple-400" />
+              </div>
+              <h3 className="text-3xl sm:text-4xl font-bold text-purple-600 dark:text-purple-400">50,000+</h3>
+              <p className="mt-2 text-sm sm:text-base text-muted-foreground">Verified Coupons</p>
+            </div>
+            <div className="flex flex-col items-center">
+              <div className="mb-3 flex h-16 w-16 items-center justify-center rounded-full bg-purple-100 dark:bg-purple-900/30">
+                <Store className="h-8 w-8 text-purple-600 dark:text-purple-400" />
+              </div>
+              <h3 className="text-3xl sm:text-4xl font-bold text-purple-600 dark:text-purple-400">1000+</h3>
+              <p className="mt-2 text-sm sm:text-base text-muted-foreground">Partner Stores</p>
+            </div>
+            <div className="flex flex-col items-center">
+              <div className="mb-3 flex h-16 w-16 items-center justify-center rounded-full bg-purple-100 dark:bg-purple-900/30">
+                <Gift className="h-8 w-8 text-purple-600 dark:text-purple-400" />
+              </div>
+              <h3 className="text-3xl sm:text-4xl font-bold text-purple-600 dark:text-purple-400">₹50 Cr+</h3>
+              <p className="mt-2 text-sm sm:text-base text-muted-foreground">Cashback Given</p>
+            </div>
+          </div>
+        </div>
+      </section>
+
       {/* Promotional Offers Banner - Top Section */}
       <section className="bg-gradient-to-r from-blue-50 to-purple-50 dark:from-gray-900 dark:to-gray-800 py-3 sm:py-4">
         <div className="container">
@@ -260,39 +317,6 @@ export default function HomePage() {
           </div>
         </section>
       )}
-
-      {/* Stats Section - Enhanced */}
-      <section className="container py-8 sm:py-12 lg:py-16">
-        <div className="grid gap-4 sm:gap-6 grid-cols-1 sm:grid-cols-3">
-          <Card className="text-center border-0 shadow-xl hover:shadow-2xl transition-all duration-300 bg-gradient-to-br from-blue-50 via-blue-100 to-blue-50 dark:from-blue-950/40 dark:via-blue-900/30 dark:to-blue-950/40 hover:scale-105">
-            <CardContent className="p-6 sm:p-8">
-              <div className="mx-auto mb-4 flex h-14 w-14 sm:h-16 sm:w-16 items-center justify-center rounded-2xl bg-gradient-to-br from-blue-500 to-blue-600 shadow-lg">
-                <TrendingUp className="h-7 w-7 sm:h-8 sm:w-8 text-white" />
-              </div>
-              <h3 className="text-2xl sm:text-3xl lg:text-4xl font-bold bg-gradient-to-r from-blue-600 to-blue-800 dark:from-blue-400 dark:to-blue-200 bg-clip-text text-transparent">50,000+</h3>
-              <p className="mt-2 text-sm sm:text-base font-medium text-muted-foreground">Verified Coupons</p>
-            </CardContent>
-          </Card>
-          <Card className="text-center border-0 shadow-xl hover:shadow-2xl transition-all duration-300 bg-gradient-to-br from-green-50 via-green-100 to-green-50 dark:from-green-950/40 dark:via-green-900/30 dark:to-green-950/40 hover:scale-105">
-            <CardContent className="p-6 sm:p-8">
-              <div className="mx-auto mb-4 flex h-14 w-14 sm:h-16 sm:w-16 items-center justify-center rounded-2xl bg-gradient-to-br from-green-500 to-green-600 shadow-lg">
-                <Store className="h-7 w-7 sm:h-8 sm:w-8 text-white" />
-              </div>
-              <h3 className="text-2xl sm:text-3xl lg:text-4xl font-bold bg-gradient-to-r from-green-600 to-green-800 dark:from-green-400 dark:to-green-200 bg-clip-text text-transparent">1000+</h3>
-              <p className="mt-2 text-sm sm:text-base font-medium text-muted-foreground">Partner Stores</p>
-            </CardContent>
-          </Card>
-          <Card className="text-center border-0 shadow-xl hover:shadow-2xl transition-all duration-300 bg-gradient-to-br from-orange-50 via-orange-100 to-orange-50 dark:from-orange-950/40 dark:via-orange-900/30 dark:to-orange-950/40 hover:scale-105">
-            <CardContent className="p-6 sm:p-8">
-              <div className="mx-auto mb-4 flex h-14 w-14 sm:h-16 sm:w-16 items-center justify-center rounded-2xl bg-gradient-to-br from-orange-500 to-orange-600 shadow-lg">
-                <Gift className="h-7 w-7 sm:h-8 sm:w-8 text-white" />
-              </div>
-              <h3 className="text-2xl sm:text-3xl lg:text-4xl font-bold bg-gradient-to-r from-orange-600 to-orange-800 dark:from-orange-400 dark:to-orange-200 bg-clip-text text-transparent">₹50 Cr+</h3>
-              <p className="mt-2 text-sm sm:text-base font-medium text-muted-foreground">Cashback Given</p>
-            </CardContent>
-          </Card>
-        </div>
-      </section>
 
       {/* Featured Stores */}
       <section className="container py-8 sm:py-12">
