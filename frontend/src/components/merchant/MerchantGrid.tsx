@@ -12,6 +12,8 @@ interface MerchantGridProps {
 }
 
 export function MerchantGrid({ merchants, isLoading }: MerchantGridProps) {
+  const merchantList = Array.isArray(merchants) ? merchants : [];
+  
   if (isLoading) {
     return (
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
@@ -31,7 +33,7 @@ export function MerchantGrid({ merchants, isLoading }: MerchantGridProps) {
     );
   }
 
-  if (merchants.length === 0) {
+  if (merchantList.length === 0) {
     return (
       <EmptyState
         icon={Store}
@@ -43,7 +45,7 @@ export function MerchantGrid({ merchants, isLoading }: MerchantGridProps) {
 
   return (
     <div className="grid gap-3 sm:gap-4 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
-      {merchants.map((merchant) => (
+      {merchantList.map((merchant) => (
         <MerchantCard key={merchant.id} merchant={merchant} />
       ))}
     </div>

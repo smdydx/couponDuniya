@@ -11,7 +11,7 @@ async function getHomepageData() {
   const base = process.env.NEXT_PUBLIC_API_URL || 'http://0.0.0.0:8000/api/v1';
 
   try {
-    const res = await fetch(`${base}/homepage?limit_merchants=12&limit_featured_offers=8&limit_exclusive_offers=6&limit_products=8`, {
+    const res = await fetch(`${base}/homepage/?limit_merchants=12&limit_featured_offers=8&limit_exclusive_offers=6&limit_products=8`, {
       next: { revalidate: 300 },
       headers: {
         'Content-Type': 'application/json',

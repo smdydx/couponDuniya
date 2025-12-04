@@ -1,0 +1,26 @@
+## Error Type
+Console TypeError
+
+## Error Message
+merchants.map is not a function
+
+
+    at MerchantGrid (file:///home/deepak/office Project /couponDuniya /frontend/.next/dev/static/chunks/src_components_22171018._.js:465:29)
+    at Object.react_stack_bottom_frame (file:///home/deepak/office Project /couponDuniya /frontend/.next/dev/static/chunks/node_modules_next_dist_compiled_react-dom_1e674e59._.js:14816:24)
+    at renderWithHooks (file:///home/deepak/office Project /couponDuniya /frontend/.next/dev/static/chunks/node_modules_next_dist_compiled_react-dom_1e674e59._.js:4645:24)
+    at updateFunctionComponent (file:///home/deepak/office Project /couponDuniya /frontend/.next/dev/static/chunks/node_modules_next_dist_compiled_react-dom_1e674e59._.js:6106:21)
+    at beginWork (file:///home/deepak/office Project /couponDuniya /frontend/.next/dev/static/chunks/node_modules_next_dist_compiled_react-dom_1e674e59._.js:6702:24)
+    at runWithFiberInDEV (file:///home/deepak/office Project /couponDuniya /frontend/.next/dev/static/chunks/node_modules_next_dist_compiled_react-dom_1e674e59._.js:959:74)
+    at performUnitOfWork (file:///home/deepak/office Project /couponDuniya /frontend/.next/dev/static/chunks/node_modules_next_dist_compiled_react-dom_1e674e59._.js:9556:97)
+    at workLoopSync (file:///home/deepak/office Project /couponDuniya /frontend/.next/dev/static/chunks/node_modules_next_dist_compiled_react-dom_1e674e59._.js:9450:40)
+    at renderRootSync (file:///home/deepak/office Project /couponDuniya /frontend/.next/dev/static/chunks/node_modules_next_dist_compiled_react-dom_1e674e59._.js:9434:13)
+    at performWorkOnRoot (file:///home/deepak/office Project /couponDuniya /frontend/.next/dev/static/chunks/node_modules_next_dist_compiled_react-dom_1e674e59._.js:9099:47)
+    at performSyncWorkOnRoot (file:///home/deepak/office Project /couponDuniya /frontend/.next/dev/static/chunks/node_modules_next_dist_compiled_react-dom_1e674e59._.js:10232:9)
+    at flushSyncWorkAcrossRoots_impl (file:///home/deepak/office Project /couponDuniya /frontend/.next/dev/static/chunks/node_modules_next_dist_compiled_react-dom_1e674e59._.js:10148:316)
+    at processRootScheduleInMicrotask (file:///home/deepak/office Project /couponDuniya /frontend/.next/dev/static/chunks/node_modules_next_dist_compiled_react-dom_1e674e59._.js:10169:106)
+    at <unknown> (file:///home/deepak/office Project /couponDuniya /frontend/.next/dev/static/chunks/node_modules_next_dist_compiled_react-dom_1e674e59._.js:10243:158)
+    at ErrorBoundaryHandler.render (file:///home/deepak/office Project /couponDuniya /frontend/.next/dev/static/chunks/node_modules_next_dist_client_aaee43fe._.js:1038:55)
+    at ErrorBoundary (file:///home/deepak/office Project /couponDuniya /frontend/.next/dev/static/chunks/node_modules_next_dist_client_aaee43fe._.js:1055:50)
+    at OuterLayoutRouter (file:///home/deepak/office Project /couponDuniya /frontend/.next/dev/static/chunks/node_modules_next_dist_094231d7._.js:671:55)
+
+Next.js version: 16.0.3 (Turbopack)

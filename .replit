@@ -9,12 +9,12 @@ packages = ["cargo", "gcc", "glibc", "libiconv", "libxcrypt", "postgresql", "rus
 [userenv]
 
 [userenv.shared]
-NEXT_PUBLIC_API_URL = "https://3c65ebcd-3446-451d-a99a-cc23a05ff4af-00-2mvxrqxwnfspg.sisko.replit.dev/api/v1"
+NEXT_PUBLIC_API_URL = "http://127.0.0.1:8000/api/v1"
 SECRET_KEY = "dev-secret-key-change-in-production-12345"
 JWT_ALGORITHM = "HS256"
 ACCESS_TOKEN_EXPIRE_MINUTES = "1440"
-CORS_ORIGINS = "https://900352e7-baa0-41ae-92b8-f3844a60a913-00-5qg60n2tn726.sisko.replit.dev,http://localhost:5000,http://0.0.0.0:5000"
-FRONTEND_BASE_URL = "https://900352e7-baa0-41ae-92b8-f3844a60a913-00-5qg60n2tn726.sisko.replit.dev"
+CORS_ORIGINS = "https://b9df0ce0-80cb-4d8d-83a2-e12bcc6f831c-00-7l6kkbk0zswa.kirk.replit.dev,http://localhost:5000,http://0.0.0.0:5000"
+FRONTEND_BASE_URL = "https://b9df0ce0-80cb-4d8d-83a2-e12bcc6f831c-00-7l6kkbk0zswa.kirk.replit.dev"
 DEFAULT_PASSWORD = "hardik123"
 SMS_ENABLED = "False"
 EMAIL_ENABLED = "False"
@@ -71,12 +71,12 @@ localPort = 8000
 externalPort = 8000
 
 [[ports]]
-localPort = 43687
-externalPort = 3000
+localPort = 42345
+externalPort = 3001
 
 [[ports]]
-localPort = 45181
-externalPort = 3001
+localPort = 43687
+externalPort = 3000
 
 [deployment]
 deploymentTarget = "static"
