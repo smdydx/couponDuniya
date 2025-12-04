@@ -1,7 +1,7 @@
 
 "use client";
 
-import { useEffect, useState } from "react";
+import React, { useEffect, useState, useRef } from "react";
 import Link from "next/link";
 import { ArrowRight, TrendingUp, Sparkles, Gift, Tag, Store, Percent, ChevronRight, ChevronLeft } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -38,6 +38,188 @@ function SectionHeader({ title, subtitle, viewAllLink, viewAllText = "View All" 
   );
 }
 
+const promoOffers = [
+  {
+    id: 1,
+    brand: "cleartrip",
+    brandColor: "text-blue-600",
+    badge: "Exclusive",
+    badgeColor: "bg-orange-500 text-white",
+    title: "Upto 25% Off",
+    subtitle: "On Domestic Flights",
+    code: "Flat ₹160 Cashback",
+    gradient: "from-blue-500 to-blue-600",
+    emoji: "✈️",
+  },
+  {
+    id: 2,
+    brand: "McDelivery",
+    brandColor: "text-red-600",
+    badge: "Hot Deal",
+    badgeColor: "bg-yellow-400 text-red-600",
+    title: "Get A Free Burger",
+    subtitle: "McVeggie Or A McChicken Burger On Orders Above ₹499",
+    code: "Use Code : CDXMCDFREE",
+    gradient: "from-red-500 to-red-600",
+    emoji: "🍔",
+  },
+  {
+    id: 3,
+    brand: "Swiggy",
+    brandColor: "text-orange-600",
+    badge: "New User",
+    badgeColor: "bg-green-500 text-white",
+    title: "Flat 50% Off",
+    subtitle: "On Your First Food Order",
+    code: "Up to ₹100 Off",
+    gradient: "from-orange-500 to-orange-600",
+    emoji: "🍕",
+  },
+  {
+    id: 4,
+    brand: "Amazon",
+    brandColor: "text-yellow-700",
+    badge: "Limited Time",
+    badgeColor: "bg-purple-500 text-white",
+    title: "Upto 60% Off",
+    subtitle: "On Electronics & Gadgets",
+    code: "Extra 10% Bank Offer",
+    gradient: "from-yellow-500 to-orange-500",
+    emoji: "📱",
+  },
+  {
+    id: 5,
+    brand: "Flipkart",
+    brandColor: "text-blue-700",
+    badge: "Big Savings",
+    badgeColor: "bg-red-500 text-white",
+    title: "Min 40% Off",
+    subtitle: "On Fashion & Lifestyle",
+    code: "Flat ₹200 Cashback",
+    gradient: "from-indigo-500 to-blue-600",
+    emoji: "👕",
+  },
+  {
+    id: 6,
+    brand: "Zomato",
+    brandColor: "text-red-600",
+    badge: "Weekend Special",
+    badgeColor: "bg-green-600 text-white",
+    title: "Buy 1 Get 1 Free",
+    subtitle: "On All Restaurant Orders",
+    code: "Use Code : BOGO50",
+    gradient: "from-red-600 to-pink-600",
+    emoji: "🍜",
+  },
+];
+
+function PromoSlider() {
+  const [promoIndex, setPromoIndex] = useState(0);
+  const containerRef = useRef<HTMLDivElement>(null);
+  const visibleCards = 3;
+  const maxIndex = Math.max(0, promoOffers.length - visibleCards);
+
+  const scrollToIndex = (index: number) => {
+    if (containerRef.current) {
+      const cardWidth = containerRef.current.scrollWidth / promoOffers.length;
+      containerRef.current.scrollTo({
+        left: cardWidth * index,
+        behavior: 'smooth'
+      });
+    }
+  };
+
+  const handlePrev = () => {
+    const newIndex = Math.max(0, promoIndex - 1);
+    setPromoIndex(newIndex);
+    scrollToIndex(newIndex);
+  };
+
+  const handleNext = () => {
+    const newIndex = Math.min(maxIndex, promoIndex + 1);
+    setPromoIndex(newIndex);
+    scrollToIndex(newIndex);
+  };
+
+  return (
+    <div className="relative">
+      {/* Navigation Buttons */}
+      <button
+        onClick={handlePrev}
+        disabled={promoIndex === 0}
+        className={`absolute -left-4 sm:left-0 top-1/2 -translate-y-1/2 z-20 bg-white hover:bg-gray-50 rounded-full p-2 sm:p-3 shadow-lg transition-all ${
+          promoIndex === 0 ? 'opacity-50 cursor-not-allowed' : 'hover:scale-110'
+        }`}
+        aria-label="Previous offers"
+      >
+        <ChevronLeft className="h-5 w-5 sm:h-6 sm:w-6 text-gray-800" />
+      </button>
+      
+      <button
+        onClick={handleNext}
+        disabled={promoIndex >= maxIndex}
+        className={`absolute -right-4 sm:right-0 top-1/2 -translate-y-1/2 z-20 bg-white hover:bg-gray-50 rounded-full p-2 sm:p-3 shadow-lg transition-all ${
+          promoIndex >= maxIndex ? 'opacity-50 cursor-not-allowed' : 'hover:scale-110'
+        }`}
+        aria-label="Next offers"
+      >
+        <ChevronRight className="h-5 w-5 sm:h-6 sm:w-6 text-gray-800" />
+      </button>
+
+      {/* Slider Container */}
+      <div 
+        ref={containerRef}
+        className="flex gap-3 sm:gap-4 overflow-x-auto scrollbar-hide snap-x snap-mandatory pb-2 px-6 sm:px-10"
+        style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}
+      >
+        {promoOffers.map((offer) => (
+          <div key={offer.id} className="min-w-[280px] sm:min-w-[320px] md:min-w-[380px] flex-shrink-0 snap-start">
+            <div className={`bg-gradient-to-r ${offer.gradient} rounded-xl p-4 sm:p-5 shadow-lg hover:shadow-xl transition-all cursor-pointer hover:scale-[1.02]`}>
+              <div className="flex items-center justify-between">
+                <div className="flex-1">
+                  <div className="flex items-center gap-2 mb-2">
+                    <div className="bg-white px-3 py-1 rounded-md">
+                      <span className={`text-xs font-semibold ${offer.brandColor}`}>{offer.brand}</span>
+                    </div>
+                    <Badge className={`${offer.badgeColor} text-xs`}>{offer.badge}</Badge>
+                  </div>
+                  <h3 className="text-white font-bold text-lg sm:text-xl mb-1">{offer.title}</h3>
+                  <p className="text-white/80 text-sm line-clamp-1">{offer.subtitle}</p>
+                  <div className="mt-3 flex items-center gap-2 bg-white rounded-lg px-3 py-2">
+                    <Tag className="h-4 w-4 text-red-500 flex-shrink-0" />
+                    <span className="text-sm font-semibold text-gray-800 truncate">{offer.code}</span>
+                    <ArrowRight className="h-4 w-4 ml-auto text-gray-600 flex-shrink-0" />
+                  </div>
+                </div>
+                <div className="hidden sm:block ml-4">
+                  <div className="text-5xl">{offer.emoji}</div>
+                </div>
+              </div>
+            </div>
+          </div>
+        ))}
+      </div>
+
+      {/* Dots Indicator */}
+      <div className="flex justify-center gap-2 mt-4">
+        {Array.from({ length: maxIndex + 1 }).map((_, index) => (
+          <button
+            key={index}
+            onClick={() => {
+              setPromoIndex(index);
+              scrollToIndex(index);
+            }}
+            className={`h-2 rounded-full transition-all ${
+              index === promoIndex ? 'w-6 bg-purple-600' : 'w-2 bg-gray-300'
+            }`}
+            aria-label={`Go to slide ${index + 1}`}
+          />
+        ))}
+      </div>
+    </div>
+  );
+}
+
 export default function HomePage() {
   const [data, setData] = useState<any>(null);
   const [currentSlide, setCurrentSlide] = useState(0);
@@ -46,8 +228,7 @@ export default function HomePage() {
   useEffect(() => {
     async function fetchData() {
       try {
-        const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://127.0.0.1:8000';
-        const res = await fetch(`${apiUrl}/api/v1/homepage/?limit_merchants=12&limit_featured_offers=8&limit_exclusive_offers=6&limit_products=12&limit_banners=5`, {
+        const res = await fetch(`/backend-api/homepage/?limit_merchants=12&limit_featured_offers=8&limit_exclusive_offers=6&limit_products=12&limit_banners=5`, {
           method: 'GET',
           headers: {
             'Content-Type': 'application/json',
@@ -158,90 +339,10 @@ export default function HomePage() {
         </div>
       </section>
 
-      {/* Promotional Offers Banner - Top Section */}
-      <section className="bg-gradient-to-r from-blue-50 to-purple-50 dark:from-gray-900 dark:to-gray-800 py-3 sm:py-4">
+      {/* Promotional Offers Slider - 6 Cards with Navigation */}
+      <section className="bg-gradient-to-r from-blue-50 to-purple-50 dark:from-gray-900 dark:to-gray-800 py-4 sm:py-6">
         <div className="container">
-          <div className="relative overflow-hidden">
-            <div className="flex gap-3 sm:gap-4 overflow-x-auto scrollbar-hide snap-x snap-mandatory pb-2">
-              {/* Cleartrip Offer */}
-              <div className="min-w-[280px] sm:min-w-[400px] md:min-w-[500px] flex-shrink-0 snap-start">
-                <div className="bg-gradient-to-r from-blue-500 to-blue-600 rounded-xl p-4 sm:p-6 shadow-lg hover:shadow-xl transition-all">
-                  <div className="flex items-center justify-between">
-                    <div className="flex-1">
-                      <div className="flex items-center gap-2 mb-2">
-                        <div className="bg-white px-3 py-1 rounded-md">
-                          <span className="text-xs font-semibold text-blue-600">cleartrip</span>
-                        </div>
-                        <Badge className="bg-orange-500 text-white text-xs">Exclusive</Badge>
-                      </div>
-                      <h3 className="text-white font-bold text-lg sm:text-xl mb-1">Upto 25% Off</h3>
-                      <p className="text-blue-100 text-sm">On Domestic Flights</p>
-                      <div className="mt-3 flex items-center gap-2 bg-white rounded-lg px-3 py-2">
-                        <Tag className="h-4 w-4 text-red-500" />
-                        <span className="text-sm font-semibold text-gray-800">Flat ₹160 Cashback</span>
-                        <ArrowRight className="h-4 w-4 ml-auto text-gray-600" />
-                      </div>
-                    </div>
-                    <div className="hidden sm:block ml-4">
-                      <div className="text-6xl">✈️</div>
-                    </div>
-                  </div>
-                </div>
-              </div>
-
-              {/* McDelivery Offer */}
-              <div className="min-w-[280px] sm:min-w-[400px] md:min-w-[500px] flex-shrink-0 snap-start">
-                <div className="bg-gradient-to-r from-red-500 to-red-600 rounded-xl p-4 sm:p-6 shadow-lg hover:shadow-xl transition-all">
-                  <div className="flex items-center justify-between">
-                    <div className="flex-1">
-                      <div className="flex items-center gap-2 mb-2">
-                        <div className="bg-white px-3 py-1 rounded-md">
-                          <span className="text-xs font-semibold text-red-600">McDelivery</span>
-                        </div>
-                        <Badge className="bg-yellow-400 text-red-600 text-xs">Hot Deal</Badge>
-                      </div>
-                      <h3 className="text-white font-bold text-lg sm:text-xl mb-1">Get A Free Burger</h3>
-                      <p className="text-red-100 text-sm">McVeggie Or A McChicken Burger On Orders Above ₹499</p>
-                      <div className="mt-3 flex items-center gap-2 bg-white rounded-lg px-3 py-2">
-                        <Tag className="h-4 w-4 text-red-500" />
-                        <span className="text-sm font-semibold text-gray-800">Use Code : CDXMCDFREE</span>
-                        <ArrowRight className="h-4 w-4 ml-auto text-gray-600" />
-                      </div>
-                    </div>
-                    <div className="hidden sm:block ml-4">
-                      <div className="text-6xl">🍔</div>
-                    </div>
-                  </div>
-                </div>
-              </div>
-
-              {/* Swiggy Offer */}
-              <div className="min-w-[280px] sm:min-w-[400px] md:min-w-[500px] flex-shrink-0 snap-start">
-                <div className="bg-gradient-to-r from-orange-500 to-orange-600 rounded-xl p-4 sm:p-6 shadow-lg hover:shadow-xl transition-all">
-                  <div className="flex items-center justify-between">
-                    <div className="flex-1">
-                      <div className="flex items-center gap-2 mb-2">
-                        <div className="bg-white px-3 py-1 rounded-md">
-                          <span className="text-xs font-semibold text-orange-600">Swiggy</span>
-                        </div>
-                        <Badge className="bg-green-500 text-white text-xs">New User</Badge>
-                      </div>
-                      <h3 className="text-white font-bold text-lg sm:text-xl mb-1">Flat 50% Off</h3>
-                      <p className="text-orange-100 text-sm">On Your First Food Order</p>
-                      <div className="mt-3 flex items-center gap-2 bg-white rounded-lg px-3 py-2">
-                        <Tag className="h-4 w-4 text-orange-500" />
-                        <span className="text-sm font-semibold text-gray-800">Up to ₹100 Off</span>
-                        <ArrowRight className="h-4 w-4 ml-auto text-gray-600" />
-                      </div>
-                    </div>
-                    <div className="hidden sm:block ml-4">
-                      <div className="text-6xl">🍕</div>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
+          <PromoSlider />
         </div>
       </section>
 

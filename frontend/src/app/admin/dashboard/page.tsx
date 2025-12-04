@@ -15,17 +15,9 @@ import {
   AlertCircle,
   ArrowUpRight,
   ArrowDownRight,
+  Wallet,
 } from "lucide-react";
-import { adminApi } from "@/lib/api";
-
-interface DashboardStats {
-  total_users: number;
-  total_merchants: number;
-  total_offers: number;
-  total_orders: number;
-  total_revenue: number;
-  pending_withdrawals: number;
-}
+import adminApi, { type DashboardStats } from "@/lib/api/admin";
 
 export default function AdminDashboard() {
   const [stats, setStats] = useState<DashboardStats | null>(null);
@@ -53,7 +45,8 @@ export default function AdminDashboard() {
   const statCards = stats ? [
     {
       title: "Total Users",
-      value: stats.total_users.toLocaleString(),
+      value: stats.users?.total?.toLocaleString() || "0",
+      subtitle: `${stats.users?.new_this_week || 0} new this week`,
       icon: Users,
       gradient: "from-blue-500 to-blue-600",
       bgGradient: "from-blue-50 to-blue-100 dark:from-blue-950/30 dark:to-blue-900/20",
@@ -61,8 +54,9 @@ export default function AdminDashboard() {
       positive: true,
     },
     {
-      title: "Merchants",
-      value: stats.total_merchants.toLocaleString(),
+      title: "Active Merchants",
+      value: stats.catalog?.active_merchants?.toLocaleString() || "0",
+      subtitle: "Partner stores",
       icon: Store,
       gradient: "from-green-500 to-green-600",
       bgGradient: "from-green-50 to-green-100 dark:from-green-950/30 dark:to-green-900/20",
@@ -71,7 +65,8 @@ export default function AdminDashboard() {
     },
     {
       title: "Active Offers",
-      value: stats.total_offers.toLocaleString(),
+      value: stats.catalog?.active_offers?.toLocaleString() || "0",
+      subtitle: "Live deals",
       icon: Tag,
       gradient: "from-purple-500 to-purple-600",
       bgGradient: "from-purple-50 to-purple-100 dark:from-purple-950/30 dark:to-purple-900/20",
@@ -80,7 +75,8 @@ export default function AdminDashboard() {
     },
     {
       title: "Total Orders",
-      value: stats.total_orders.toLocaleString(),
+      value: stats.orders?.total?.toLocaleString() || "0",
+      subtitle: `${stats.orders?.today || 0} today`,
       icon: ShoppingCart,
       gradient: "from-orange-500 to-orange-600",
       bgGradient: "from-orange-50 to-orange-100 dark:from-orange-950/30 dark:to-orange-900/20",
@@ -88,8 +84,9 @@ export default function AdminDashboard() {
       positive: true,
     },
     {
-      title: "Revenue",
-      value: `₹${(stats.total_revenue / 100000).toFixed(1)}L`,
+      title: "Total Revenue",
+      value: `₹${((stats.revenue?.total || 0) / 100000).toFixed(1)}L`,
+      subtitle: `₹${stats.revenue?.today?.toLocaleString() || 0} today`,
       icon: DollarSign,
       gradient: "from-emerald-500 to-emerald-600",
       bgGradient: "from-emerald-50 to-emerald-100 dark:from-emerald-950/30 dark:to-emerald-900/20",
@@ -98,8 +95,9 @@ export default function AdminDashboard() {
     },
     {
       title: "Pending Withdrawals",
-      value: stats.pending_withdrawals.toLocaleString(),
-      icon: TrendingUp,
+      value: stats.withdrawals?.pending_count?.toLocaleString() || "0",
+      subtitle: `₹${((stats.withdrawals?.pending_amount || 0) / 1000).toFixed(1)}K pending`,
+      icon: Wallet,
       gradient: "from-red-500 to-red-600",
       bgGradient: "from-red-50 to-red-100 dark:from-red-950/30 dark:to-red-900/20",
       change: "-5%",
@@ -180,6 +178,9 @@ export default function AdminDashboard() {
                   <div>
                     <p className="text-sm font-medium text-gray-600 dark:text-gray-400 mb-1">{stat.title}</p>
                     <h3 className="text-2xl sm:text-3xl font-bold text-gray-900 dark:text-white">{stat.value}</h3>
+                    {stat.subtitle && (
+                      <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">{stat.subtitle}</p>
+                    )}
                   </div>
                 </CardContent>
               </Card>
@@ -214,7 +215,7 @@ export default function AdminDashboard() {
               <CardTitle className="text-base sm:text-lg">Active Coupons</CardTitle>
             </CardHeader>
             <CardContent>
-              <p className="text-2xl sm:text-3xl font-bold">{stats?.total_offers || 0}</p>
+              <p className="text-2xl sm:text-3xl font-bold">{stats?.catalog?.active_offers || 0}</p>
               <p className="text-xs sm:text-sm text-muted-foreground mt-1">Currently live</p>
             </CardContent>
           </Card>
