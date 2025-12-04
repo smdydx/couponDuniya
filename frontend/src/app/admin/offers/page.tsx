@@ -33,6 +33,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import adminApi, { Offer, Merchant, Pagination } from "@/lib/api/admin";
+import { ImageUploader } from "@/components/admin";
 
 export default function AdminOffersPage() {
   const [offers, setOffers] = useState<Offer[]>([]);
@@ -421,17 +422,13 @@ export default function AdminOffersPage() {
                 placeholder="SAVE20"
               />
             </div>
-            <div className="grid gap-2">
-              <Label htmlFor="image_url">Image URL</Label>
-              <Input
-                id="image_url"
-                value={formData.image_url}
-                onChange={(e) =>
-                  setFormData((prev) => ({ ...prev, image_url: e.target.value }))
-                }
-                placeholder="https://example.com/offer.png"
-              />
-            </div>
+            <ImageUploader
+              label="Offer Image"
+              value={formData.image_url}
+              onChange={(url) => setFormData((prev) => ({ ...prev, image_url: url }))}
+              category="offers"
+              aspectRatio="video"
+            />
             <div className="grid gap-2">
               <Label htmlFor="priority">Priority</Label>
               <Input

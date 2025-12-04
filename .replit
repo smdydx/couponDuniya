@@ -4,7 +4,7 @@ expertMode = true
 
 [nix]
 channel = "stable-25_05"
-packages = ["cargo", "gcc", "glibc", "libiconv", "libxcrypt", "postgresql", "rustc"]
+packages = ["cargo", "freetype", "gcc", "glibc", "lcms2", "libiconv", "libimagequant", "libjpeg", "libtiff", "libwebp", "libxcrypt", "openjpeg", "postgresql", "rustc", "tcl", "tk", "zlib"]
 
 [userenv]
 
@@ -71,7 +71,7 @@ localPort = 8000
 externalPort = 8000
 
 [[ports]]
-localPort = 41755
+localPort = 41775
 externalPort = 3001
 
 [[ports]]

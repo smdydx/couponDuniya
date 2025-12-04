@@ -47,12 +47,12 @@ const nextConfig: NextConfig = {
   rewrites: async () => {
     return [
       {
-        source: "/api/:path*/",
+        source: "/backend-api/:path*/",
         destination: "http://127.0.0.1:8000/api/v1/:path*/",
       },
       {
-        source: "/api/:path*",
-        destination: "http://127.0.0.1:8000/api/v1/:path*/",
+        source: "/backend-api/:path*",
+        destination: "http://127.0.0.1:8000/api/v1/:path*",
       },
     ];
   },

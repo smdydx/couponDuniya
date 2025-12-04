@@ -34,6 +34,7 @@ import {
 } from "@/components/ui/select";
 import { formatCurrency } from "@/lib/utils";
 import adminApi, { Product, Merchant, Pagination } from "@/lib/api/admin";
+import { ImageUploader } from "@/components/admin";
 
 export default function AdminProductsPage() {
   const [products, setProducts] = useState<Product[]>([]);
@@ -462,17 +463,13 @@ export default function AdminProductsPage() {
                 />
               </div>
             </div>
-            <div className="grid gap-2">
-              <Label htmlFor="image_url">Image URL</Label>
-              <Input
-                id="image_url"
-                value={formData.image_url}
-                onChange={(e) =>
-                  setFormData((prev) => ({ ...prev, image_url: e.target.value }))
-                }
-                placeholder="https://example.com/product.png"
-              />
-            </div>
+            <ImageUploader
+              label="Product Image"
+              value={formData.image_url}
+              onChange={(url) => setFormData((prev) => ({ ...prev, image_url: url }))}
+              category="products"
+              aspectRatio="square"
+            />
             <div className="flex items-center justify-between rounded-lg border p-4">
               <div className="space-y-0.5">
                 <Label>Active</Label>

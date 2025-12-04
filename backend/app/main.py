@@ -40,6 +40,7 @@ from .api.v1 import (
     blog,
     blog_uploads,
     homepage,
+    uploads,
 )
 from fastapi.openapi.utils import get_openapi
 from fastapi.staticfiles import StaticFiles
@@ -257,6 +258,7 @@ app.include_router(realtime.router, prefix="/api/v1")
 app.include_router(blog.router, prefix="/api/v1")
 app.include_router(blog_uploads.router, prefix="/api/v1")
 app.include_router(homepage.router, prefix="/api/v1")
+app.include_router(uploads.router, prefix="/api/v1")
 
 GROUP_ORDER = [
     ("Auth", ["Auth"]),

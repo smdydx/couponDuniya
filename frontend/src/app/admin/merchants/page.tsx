@@ -35,6 +35,7 @@ import {
   ChevronRight,
 } from "lucide-react";
 import adminApi, { Merchant, Pagination } from "@/lib/api/admin";
+import { ImageUploader } from "@/components/admin";
 
 export default function AdminMerchantsPage() {
   const [merchants, setMerchants] = useState<Merchant[]>([]);
@@ -406,17 +407,13 @@ export default function AdminMerchantsPage() {
                 rows={3}
               />
             </div>
-            <div className="grid gap-2">
-              <Label htmlFor="logo_url">Logo URL</Label>
-              <Input
-                id="logo_url"
-                value={formData.logo_url}
-                onChange={(e) =>
-                  setFormData((prev) => ({ ...prev, logo_url: e.target.value }))
-                }
-                placeholder="https://example.com/logo.png"
-              />
-            </div>
+            <ImageUploader
+              label="Logo"
+              value={formData.logo_url}
+              onChange={(url) => setFormData((prev) => ({ ...prev, logo_url: url }))}
+              category="merchants"
+              aspectRatio="square"
+            />
             <div className="flex items-center justify-between rounded-lg border p-4">
               <div className="space-y-0.5">
                 <Label>Active</Label>

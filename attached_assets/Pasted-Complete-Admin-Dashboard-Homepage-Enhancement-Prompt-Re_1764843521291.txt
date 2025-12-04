@@ -1,0 +1,193 @@
+Complete Admin Dashboard & Homepage Enhancement Prompt
+Requirements Summary
+1. Admin Dashboard Features
+Full CRUD operations for all entities (Merchants, Offers, Products, Categories)
+Image upload functionality with both file upload and URL input options
+Dynamic management of:
+Banners (homepage hero sections)
+Logos (merchant/brand logos)
+Product images
+Offer images
+Category icons
+Real-time preview of uploaded images
+Bulk operations support
+Search and filtering for all entities
+Status management (active/inactive toggle)
+Analytics dashboard with live stats
+2. Homepage UI Redesign
+Product Grid Layout:
+Display 12 products total on homepage
+First row: 6 product cards (horizontal scroll on mobile)
+Second row: 6 product cards
+"View All" button at the end
+Responsive Design:
+Desktop: 6 cards per row
+Tablet: 4 cards per row
+Mobile: 2 cards per row with horizontal scroll
+Card Design:
+Compact, clean design
+Product image with merchant logo overlay
+Price with discount badge
+Quick "Add to Cart" button
+Hover effects with smooth transitions
+3. Image Management System
+Create a unified image upload component that supports:
+
+Drag & drop file upload
+Direct URL input option
+Image preview before saving
+Multiple image formats (jpg, png, webp, svg)
+File size validation (max 2MB)
+Cloudinary/local storage integration
+Image optimization (auto-resize, compression)
+4. Homepage Sections to Implement
+Hero Banner (admin-managed)
+Featured Merchants (6-12 cards)
+Exclusive Offers (scrollable carousel)
+Featured Products (12 cards, 6+6 layout)
+Top Categories (icon grid)
+Trending Deals (horizontal scroll)
+5. Admin Features Required
+Merchants Management
+Create/Edit/Delete merchants
+Upload logo (file or URL)
+Set as featured
+Manage commission rates
+View merchant analytics
+Offers Management
+Create/Edit/Delete offers
+Upload offer banner
+Set priority for homepage display
+Manage expiry dates
+Toggle active/inactive status
+Products Management
+Create/Edit/Delete products
+Upload product images
+Manage variants (denominations)
+Stock management
+Set featured/bestseller flags
+Bulk price updates
+Homepage Banner Management
+Upload hero banners
+Set banner order/priority
+Schedule banner display
+Add CTA buttons with links
+Preview before publishing
+Category Management
+Create/Edit categories
+Upload category icons
+Set display order
+Manage subcategories
+6. API Endpoints Required
+Admin Image Upload:
+POST /api/v1/admin/upload/image
+- Accepts: multipart/form-data or JSON with URL
+- Returns: uploaded image URL
+Homepage Management:
+GET /api/v1/admin/homepage/config
+PUT /api/v1/admin/homepage/config
+- Manage banner order, featured items, layout
+Product Management:
+POST /api/v1/admin/products
+PUT /api/v1/admin/products/{id}
+DELETE /api/v1/admin/products/{id}
+POST /api/v1/admin/products/bulk-update
+Offer Management:
+POST /api/v1/admin/offers
+PUT /api/v1/admin/offers/{id}
+DELETE /api/v1/admin/offers/{id}
+POST /api/v1/admin/offers/bulk-update
+Merchant Management:
+POST /api/v1/admin/merchants
+PUT /api/v1/admin/merchants/{id}
+DELETE /api/v1/admin/merchants/{id}
+7. UI Components Needed
+ImageUploader Component
+
+Dual mode: File upload + URL input
+Preview functionality
+Progress indicator
+Error handling
+ProductGridHomepage Component
+
+6x2 grid layout
+Responsive breakpoints
+Lazy loading
+Skeleton loaders
+AdminDataTable Component
+
+Sortable columns
+Inline editing
+Bulk actions
+Export functionality
+BannerManager Component
+
+Drag-to-reorder
+Live preview
+Schedule display
+8. Implementation Priority
+Phase 1: Image Upload System
+
+Backend: File upload endpoint with validation
+Frontend: Reusable ImageUploader component
+Storage: Local + Cloudinary integration
+Phase 2: Admin CRUD Pages
+
+Products page with image upload
+Merchants page with logo upload
+Offers page with banner upload
+Categories page with icon upload
+Phase 3: Homepage Redesign
+
+New product grid layout (6+6)
+Featured sections with "View All"
+Responsive design implementation
+Performance optimization
+Phase 4: Dynamic Homepage Config
+
+Admin panel to control homepage sections
+Banner management system
+Featured items selection
+Layout customization
+9. Technical Specifications
+Frontend Stack:
+
+Next.js 14+ with App Router
+TypeScript
+Tailwind CSS + shadcn/ui
+Zustand for state management
+React Hook Form for forms
+Zod for validation
+Backend Stack:
+
+FastAPI with async
+SQLAlchemy ORM
+Alembic migrations
+Redis caching
+Image optimization with Pillow
+File Storage:
+
+Primary: Local uploads folder
+Optional: Cloudinary CDN
+Backup: S3-compatible storage
+10. Success Criteria
+✅ Admin can upload images via drag-drop or URL
+✅ All entities fully manageable from dashboard
+✅ Homepage displays 12 products in 6+6 layout
+✅ All pages are functional with no broken features
+✅ Responsive design works on all devices
+✅ Image optimization reduces load time
+✅ Cache invalidation works properly
+✅ Analytics dashboard shows real-time data
+
+Implementation Instructions
+Step 1: Implement image upload backend endpoint with file validation and storage
+Step 2: Create reusable ImageUploader React component
+Step 3: Update admin product/merchant/offer pages with image upload
+Step 4: Redesign homepage ProductGrid to 6+6 layout
+Step 5: Add "View All" buttons to all homepage sections
+Step 6: Implement banner management system
+Step 7: Add cache invalidation for all admin changes
+Step 8: Test all functionalities and fix bugs
+Step 9: Optimize images and API responses
+Step 10: Deploy and verify production build
