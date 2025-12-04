@@ -2,7 +2,17 @@
 
 import React, { useEffect, useState, useRef } from "react";
 import Link from "next/link";
-import { ArrowRight, TrendingUp, Sparkles, Gift, Tag, Store, Percent, ChevronRight, ChevronLeft } from "lucide-react";
+import {
+  ArrowRight,
+  TrendingUp,
+  Sparkles,
+  Gift,
+  Tag,
+  Store,
+  Percent,
+  ChevronRight,
+  ChevronLeft,
+} from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -18,12 +28,19 @@ interface SectionHeaderProps {
   viewAllText?: string;
 }
 
-function SectionHeader({ title, subtitle, viewAllLink, viewAllText = "View All" }: SectionHeaderProps) {
+function SectionHeader({
+  title,
+  subtitle,
+  viewAllLink,
+  viewAllText = "View All",
+}: SectionHeaderProps) {
   return (
     <div className="mb-6 flex items-center justify-between">
       <div>
         <h2 className="text-xl font-bold sm:text-2xl lg:text-3xl">{title}</h2>
-        <p className="mt-1 text-sm text-muted-foreground sm:text-base">{subtitle}</p>
+        <p className="mt-1 text-sm text-muted-foreground sm:text-base">
+          {subtitle}
+        </p>
       </div>
       {viewAllLink && (
         <Button variant="outline" asChild className="gap-2">
@@ -123,7 +140,7 @@ function PromoSlider() {
       const cardWidth = containerRef.current.scrollWidth / promoOffers.length;
       containerRef.current.scrollTo({
         left: cardWidth * index,
-        behavior: 'smooth'
+        behavior: "smooth",
       });
     }
   };
@@ -157,24 +174,41 @@ function PromoSlider() {
           <div
             ref={containerRef}
             className="flex gap-3 sm:gap-4 overflow-x-auto scrollbar-hide snap-x snap-mandatory pb-2"
-            style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}
+            style={{ scrollbarWidth: "none", msOverflowStyle: "none" }}
           >
             {promoOffers.map((offer) => (
-              <div key={offer.id} className="min-w-[280px] sm:min-w-[320px] md:min-w-[380px] flex-shrink-0 snap-start">
-                <div className={`bg-gradient-to-r ${offer.gradient} rounded-xl p-4 sm:p-5 shadow-lg hover:shadow-xl transition-all cursor-pointer hover:scale-[1.02]`}>
+              <div
+                key={offer.id}
+                className="min-w-[280px] sm:min-w-[320px] md:min-w-[380px] flex-shrink-0 snap-start"
+              >
+                <div
+                  className={`bg-gradient-to-r ${offer.gradient} rounded-xl p-4 sm:p-5 shadow-lg hover:shadow-xl transition-all cursor-pointer hover:scale-[1.02]`}
+                >
                   <div className="flex items-center justify-between">
                     <div className="flex-1">
                       <div className="flex items-center gap-2 mb-2">
                         <div className="bg-white px-3 py-1 rounded-md">
-                          <span className={`text-xs font-semibold ${offer.brandColor}`}>{offer.brand}</span>
+                          <span
+                            className={`text-xs font-semibold ${offer.brandColor}`}
+                          >
+                            {offer.brand}
+                          </span>
                         </div>
-                        <Badge className={`${offer.badgeColor} text-xs`}>{offer.badge}</Badge>
+                        <Badge className={`${offer.badgeColor} text-xs`}>
+                          {offer.badge}
+                        </Badge>
                       </div>
-                      <h3 className="text-white font-bold text-lg sm:text-xl mb-1">{offer.title}</h3>
-                      <p className="text-white/80 text-sm line-clamp-1">{offer.subtitle}</p>
+                      <h3 className="text-white font-bold text-lg sm:text-xl mb-1">
+                        {offer.title}
+                      </h3>
+                      <p className="text-white/80 text-sm line-clamp-1">
+                        {offer.subtitle}
+                      </p>
                       <div className="mt-3 flex items-center gap-2 bg-white rounded-lg px-3 py-2">
                         <Tag className="h-4 w-4 text-red-500 flex-shrink-0" />
-                        <span className="text-sm font-semibold text-gray-800 truncate">{offer.code}</span>
+                        <span className="text-sm font-semibold text-gray-800 truncate">
+                          {offer.code}
+                        </span>
                         <ArrowRight className="h-4 w-4 ml-auto text-gray-600 flex-shrink-0" />
                       </div>
                     </div>
@@ -226,7 +260,7 @@ function PromoSlider() {
               scrollToIndex(index);
             }}
             className={`h-2 rounded-full transition-all ${
-              index === promoIndex ? 'w-6 bg-purple-600' : 'w-2 bg-gray-300'
+              index === promoIndex ? "w-6 bg-purple-600" : "w-2 bg-gray-300"
             }`}
             aria-label={`Go to slide ${index + 1}`}
           />
@@ -244,20 +278,23 @@ export default function HomePage() {
   useEffect(() => {
     async function fetchData() {
       try {
-        const res = await fetch(`/backend-api/homepage/?limit_merchants=12&limit_featured_offers=8&limit_exclusive_offers=6&limit_products=12&limit_banners=5`, {
-          method: 'GET',
-          headers: {
-            'Content-Type': 'application/json',
+        const res = await fetch(
+          `/backend-api/homepage/?limit_merchants=12&limit_featured_offers=8&limit_exclusive_offers=6&limit_products=12&limit_banners=5`,
+          {
+            method: "GET",
+            headers: {
+              "Content-Type": "application/json",
+            },
           },
-        });
+        );
         if (res.ok) {
           const json = await res.json();
           setData(json.data || null);
         } else {
-          console.error('Homepage API error:', res.status, res.statusText);
+          console.error("Homepage API error:", res.status, res.statusText);
         }
       } catch (error) {
-        console.error('Failed to fetch homepage data:', error);
+        console.error("Failed to fetch homepage data:", error);
       } finally {
         setIsLoading(false);
       }
@@ -309,21 +346,33 @@ export default function HomePage() {
                   <div
                     key={banner.id}
                     className={`absolute inset-0 transition-opacity duration-700 ${
-                      index === currentSlide ? 'opacity-100 z-10' : 'opacity-0 z-0'
+                      index === currentSlide
+                        ? "opacity-100 z-10"
+                        : "opacity-0 z-0"
                     }`}
                   >
                     {banner.link_url ? (
-                      <a href={banner.link_url} target="_blank" rel="noopener noreferrer" className="block w-full h-full">
+                      <a
+                        href={banner.link_url}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="block w-full h-full"
+                      >
                         <img
-                          src={banner.image_url || '/images/banners/placeholder.jpg'}
-                          alt={banner.title || 'Banner'}
+                          src={
+                            banner.image_url ||
+                            "/images/banners/placeholder.jpg"
+                          }
+                          alt={banner.title || "Banner"}
                           className="w-full h-full object-cover"
                         />
                       </a>
                     ) : (
                       <img
-                        src={banner.image_url || '/images/banners/placeholder.jpg'}
-                        alt={banner.title || 'Banner'}
+                        src={
+                          banner.image_url || "/images/banners/placeholder.jpg"
+                        }
+                        alt={banner.title || "Banner"}
                         className="w-full h-full object-cover"
                       />
                     )}
@@ -359,7 +408,9 @@ export default function HomePage() {
                       key={index}
                       onClick={() => setCurrentSlide(index)}
                       className={`h-2 rounded-full transition-all ${
-                        index === currentSlide ? 'w-8 bg-white' : 'w-2 bg-white/50'
+                        index === currentSlide
+                          ? "w-8 bg-white"
+                          : "w-2 bg-white/50"
                       }`}
                       aria-label={`Go to slide ${index + 1}`}
                     />
@@ -370,30 +421,10 @@ export default function HomePage() {
           </div>
         </section>
       )}
-
-      {/* Stats Bar - At the Very Top */}
-      <section className="bg-gradient-to-r from-purple-600 via-purple-700 to-blue-600 dark:from-purple-900 dark:via-purple-800 dark:to-blue-900 py-6 sm:py-8">
+      {/* Promotional Offers Slider - After Stats Section */}
+      <section className="bg-gradient-to-r from-blue-50 to-purple-50 dark:from-gray-900 dark:to-gray-800 py-8 sm:py-12">
         <div className="container">
-          <div className="grid gap-4 sm:gap-6 grid-cols-1 sm:grid-cols-3 max-w-5xl mx-auto">
-            <div className="text-center">
-              <h3 className="text-3xl sm:text-4xl lg:text-5xl font-bold text-white mb-1">
-                50,000+
-              </h3>
-              <p className="text-sm sm:text-base text-purple-100 dark:text-purple-200">Verified Coupons</p>
-            </div>
-            <div className="text-center">
-              <h3 className="text-3xl sm:text-4xl lg:text-5xl font-bold text-white mb-1">
-                1000+
-              </h3>
-              <p className="text-sm sm:text-base text-purple-100 dark:text-purple-200">Partner Stores</p>
-            </div>
-            <div className="text-center">
-              <h3 className="text-3xl sm:text-4xl lg:text-5xl font-bold text-white mb-1">
-                ₹50 Cr+
-              </h3>
-              <p className="text-sm sm:text-base text-purple-100 dark:text-purple-200">Cashback Given</p>
-            </div>
-          </div>
+          <PromoSlider />
         </div>
       </section>
 
@@ -407,28 +438,24 @@ export default function HomePage() {
             Coupons & Cashback
           </h2>
           <p className="text-base sm:text-lg text-muted-foreground mb-8 max-w-3xl mx-auto">
-            Get the best deals, exclusive coupons, and instant cashback from 1000+ top brands. Start saving today!
+            Get the best deals, exclusive coupons, and instant cashback from
+            1000+ top brands. Start saving today!
           </p>
           <div className="flex flex-col sm:flex-row gap-4 justify-center items-center">
-            <Button size="lg" className="bg-purple-600 hover:bg-purple-700 text-white px-8" asChild>
+            <Button
+              size="lg"
+              className="bg-purple-600 hover:bg-purple-700 text-white px-8"
+              asChild
+            >
               <Link href={ROUTES.coupons}>
                 Browse Coupons
                 <ArrowRight className="ml-2 h-5 w-5" />
               </Link>
             </Button>
             <Button size="lg" variant="outline" asChild>
-              <Link href={ROUTES.merchants}>
-                View All Stores
-              </Link>
+              <Link href={ROUTES.merchants}>View All Stores</Link>
             </Button>
           </div>
-        </div>
-      </section>
-
-      {/* Promotional Offers Slider - After Stats Section */}
-      <section className="bg-gradient-to-r from-blue-50 to-purple-50 dark:from-gray-900 dark:to-gray-800 py-8 sm:py-12">
-        <div className="container">
-          <PromoSlider />
         </div>
       </section>
 
@@ -444,7 +471,9 @@ export default function HomePage() {
         ) : (
           <div className="text-center py-12 bg-muted/30 rounded-lg">
             <Store className="h-12 w-12 mx-auto text-muted-foreground mb-3" />
-            <p className="text-muted-foreground">No featured stores available</p>
+            <p className="text-muted-foreground">
+              No featured stores available
+            </p>
           </div>
         )}
       </section>
@@ -474,8 +503,12 @@ export default function HomePage() {
         <section className="container py-8 sm:py-12">
           <div className="flex items-center justify-between mb-6">
             <div>
-              <h2 className="text-xl font-bold sm:text-2xl lg:text-3xl">Featured Gift Cards</h2>
-              <p className="text-sm text-muted-foreground mt-1">Best selling gift cards at amazing prices</p>
+              <h2 className="text-xl font-bold sm:text-2xl lg:text-3xl">
+                Featured Gift Cards
+              </h2>
+              <p className="text-sm text-muted-foreground mt-1">
+                Best selling gift cards at amazing prices
+              </p>
             </div>
             <Button variant="outline" asChild className="gap-2">
               <Link href={ROUTES.products}>
@@ -515,7 +548,9 @@ export default function HomePage() {
         ) : (
           <div className="text-center py-12 bg-muted/30 rounded-lg">
             <Tag className="h-12 w-12 mx-auto text-muted-foreground mb-3" />
-            <p className="text-muted-foreground">No featured offers available</p>
+            <p className="text-muted-foreground">
+              No featured offers available
+            </p>
           </div>
         )}
       </section>
@@ -524,9 +559,12 @@ export default function HomePage() {
       <section className="container py-8 sm:py-12">
         <Card className="bg-gradient-to-r from-primary to-purple-600 text-white border-0">
           <CardContent className="p-6 sm:p-8 md:p-12 text-center">
-            <h2 className="text-2xl sm:text-3xl font-bold mb-3">Start Saving Today!</h2>
+            <h2 className="text-2xl sm:text-3xl font-bold mb-3">
+              Start Saving Today!
+            </h2>
             <p className="text-white/80 mb-6 max-w-xl mx-auto">
-              Join thousands of smart shoppers who save money every day with our verified coupons and cashback offers.
+              Join thousands of smart shoppers who save money every day with our
+              verified coupons and cashback offers.
             </p>
             <div className="flex flex-wrap justify-center gap-3">
               <Button size="lg" variant="secondary" asChild>
