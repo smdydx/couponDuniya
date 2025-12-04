@@ -1,0 +1,68 @@
+## Error Type
+Recoverable Error
+
+## Error Message
+Hydration failed because the server rendered HTML didn't match the client. As a result this tree will be regenerated on the client. This can happen if a SSR-ed Client Component used:
+
+- A server/client branch `if (typeof window !== 'undefined')`.
+- Variable input such as `Date.now()` or `Math.random()` which changes each time it's called.
+- Date formatting in a user's locale which doesn't match the server.
+- External changing data without sending a snapshot of it along with the HTML.
+- Invalid HTML tag nesting.
+
+It can also happen if the client has a browser extension installed which messes with the HTML before React loaded.
+
+https://react.dev/link/hydration-mismatch
+
+  ...
+    <HotReload globalError={[...]} webSocket={WebSocket} staticIndicatorState={{pathname:null, ...}}>
+      <AppDevOverlayErrorBoundary globalError={[...]}>
+        <ReplaySsrOnlyErrors>
+        <DevRootHTTPAccessFallbackBoundary>
+          <HTTPAccessFallbackBoundary notFound={<NotAllowedRootHTTPFallbackError>}>
+            <HTTPAccessFallbackErrorBoundary pathname="/admin/ana..." notFound={<NotAllowedRootHTTPFallbackError>} ...>
+              <RedirectBoundary>
+                <RedirectErrorBoundary router={{...}}>
+                  <Head>
+                  <__next_root_layout_boundary__>
+                    <SegmentViewNode type="layout" pagePath="layout.tsx">
+                      <SegmentTrieNode>
+                      <link>
+                      <script>
+                      <RootLayout>
+                        <html lang="en" suppressHydrationWarning={true}>
+                          <body className="inter_5901...">
+                            <a>
+                            <div
++                             id="main-content"
+-                             id={null}
+-                             className="min-h-screen bg-muted/30"
+                            >
+                              ...
+                                <script>
+                                <script>
+                                <script>
+                                <ClientSegmentRoot Component={function AdminLayout} slots={{...}} ...>
+                                  <AdminLayout params={Promise}>
++                                   <div className="min-h-screen bg-muted/30">
+-                                   <aside
+-                                     className="fixed left-0 top-0 z-40 h-screen border-r bg-background transition-al..."
+-                                   >
+                  ...
+
+
+
+    at throwOnHydrationMismatch (file:///home/deepak/office Project /couponDuniya /frontend/.next/dev/static/chunks/node_modules_next_dist_compiled_react-dom_1e674e59._.js:3342:56)
+    at beginWork (file:///home/deepak/office Project /couponDuniya /frontend/.next/dev/static/chunks/node_modules_next_dist_compiled_react-dom_1e674e59._.js:6769:918)
+    at runWithFiberInDEV (file:///home/deepak/office Project /couponDuniya /frontend/.next/dev/static/chunks/node_modules_next_dist_compiled_react-dom_1e674e59._.js:959:74)
+    at performUnitOfWork (file:///home/deepak/office Project /couponDuniya /frontend/.next/dev/static/chunks/node_modules_next_dist_compiled_react-dom_1e674e59._.js:9556:97)
+    at workLoopConcurrentByScheduler (file:///home/deepak/office Project /couponDuniya /frontend/.next/dev/static/chunks/node_modules_next_dist_compiled_react-dom_1e674e59._.js:9552:58)
+    at renderRootConcurrent (file:///home/deepak/office Project /couponDuniya /frontend/.next/dev/static/chunks/node_modules_next_dist_compiled_react-dom_1e674e59._.js:9535:71)
+    at performWorkOnRoot (file:///home/deepak/office Project /couponDuniya /frontend/.next/dev/static/chunks/node_modules_next_dist_compiled_react-dom_1e674e59._.js:9062:150)
+    at performWorkOnRootViaSchedulerTask (file:///home/deepak/office Project /couponDuniya /frontend/.next/dev/static/chunks/node_modules_next_dist_compiled_react-dom_1e674e59._.js:10224:9)
+    at MessagePort.performWorkUntilDeadline (file:///home/deepak/office Project /couponDuniya /frontend/.next/dev/static/chunks/node_modules_next_dist_compiled_a0e4c7b4._.js:2647:64)
+    at div (<anonymous>:null:null)
+    at AdminLayout (file:///home/deepak/office Project /couponDuniya /frontend/.next/dev/static/chunks/src_05cc1f38._.js:972:214)
+    at ClientSegmentRoot (file:///home/deepak/office Project /couponDuniya /frontend/.next/dev/static/chunks/node_modules_next_dist_094231d7._.js:2264:50)
+
+Next.js version: 16.0.3 (Turbopack)
