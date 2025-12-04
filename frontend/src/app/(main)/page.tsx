@@ -94,6 +94,93 @@ export default function HomePage() {
 
   return (
     <div className="flex flex-col">
+      {/* Promotional Offers Banner - Top Section */}
+      <section className="bg-gradient-to-r from-blue-50 to-purple-50 dark:from-gray-900 dark:to-gray-800 py-3 sm:py-4">
+        <div className="container">
+          <div className="relative overflow-hidden">
+            <div className="flex gap-3 sm:gap-4 overflow-x-auto scrollbar-hide snap-x snap-mandatory pb-2">
+              {/* Cleartrip Offer */}
+              <div className="min-w-[280px] sm:min-w-[400px] md:min-w-[500px] flex-shrink-0 snap-start">
+                <div className="bg-gradient-to-r from-blue-500 to-blue-600 rounded-xl p-4 sm:p-6 shadow-lg hover:shadow-xl transition-all">
+                  <div className="flex items-center justify-between">
+                    <div className="flex-1">
+                      <div className="flex items-center gap-2 mb-2">
+                        <div className="bg-white px-3 py-1 rounded-md">
+                          <span className="text-xs font-semibold text-blue-600">cleartrip</span>
+                        </div>
+                        <Badge className="bg-orange-500 text-white text-xs">Exclusive</Badge>
+                      </div>
+                      <h3 className="text-white font-bold text-lg sm:text-xl mb-1">Upto 25% Off</h3>
+                      <p className="text-blue-100 text-sm">On Domestic Flights</p>
+                      <div className="mt-3 flex items-center gap-2 bg-white rounded-lg px-3 py-2">
+                        <Tag className="h-4 w-4 text-red-500" />
+                        <span className="text-sm font-semibold text-gray-800">Flat ₹160 Cashback</span>
+                        <ArrowRight className="h-4 w-4 ml-auto text-gray-600" />
+                      </div>
+                    </div>
+                    <div className="hidden sm:block ml-4">
+                      <div className="text-6xl">✈️</div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              {/* McDelivery Offer */}
+              <div className="min-w-[280px] sm:min-w-[400px] md:min-w-[500px] flex-shrink-0 snap-start">
+                <div className="bg-gradient-to-r from-red-500 to-red-600 rounded-xl p-4 sm:p-6 shadow-lg hover:shadow-xl transition-all">
+                  <div className="flex items-center justify-between">
+                    <div className="flex-1">
+                      <div className="flex items-center gap-2 mb-2">
+                        <div className="bg-white px-3 py-1 rounded-md">
+                          <span className="text-xs font-semibold text-red-600">McDelivery</span>
+                        </div>
+                        <Badge className="bg-yellow-400 text-red-600 text-xs">Hot Deal</Badge>
+                      </div>
+                      <h3 className="text-white font-bold text-lg sm:text-xl mb-1">Get A Free Burger</h3>
+                      <p className="text-red-100 text-sm">McVeggie Or A McChicken Burger On Orders Above ₹499</p>
+                      <div className="mt-3 flex items-center gap-2 bg-white rounded-lg px-3 py-2">
+                        <Tag className="h-4 w-4 text-red-500" />
+                        <span className="text-sm font-semibold text-gray-800">Use Code : CDXMCDFREE</span>
+                        <ArrowRight className="h-4 w-4 ml-auto text-gray-600" />
+                      </div>
+                    </div>
+                    <div className="hidden sm:block ml-4">
+                      <div className="text-6xl">🍔</div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              {/* Swiggy Offer */}
+              <div className="min-w-[280px] sm:min-w-[400px] md:min-w-[500px] flex-shrink-0 snap-start">
+                <div className="bg-gradient-to-r from-orange-500 to-orange-600 rounded-xl p-4 sm:p-6 shadow-lg hover:shadow-xl transition-all">
+                  <div className="flex items-center justify-between">
+                    <div className="flex-1">
+                      <div className="flex items-center gap-2 mb-2">
+                        <div className="bg-white px-3 py-1 rounded-md">
+                          <span className="text-xs font-semibold text-orange-600">Swiggy</span>
+                        </div>
+                        <Badge className="bg-green-500 text-white text-xs">New User</Badge>
+                      </div>
+                      <h3 className="text-white font-bold text-lg sm:text-xl mb-1">Flat 50% Off</h3>
+                      <p className="text-orange-100 text-sm">On Your First Food Order</p>
+                      <div className="mt-3 flex items-center gap-2 bg-white rounded-lg px-3 py-2">
+                        <Tag className="h-4 w-4 text-orange-500" />
+                        <span className="text-sm font-semibold text-gray-800">Up to ₹100 Off</span>
+                        <ArrowRight className="h-4 w-4 ml-auto text-gray-600" />
+                      </div>
+                    </div>
+                    <div className="hidden sm:block ml-4">
+                      <div className="text-6xl">🍕</div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
       {/* Hero Slider Section */}
       {banners.length > 0 && (
         <section className="relative w-full bg-gradient-to-b from-primary/5 to-transparent">
