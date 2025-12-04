@@ -68,12 +68,9 @@ export default function AdminDashboardPage() {
 
   if (loading) {
     return (
-      <div className="flex items-center justify-center min-h-screen bg-gradient-to-br from-green-50 via-emerald-50 to-teal-50 dark:from-gray-900 dark:via-gray-800 dark:to-gray-900">
+      <div className="flex items-center justify-center min-h-screen">
         <div className="text-center space-y-4">
-          <div className="relative">
-            <RefreshCw className="h-16 w-16 animate-spin mx-auto text-emerald-600 dark:text-emerald-400" />
-            <Leaf className="h-8 w-8 absolute top-0 right-0 text-green-500 dark:text-green-400 animate-pulse" />
-          </div>
+          <RefreshCw className="h-16 w-16 animate-spin mx-auto text-emerald-600 dark:text-emerald-400" />
           <p className="text-muted-foreground font-medium">Loading dashboard...</p>
         </div>
       </div>

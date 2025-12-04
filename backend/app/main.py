@@ -60,16 +60,14 @@ try:
 except Exception:
     pass
 
-# CORS configuration to allow frontend on port 3000
-origins = [
-    o.strip() for o in (settings.CORS_ORIGINS or "").split(",") if o.strip()
-]
+# CORS - Allow all origins for Replit development
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=origins if origins else ["http://localhost:3000"],
+    allow_origins=["*"],  # Allow all origins
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
+    expose_headers=["*"],
 )
 
 # Rate limiting middleware using Redis
