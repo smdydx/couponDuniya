@@ -4,8 +4,8 @@ from functools import lru_cache
 class Settings(BaseSettings):
     APP_NAME: str = "CouponAli API"
     DEBUG: bool = True
-    # Use SQLite by default for Replit environment
-    DATABASE_URL: str = "sqlite:///./couponali.db"
+    # PostgreSQL database connection
+    DATABASE_URL: str = "postgresql+psycopg://coupon:hardik123@127.0.0.1:5432/couponali"
     REDIS_URL: str = "redis://localhost:6379"
     SECRET_KEY: str = "dev-secret"
     JWT_ALGORITHM: str = "HS256"

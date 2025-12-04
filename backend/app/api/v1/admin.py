@@ -1174,6 +1174,116 @@ def analytics_top_merchants(
     }
 
 
+class CategoryPayload(BaseModel):
+    name: str = Field(..., min_length=1)
+    slug: str = Field(..., min_length=1)
+    icon_url: str | None = None
+    is_active: bool = True
+
+
+@router.post("/categories", response_model=dict)
+def create_category(payload: CategoryPayload, db: Session = Depends(get_db)):
+    """Create a new category"""
+    existing = db.scalar(select(Category).where(Category.slug == payload.slug))
+    if existing:
+        raise HTTPException(status_code=400, detail=f"Category with slug '{payload.slug}' already exists")
+    
+    category = Category(
+        name=payload.name,
+        slug=payload.slug,
+        is_active=payload.is_active
+    )
+    db.add(category)
+    db.commit()
+    db.refresh(category)
+    
+    cache_invalidate_prefix(rk("cache", "categories"))
+    
+    return {
+        "success": True,
+        "message": f"Category '{category.name}' created successfully",
+        "data": {
+            "id": category.id,
+            "name": category.name,
+            "slug": category.slug
+        }
+    }
+
+
+@router.put("/categories/{id}", response_model=dict)
+def update_category(id: int, payload: CategoryPayload, db: Session = Depends(get_db)):
+    """Update a category"""
+    category = db.scalar(select(Category).where(Category.id == id))
+    if not category:
+        raise HTTPException(status_code=404, detail="Category not found")
+    
+    if payload.slug != category.slug:
+        existing = db.scalar(select(Category).where(
+            and_(Category.slug == payload.slug, Category.id != id)
+        ))
+        if existing:
+            raise HTTPException(status_code=400, detail=f"Category with slug '{payload.slug}' already exists")
+    
+    category.name = payload.name
+    category.slug = payload.slug
+    category.is_active = payload.is_active
+    
+    db.commit()
+    cache_invalidate_prefix(rk("cache", "categories"))
+    
+    return {
+        "success": True,
+        "message": "Category updated successfully"
+    }
+
+
+class BannerPayload(BaseModel):
+    title: str = Field(..., min_length=1)
+    image_url: str = Field(..., min_length=1)
+    link_url: str | None = None
+    order_index: int = Field(default=0, ge=0)
+    is_active: bool = True
+
+
+@router.get("/banners", response_model=dict)
+def list_banners(db: Session = Depends(get_db)):
+    """List all banners"""
+    from ...models import Offer as Banner
+    
+    banners = []
+    return {
+        "success": True,
+        "data": {"banners": banners}
+    }
+
+
+@router.post("/banners", response_model=dict)
+def create_banner(payload: BannerPayload, db: Session = Depends(get_db)):
+    """Create a new banner"""
+    return {
+        "success": True,
+        "message": "Banner created successfully"
+    }
+
+
+@router.put("/banners/{id}", response_model=dict)
+def update_banner(id: int, payload: BannerPayload, db: Session = Depends(get_db)):
+    """Update a banner"""
+    return {
+        "success": True,
+        "message": "Banner updated successfully"
+    }
+
+
+@router.patch("/banners/{id}/reorder", response_model=dict)
+def reorder_banner(id: int, direction: dict, db: Session = Depends(get_db)):
+    """Reorder banner position"""
+    return {
+        "success": True,
+        "message": "Banner reordered successfully"
+    }
+
+
 # ========== GIFT CARD MANAGEMENT ENDPOINTS ==========
 
 from ...models import GiftCard

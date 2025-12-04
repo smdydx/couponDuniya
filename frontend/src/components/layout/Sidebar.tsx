@@ -17,6 +17,8 @@ import {
   Wallet,
   FileText,
   Shield,
+  FolderOpen, // Added for Categories
+  ImageIcon, // Added for Banners
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
@@ -43,6 +45,16 @@ const adminNavItems = [
     title: "Products",
     href: ROUTES.admin.products,
     icon: Gift,
+  },
+  {
+    title: "Categories",
+    href: "/admin/categories",
+    icon: FolderOpen,
+  },
+  {
+    title: "Banners",
+    href: "/admin/banners",
+    icon: ImageIcon,
   },
   {
     title: "Orders",
