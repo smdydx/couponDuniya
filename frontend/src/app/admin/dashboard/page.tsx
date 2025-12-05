@@ -2,59 +2,62 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent } from "@/components/ui/card";
 import {
   Users,
   Store,
   Tag,
   ShoppingCart,
   DollarSign,
-  Clock,
   TrendingUp,
   TrendingDown,
   Package,
   Wallet,
 } from "lucide-react";
-import api from "@/lib/api/client";
 import { LoadingSpinner } from "@/components/common/LoadingSpinner";
 
 interface DashboardStats {
-  total_users: number;
-  new_users_today: number;
-  total_merchants: number;
-  active_merchants: number;
-  total_offers: number;
-  active_offers: number;
-  total_products: number;
-  active_products: number;
-  total_orders: number;
-  orders_today: number;
-  total_revenue: number;
-  revenue_today: number;
-  pending_withdrawals: number;
-  pending_withdrawal_amount: number;
+  orders: { total: number; today: number };
+  revenue: { total: number; today: number };
+  users: { total: number; new_this_week: number };
+  withdrawals: { pending_count: number; pending_amount: number };
+  catalog: { active_merchants: number; active_offers: number; available_products: number };
+  redis: { connected: boolean; keys_count: number; memory_used: string; connected_clients: number };
 }
 
 export default function AdminDashboard() {
   const [stats, setStats] = useState<DashboardStats | null>(null);
   const [loading, setLoading] = useState(true);
+  const [mounted, setMounted] = useState(false);
 
   useEffect(() => {
-    fetchDashboardStats();
+    setMounted(true);
   }, []);
 
-  const fetchDashboardStats = async () => {
-    try {
-      const response = await api.get("/admin/analytics/dashboard");
-      if (response.data.success) {
-        setStats(response.data.data);
+  useEffect(() => {
+    if (!mounted) return;
+    
+    const fetchDashboardStats = async () => {
+      try {
+        const response = await fetch("http://localhost:8000/api/v1/admin/analytics/dashboard");
+        const data = await response.json();
+        
+        if (data.success) {
+          setStats(data.data);
+        }
+      } catch (error) {
+        console.error("Failed to fetch dashboard stats:", error);
+      } finally {
+        setLoading(false);
       }
-    } catch (error) {
-      console.error("Failed to fetch dashboard stats:", error);
-    } finally {
-      setLoading(false);
-    }
-  };
+    };
+
+    fetchDashboardStats();
+  }, [mounted]);
+
+  if (!mounted) {
+    return null;
+  }
 
   if (loading) {
     return (
@@ -80,18 +83,18 @@ export default function AdminDashboard() {
   const statCards = [
     {
       title: "Total Users",
-      value: stats.total_users.toLocaleString(),
-      subtitle: `+${stats.new_users_today} today`,
+      value: stats.users.total.toLocaleString(),
+      subtitle: `+${stats.users.new_this_week} this week`,
       icon: Users,
       gradient: "from-blue-500 to-cyan-500",
       bgColor: "bg-blue-50",
       iconColor: "text-blue-600",
-      change: stats.new_users_today > 0 ? "up" : "neutral",
+      change: stats.users.new_this_week > 0 ? "up" : "neutral",
     },
     {
       title: "Active Merchants",
-      value: stats.active_merchants.toLocaleString(),
-      subtitle: `${calculatePercentage(stats.active_merchants, stats.total_merchants)}% active`,
+      value: stats.catalog.active_merchants.toLocaleString(),
+      subtitle: `Live merchants`,
       icon: Store,
       gradient: "from-purple-500 to-pink-500",
       bgColor: "bg-purple-50",
@@ -100,7 +103,7 @@ export default function AdminDashboard() {
     },
     {
       title: "Active Offers",
-      value: stats.active_offers.toLocaleString(),
+      value: stats.catalog.active_offers.toLocaleString(),
       subtitle: `Live deals running`,
       icon: Tag,
       gradient: "from-orange-500 to-red-500",
@@ -110,37 +113,37 @@ export default function AdminDashboard() {
     },
     {
       title: "Total Orders",
-      value: stats.total_orders.toLocaleString(),
-      subtitle: `+${stats.orders_today} today`,
+      value: stats.orders.total.toLocaleString(),
+      subtitle: `+${stats.orders.today} today`,
       icon: ShoppingCart,
       gradient: "from-green-500 to-emerald-500",
       bgColor: "bg-green-50",
       iconColor: "text-green-600",
-      change: stats.orders_today > 0 ? "up" : "neutral",
+      change: stats.orders.today > 0 ? "up" : "neutral",
     },
     {
       title: "Total Revenue",
-      value: `₹${stats.total_revenue.toLocaleString()}`,
-      subtitle: `₹${stats.revenue_today.toLocaleString()} today`,
+      value: `₹${stats.revenue.total.toLocaleString()}`,
+      subtitle: `₹${stats.revenue.today.toLocaleString()} today`,
       icon: DollarSign,
       gradient: "from-indigo-500 to-blue-500",
       bgColor: "bg-indigo-50",
       iconColor: "text-indigo-600",
-      change: stats.revenue_today > 0 ? "up" : "neutral",
+      change: stats.revenue.today > 0 ? "up" : "neutral",
     },
     {
       title: "Pending Withdrawals",
-      value: stats.pending_withdrawals.toLocaleString(),
-      subtitle: `₹${stats.pending_withdrawal_amount.toLocaleString()} pending`,
+      value: stats.withdrawals.pending_count.toLocaleString(),
+      subtitle: `₹${stats.withdrawals.pending_amount.toLocaleString()} pending`,
       icon: Wallet,
       gradient: "from-yellow-500 to-orange-500",
       bgColor: "bg-yellow-50",
       iconColor: "text-yellow-600",
-      change: stats.pending_withdrawals > 0 ? "down" : "neutral",
+      change: stats.withdrawals.pending_count > 0 ? "down" : "neutral",
     },
     {
       title: "Active Products",
-      value: stats.active_products.toLocaleString(),
+      value: stats.catalog.available_products.toLocaleString(),
       subtitle: `Gift cards available`,
       icon: Package,
       gradient: "from-pink-500 to-rose-500",
@@ -151,7 +154,7 @@ export default function AdminDashboard() {
   ];
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-6 p-6">
       {/* Header */}
       <div>
         <h1 className="text-3xl font-bold tracking-tight">Admin Dashboard</h1>
@@ -206,32 +209,30 @@ export default function AdminDashboard() {
       </div>
 
       {/* Quick Actions */}
-      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+      <div className="grid gap-4 md:grid-cols-3">
         <Card className="border-l-4 border-l-blue-500 shadow-md hover:shadow-lg transition-shadow">
-          <CardHeader>
-            <CardTitle className="text-lg flex items-center gap-2">
-              <Clock className="h-5 w-5 text-blue-600" />
-              Recent Activity
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
+          <CardContent className="p-6">
+            <h3 className="text-lg font-semibold mb-4 flex items-center gap-2">
+              <ShoppingCart className="h-5 w-5 text-blue-600" />
+              Recent Orders
+            </h3>
             <div className="space-y-2">
               <div className="flex justify-between items-center text-sm">
                 <span className="text-muted-foreground">Orders Today</span>
                 <span className="font-bold text-blue-600">
-                  {stats.orders_today}
+                  {stats.orders.today}
                 </span>
               </div>
               <div className="flex justify-between items-center text-sm">
-                <span className="text-muted-foreground">New Users</span>
+                <span className="text-muted-foreground">Total Orders</span>
                 <span className="font-bold text-green-600">
-                  {stats.new_users_today}
+                  {stats.orders.total}
                 </span>
               </div>
               <div className="flex justify-between items-center text-sm">
                 <span className="text-muted-foreground">Revenue Today</span>
                 <span className="font-bold text-indigo-600">
-                  ₹{stats.revenue_today.toLocaleString()}
+                  ₹{stats.revenue.today.toLocaleString()}
                 </span>
               </div>
             </div>
@@ -239,30 +240,28 @@ export default function AdminDashboard() {
         </Card>
 
         <Card className="border-l-4 border-l-purple-500 shadow-md hover:shadow-lg transition-shadow">
-          <CardHeader>
-            <CardTitle className="text-lg flex items-center gap-2">
+          <CardContent className="p-6">
+            <h3 className="text-lg font-semibold mb-4 flex items-center gap-2">
               <Store className="h-5 w-5 text-purple-600" />
-              Merchants Overview
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
+              Catalog Overview
+            </h3>
             <div className="space-y-2">
               <div className="flex justify-between items-center text-sm">
-                <span className="text-muted-foreground">Total Merchants</span>
-                <span className="font-bold text-purple-600">
-                  {stats.total_merchants}
-                </span>
-              </div>
-              <div className="flex justify-between items-center text-sm">
                 <span className="text-muted-foreground">Active Merchants</span>
-                <span className="font-bold text-green-600">
-                  {stats.active_merchants}
+                <span className="font-bold text-purple-600">
+                  {stats.catalog.active_merchants}
                 </span>
               </div>
               <div className="flex justify-between items-center text-sm">
-                <span className="text-muted-foreground">Active Rate</span>
-                <span className="font-bold text-blue-600">
-                  {calculatePercentage(stats.active_merchants, stats.total_merchants)}%
+                <span className="text-muted-foreground">Active Offers</span>
+                <span className="font-bold text-pink-600">
+                  {stats.catalog.active_offers}
+                </span>
+              </div>
+              <div className="flex justify-between items-center text-sm">
+                <span className="text-muted-foreground">Active Products</span>
+                <span className="font-bold text-orange-600">
+                  {stats.catalog.available_products}
                 </span>
               </div>
             </div>
@@ -270,30 +269,28 @@ export default function AdminDashboard() {
         </Card>
 
         <Card className="border-l-4 border-l-orange-500 shadow-md hover:shadow-lg transition-shadow">
-          <CardHeader>
-            <CardTitle className="text-lg flex items-center gap-2">
-              <Package className="h-5 w-5 text-orange-600" />
-              Products & Offers
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
+          <CardContent className="p-6">
+            <h3 className="text-lg font-semibold mb-4 flex items-center gap-2">
+              <Wallet className="h-5 w-5 text-orange-600" />
+              Withdrawals
+            </h3>
             <div className="space-y-2">
               <div className="flex justify-between items-center text-sm">
-                <span className="text-muted-foreground">Active Products</span>
+                <span className="text-muted-foreground">Pending Count</span>
                 <span className="font-bold text-orange-600">
-                  {stats.active_products}
+                  {stats.withdrawals.pending_count}
                 </span>
               </div>
               <div className="flex justify-between items-center text-sm">
-                <span className="text-muted-foreground">Active Offers</span>
-                <span className="font-bold text-pink-600">
-                  {stats.active_offers}
+                <span className="text-muted-foreground">Pending Amount</span>
+                <span className="font-bold text-red-600">
+                  ₹{stats.withdrawals.pending_amount.toLocaleString()}
                 </span>
               </div>
               <div className="flex justify-between items-center text-sm">
-                <span className="text-muted-foreground">Total Products</span>
-                <span className="font-bold text-indigo-600">
-                  {stats.total_products}
+                <span className="text-muted-foreground">Redis Status</span>
+                <span className={`font-bold ${stats.redis.connected ? 'text-green-600' : 'text-red-600'}`}>
+                  {stats.redis.connected ? 'Connected' : 'Disconnected'}
                 </span>
               </div>
             </div>
