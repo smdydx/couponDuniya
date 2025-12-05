@@ -14,14 +14,15 @@ from app.config import get_settings
 
 # Import all models so they're registered with Base.metadata
 from app.models import (  # noqa
-    User, Merchant, Category, Offer, OfferClick, OfferView,
+    User, SocialAccount, Merchant, Category, Offer, OfferClick, OfferView,
     Product, ProductVariant, Order, OrderItem, PromoCode,
     WalletTransaction, WalletBalance, Withdrawal, WithdrawalRequest,
     Payout, MerchantCommission, Payment,
     GiftCard, Referral, CashbackEvent,
     SupportTicket, Notification,
     Role, Permission, RolePermission, Department, UserRole, UserDepartment,
-    AuditLog, UserSession, UserKYC, Inventory, CMSPage, SEORedirect
+    AuditLog, UserSession, UserKYC, Inventory, CMSPage, SEORedirect,
+    CashbackRule, BlogPost, Banner
 )
 
 settings = get_settings()
