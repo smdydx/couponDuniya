@@ -25,36 +25,33 @@ export function MerchantCard({ merchant }: MerchantCardProps) {
           </div>
         )}
         
-        <CardContent className="p-5 sm:p-6">
-          <div className="flex flex-col items-center text-center gap-4">
-            {/* Logo Section - Centered */}
-            <div className="relative h-20 w-20 sm:h-24 sm:w-24 shrink-0 overflow-hidden rounded-xl border-2 border-gray-100 bg-white shadow-sm transition-all duration-300 group-hover:scale-110 group-hover:shadow-md">
+        <CardContent className="p-4">
+          <div className="flex flex-col items-center text-center gap-3">
+            {/* Logo Section - Fixed aspect ratio */}
+            <div className="relative w-full aspect-square max-w-[80px] shrink-0 overflow-hidden rounded-lg border-2 border-gray-100 bg-white shadow-sm transition-all duration-300 group-hover:scale-110 group-hover:shadow-md">
               {merchant.logo_url ? (
-                <Image
+                <img
                   src={merchant.logo_url}
                   alt={merchant.name}
-                  fill
-                  className="object-contain p-2"
-                  sizes="96px"
-                  priority={merchant.is_featured}
+                  className="w-full h-full object-contain p-2"
                 />
               ) : (
-                <div className="flex h-full w-full items-center justify-center text-3xl font-bold text-primary bg-gradient-to-br from-primary/10 to-primary/5 rounded-xl">
+                <div className="flex h-full w-full items-center justify-center text-2xl font-bold text-primary bg-gradient-to-br from-primary/10 to-primary/5">
                   {merchant.name.charAt(0)}
                 </div>
               )}
             </div>
 
-            {/* Info Section - Centered */}
+            {/* Info Section */}
             <div className="w-full space-y-2">
-              {/* Title */}
-              <h3 className="font-bold text-base sm:text-lg line-clamp-2 group-hover:text-primary transition-colors min-h-[3rem]">
+              {/* Title - Fixed height */}
+              <h3 className="font-bold text-sm line-clamp-2 group-hover:text-primary transition-colors h-10 flex items-center justify-center">
                 {merchant.name}
               </h3>
 
               {/* Cashback Info */}
               {merchant.default_cashback_value > 0 && (
-                <Badge variant="default" className="bg-purple-100 text-purple-700 hover:bg-purple-200 font-semibold px-3 py-1">
+                <Badge variant="default" className="bg-purple-100 text-purple-700 hover:bg-purple-200 font-semibold text-xs px-2 py-1">
                   {merchant.default_cashback_type === "percentage"
                     ? `${merchant.default_cashback_value}% Cashback`
                     : `₹${merchant.default_cashback_value} Cashback`}
@@ -63,8 +60,8 @@ export function MerchantCard({ merchant }: MerchantCardProps) {
 
               {/* Offers Count */}
               {merchant.total_offers !== undefined && merchant.total_offers > 0 && (
-                <div className="flex items-center justify-center gap-1.5 text-sm text-muted-foreground pt-1">
-                  <Tag className="h-4 w-4" />
+                <div className="flex items-center justify-center gap-1 text-xs text-muted-foreground">
+                  <Tag className="h-3 w-3" />
                   <span className="font-medium">{merchant.total_offers} offer{merchant.total_offers > 1 ? 's' : ''}</span>
                 </div>
               )}

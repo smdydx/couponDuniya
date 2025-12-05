@@ -68,30 +68,30 @@ export function ProductCard({ product, compact = false }: ProductCardProps) {
   if (compact) {
     return (
       <Link href={`/products/${product.slug}`}>
-        <Card className="group overflow-hidden hover:shadow-lg transition-all duration-300 hover:-translate-y-1">
-          <div className="relative aspect-square bg-gradient-to-br from-gray-50 to-gray-100 dark:from-gray-900 dark:to-gray-800">
+        <Card className="group overflow-hidden hover:shadow-lg transition-all duration-300 hover:-translate-y-1 h-full flex flex-col">
+          <div className="relative w-full aspect-square bg-gradient-to-br from-gray-50 to-gray-100 dark:from-gray-900 dark:to-gray-800 overflow-hidden">
             <img
               src={product.image_url || '/images/gift-cards/placeholder.png'}
               alt={product.name}
-              className="object-cover w-full h-full group-hover:scale-105 transition-transform duration-300"
+              className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
             />
             {product.merchant?.logo_url && (
               <div className="absolute top-2 left-2 bg-white dark:bg-gray-800 rounded-full p-1.5 shadow-md">
                 <img
                   src={product.merchant.logo_url}
                   alt={product.merchant.name}
-                  className="w-6 h-6 object-contain"
+                  className="w-5 h-5 object-contain"
                 />
               </div>
             )}
           </div>
-          <CardContent className="p-3">
-            <h3 className="font-semibold text-sm mb-2 line-clamp-1 group-hover:text-primary transition-colors">
+          <CardContent className="p-3 flex-1 flex flex-col justify-between">
+            <h3 className="font-semibold text-sm mb-2 line-clamp-2 group-hover:text-primary transition-colors h-10">
               {product.name}
             </h3>
-            <div className="flex items-center justify-between">
+            <div className="flex items-center justify-between mt-auto">
               <div>
-                <p className="text-lg font-bold text-primary">
+                <p className="text-base font-bold text-primary">
                   {formatCurrency(minPrice)}
                 </p>
                 {minPrice !== maxPrice && (
@@ -100,8 +100,8 @@ export function ProductCard({ product, compact = false }: ProductCardProps) {
                   </p>
                 )}
               </div>
-              <Button size="sm" variant="ghost" className="h-8 w-8 p-0 group-hover:bg-primary group-hover:text-primary-foreground transition-colors" disabled={!selectedVariant?.is_available}>
-                <ShoppingCart className="h-4 w-4" />
+              <Button size="sm" variant="ghost" className="h-7 w-7 p-0 group-hover:bg-primary group-hover:text-primary-foreground transition-colors" disabled={!selectedVariant?.is_available}>
+                <ShoppingCart className="h-3.5 w-3.5" />
               </Button>
             </div>
           </CardContent>

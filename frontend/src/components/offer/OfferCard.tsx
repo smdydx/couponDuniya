@@ -41,9 +41,9 @@ export function OfferCard({ offer, onClickTrack }: OfferCardProps) {
 
   return (
     <Card className="elevated-card group relative overflow-hidden h-full flex flex-col transition-all hover:shadow-xl hover:border-primary/30">
-      {/* Offer Image with Gradient Overlay */}
+      {/* Offer Image with Gradient Overlay - Fixed aspect ratio */}
       {offer.image_url && (
-        <div className="relative h-40 sm:h-48 w-full overflow-hidden">
+        <div className="relative w-full aspect-video overflow-hidden">
           <img
             src={offer.image_url}
             alt={offer.title}
