@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback } from "react";
 import { useRouter } from "next/navigation";
 import { useAuthStore } from "@/store/authStore";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -55,29 +55,106 @@ interface RecentOffer {
   merchant_name: string;
 }
 
+const defaultStats: DashboardStats = {
+  orders: { total: 0, today: 0 },
+  revenue: { total: 0, today: 0 },
+  users: { total: 0, new_this_week: 0 },
+  withdrawals: { pending_count: 0, pending_amount: 0 },
+  catalog: { active_merchants: 0, active_offers: 0, available_products: 0 },
+  redis: { connected: false, keys_count: 0, memory_used: "0 MB", connected_clients: 0 },
+};
+
 export default function AdminDashboard() {
   const router = useRouter();
   const [stats, setStats] = useState<DashboardStats | null>(null);
   const [loading, setLoading] = useState(true);
+  const [authChecked, setAuthChecked] = useState(false);
   const [mounted, setMounted] = useState(false);
   const [recentMerchants, setRecentMerchants] = useState<RecentMerchant[]>([]);
   const [recentOffers, setRecentOffers] = useState<RecentOffer[]>([]);
+
+  const { user, accessToken, isAuthenticated } = useAuthStore();
+
+  const fetchDashboardData = useCallback(async () => {
+    try {
+      console.log("📊 Fetching dashboard data...");
+      const [statsResponse, merchantsResponse, offersResponse] = await Promise.allSettled([
+        adminApiClient.get("/analytics/dashboard"),
+        adminApiClient.get("/merchants", { params: { limit: 5 } }),
+        adminApiClient.get("/offers", { params: { limit: 5 } }),
+      ]);
+
+      console.log("✅ Stats response:", statsResponse);
+      console.log("✅ Merchants response:", merchantsResponse);
+      console.log("✅ Offers response:", offersResponse);
+
+      if (statsResponse.status === "fulfilled") {
+        const statsData = statsResponse.value.data;
+        console.log("📊 Stats data received:", statsData);
+
+        if (statsData?.data) {
+          console.log("✅ Setting stats from statsData.data:", statsData.data);
+          setStats(statsData.data);
+        } else if (statsData && typeof statsData === 'object' && 'orders' in statsData) {
+          console.log("✅ Setting stats directly:", statsData);
+          setStats(statsData);
+        } else if (statsData?.success === false) {
+          console.error("❌ Stats API returned error:", statsData.error);
+          setStats(defaultStats);
+        } else {
+          console.warn("⚠️ Unexpected stats data format, using defaults");
+          setStats(defaultStats);
+        }
+      } else {
+        console.error("❌ Stats fetch failed:", statsResponse.reason);
+        if (statsResponse.reason?.response) {
+          console.error("Response data:", statsResponse.reason.response.data);
+          console.error("Response status:", statsResponse.reason.response.status);
+        }
+        setStats(defaultStats);
+      }
+
+      if (merchantsResponse.status === "fulfilled") {
+        const merchantsData = merchantsResponse.value.data;
+        console.log("🏪 Merchants data:", merchantsData);
+        const merchantsList = merchantsData?.merchants || merchantsData?.data?.merchants || merchantsData?.data || [];
+        setRecentMerchants(Array.isArray(merchantsList) ? merchantsList.slice(0, 5) : []);
+      }
+
+      if (offersResponse.status === "fulfilled") {
+        const offersData = offersResponse.value.data;
+        console.log("🏷️ Offers data:", offersData);
+        const offersList = offersData?.data?.offers || offersData?.offers || offersData?.data || [];
+        const offersArray = Array.isArray(offersList) ? offersList : [];
+        setRecentOffers(offersArray.slice(0, 5).map((o: any) => ({
+          id: o.id,
+          title: o.title,
+          image_url: o.image_url,
+          merchant_name: o.merchant_name || o.merchant?.name || "Unknown",
+        })));
+      }
+    } catch (error) {
+      console.error("❌ Failed to fetch dashboard data:", error);
+      setStats(defaultStats);
+    } finally {
+      setLoading(false);
+    }
+  }, []);
 
   useEffect(() => {
     setMounted(true);
   }, []);
 
-  const { user, accessToken, isAuthenticated } = useAuthStore();
-
   useEffect(() => {
     if (!mounted) return;
 
-    // Wait a tick for hydration to complete
     const checkAuth = () => {
       console.log("🔐 Admin auth check:", { 
         hasToken: !!accessToken, 
         hasUser: !!user,
-        isAuthenticated 
+        isAuthenticated,
+        userRole: user?.role,
+        isAdmin: user?.is_admin
       });
 
       if (!isAuthenticated || !accessToken || !user) {
@@ -86,7 +163,6 @@ export default function AdminDashboard() {
         return;
       }
 
-      // Check if user is admin - either is_admin flag or role is 'admin'
       const isAdminUser = user.is_admin === true || user.role === 'admin';
 
       if (!isAdminUser) {
@@ -96,86 +172,19 @@ export default function AdminDashboard() {
         return;
       }
       
-      console.log("✅ Admin access granted - loading dashboard");
-      setLoading(false); // Allow dashboard to load
+      console.log("✅ Admin access granted - loading dashboard data");
+      setAuthChecked(true);
     };
 
-    // Add small delay to ensure store hydration completes
     const timer = setTimeout(checkAuth, 100);
     return () => clearTimeout(timer);
+  }, [mounted, isAuthenticated, accessToken, user, router]);
 
-    const defaultStats: DashboardStats = {
-      orders: { total: 0, today: 0 },
-      revenue: { total: 0, today: 0 },
-      users: { total: 0, new_this_week: 0 },
-      withdrawals: { pending_count: 0, pending_amount: 0 },
-      catalog: { active_merchants: 0, active_offers: 0, available_products: 0 },
-      redis: { connected: false, keys_count: 0, memory_used: "0 MB", connected_clients: 0 },
-    };
-
-    const fetchDashboardData = async () => {
-      try {
-        console.log("Fetching dashboard data...");
-        const [statsResponse, merchantsResponse, offersResponse] = await Promise.allSettled([
-          adminApiClient.get("/analytics/dashboard"),
-          adminApiClient.get("/merchants", { params: { limit: 5 } }),
-          adminApiClient.get("/offers", { params: { limit: 5 } }),
-        ]);
-
-        console.log("✅ Stats response:", statsResponse);
-        console.log("✅ Merchants response:", merchantsResponse);
-        console.log("✅ Offers response:", offersResponse);
-
-        if (statsResponse.status === "fulfilled") {
-          const statsData = statsResponse.value.data;
-          console.log("📊 Stats data received:", statsData);
-
-          // Handle different response formats
-          if (statsData?.data) {
-            console.log("✅ Setting stats from statsData.data:", statsData.data);
-            setStats(statsData.data);
-          } else if (statsData?.success === false) {
-            console.error("❌ Stats API returned error:", statsData.error);
-            setStats(defaultStats);
-          } else {
-            console.warn("⚠️ Unexpected stats data format, using defaults");
-            setStats(defaultStats);
-          }
-        } else {
-          console.error("❌ Stats fetch failed:", statsResponse.reason);
-          if (statsResponse.reason?.response) {
-            console.error("Response data:", statsResponse.reason.response.data);
-            console.error("Response status:", statsResponse.reason.response.status);
-          }
-          setStats(defaultStats);
-        }
-
-        if (merchantsResponse.status === "fulfilled") {
-          const merchantsData = merchantsResponse.value.data;
-          const merchantsList = merchantsData?.merchants || merchantsData?.data?.merchants || [];
-          setRecentMerchants(merchantsList.slice(0, 5));
-        }
-
-        if (offersResponse.status === "fulfilled") {
-          const offersData = offersResponse.value.data;
-          const offersList = offersData?.data?.offers || offersData?.offers || [];
-          setRecentOffers(offersList.slice(0, 5).map((o: any) => ({
-            id: o.id,
-            title: o.title,
-            image_url: o.image_url,
-            merchant_name: o.merchant_name || o.merchant?.name || "Unknown",
-          })));
-        }
-      } catch (error) {
-        console.error("Failed to fetch dashboard data:", error);
-        setStats(defaultStats);
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    fetchDashboardData();
-  }, [mounted]);
+  useEffect(() => {
+    if (authChecked) {
+      fetchDashboardData();
+    }
+  }, [authChecked, fetchDashboardData]);
 
   if (!mounted) {
     return null;
