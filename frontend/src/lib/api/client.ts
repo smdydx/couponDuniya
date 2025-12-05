@@ -2,13 +2,13 @@ import axios, { AxiosError, InternalAxiosRequestConfig } from 'axios';
 
 const getApiUrl = () => {
   if (typeof window !== 'undefined') {
-    return `${window.location.protocol}//${window.location.hostname}:8000/api/v1`;
+    return '/backend-api';
   }
   return process.env.NEXT_PUBLIC_API_URL || 'http://127.0.0.1:8000/api/v1';
 };
 
 const API_URL = typeof window !== 'undefined' 
-  ? `${window.location.protocol}//${window.location.hostname}:8000/api/v1`
+  ? '/backend-api'
   : process.env.NEXT_PUBLIC_API_URL || 'http://127.0.0.1:8000/api/v1';
 
 const apiClient = axios.create({

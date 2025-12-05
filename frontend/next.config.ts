@@ -10,8 +10,9 @@ const nextConfig: NextConfig = {
   allowedDevOrigins: [
     'localhost:5000',
     '127.0.0.1:5000',
-    'b4593f08-7d63-4102-8c06-d96b162298c1-00-2njwiknvokenz.kirk.replit.dev',
-  ],
+    process.env.REPLIT_DEV_DOMAIN || '',
+    process.env.REPLIT_DOMAINS || '',
+  ].filter(Boolean),
   experimental: {
     serverActions: {
       allowedOrigins: ['*'],
