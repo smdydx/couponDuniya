@@ -112,22 +112,31 @@ export default function AdminDashboard() {
           adminApiClient.get("/offers", { params: { limit: 5 } }),
         ]);
         
-        console.log("Stats response:", statsResponse);
-        console.log("Merchants response:", merchantsResponse);
-        console.log("Offers response:", offersResponse);
+        console.log("✅ Stats response:", statsResponse);
+        console.log("✅ Merchants response:", merchantsResponse);
+        console.log("✅ Offers response:", offersResponse);
         
         if (statsResponse.status === "fulfilled") {
           const statsData = statsResponse.value.data;
-          console.log("Stats data received:", statsData);
-          if (statsData?.success && statsData?.data) {
+          console.log("📊 Stats data received:", statsData);
+          
+          // Handle different response formats
+          if (statsData?.data) {
+            console.log("✅ Setting stats from statsData.data:", statsData.data);
             setStats(statsData.data);
-          } else if (statsData?.data) {
-            setStats(statsData.data);
+          } else if (statsData?.success === false) {
+            console.error("❌ Stats API returned error:", statsData.error);
+            setStats(defaultStats);
           } else {
+            console.warn("⚠️ Unexpected stats data format, using defaults");
             setStats(defaultStats);
           }
         } else {
-          console.error("Stats fetch failed:", statsResponse.reason);
+          console.error("❌ Stats fetch failed:", statsResponse.reason);
+          if (statsResponse.reason?.response) {
+            console.error("Response data:", statsResponse.reason.response.data);
+            console.error("Response status:", statsResponse.reason.response.status);
+          }
           setStats(defaultStats);
         }
         

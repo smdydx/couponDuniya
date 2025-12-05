@@ -1112,6 +1112,11 @@ def analytics_dashboard(
                 "users": {"total": 0, "new_this_week": 0},
                 "withdrawals": {"pending_count": 0, "pending_amount": 0.0},
                 "catalog": {"active_merchants": 0, "active_offers": 0, "available_products": 0},
+                "redis": {"connected": False, "keys_count": 0, "memory_used": "0 MB", "connected_clients": 0}
+            }
+        }},
+                "withdrawals": {"pending_count": 0, "pending_amount": 0.0},
+                "catalog": {"active_merchants": 0, "active_offers": 0, "available_products": 0},
                 "redis": {"connected": False, "keys_count": 0, "memory_used": "N/A", "connected_clients": 0},
             }
         }
