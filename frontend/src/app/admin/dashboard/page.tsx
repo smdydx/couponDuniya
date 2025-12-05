@@ -78,13 +78,14 @@ export default function AdminDashboard() {
 
     try {
       const authData = JSON.parse(authStorage);
-      if (!authData?.state?.token || !authData?.state?.user) {
+      if (!authData?.state?.accessToken || !authData?.state?.user) {
         router.push("/login");
         return;
       }
 
       // Check if user is admin
-      if (authData.state.user.role !== "admin") {
+      const user = authData.state.user;
+      if (user.role !== "admin" && !user.is_admin) {
         router.push("/");
         return;
       }

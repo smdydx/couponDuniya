@@ -44,10 +44,9 @@ apiClient.interceptors.request.use(
       if (authStorage) {
         try {
           const authData = JSON.parse(authStorage);
-          const token = authData?.state?.token;
+          const token = authData?.state?.accessToken;
           if (token) {
             config.headers.Authorization = `Bearer ${token}`;
-            console.log("Auth token attached to request:", config.url);
           }
         } catch (error) {
           console.error("Failed to parse auth storage:", error);
