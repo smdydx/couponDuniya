@@ -1,4 +1,5 @@
 from .user import User
+from .social_account import SocialAccount
 from .merchant import Merchant
 from .offer import Offer
 from .product import Product
@@ -34,3 +35,48 @@ from .affiliate_merchant_map import AffiliateMerchantMap
 from .cashback_rule import CashbackRule
 from .blog_post import BlogPost
 from .banner import Banner
+
+__all__ = [
+    "User",
+    "SocialAccount",
+    "Merchant",
+    "Offer",
+    "Product",
+    "Order",
+    "WalletTransaction",
+    "OfferClick",
+    "ProductVariant",
+    "OrderItem",
+    "WalletBalance",
+    "Category",
+    "Role",
+    "Permission",
+    "RolePermission",
+    "Department",
+    "UserRole",
+    "UserDepartment",
+    "GiftCard",
+    "Referral",
+    "CashbackEvent",
+    "WithdrawalRequest",
+    "Payout",
+    "SupportTicket",
+    "Notification",
+    "AuditLog",
+    "UserSession",
+    "UserKYC",
+    "MerchantCommission",
+    "OfferView",
+    "Inventory",
+    "Payment",
+    "Withdrawal",
+    "SEORedirect",
+    "CMSPage",
+    "PromoCode",
+    "AffiliateClick",
+    "AffiliateTransaction",
+    "AffiliateMerchantMap",
+    "CashbackRule",
+    "BlogPost",
+    "Banner",
+]
