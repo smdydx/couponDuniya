@@ -37,12 +37,12 @@ export default function MerchantsPage() {
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-background to-muted/20">
-      <div className="container py-4 sm:py-6 space-y-4 sm:space-y-6">
+      <div className="container py-3 sm:py-4 space-y-3 sm:space-y-4">
         <Breadcrumbs items={[{ label: "Stores" }]} />
 
-        <div className="space-y-2">
-          <h1 className="text-2xl sm:text-3xl font-bold">All Stores</h1>
-          <p className="text-sm sm:text-base text-muted-foreground">
+        <div className="space-y-1">
+          <h1 className="text-xl sm:text-2xl font-bold">All Stores</h1>
+          <p className="text-xs sm:text-sm text-muted-foreground">
             Shop with cashback at {pagination?.total_items || 1000}+ partner stores
           </p>
         </div>
