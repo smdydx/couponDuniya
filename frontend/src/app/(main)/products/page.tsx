@@ -1,3 +1,4 @@
+
 "use client";
 
 import { useState } from "react";
@@ -53,35 +54,38 @@ export default function ProductsPage() {
   const totalPages = data?.pagination?.total_pages || 1;
 
   return (
-    <div className="container py-6">
-      <Breadcrumbs items={[{ label: "Gift Cards" }]} />
+    <div className="min-h-screen bg-gradient-to-b from-background to-muted/20">
+      <div className="container py-4 sm:py-6 space-y-4 sm:space-y-6">
+        <Breadcrumbs items={[{ label: "Gift Cards" }]} />
 
-      <div className="mb-6">
-        <h1 className="text-3xl font-bold">Gift Cards</h1>
-        <p className="mt-1 text-muted-foreground">
-          Buy discounted gift cards from your favorite brands
-        </p>
-      </div>
-
-      {/* Categories */}
-      <div className="mb-6">
-        <CategoryNav basePath={ROUTES.products} />
-      </div>
-
-      {/* Filters */}
-      <div className="mb-6 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-        <div className="relative max-w-sm flex-1">
-          <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-          <Input
-            placeholder="Search gift cards..."
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-            className="pl-10"
-          />
+        <div className="space-y-2">
+          <h1 className="text-2xl sm:text-3xl font-bold">Gift Cards</h1>
+          <p className="text-sm sm:text-base text-muted-foreground">
+            Buy discounted gift cards from your favorite brands
+          </p>
         </div>
-        <div className="flex gap-2">
+
+        {/* Categories */}
+        <div className="overflow-x-auto -mx-4 px-4 sm:mx-0 sm:px-0">
+          <CategoryNav basePath={ROUTES.products} />
+        </div>
+
+        {/* Filters */}
+        <div className="flex flex-col sm:flex-row gap-3 sm:gap-4 sm:items-center sm:justify-between">
+          <div className="relative flex-1 max-w-sm">
+            <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+            <Input
+              placeholder="Search gift cards..."
+              value={searchQuery}
+              onChange={(e) => {
+                setSearchQuery(e.target.value);
+                setCurrentPage(1);
+              }}
+              className="pl-10"
+            />
+          </div>
           <Select value={sortBy} onValueChange={setSortBy}>
-            <SelectTrigger className="w-[180px]">
+            <SelectTrigger className="w-full sm:w-[180px]">
               <SelectValue placeholder="Sort by" />
             </SelectTrigger>
             <SelectContent>
@@ -93,41 +97,41 @@ export default function ProductsPage() {
             </SelectContent>
           </Select>
         </div>
-      </div>
 
-      {/* Results */}
-      {isLoading ? (
-        <div className="flex justify-center py-12">
-          <LoadingSpinner />
-        </div>
-      ) : error ? (
-        <div className="text-center py-12">
-          <p className="text-muted-foreground">Failed to load gift cards. Please try again.</p>
-        </div>
-      ) : (
-        <>
-          <div className="mb-4 text-sm text-muted-foreground">
-            Showing {products.length} gift cards
+        {/* Results */}
+        {isLoading ? (
+          <div className="flex justify-center py-12">
+            <LoadingSpinner />
           </div>
-
-          {products.length > 0 ? (
-            <ProductGrid products={products} />
-          ) : (
-            <p className="text-center text-muted-foreground py-12">No gift cards found</p>
-          )}
-
-          {/* Pagination */}
-          {totalPages > 1 && (
-            <div className="mt-8">
-              <Pagination
-                currentPage={currentPage}
-                totalPages={totalPages}
-                onPageChange={setCurrentPage}
-              />
+        ) : error ? (
+          <div className="text-center py-12">
+            <p className="text-muted-foreground">Failed to load gift cards. Please try again.</p>
+          </div>
+        ) : (
+          <>
+            <div className="mb-4 text-xs sm:text-sm text-muted-foreground">
+              Showing {products.length} gift cards
             </div>
-          )}
-        </>
-      )}
+
+            {products.length > 0 ? (
+              <ProductGrid products={products} />
+            ) : (
+              <p className="text-center text-muted-foreground py-12">No gift cards found</p>
+            )}
+
+            {/* Pagination */}
+            {totalPages > 1 && (
+              <div className="mt-6 sm:mt-8">
+                <Pagination
+                  currentPage={currentPage}
+                  totalPages={totalPages}
+                  onPageChange={setCurrentPage}
+                />
+              </div>
+            )}
+          </>
+        )}
+      </div>
     </div>
   );
 }
