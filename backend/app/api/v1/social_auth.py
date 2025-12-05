@@ -98,13 +98,22 @@ async def login_with_google(
     payload: GoogleLoginRequest,
     db: Session = Depends(get_db)
 ):
-    """Login or register with Google"""
+    """Login with Google - Only for existing registered users"""
     from ...security import create_access_token
 
     # Verify token and get user info
     user_info = await verify_google_token(payload.token)
 
-    # Check if social account exists
+    # Check if user with this email exists in the database
+    user = db.scalar(select(User).where(User.email == user_info["email"]))
+
+    if not user:
+        raise HTTPException(
+            status_code=400,
+            detail="No account found with this email. Please register first."
+        )
+
+    # Check if Google account is already linked
     social_account = db.scalar(
         select(SocialAccount).where(
             SocialAccount.provider == "google",
@@ -113,50 +122,20 @@ async def login_with_google(
     )
 
     if social_account:
-        # Existing user - login
-        user = social_account.user
-
-        # Update social account
+        # Update existing social account
         social_account.profile_data = json.dumps(user_info)
         social_account.updated_at = datetime.utcnow()
         db.commit()
-
     else:
-        # Check if user with this email exists
-        user = db.scalar(select(User).where(User.email == user_info["email"]))
-
-        if user:
-            # Link existing account
-            social_account = SocialAccount(
-                user_id=user.id,
-                provider="google",
-                provider_user_id=user_info["provider_user_id"],
-                profile_data=json.dumps(user_info)
-            )
-            db.add(social_account)
-        else:
-            # Create new user
-            user = User(
-                email=user_info["email"],
-                name=user_info["name"],
-                password_hash=hash_password(""),  # No password for social login
-                is_verified=user_info["email_verified"],
-                email_verified_at=datetime.utcnow() if user_info["email_verified"] else None
-            )
-            db.add(user)
-            db.flush()
-
-            # Create social account
-            social_account = SocialAccount(
-                user_id=user.id,
-                provider="google",
-                provider_user_id=user_info["provider_user_id"],
-                profile_data=json.dumps(user_info)
-            )
-            db.add(social_account)
-
+        # Link Google account to existing user
+        social_account = SocialAccount(
+            user_id=user.id,
+            provider="google",
+            provider_user_id=user_info["provider_user_id"],
+            profile_data=json.dumps(user_info)
+        )
+        db.add(social_account)
         db.commit()
-        db.refresh(user)
 
     # Generate access token
     access_token = create_access_token({"sub": str(user.id)})
@@ -170,7 +149,9 @@ async def login_with_google(
             "user": {
                 "id": user.id,
                 "email": user.email,
-                "name": user.name
+                "full_name": user.full_name,
+                "is_admin": user.is_admin,
+                "role": user.role
             }
         }
     }

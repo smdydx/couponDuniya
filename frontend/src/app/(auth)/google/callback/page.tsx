@@ -42,9 +42,17 @@ export default function GoogleCallbackPage() {
           
           router.replace(redirectUrl);
         }
-      } catch (error) {
+      } catch (error: any) {
         console.error('Google auth error:', error);
-        router.replace('/login?error=google_auth_failed');
+        
+        // Check if error is about account not found
+        const errorMessage = error?.response?.data?.detail || 'google_auth_failed';
+        
+        if (errorMessage.includes('No account found') || errorMessage.includes('register first')) {
+          router.replace('/login?error=not_registered');
+        } else {
+          router.replace('/login?error=google_auth_failed');
+        }
       }
     };
 

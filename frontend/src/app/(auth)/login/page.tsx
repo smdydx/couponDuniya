@@ -19,13 +19,14 @@ export default function LoginPage() {
   const router = useRouter();
   const { login, isLoading, error, setError, clearError, user, isAuthenticated } = useAuthStore();
   const [showPassword, setShowPassword] = useState(false);
+  const [googleError, setGoogleError] = useState<string | null>(null); // State for Google login errors
 
   // Redirect if already logged in
   useEffect(() => {
     if (isAuthenticated && user) {
       const isAdmin = user.is_admin === true || user.role === 'admin';
       const redirectUrl = isAdmin ? '/admin/dashboard' : '/';
-      
+
       console.log('✅ Already authenticated, redirecting to:', redirectUrl, { isAdmin });
       router.replace(redirectUrl);
     }
@@ -41,17 +42,17 @@ export default function LoginPage() {
     try {
       console.log('Attempting login...');
       const user = await login(data);
-      
+
       console.log('Login successful, user data:', user);
-      
+
       // Redirect based on user role
       if (user) {
-        const redirectUrl = (user.is_admin || user.role === 'admin') 
-          ? '/admin/dashboard' 
+        const redirectUrl = (user.is_admin || user.role === 'admin')
+          ? '/admin/dashboard'
           : '/';
-        
+
         console.log('Redirecting to:', redirectUrl);
-        
+
         // Force redirect with window.location if router.push fails
         setTimeout(() => {
           window.location.href = redirectUrl;
@@ -159,24 +160,31 @@ export default function LoginPage() {
           </span>
         </div>
 
-        <Button 
-          variant="outline" 
-          className="w-full flex items-center justify-center gap-2" 
+        <Button
+          variant="outline"
+          className="w-full flex items-center justify-center gap-2"
           onClick={() => {
+            setGoogleError(null); // Clear any previous Google errors
             const clientId = "433927974317-omujf5cn8ndhtdrofprnv9sb0uo3irl1.apps.googleusercontent.com";
             const redirectUri = `${window.location.origin}/auth/google/callback`;
             const scope = "openid email profile";
             const responseType = "id_token token";
             const nonce = Math.random().toString(36).substring(7);
-            
+
             const authUrl = `https://accounts.google.com/o/oauth2/v2/auth?client_id=${clientId}&redirect_uri=${redirectUri}&response_type=${responseType}&scope=${scope}&nonce=${nonce}`;
-            
+
             window.location.href = authUrl;
           }}
         >
           <img src="/images/icons/google.png" alt="Google" className="w-5 h-5" />
           Continue with Google
         </Button>
+
+        {googleError && (
+          <div className="mt-4 rounded-lg bg-destructive/10 p-3 text-sm text-destructive">
+            {googleError}
+          </div>
+        )}
       </CardContent>
       <CardFooter className="justify-center">
         <p className="text-sm text-muted-foreground">
