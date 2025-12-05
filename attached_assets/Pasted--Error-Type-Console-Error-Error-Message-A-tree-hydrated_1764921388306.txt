@@ -1,0 +1,236 @@
+## Error Type
+Console Error
+
+## Error Message
+A tree hydrated but some attributes of the server rendered HTML didn't match the client properties. This won't be patched up. This can happen if a SSR-ed Client Component used:
+
+- A server/client branch `if (typeof window !== 'undefined')`.
+- Variable input such as `Date.now()` or `Math.random()` which changes each time it's called.
+- Date formatting in a user's locale which doesn't match the server.
+- External changing data without sending a snapshot of it along with the HTML.
+- Invalid HTML tag nesting.
+
+It can also happen if the client has a browser extension installed which messes with the HTML before React loaded.
+
+https://react.dev/link/hydration-mismatch
+
+  ...
+    <RenderFromTemplateContext>
+      <ScrollAndFocusHandler segmentPath={[...]}>
+        <InnerScrollAndFocusHandler segmentPath={[...]} focusAndScrollRef={{apply:false, ...}}>
+          <ErrorBoundary errorComponent={undefined} errorStyles={undefined} errorScripts={undefined}>
+            <LoadingBoundary name="dashboard/" loading={null}>
+              <HTTPAccessFallbackBoundary notFound={undefined} forbidden={undefined} unauthorized={undefined}>
+                <RedirectBoundary>
+                  <RedirectErrorBoundary router={{...}}>
+                    <InnerLayoutRouter url="/admin/das..." tree={[...]} params={{}} cacheNode={{lazyData:null, ...}} ...>
+                      <SegmentViewNode type="page" pagePath="admin/dash...">
+                        <SegmentTrieNode>
+                        <ClientPageRoot Component={function AdminDashboard} serverProvidedParams={{...}}>
+                          <AdminDashboard params={Promise} searchParams={Promise}>
+                            <div
++                             className="min-h-screen bg-gray-50 dark:bg-gray-950"
+-                             className="min-h-screen bg-white"
+                            >
+                              <div
++                               className="sticky top-0 z-10 bg-white/80 dark:bg-gray-900/80 backdrop-blur-lg border-b..."
+-                               className="sticky top-0 z-10 bg-white/95 backdrop-blur-lg border-b border-gray-100"
+                              >
+                                <div className="px-4 sm:px...">
+                                  <div className="flex flex-...">
+                                    <div>
+                                      <h1
++                                       className="text-2xl sm:text-3xl font-bold bg-gradient-to-r from-purple-600 to-..."
+-                                       className="text-2xl sm:text-3xl font-bold bg-gradient-to-r from-purple-600 via..."
+                                      >
++                                       Dashboard
+                                      <p
++                                       className="text-sm text-gray-600 dark:text-gray-400 mt-1"
+-                                       className="text-sm text-gray-600 mt-1"
+                                      >
++                                       Monitor your platform performance
+                                    <_c variant="outline" size="sm" className="gap-2 w-fu..." ...>
+                                      <button
++                                       className="inline-flex items-center justify-center whitespace-nowrap text-sm f..."
+-                                       className="inline-flex items-center justify-center whitespace-nowrap text-sm f..."
+                                        ref={null}
+                                        disabled={true}
+                                        onClick={function fetchDashboardData}
+                                      >
+                              <div className="p-4 sm:p-6...">
+                                <div className="grid gap-4...">
+                                  <_c className="animate-pu...">
+                                    <div
+                                      ref={null}
++                                     className="rounded-lg border bg-card text-card-foreground shadow-sm animate-puls..."
+-                                     className="rounded-lg border bg-card text-card-foreground shadow-sm animate-puls..."
+                                    >
+                                      <_c8 className="p-6">
+                                        <div ref={null} className="p-6">
+                                          <div
++                                           className="h-20 bg-gray-200 dark:bg-gray-800 rounded"
+-                                           className="h-20 bg-gray-200 rounded"
+                                          >
+                                  <_c className="animate-pu...">
+                                    <div
+                                      ref={null}
++                                     className="rounded-lg border bg-card text-card-foreground shadow-sm animate-puls..."
+-                                     className="rounded-lg border bg-card text-card-foreground shadow-sm animate-puls..."
+                                    >
+                                      <_c8 className="p-6">
+                                        <div ref={null} className="p-6">
+                                          <div
++                                           className="h-20 bg-gray-200 dark:bg-gray-800 rounded"
+-                                           className="h-20 bg-gray-200 rounded"
+                                          >
+                                  <_c className="animate-pu...">
+                                    <div
+                                      ref={null}
++                                     className="rounded-lg border bg-card text-card-foreground shadow-sm animate-puls..."
+-                                     className="rounded-lg border bg-card text-card-foreground shadow-sm animate-puls..."
+                                    >
+                                      <_c8 className="p-6">
+                                        <div ref={null} className="p-6">
+                                          <div
++                                           className="h-20 bg-gray-200 dark:bg-gray-800 rounded"
+-                                           className="h-20 bg-gray-200 rounded"
+                                          >
+                                  <_c className="animate-pu...">
+                                    <div
+                                      ref={null}
++                                     className="rounded-lg border bg-card text-card-foreground shadow-sm animate-puls..."
+-                                     className="rounded-lg border bg-card text-card-foreground shadow-sm animate-puls..."
+                                    >
+                                      <_c8 className="p-6">
+                                        <div ref={null} className="p-6">
+                                          <div
++                                           className="h-20 bg-gray-200 dark:bg-gray-800 rounded"
+-                                           className="h-20 bg-gray-200 rounded"
+                                          >
+                                  <_c className="animate-pu...">
+                                    <div
+                                      ref={null}
++                                     className="rounded-lg border bg-card text-card-foreground shadow-sm animate-puls..."
+-                                     className="rounded-lg border bg-card text-card-foreground shadow-sm animate-puls..."
+                                    >
+                                      <_c8 className="p-6">
+                                        <div ref={null} className="p-6">
+                                          <div
++                                           className="h-20 bg-gray-200 dark:bg-gray-800 rounded"
+-                                           className="h-20 bg-gray-200 rounded"
+                                          >
+                                  <_c className="animate-pu...">
+                                    <div
+                                      ref={null}
++                                     className="rounded-lg border bg-card text-card-foreground shadow-sm animate-puls..."
+-                                     className="rounded-lg border bg-card text-card-foreground shadow-sm animate-puls..."
+                                    >
+                                      <_c8 className="p-6">
+                                        <div ref={null} className="p-6">
+                                          <div
++                                           className="h-20 bg-gray-200 dark:bg-gray-800 rounded"
+-                                           className="h-20 bg-gray-200 rounded"
+                                          >
+                                <div className="grid gap-4...">
+                                  <_c className="border-gra...">
+                                    <div
+                                      ref={null}
++                                     className="rounded-lg border shadow-sm border-gray-200 dark:border-gray-800 bg-g..."
+-                                     className="rounded-lg shadow-sm border-0 bg-gradient-to-br from-blue-500 to-blue..."
+                                    >
+                                      <_c8 className="p-6">
+                                        <div ref={null} className="p-6">
+                                          <h3
++                                           className="text-sm font-medium text-gray-300"
+-                                           className="text-sm font-medium text-blue-100"
+                                          >
++                                           Recent Orders
+                                          <p>
+                                          <p
++                                           className="text-xs text-gray-400 mt-1"
+-                                           className="text-xs text-blue-100 mt-1"
+                                          >
++                                           Last 24 hours
+                                  <_c className="border-gra...">
+                                    <div
+                                      ref={null}
++                                     className="rounded-lg border shadow-sm border-gray-200 dark:border-gray-800 bg-g..."
+-                                     className="rounded-lg shadow-sm border-0 bg-gradient-to-br from-purple-500 to-pu..."
+                                    >
+                                      <_c8 className="p-6">
+                                        <div ref={null} className="p-6">
+                                          <h3
++                                           className="text-sm font-medium text-gray-300"
+-                                           className="text-sm font-medium text-purple-100"
+                                          >
++                                           New Users
+                                          <p>
+                                          <p
++                                           className="text-xs text-gray-400 mt-1"
+-                                           className="text-xs text-purple-100 mt-1"
+                                          >
++                                           This week
+                                  <_c className="border-gra...">
+                                    <div
+                                      ref={null}
++                                     className="rounded-lg border shadow-sm border-gray-200 dark:border-gray-800 bg-g..."
+-                                     className="rounded-lg shadow-sm border-0 bg-gradient-to-br from-pink-500 to-pink..."
+                                    >
+                                      <_c8 className="p-6">
+                                        <div ref={null} className="p-6">
+                                          <h3
++                                           className="text-sm font-medium text-gray-300"
+-                                           className="text-sm font-medium text-pink-100"
+                                          >
++                                           Active Coupons
+                                          <p>
+                                          <p
++                                           className="text-xs text-gray-400 mt-1"
+-                                           className="text-xs text-pink-100 mt-1"
+                                          >
++                                           Currently live
+                                  <_c className="border-gra...">
+                                    <div
+                                      ref={null}
++                                     className="rounded-lg border shadow-sm border-gray-200 dark:border-gray-800 bg-g..."
+-                                     className="rounded-lg shadow-sm border-0 bg-gradient-to-br from-cyan-500 to-cyan..."
+                                    >
+                                      <_c8 className="p-6">
+                                        <div ref={null} className="p-6">
+                                          <h3
++                                           className="text-sm font-medium text-gray-300"
+-                                           className="text-sm font-medium text-cyan-100"
+                                          >
++                                           Cashback Pending
+                                          <p>
+                                          <p
++                                           className="text-xs text-gray-400 mt-1"
+-                                           className="text-xs text-cyan-100 mt-1"
+                                          >
++                                           To be processed
+                      ...
+                    ...
+          ...
+
+
+
+    at createConsoleError (file:///home/deepak/office Project /couponDuniya /frontend/.next/dev/static/chunks/node_modules_next_dist_7a8122d0._.js:2189:71)
+    at handleConsoleError (file:///home/deepak/office Project /couponDuniya /frontend/.next/dev/static/chunks/node_modules_next_dist_7a8122d0._.js:2970:54)
+    at console.error (file:///home/deepak/office Project /couponDuniya /frontend/.next/dev/static/chunks/node_modules_next_dist_7a8122d0._.js:3114:57)
+    at <unknown> (file:///home/deepak/office Project /couponDuniya /frontend/.next/dev/static/chunks/node_modules_next_dist_compiled_react-dom_1e674e59._.js:3463:25)
+    at runWithFiberInDEV (file:///home/deepak/office Project /couponDuniya /frontend/.next/dev/static/chunks/node_modules_next_dist_compiled_react-dom_1e674e59._.js:959:74)
+    at emitPendingHydrationWarnings (file:///home/deepak/office Project /couponDuniya /frontend/.next/dev/static/chunks/node_modules_next_dist_compiled_react-dom_1e674e59._.js:3462:13)
+    at completeWork (file:///home/deepak/office Project /couponDuniya /frontend/.next/dev/static/chunks/node_modules_next_dist_compiled_react-dom_1e674e59._.js:6891:102)
+    at runWithFiberInDEV (file:///home/deepak/office Project /couponDuniya /frontend/.next/dev/static/chunks/node_modules_next_dist_compiled_react-dom_1e674e59._.js:959:131)
+    at completeUnitOfWork (file:///home/deepak/office Project /couponDuniya /frontend/.next/dev/static/chunks/node_modules_next_dist_compiled_react-dom_1e674e59._.js:9621:23)
+    at performUnitOfWork (file:///home/deepak/office Project /couponDuniya /frontend/.next/dev/static/chunks/node_modules_next_dist_compiled_react-dom_1e674e59._.js:9558:28)
+    at workLoopConcurrentByScheduler (file:///home/deepak/office Project /couponDuniya /frontend/.next/dev/static/chunks/node_modules_next_dist_compiled_react-dom_1e674e59._.js:9552:58)
+    at renderRootConcurrent (file:///home/deepak/office Project /couponDuniya /frontend/.next/dev/static/chunks/node_modules_next_dist_compiled_react-dom_1e674e59._.js:9535:71)
+    at performWorkOnRoot (file:///home/deepak/office Project /couponDuniya /frontend/.next/dev/static/chunks/node_modules_next_dist_compiled_react-dom_1e674e59._.js:9062:150)
+    at performWorkOnRootViaSchedulerTask (file:///home/deepak/office Project /couponDuniya /frontend/.next/dev/static/chunks/node_modules_next_dist_compiled_react-dom_1e674e59._.js:10224:9)
+    at MessagePort.performWorkUntilDeadline (file:///home/deepak/office Project /couponDuniya /frontend/.next/dev/static/chunks/node_modules_next_dist_compiled_a0e4c7b4._.js:2647:64)
+    at h1 (<anonymous>:null:null)
+    at AdminDashboard (file:///home/deepak/office Project /couponDuniya /frontend/.next/dev/static/chunks/src_9bca47a8._.js:514:239)
+    at ClientPageRoot (file:///home/deepak/office Project /couponDuniya /frontend/.next/dev/static/chunks/node_modules_next_dist_094231d7._.js:2202:50)
+
+Next.js version: 16.0.3 (Turbopack)

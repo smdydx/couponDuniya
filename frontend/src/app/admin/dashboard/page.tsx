@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import {
   Users,
@@ -14,6 +14,7 @@ import {
   DollarSign,
   Wallet,
   TrendingDown,
+  ArrowUpRight,
 } from "lucide-react";
 import adminApi, { type DashboardStats } from "@/lib/api/admin";
 
@@ -50,239 +51,189 @@ export default function AdminDashboard() {
   }, []);
 
   return (
-    <div className="min-h-screen bg-white">
-      {/* Header */}
-      <div className="sticky top-0 z-10 bg-white/95 backdrop-blur-lg border-b border-gray-100">
-        <div className="px-4 sm:px-6 lg:px-8 py-4 sm:py-5">
+    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-purple-50">
+      {/* Header - PhonePe Style */}
+      <div className="sticky top-0 z-10 bg-white border-b border-gray-200 shadow-sm">
+        <div className="px-4 sm:px-6 lg:px-8 py-6">
           <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
             <div>
-              <h1 className="text-2xl sm:text-3xl font-bold bg-gradient-to-r from-purple-600 via-blue-600 to-pink-600 bg-clip-text text-transparent">
-                Dashboard
-              </h1>
-              <p className="text-sm text-gray-600 mt-1">Monitor your platform performance</p>
+              <h1 className="text-3xl sm:text-4xl font-bold text-gray-900">Admin Dashboard</h1>
+              <p className="text-sm text-gray-500 mt-2">Welcome back! Here's your platform overview</p>
             </div>
             <Button 
-              variant="default" 
               size="sm" 
-              className="gap-2 w-full sm:w-auto bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-700 hover:to-blue-700"
+              className="gap-2 w-full sm:w-auto bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white rounded-lg"
               onClick={fetchDashboardData}
               disabled={loading}
             >
               <RefreshCw className={`h-4 w-4 ${loading ? 'animate-spin' : ''}`} />
-              <span className="hidden sm:inline">Refresh</span>
+              <span className="hidden sm:inline">Refresh Stats</span>
             </Button>
           </div>
         </div>
       </div>
 
-      <div className="p-4 sm:p-6 lg:p-8 space-y-6">
+      <div className="p-4 sm:p-6 lg:p-8 space-y-8">
         {/* Error Alert */}
         {error && (
-          <div className="rounded-lg border border-red-200 bg-red-50 p-4">
+          <div className="rounded-xl border border-red-300 bg-red-50 p-4">
             <div className="flex flex-col sm:flex-row items-start sm:items-center gap-3">
-              <AlertCircle className="h-5 w-5 text-red-600 flex-shrink-0" />
+              <AlertCircle className="h-5 w-5 text-red-600 flex-shrink-0 mt-0.5" />
               <div className="flex-1 min-w-0">
-                <p className="text-sm font-medium text-red-800">Failed to load data</p>
-                <p className="text-xs text-red-600 mt-1 break-words">{error}</p>
+                <p className="text-sm font-semibold text-red-900">Failed to load data</p>
+                <p className="text-xs text-red-700 mt-1 break-words">{error}</p>
               </div>
-              <Button onClick={fetchDashboardData} size="sm" variant="outline" className="w-full sm:w-auto">Retry</Button>
+              <Button onClick={fetchDashboardData} size="sm" className="w-full sm:w-auto bg-red-600 hover:bg-red-700">Retry</Button>
             </div>
           </div>
         )}
 
         {/* Loading State */}
         {loading && !stats && (
-          <div className="grid gap-4 sm:gap-6 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3">
+          <div className="grid gap-5 sm:gap-6 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3">
             {[1, 2, 3, 4, 5, 6].map((i) => (
-              <Card key={i} className="animate-pulse border-gray-200">
-                <CardContent className="p-6">
-                  <div className="h-20 bg-gray-200 rounded"></div>
-                </CardContent>
-              </Card>
+              <div key={i} className="h-36 bg-white rounded-2xl animate-pulse shadow-sm border border-gray-100"></div>
             ))}
           </div>
         )}
 
-        {/* Stats Grid */}
+        {/* Stats Grid - PhonePe Style */}
         {!loading && stats && (
-          <div className="grid gap-4 md:gap-6 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3">
-            {/* Total Users */}
-            <Card className="border-blue-200 overflow-hidden hover:shadow-lg transition-shadow">
-              <CardContent className="p-6">
-                <div className="flex items-center justify-between">
-                  <div className="flex-1">
-                    <p className="text-sm font-medium text-gray-600">Total Users</p>
-                    <p className="text-3xl font-bold mt-2 text-gray-900">
-                      {stats.users?.total?.toLocaleString() || "0"}
-                    </p>
-                    <p className="text-xs text-gray-500 mt-1">
-                      {(stats.users?.new_this_week || 0) > 0 ? '+' : ''}{(stats.users?.new_this_week || 0)} this week
-                    </p>
-                  </div>
-                  <div className="bg-blue-100 p-3 rounded-xl">
-                    <Users className="h-8 w-8 text-blue-600" />
-                  </div>
+          <div className="grid gap-5 md:gap-6 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3">
+            {/* Total Users Card */}
+            <div className="group bg-white rounded-2xl shadow-sm border border-gray-100 hover:shadow-md transition-all duration-300 p-6">
+              <div className="flex items-start justify-between mb-4">
+                <div className="bg-gradient-to-br from-blue-50 to-blue-100 p-3 rounded-xl group-hover:scale-110 transition-transform">
+                  <Users className="h-6 w-6 text-blue-600" />
                 </div>
-                {(stats.users?.new_this_week || 0) > 0 && (
-                  <div className="mt-4 flex items-center gap-1 text-xs text-green-600">
-                    <TrendingUp className="h-3 w-3" />
-                    +{Math.round(((stats.users?.new_this_week || 0) / (stats.users?.total || 1)) * 100)}%
-                  </div>
-                )}
-              </CardContent>
-            </Card>
+                <div className="flex items-center gap-1 bg-green-50 px-2 py-1 rounded-lg">
+                  <ArrowUpRight className="h-3.5 w-3.5 text-green-600" />
+                  <span className="text-xs font-semibold text-green-700">+8%</span>
+                </div>
+              </div>
+              <p className="text-sm text-gray-600 font-medium">Total Users</p>
+              <p className="text-4xl font-bold text-gray-900 mt-2">{stats.users?.total?.toLocaleString() || "0"}</p>
+              <p className="text-xs text-gray-500 mt-3">{(stats.users?.new_this_week || 0)} added this week</p>
+            </div>
 
-            {/* Active Merchants */}
-            <Card className="border-green-200 overflow-hidden hover:shadow-lg transition-shadow">
-              <CardContent className="p-6">
-                <div className="flex items-center justify-between">
-                  <div className="flex-1">
-                    <p className="text-sm font-medium text-gray-600">Active Merchants</p>
-                    <p className="text-3xl font-bold mt-2 text-gray-900">
-                      {stats.catalog?.active_merchants?.toLocaleString() || "0"}
-                    </p>
-                    <p className="text-xs text-gray-500 mt-1">Partner stores</p>
-                  </div>
-                  <div className="bg-green-100 p-3 rounded-xl">
-                    <Store className="h-8 w-8 text-green-600" />
-                  </div>
+            {/* Active Merchants Card */}
+            <div className="group bg-white rounded-2xl shadow-sm border border-gray-100 hover:shadow-md transition-all duration-300 p-6">
+              <div className="flex items-start justify-between mb-4">
+                <div className="bg-gradient-to-br from-emerald-50 to-emerald-100 p-3 rounded-xl group-hover:scale-110 transition-transform">
+                  <Store className="h-6 w-6 text-emerald-600" />
                 </div>
-                <div className="mt-4 flex items-center gap-1 text-xs text-green-600">
-                  <TrendingUp className="h-3 w-3" />
-                  +8%
+                <div className="flex items-center gap-1 bg-green-50 px-2 py-1 rounded-lg">
+                  <ArrowUpRight className="h-3.5 w-3.5 text-green-600" />
+                  <span className="text-xs font-semibold text-green-700">+8%</span>
                 </div>
-              </CardContent>
-            </Card>
+              </div>
+              <p className="text-sm text-gray-600 font-medium">Active Merchants</p>
+              <p className="text-4xl font-bold text-gray-900 mt-2">{stats.catalog?.active_merchants?.toLocaleString() || "0"}</p>
+              <p className="text-xs text-gray-500 mt-3">Partner stores online</p>
+            </div>
 
-            {/* Active Offers */}
-            <Card className="border-purple-200 overflow-hidden hover:shadow-lg transition-shadow">
-              <CardContent className="p-6">
-                <div className="flex items-center justify-between">
-                  <div className="flex-1">
-                    <p className="text-sm font-medium text-gray-600">Active Offers</p>
-                    <p className="text-3xl font-bold mt-2 text-gray-900">
-                      {stats.catalog?.active_offers?.toLocaleString() || "0"}
-                    </p>
-                    <p className="text-xs text-gray-500 mt-1">Live deals</p>
-                  </div>
-                  <div className="bg-purple-100 p-3 rounded-xl">
-                    <Tag className="h-8 w-8 text-purple-600" />
-                  </div>
+            {/* Active Offers Card */}
+            <div className="group bg-white rounded-2xl shadow-sm border border-gray-100 hover:shadow-md transition-all duration-300 p-6">
+              <div className="flex items-start justify-between mb-4">
+                <div className="bg-gradient-to-br from-purple-50 to-purple-100 p-3 rounded-xl group-hover:scale-110 transition-transform">
+                  <Tag className="h-6 w-6 text-purple-600" />
                 </div>
-                <div className="mt-4 flex items-center gap-1 text-xs text-green-600">
-                  <TrendingUp className="h-3 w-3" />
-                  +15%
+                <div className="flex items-center gap-1 bg-green-50 px-2 py-1 rounded-lg">
+                  <ArrowUpRight className="h-3.5 w-3.5 text-green-600" />
+                  <span className="text-xs font-semibold text-green-700">+15%</span>
                 </div>
-              </CardContent>
-            </Card>
+              </div>
+              <p className="text-sm text-gray-600 font-medium">Active Offers</p>
+              <p className="text-4xl font-bold text-gray-900 mt-2">{stats.catalog?.active_offers?.toLocaleString() || "0"}</p>
+              <p className="text-xs text-gray-500 mt-3">Live deals running</p>
+            </div>
 
-            {/* Total Orders */}
-            <Card className="border-orange-200 overflow-hidden hover:shadow-lg transition-shadow">
-              <CardContent className="p-6">
-                <div className="flex items-center justify-between">
-                  <div className="flex-1">
-                    <p className="text-sm font-medium text-gray-600">Total Orders</p>
-                    <p className="text-3xl font-bold mt-2 text-gray-900">
-                      {stats.orders?.total?.toLocaleString() || "0"}
-                    </p>
-                    <p className="text-xs text-gray-500 mt-1">
-                      {(stats.orders?.today || 0) > 0 ? '+' : ''}{(stats.orders?.today || 0)} today
-                    </p>
-                  </div>
-                  <div className="bg-orange-100 p-3 rounded-xl">
-                    <ShoppingCart className="h-8 w-8 text-orange-600" />
-                  </div>
+            {/* Total Orders Card */}
+            <div className="group bg-white rounded-2xl shadow-sm border border-gray-100 hover:shadow-md transition-all duration-300 p-6">
+              <div className="flex items-start justify-between mb-4">
+                <div className="bg-gradient-to-br from-orange-50 to-orange-100 p-3 rounded-xl group-hover:scale-110 transition-transform">
+                  <ShoppingCart className="h-6 w-6 text-orange-600" />
                 </div>
-                <div className="mt-4 flex items-center gap-1 text-xs text-green-600">
-                  <TrendingUp className="h-3 w-3" />
-                  +23%
+                <div className="flex items-center gap-1 bg-green-50 px-2 py-1 rounded-lg">
+                  <ArrowUpRight className="h-3.5 w-3.5 text-green-600" />
+                  <span className="text-xs font-semibold text-green-700">+23%</span>
                 </div>
-              </CardContent>
-            </Card>
+              </div>
+              <p className="text-sm text-gray-600 font-medium">Total Orders</p>
+              <p className="text-4xl font-bold text-gray-900 mt-2">{stats.orders?.total?.toLocaleString() || "0"}</p>
+              <p className="text-xs text-gray-500 mt-3">{(stats.orders?.today || 0)} orders today</p>
+            </div>
 
-            {/* Total Revenue */}
-            <Card className="border-emerald-200 overflow-hidden hover:shadow-lg transition-shadow">
-              <CardContent className="p-6">
-                <div className="flex items-center justify-between">
-                  <div className="flex-1">
-                    <p className="text-sm font-medium text-gray-600">Total Revenue</p>
-                    <p className="text-3xl font-bold mt-2 text-gray-900">
-                      {formatCurrency(stats.revenue?.total || 0)}
-                    </p>
-                    <p className="text-xs text-gray-500 mt-1">
-                      {formatCurrency(stats.revenue?.today || 0)} today
-                    </p>
-                  </div>
-                  <div className="bg-emerald-100 p-3 rounded-xl">
-                    <DollarSign className="h-8 w-8 text-emerald-600" />
-                  </div>
+            {/* Total Revenue Card */}
+            <div className="group bg-white rounded-2xl shadow-sm border border-gray-100 hover:shadow-md transition-all duration-300 p-6">
+              <div className="flex items-start justify-between mb-4">
+                <div className="bg-gradient-to-br from-green-50 to-green-100 p-3 rounded-xl group-hover:scale-110 transition-transform">
+                  <DollarSign className="h-6 w-6 text-green-600" />
                 </div>
-                <div className="mt-4 flex items-center gap-1 text-xs text-green-600">
-                  <TrendingUp className="h-3 w-3" />
-                  +18%
+                <div className="flex items-center gap-1 bg-green-50 px-2 py-1 rounded-lg">
+                  <ArrowUpRight className="h-3.5 w-3.5 text-green-600" />
+                  <span className="text-xs font-semibold text-green-700">+18%</span>
                 </div>
-              </CardContent>
-            </Card>
+              </div>
+              <p className="text-sm text-gray-600 font-medium">Total Revenue</p>
+              <p className="text-4xl font-bold text-gray-900 mt-2">{formatCurrency(stats.revenue?.total || 0)}</p>
+              <p className="text-xs text-gray-500 mt-3">{formatCurrency(stats.revenue?.today || 0)} today</p>
+            </div>
 
-            {/* Pending Withdrawals */}
-            <Card className="border-red-200 overflow-hidden hover:shadow-lg transition-shadow">
-              <CardContent className="p-6">
-                <div className="flex items-center justify-between">
-                  <div className="flex-1">
-                    <p className="text-sm font-medium text-gray-600">Pending Withdrawals</p>
-                    <p className="text-3xl font-bold mt-2 text-gray-900">
-                      {stats.withdrawals?.pending_count?.toLocaleString() || "0"}
-                    </p>
-                    <p className="text-xs text-gray-500 mt-1">
-                      {formatCurrency(stats.withdrawals?.pending_amount || 0)} pending
-                    </p>
-                  </div>
-                  <div className="bg-red-100 p-3 rounded-xl">
-                    <Wallet className="h-8 w-8 text-red-600" />
-                  </div>
+            {/* Pending Withdrawals Card */}
+            <div className="group bg-white rounded-2xl shadow-sm border border-gray-100 hover:shadow-md transition-all duration-300 p-6">
+              <div className="flex items-start justify-between mb-4">
+                <div className="bg-gradient-to-br from-red-50 to-red-100 p-3 rounded-xl group-hover:scale-110 transition-transform">
+                  <Wallet className="h-6 w-6 text-red-600" />
                 </div>
-                <div className="mt-4 flex items-center gap-1 text-xs text-red-600">
-                  <TrendingDown className="h-3 w-3" />
-                  -5%
+                <div className="flex items-center gap-1 bg-red-50 px-2 py-1 rounded-lg">
+                  <TrendingDown className="h-3.5 w-3.5 text-red-600" />
+                  <span className="text-xs font-semibold text-red-700">-5%</span>
                 </div>
-              </CardContent>
-            </Card>
+              </div>
+              <p className="text-sm text-gray-600 font-medium">Pending Withdrawals</p>
+              <p className="text-4xl font-bold text-gray-900 mt-2">{stats.withdrawals?.pending_count?.toLocaleString() || "0"}</p>
+              <p className="text-xs text-gray-500 mt-3">{formatCurrency(stats.withdrawals?.pending_amount || 0)} pending</p>
+            </div>
           </div>
         )}
 
-        {/* Quick Actions */}
-        <div className="grid gap-4 md:gap-6 grid-cols-1 sm:grid-cols-2 lg:grid-cols-4">
-          <Card className="border-0 bg-gradient-to-br from-blue-500 to-blue-600 text-white hover:shadow-lg transition-shadow">
-            <CardContent className="p-6">
-              <h3 className="text-sm font-medium text-blue-100">Recent Orders</h3>
-              <p className="text-3xl font-bold mt-2">24</p>
-              <p className="text-xs text-blue-100 mt-1">Last 24 hours</p>
-            </CardContent>
-          </Card>
+        {/* Quick Actions - Gradient Cards PhonePe Style */}
+        <div className="mt-8">
+          <h2 className="text-xl font-bold text-gray-900 mb-6">Quick Actions</h2>
+          <div className="grid gap-5 md:gap-6 grid-cols-1 sm:grid-cols-2 lg:grid-cols-4">
+            {/* Recent Orders */}
+            <div className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-blue-500 via-blue-600 to-blue-700 text-white p-6 shadow-lg hover:shadow-xl transition-all duration-300 hover:scale-105">
+              <div className="absolute -right-8 -top-8 w-32 h-32 bg-white/10 rounded-full blur-3xl"></div>
+              <h3 className="text-sm font-semibold text-blue-100 relative z-10">Recent Orders</h3>
+              <p className="text-4xl font-bold mt-3 relative z-10">24</p>
+              <p className="text-xs text-blue-100 mt-2 relative z-10">Last 24 hours</p>
+            </div>
 
-          <Card className="border-0 bg-gradient-to-br from-purple-500 to-purple-600 text-white hover:shadow-lg transition-shadow">
-            <CardContent className="p-6">
-              <h3 className="text-sm font-medium text-purple-100">New Users</h3>
-              <p className="text-3xl font-bold mt-2">156</p>
-              <p className="text-xs text-purple-100 mt-1">This week</p>
-            </CardContent>
-          </Card>
+            {/* New Users */}
+            <div className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-purple-500 via-purple-600 to-purple-700 text-white p-6 shadow-lg hover:shadow-xl transition-all duration-300 hover:scale-105">
+              <div className="absolute -right-8 -top-8 w-32 h-32 bg-white/10 rounded-full blur-3xl"></div>
+              <h3 className="text-sm font-semibold text-purple-100 relative z-10">New Users</h3>
+              <p className="text-4xl font-bold mt-3 relative z-10">156</p>
+              <p className="text-xs text-purple-100 mt-2 relative z-10">This week</p>
+            </div>
 
-          <Card className="border-0 bg-gradient-to-br from-pink-500 to-pink-600 text-white hover:shadow-lg transition-shadow">
-            <CardContent className="p-6">
-              <h3 className="text-sm font-medium text-pink-100">Active Coupons</h3>
-              <p className="text-3xl font-bold mt-2">{stats?.catalog?.active_offers || 0}</p>
-              <p className="text-xs text-pink-100 mt-1">Currently live</p>
-            </CardContent>
-          </Card>
+            {/* Active Coupons */}
+            <div className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-pink-500 via-pink-600 to-rose-700 text-white p-6 shadow-lg hover:shadow-xl transition-all duration-300 hover:scale-105">
+              <div className="absolute -right-8 -top-8 w-32 h-32 bg-white/10 rounded-full blur-3xl"></div>
+              <h3 className="text-sm font-semibold text-pink-100 relative z-10">Active Coupons</h3>
+              <p className="text-4xl font-bold mt-3 relative z-10">{stats?.catalog?.active_offers || 0}</p>
+              <p className="text-xs text-pink-100 mt-2 relative z-10">Currently live</p>
+            </div>
 
-          <Card className="border-0 bg-gradient-to-br from-cyan-500 to-cyan-600 text-white hover:shadow-lg transition-shadow">
-            <CardContent className="p-6">
-              <h3 className="text-sm font-medium text-cyan-100">Cashback Pending</h3>
-              <p className="text-3xl font-bold mt-2">₹2.4L</p>
-              <p className="text-xs text-cyan-100 mt-1">To be processed</p>
-            </CardContent>
-          </Card>
+            {/* Cashback Pending */}
+            <div className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-cyan-500 via-cyan-600 to-teal-700 text-white p-6 shadow-lg hover:shadow-xl transition-all duration-300 hover:scale-105">
+              <div className="absolute -right-8 -top-8 w-32 h-32 bg-white/10 rounded-full blur-3xl"></div>
+              <h3 className="text-sm font-semibold text-cyan-100 relative z-10">Cashback Pending</h3>
+              <p className="text-4xl font-bold mt-3 relative z-10">₹2.4L</p>
+              <p className="text-xs text-cyan-100 mt-2 relative z-10">To be processed</p>
+            </div>
+          </div>
         </div>
       </div>
     </div>
