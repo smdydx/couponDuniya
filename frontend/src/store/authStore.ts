@@ -17,6 +17,7 @@ interface AuthState {
   logout: () => void;
   updateUser: (data: Partial<User>) => void;
   setTokens: (access: string, refresh: string) => void;
+  setError: (error: string) => void;
   clearError: () => void;
   refreshAccessToken: () => Promise<void>;
 }
@@ -48,17 +49,17 @@ export const useAuthStore = createWithEqualityFn<AuthState>()(
             refreshToken: response.refresh_token,
             isAuthenticated: true,
             isLoading: false,
+            error: null,
           });
           
-          // Redirect based on role - use setTimeout to ensure state is updated first
+          // Redirect based on role
           if (typeof window !== 'undefined') {
-            setTimeout(() => {
-              if (user.is_admin || user.role === 'admin') {
-                window.location.href = '/admin/dashboard';
-              } else {
-                window.location.href = '/';
-              }
-            }, 100);
+            const redirectUrl = (user.is_admin || user.role === 'admin') 
+              ? '/admin/dashboard' 
+              : '/';
+            
+            console.log('Login successful, redirecting to:', redirectUrl);
+            window.location.href = redirectUrl;
           }
         } catch (error) {
           set({
@@ -107,6 +108,10 @@ export const useAuthStore = createWithEqualityFn<AuthState>()(
 
       setTokens: (access: string, refresh: string) => {
         set({ accessToken: access, refreshToken: refresh });
+      },
+
+      setError: (error: string) => {
+        set({ error });
       },
 
       clearError: () => {
