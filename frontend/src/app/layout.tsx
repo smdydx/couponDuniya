@@ -1,8 +1,7 @@
+
 import type { Metadata, Viewport } from "next";
 import { Inter } from "next/font/google";
 import "./globals.css";
-import { Providers } from "./providers";
-import ClientLayout from "./ClientLayout"; // Assuming ClientLayout will contain the client-side logic
 
 const inter = Inter({
   subsets: ["latin"],
@@ -43,13 +42,9 @@ export default function RootLayout({
         <a href="#main-content" className="sr-only focus:not-sr-only focus:absolute focus:left-4 focus:top-4 rounded bg-primary px-3 py-2 text-primary-foreground">
           Skip to main content
         </a>
-        <Providers>
-          <ClientLayout> {/* Use the new client component here */}
-            <div id="main-content">
-              {children}
-            </div>
-          </ClientLayout>
-        </Providers>
+        <div id="main-content">
+          {children}
+        </div>
       </body>
     </html>
   );
