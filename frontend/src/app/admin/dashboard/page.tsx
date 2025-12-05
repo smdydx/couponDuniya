@@ -69,43 +69,47 @@ export default function AdminDashboard() {
   useEffect(() => {
     if (!mounted) return;
 
-    // Check if user is authenticated
-    const authStorage = localStorage.getItem("auth-storage");
-    if (!authStorage) {
-      console.log("No auth storage, redirecting to login");
-      router.push("/login");
-      return;
-    }
+    const checkAuth = async () => {
+      const token = localStorage.getItem("token");
+      const userStr = localStorage.getItem("user");
 
-    try {
-      const authData = JSON.parse(authStorage);
-      console.log("Auth data:", authData);
-      
-      if (!authData?.state?.accessToken || !authData?.state?.user) {
-        console.log("No token or user, redirecting to login");
+      console.log("🔐 Admin auth check:", { hasToken: !!token, hasUser: !!userStr });
+
+      if (!token || !userStr) {
+        console.log("❌ No auth found, redirecting to login");
         router.push("/login");
         return;
       }
 
-      // Check if user is admin
-      const user = authData.state.user;
-      console.log("User role check:", user.role, "is_admin:", user.is_admin);
-      
-      if (user.role !== "admin" && !user.is_admin) {
-        console.log("Not an admin, redirecting to home");
-        router.push("/");
+      try {
+        const user = JSON.parse(userStr);
+        console.log("🔍 User details:", { 
+          email: user.email, 
+          is_admin: user.is_admin, 
+          role: user.role 
+        });
+
+        // Check if user is admin - either is_admin flag or role is 'admin'
+        const isAdminUser = user.is_admin === true || user.role === 'admin';
+
+        if (!isAdminUser) {
+          console.log("❌ Access denied - User is not admin");
+          alert("Access denied. Admin privileges required.");
+          router.push("/");
+          return;
+        }
+        
+        console.log("✅ Admin access granted - loading dashboard");
+        setLoading(false); // Allow dashboard to load
+      } catch (error) {
+        console.error("Auth check failed:", error);
+        router.push("/login");
         return;
       }
-      
-      console.log("✅ Admin access granted - loading dashboard");
-      setLoading(false); // Allow dashboard to load
-      return;
-    } catch (error) {
-      console.error("Auth check failed:", error);
-      router.push("/login");
-      return;
-    }
-    
+    };
+
+    checkAuth();
+
     const defaultStats: DashboardStats = {
       orders: { total: 0, today: 0 },
       revenue: { total: 0, today: 0 },
@@ -123,15 +127,15 @@ export default function AdminDashboard() {
           adminApiClient.get("/merchants", { params: { limit: 5 } }),
           adminApiClient.get("/offers", { params: { limit: 5 } }),
         ]);
-        
+
         console.log("✅ Stats response:", statsResponse);
         console.log("✅ Merchants response:", merchantsResponse);
         console.log("✅ Offers response:", offersResponse);
-        
+
         if (statsResponse.status === "fulfilled") {
           const statsData = statsResponse.value.data;
           console.log("📊 Stats data received:", statsData);
-          
+
           // Handle different response formats
           if (statsData?.data) {
             console.log("✅ Setting stats from statsData.data:", statsData.data);
@@ -151,13 +155,13 @@ export default function AdminDashboard() {
           }
           setStats(defaultStats);
         }
-        
+
         if (merchantsResponse.status === "fulfilled") {
           const merchantsData = merchantsResponse.value.data;
           const merchantsList = merchantsData?.merchants || merchantsData?.data?.merchants || [];
           setRecentMerchants(merchantsList.slice(0, 5));
         }
-        
+
         if (offersResponse.status === "fulfilled") {
           const offersData = offersResponse.value.data;
           const offersList = offersData?.data?.offers || offersData?.offers || [];

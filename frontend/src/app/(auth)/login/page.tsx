@@ -23,11 +23,10 @@ export default function LoginPage() {
   // Redirect if already logged in
   useEffect(() => {
     if (isAuthenticated && user) {
-      const redirectUrl = (user.is_admin || user.role === 'admin') 
-        ? '/admin/dashboard' 
-        : '/';
+      const isAdmin = user.is_admin === true || user.role === 'admin';
+      const redirectUrl = isAdmin ? '/admin/dashboard' : '/';
       
-      console.log('Already authenticated, redirecting to:', redirectUrl);
+      console.log('✅ Already authenticated, redirecting to:', redirectUrl, { isAdmin });
       router.replace(redirectUrl);
     }
   }, [isAuthenticated, user, router]);

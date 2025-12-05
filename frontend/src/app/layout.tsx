@@ -1,11 +1,8 @@
-"use client";
-
 import type { Metadata, Viewport } from "next";
 import { Inter } from "next/font/google";
 import "./globals.css";
-import Providers from "./providers";
-import { useEffect } from "react";
-import { useAuthStore } from "@/store/authStore";
+import { Providers } from "./providers";
+import ClientLayout from "./ClientLayout"; // Assuming ClientLayout will contain the client-side logic
 
 const inter = Inter({
   subsets: ["latin"],
@@ -40,19 +37,6 @@ export default function RootLayout({
 }: Readonly<{
   children: React.ReactNode;
 }>) {
-  const hydrate = useAuthStore((state) => state.hydrate);
-  const isAuthenticated = useAuthStore((state) => state.isAuthenticated);
-
-  useEffect(() => {
-    hydrate();
-  }, [hydrate]);
-
-  // If the user is authenticated, don't render the login page, redirect to dashboard instead.
-  if (isAuthenticated && typeof window !== 'undefined' && window.location.pathname === '/login') {
-    window.location.href = '/admin/dashboard';
-    return null; // Prevent rendering anything
-  }
-
   return (
     <html lang="en" suppressHydrationWarning>
       <body className={`${inter.variable} font-sans antialiased`} data-scroll-behavior="smooth">
@@ -60,9 +44,11 @@ export default function RootLayout({
           Skip to main content
         </a>
         <Providers>
-          <div id="main-content">
-            {children}
-          </div>
+          <ClientLayout> {/* Use the new client component here */}
+            <div id="main-content">
+              {children}
+            </div>
+          </ClientLayout>
         </Providers>
       </body>
     </html>
