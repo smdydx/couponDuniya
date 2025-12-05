@@ -1,0 +1,37 @@
+Runtime ReferenceError
+
+
+MerchantCard is not defined
+Call Stack
+15
+
+<unknown>
+file:///home/deepak/office%20Project%20/couponDuniya%20/frontend/.next/dev/static/chunks/src_631c0d14._.js (1400:293)
+Array.map
+<anonymous>
+HomePage
+file:///home/deepak/office%20Project%20/couponDuniya%20/frontend/.next/dev/static/chunks/src_631c0d14._.js (1400:74)
+Object.react_stack_bottom_frame
+file:///home/deepak/office%20Project%20/couponDuniya%20/frontend/.next/dev/static/chunks/node_modules_next_dist_compiled_react-dom_1e674e59._.js (14816:24)
+renderWithHooks
+file:///home/deepak/office%20Project%20/couponDuniya%20/frontend/.next/dev/static/chunks/node_modules_next_dist_compiled_react-dom_1e674e59._.js (4645:24)
+updateFunctionComponent
+file:///home/deepak/office%20Project%20/couponDuniya%20/frontend/.next/dev/static/chunks/node_modules_next_dist_compiled_react-dom_1e674e59._.js (6106:21)
+beginWork
+file:///home/deepak/office%20Project%20/couponDuniya%20/frontend/.next/dev/static/chunks/node_modules_next_dist_compiled_react-dom_1e674e59._.js (6702:24)
+runWithFiberInDEV
+file:///home/deepak/office%20Project%20/couponDuniya%20/frontend/.next/dev/static/chunks/node_modules_next_dist_compiled_react-dom_1e674e59._.js (959:74)
+performUnitOfWork
+file:///home/deepak/office%20Project%20/couponDuniya%20/frontend/.next/dev/static/chunks/node_modules_next_dist_compiled_react-dom_1e674e59._.js (9556:97)
+workLoopSync
+file:///home/deepak/office%20Project%20/couponDuniya%20/frontend/.next/dev/static/chunks/node_modules_next_dist_compiled_react-dom_1e674e59._.js (9450:40)
+renderRootSync
+file:///home/deepak/office%20Project%20/couponDuniya%20/frontend/.next/dev/static/chunks/node_modules_next_dist_compiled_react-dom_1e674e59._.js (9434:13)
+performWorkOnRoot
+file:///home/deepak/office%20Project%20/couponDuniya%20/frontend/.next/dev/static/chunks/node_modules_next_dist_compiled_react-dom_1e674e59._.js (9099:47)
+performWorkOnRootViaSchedulerTask
+file:///home/deepak/office%20Project%20/couponDuniya%20/frontend/.next/dev/static/chunks/node_modules_next_dist_compiled_react-dom_1e674e59._.js (10224:9)
+MessagePort.performWorkUntilDeadline
+file:///home/deepak/office%20Project%20/couponDuniya%20/frontend/.next/dev/static/chunks/node_modules_next_dist_compiled_a0e4c7b4._.js (2647:64)
+ClientPageRoot
+file:///home/deepak/office%20Project%20/couponDuniya%20/frontend/.next/dev/static/chunks/node_modules_next_dist_094231d7._.js (2202:50)
