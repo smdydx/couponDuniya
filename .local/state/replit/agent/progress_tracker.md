@@ -19,13 +19,29 @@
 [x] 19. Add Referrals and Referral Tree to admin sidebar navigation
 [x] 20. Verify all admin pages render correctly with professional colorful UI
 
+## Latest Updates (December 2024):
+[x] 21. Fixed Referral Tree with proper connection lines (vertical + horizontal connectors)
+[x] 22. Enhanced connection structure - green lines for left child, blue lines for right child
+[x] 23. Fixed secondary stat cards with full gradient backgrounds (not white)
+[x] 24. Added image fetching for merchants and offers in dashboard
+[x] 25. Updated Sidebar with expandable Referral menu (Referral List + Tree View submenu)
+[x] 26. Added gradient styling to admin logo and sidebar active states
+
 ## Completed Features:
 - Admin Dashboard with colorful gradient cards (purple, blue, green, orange, pink)
+- Secondary stats with full gradient backgrounds (pink, indigo, amber, rose)
 - Referral Management with 50-level matrix table showing users, commission rates, earnings
-- Referral Tree visualization with binary structure (left/right children)
+- Referral Tree visualization with proper binary structure:
+  - Vertical connector from parent to horizontal bar
+  - Horizontal bar connecting left and right branches
+  - Green lines for left child links
+  - Blue lines for right child links
+  - Orange root user, purple active users, gray inactive users
+  - Dashed circles for empty positions
 - Products page with category selection dropdown and colorful stats
 - Categories page with full CRUD and professional design
-- All pages have consistent colorful gradient design
+- Sidebar with expandable Referral menu containing submenu items
+- Recent Merchants and Recent Offers sections with images
 
 ## Notes:
 - Backend running on port 8000

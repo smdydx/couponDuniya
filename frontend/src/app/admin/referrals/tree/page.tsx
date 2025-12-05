@@ -15,17 +15,16 @@ import {
 } from "@/components/ui/select";
 import {
   GitBranch,
-  Users,
   Search,
   ZoomIn,
   ZoomOut,
   Home,
-  ChevronUp,
   ChevronDown,
   User,
   ArrowLeft,
   Maximize2,
   Network,
+  RefreshCw,
 } from "lucide-react";
 import Link from "next/link";
 import { LoadingSpinner } from "@/components/common/LoadingSpinner";
@@ -120,14 +119,14 @@ function TreeContent() {
     setSelectedNode(null);
   };
 
-  const renderNode = (node: TreeNode | null, isLeft: boolean = false): React.ReactNode => {
+  const renderNode = (node: TreeNode | null, isLeft: boolean = false, isRoot: boolean = false): React.ReactNode => {
     if (!node) {
       return (
         <div className="flex flex-col items-center">
-          <div className={`w-16 h-16 rounded-full border-2 border-dashed ${isLeft ? 'border-green-300' : 'border-blue-300'} flex items-center justify-center bg-gray-50`}>
-            <User className="h-6 w-6 text-gray-300" />
+          <div className={`w-14 h-14 sm:w-16 sm:h-16 rounded-full border-2 border-dashed ${isLeft ? 'border-green-400' : 'border-blue-400'} flex items-center justify-center bg-gradient-to-br from-gray-50 to-gray-100 shadow-inner`}>
+            <User className="h-5 w-5 sm:h-6 sm:w-6 text-gray-300" />
           </div>
-          <p className="text-xs text-gray-400 mt-1">Empty</p>
+          <p className="text-xs text-gray-400 mt-1 font-medium">Empty</p>
         </div>
       );
     }
@@ -142,61 +141,75 @@ function TreeContent() {
       <div className="flex flex-col items-center">
         <div
           onClick={() => handleNodeClick(node)}
-          className={`relative cursor-pointer transition-all duration-200 hover:scale-110 ${
+          className={`relative cursor-pointer transition-all duration-300 hover:scale-110 hover:shadow-xl ${
             selectedNode?.id === node.id ? 'ring-4 ring-purple-400 ring-offset-2' : ''
           } ${isHighlighted ? 'ring-4 ring-yellow-400 ring-offset-2' : ''}`}
         >
-          <div className={`w-20 h-20 rounded-full flex items-center justify-center text-white font-bold text-lg shadow-lg ${
+          <div className={`w-14 h-14 sm:w-16 sm:h-16 md:w-18 md:h-18 rounded-full flex items-center justify-center text-white font-bold text-base sm:text-lg shadow-lg border-2 border-white ${
             node.is_active 
-              ? 'bg-gradient-to-br from-purple-500 to-pink-500' 
-              : 'bg-gradient-to-br from-gray-400 to-gray-500'
+              ? isRoot 
+                ? 'bg-gradient-to-br from-amber-400 via-orange-500 to-red-500' 
+                : 'bg-gradient-to-br from-purple-500 via-pink-500 to-rose-500' 
+              : 'bg-gradient-to-br from-gray-400 to-gray-600'
           }`}>
-            {node.name.charAt(0)}
+            {node.name.charAt(0).toUpperCase()}
           </div>
-          <Badge className={`absolute -top-1 -right-1 text-xs ${
-            node.level <= 10 ? 'bg-green-500' : 
-            node.level <= 20 ? 'bg-blue-500' : 
-            node.level <= 30 ? 'bg-purple-500' : 
-            'bg-amber-500'
-          }`}>
+          <Badge className={`absolute -top-1 -right-1 text-[10px] sm:text-xs px-1.5 py-0.5 font-bold shadow-md ${
+            node.level <= 10 ? 'bg-gradient-to-r from-green-500 to-emerald-500' : 
+            node.level <= 20 ? 'bg-gradient-to-r from-blue-500 to-cyan-500' : 
+            node.level <= 30 ? 'bg-gradient-to-r from-purple-500 to-violet-500' : 
+            'bg-gradient-to-r from-amber-500 to-orange-500'
+          } text-white border-0`}>
             L{node.level}
           </Badge>
         </div>
-        <div className="text-center mt-2">
-          <p className="text-sm font-medium text-gray-800 truncate max-w-24">{node.name}</p>
-          <p className="text-xs text-emerald-600 font-semibold">₹{node.earnings.toLocaleString()}</p>
+        <div className="text-center mt-2 max-w-20 sm:max-w-24">
+          <p className="text-xs sm:text-sm font-semibold text-gray-800 truncate">{node.name}</p>
+          <p className="text-xs font-bold text-emerald-600">₹{node.earnings.toLocaleString()}</p>
         </div>
       </div>
     );
   };
 
-  const renderTree = (node: TreeNode | null, depth: number = 0): React.ReactNode => {
+  const renderTree = (node: TreeNode | null, depth: number = 0, isRoot: boolean = true): React.ReactNode => {
     if (!node || depth >= parseInt(viewDepth)) return null;
+
+    const hasChildren = node.left || node.right || depth < parseInt(viewDepth) - 1;
 
     return (
       <div className="flex flex-col items-center">
-        {renderNode(node, false)}
+        {renderNode(node, false, isRoot)}
         
-        {(node.left || node.right || depth < parseInt(viewDepth) - 1) && (
-          <>
-            <div className="w-0.5 h-8 bg-gradient-to-b from-purple-400 to-pink-400"></div>
+        {hasChildren && (
+          <div className="flex flex-col items-center">
+            <div className="w-0.5 h-6 sm:h-8 bg-gradient-to-b from-purple-400 via-pink-400 to-rose-400"></div>
             
-            <div className="flex items-start gap-4">
-              <div className="flex flex-col items-center">
-                {node.left && <div className="w-16 h-0.5 bg-green-400 mb-2"></div>}
-                <div className="flex flex-col items-center">
-                  {renderTree(node.left, depth + 1) || renderNode(null, true)}
-                </div>
-              </div>
+            <div className="relative flex items-start">
+              <div className="absolute top-0 left-1/2 -translate-x-1/2 h-0.5 bg-gradient-to-r from-green-400 via-gray-300 to-blue-400" style={{ width: 'calc(100% - 2rem)' }}></div>
               
-              <div className="flex flex-col items-center">
-                {node.right && <div className="w-16 h-0.5 bg-blue-400 mb-2"></div>}
-                <div className="flex flex-col items-center">
-                  {renderTree(node.right, depth + 1) || renderNode(null, false)}
+              <div className="flex gap-4 sm:gap-6 md:gap-8 lg:gap-12">
+                <div className="flex flex-col items-center pt-0">
+                  <div className="flex items-center">
+                    <div className="w-6 sm:w-8 md:w-12 lg:w-16 h-0.5 bg-gradient-to-r from-green-500 to-green-400"></div>
+                    <div className="w-0.5 h-6 sm:h-8 bg-gradient-to-b from-green-400 to-green-500"></div>
+                  </div>
+                  <div className="flex flex-col items-center -mt-0.5">
+                    {node.left ? renderTree(node.left, depth + 1, false) : renderNode(null, true)}
+                  </div>
+                </div>
+                
+                <div className="flex flex-col items-center pt-0">
+                  <div className="flex items-center">
+                    <div className="w-0.5 h-6 sm:h-8 bg-gradient-to-b from-blue-400 to-blue-500"></div>
+                    <div className="w-6 sm:w-8 md:w-12 lg:w-16 h-0.5 bg-gradient-to-r from-blue-400 to-blue-500"></div>
+                  </div>
+                  <div className="flex flex-col items-center -mt-0.5">
+                    {node.right ? renderTree(node.right, depth + 1, false) : renderNode(null, false)}
+                  </div>
                 </div>
               </div>
             </div>
-          </>
+          </div>
         )}
       </div>
     );
@@ -215,31 +228,40 @@ function TreeContent() {
       <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
         <div className="flex items-center gap-4">
           <Link href="/admin/referrals">
-            <Button variant="outline" size="sm">
+            <Button variant="outline" size="sm" className="border-purple-200 hover:bg-purple-50">
               <ArrowLeft className="h-4 w-4 mr-2" />
               Back to List
             </Button>
           </Link>
           <div>
-            <h1 className="text-3xl font-bold bg-gradient-to-r from-purple-600 to-pink-600 bg-clip-text text-transparent">
+            <h1 className="text-2xl sm:text-3xl font-bold bg-gradient-to-r from-purple-600 via-pink-600 to-rose-600 bg-clip-text text-transparent">
               Referral Tree View
             </h1>
-            <p className="text-gray-500">
+            <p className="text-gray-500 text-sm">
               Binary tree structure with left and right children
             </p>
           </div>
         </div>
+        <Button 
+          variant="outline" 
+          size="sm" 
+          onClick={fetchTreeData}
+          className="border-purple-200 hover:bg-purple-50"
+        >
+          <RefreshCw className="h-4 w-4 mr-2" />
+          Refresh
+        </Button>
       </div>
 
       <div className="grid gap-4 lg:grid-cols-4">
-        <Card className="lg:col-span-3 border-0 shadow-xl">
-          <CardHeader className="bg-gradient-to-r from-purple-500 to-pink-500 text-white rounded-t-lg">
-            <div className="flex items-center justify-between">
-              <CardTitle className="flex items-center gap-2">
+        <Card className="lg:col-span-3 border-0 shadow-xl overflow-hidden">
+          <CardHeader className="bg-gradient-to-r from-purple-600 via-pink-600 to-rose-600 text-white">
+            <div className="flex flex-wrap items-center justify-between gap-4">
+              <CardTitle className="flex items-center gap-2 text-base sm:text-lg">
                 <GitBranch className="h-5 w-5" />
                 Binary Tree Structure
                 {rootUserId && (
-                  <Badge className="bg-white/20 ml-2">Viewing User #{rootUserId}</Badge>
+                  <Badge className="bg-white/20 ml-2 text-xs">Viewing User #{rootUserId}</Badge>
                 )}
               </CardTitle>
               <div className="flex items-center gap-2">
@@ -247,16 +269,16 @@ function TreeContent() {
                   variant="secondary"
                   size="sm"
                   onClick={handleZoomOut}
-                  className="bg-white/20 hover:bg-white/30 text-white border-0"
+                  className="bg-white/20 hover:bg-white/30 text-white border-0 h-8 w-8 p-0"
                 >
                   <ZoomOut className="h-4 w-4" />
                 </Button>
-                <span className="text-sm font-medium px-2">{Math.round(zoom * 100)}%</span>
+                <span className="text-xs sm:text-sm font-medium px-2 bg-white/10 rounded py-1">{Math.round(zoom * 100)}%</span>
                 <Button
                   variant="secondary"
                   size="sm"
                   onClick={handleZoomIn}
-                  className="bg-white/20 hover:bg-white/30 text-white border-0"
+                  className="bg-white/20 hover:bg-white/30 text-white border-0 h-8 w-8 p-0"
                 >
                   <ZoomIn className="h-4 w-4" />
                 </Button>
@@ -264,7 +286,7 @@ function TreeContent() {
                   variant="secondary"
                   size="sm"
                   onClick={handleResetZoom}
-                  className="bg-white/20 hover:bg-white/30 text-white border-0"
+                  className="bg-white/20 hover:bg-white/30 text-white border-0 h-8 w-8 p-0"
                 >
                   <Maximize2 className="h-4 w-4" />
                 </Button>
@@ -273,26 +295,29 @@ function TreeContent() {
                     variant="secondary"
                     size="sm"
                     onClick={handleResetRoot}
-                    className="bg-white/20 hover:bg-white/30 text-white border-0"
+                    className="bg-white/20 hover:bg-white/30 text-white border-0 text-xs"
                   >
                     <Home className="h-4 w-4 mr-1" />
-                    Reset Root
+                    Reset
                   </Button>
                 )}
               </div>
             </div>
           </CardHeader>
-          <CardContent className="p-6 overflow-auto" style={{ minHeight: "500px" }}>
+          <CardContent className="p-4 sm:p-6 overflow-auto bg-gradient-to-br from-slate-50 via-white to-purple-50" style={{ minHeight: "500px" }}>
             <div 
-              className="flex justify-center items-start py-8"
-              style={{ transform: `scale(${zoom})`, transformOrigin: "top center" }}
+              className="flex justify-center items-start py-6 sm:py-8"
+              style={{ transform: `scale(${zoom})`, transformOrigin: "top center", minWidth: "max-content" }}
             >
               {treeData ? (
                 renderTree(treeData)
               ) : (
                 <div className="text-center py-12 text-gray-500">
-                  <Network className="h-16 w-16 mx-auto mb-4 text-gray-300" />
-                  <p>No tree data available</p>
+                  <div className="w-24 h-24 rounded-full bg-gradient-to-br from-purple-100 to-pink-100 flex items-center justify-center mx-auto mb-4">
+                    <Network className="h-12 w-12 text-purple-400" />
+                  </div>
+                  <p className="font-medium">No tree data available</p>
+                  <p className="text-sm text-gray-400">Add referrals to see the tree structure</p>
                 </div>
               )}
             </div>
@@ -300,26 +325,29 @@ function TreeContent() {
         </Card>
 
         <div className="space-y-4">
-          <Card className="border-0 shadow-xl">
-            <CardHeader>
+          <Card className="border-0 shadow-xl bg-gradient-to-br from-white to-purple-50">
+            <CardHeader className="pb-3">
               <CardTitle className="text-lg flex items-center gap-2">
-                <Search className="h-5 w-5 text-purple-600" />
+                <div className="w-8 h-8 rounded-lg bg-gradient-to-r from-purple-500 to-pink-500 flex items-center justify-center">
+                  <Search className="h-4 w-4 text-white" />
+                </div>
                 Search & Filter
               </CardTitle>
             </CardHeader>
             <CardContent className="space-y-4">
               <div>
-                <label className="text-sm font-medium text-gray-700 mb-1 block">Search User</label>
+                <label className="text-sm font-medium text-gray-700 mb-1.5 block">Search User</label>
                 <Input
                   placeholder="Name, email or code..."
                   value={searchTerm}
                   onChange={(e) => setSearchTerm(e.target.value)}
+                  className="border-purple-200 focus:border-purple-400"
                 />
               </div>
               <div>
-                <label className="text-sm font-medium text-gray-700 mb-1 block">View Depth</label>
+                <label className="text-sm font-medium text-gray-700 mb-1.5 block">View Depth</label>
                 <Select value={viewDepth} onValueChange={setViewDepth}>
-                  <SelectTrigger>
+                  <SelectTrigger className="border-purple-200 focus:border-purple-400">
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
@@ -335,90 +363,94 @@ function TreeContent() {
           </Card>
 
           {selectedNode && (
-            <Card className="border-0 shadow-xl bg-gradient-to-br from-purple-50 to-pink-50">
-              <CardHeader>
+            <Card className="border-0 shadow-xl bg-gradient-to-br from-purple-100 via-pink-50 to-rose-50">
+              <CardHeader className="pb-3">
                 <CardTitle className="text-lg flex items-center gap-2">
-                  <User className="h-5 w-5 text-purple-600" />
+                  <div className="w-8 h-8 rounded-lg bg-gradient-to-r from-purple-500 to-pink-500 flex items-center justify-center">
+                    <User className="h-4 w-4 text-white" />
+                  </div>
                   Selected Node
                 </CardTitle>
               </CardHeader>
               <CardContent className="space-y-3">
-                <div>
-                  <p className="text-sm text-gray-500">Name</p>
-                  <p className="font-semibold">{selectedNode.name}</p>
+                <div className="p-2 bg-white/80 rounded-lg">
+                  <p className="text-xs text-gray-500">Name</p>
+                  <p className="font-semibold text-gray-800">{selectedNode.name}</p>
                 </div>
-                <div>
-                  <p className="text-sm text-gray-500">Email</p>
-                  <p className="text-sm">{selectedNode.email}</p>
+                <div className="p-2 bg-white/80 rounded-lg">
+                  <p className="text-xs text-gray-500">Email</p>
+                  <p className="text-sm text-gray-700">{selectedNode.email}</p>
                 </div>
-                <div>
-                  <p className="text-sm text-gray-500">Referral Code</p>
-                  <code className="text-sm bg-purple-100 px-2 py-1 rounded text-purple-700">
+                <div className="p-2 bg-white/80 rounded-lg">
+                  <p className="text-xs text-gray-500">Referral Code</p>
+                  <code className="text-sm bg-purple-100 px-2 py-1 rounded text-purple-700 font-bold">
                     {selectedNode.referral_code}
                   </code>
                 </div>
                 <div className="grid grid-cols-2 gap-2">
-                  <div className="p-2 bg-white rounded-lg">
-                    <p className="text-xs text-gray-500">Level</p>
-                    <p className="font-bold text-purple-600">{selectedNode.level}</p>
+                  <div className="p-3 bg-gradient-to-br from-purple-500 to-pink-500 rounded-lg text-white">
+                    <p className="text-xs opacity-80">Level</p>
+                    <p className="font-bold text-lg">{selectedNode.level}</p>
                   </div>
-                  <div className="p-2 bg-white rounded-lg">
-                    <p className="text-xs text-gray-500">Earnings</p>
-                    <p className="font-bold text-emerald-600">₹{selectedNode.earnings.toLocaleString()}</p>
+                  <div className="p-3 bg-gradient-to-br from-emerald-500 to-teal-500 rounded-lg text-white">
+                    <p className="text-xs opacity-80">Earnings</p>
+                    <p className="font-bold text-lg">₹{selectedNode.earnings.toLocaleString()}</p>
                   </div>
                 </div>
                 <div className="grid grid-cols-2 gap-2">
-                  <div className="p-2 bg-white rounded-lg text-center">
-                    <p className="text-xs text-gray-500">Left Child</p>
-                    <p className={`font-bold ${selectedNode.left ? 'text-green-600' : 'text-gray-400'}`}>
+                  <div className="p-2 bg-gradient-to-br from-green-100 to-emerald-100 rounded-lg text-center border border-green-200">
+                    <p className="text-xs text-gray-500 mb-1">Left Child</p>
+                    <p className={`font-bold text-sm ${selectedNode.left ? 'text-green-600' : 'text-gray-400'}`}>
                       {selectedNode.left ? selectedNode.left.name : 'Empty'}
                     </p>
                   </div>
-                  <div className="p-2 bg-white rounded-lg text-center">
-                    <p className="text-xs text-gray-500">Right Child</p>
-                    <p className={`font-bold ${selectedNode.right ? 'text-blue-600' : 'text-gray-400'}`}>
+                  <div className="p-2 bg-gradient-to-br from-blue-100 to-cyan-100 rounded-lg text-center border border-blue-200">
+                    <p className="text-xs text-gray-500 mb-1">Right Child</p>
+                    <p className={`font-bold text-sm ${selectedNode.right ? 'text-blue-600' : 'text-gray-400'}`}>
                       {selectedNode.right ? selectedNode.right.name : 'Empty'}
                     </p>
                   </div>
                 </div>
-                <div className="flex gap-2">
-                  <Button
-                    className="flex-1 bg-gradient-to-r from-purple-500 to-pink-500 text-white"
-                    size="sm"
-                    onClick={() => handleViewSubtree(selectedNode)}
-                  >
-                    <ChevronDown className="h-4 w-4 mr-1" />
-                    View Subtree
-                  </Button>
-                </div>
+                <Button
+                  className="w-full bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 text-white"
+                  size="sm"
+                  onClick={() => handleViewSubtree(selectedNode)}
+                >
+                  <ChevronDown className="h-4 w-4 mr-1" />
+                  View Subtree
+                </Button>
               </CardContent>
             </Card>
           )}
 
-          <Card className="border-0 shadow-xl">
-            <CardHeader>
-              <CardTitle className="text-lg">Legend</CardTitle>
+          <Card className="border-0 shadow-xl bg-gradient-to-br from-white to-slate-50">
+            <CardHeader className="pb-3">
+              <CardTitle className="text-lg font-semibold text-gray-800">Legend</CardTitle>
             </CardHeader>
-            <CardContent className="space-y-2">
-              <div className="flex items-center gap-2">
-                <div className="w-4 h-4 rounded-full bg-gradient-to-r from-purple-500 to-pink-500"></div>
-                <span className="text-sm">Active User</span>
+            <CardContent className="space-y-3">
+              <div className="flex items-center gap-3 p-2 rounded-lg bg-gradient-to-r from-purple-50 to-pink-50">
+                <div className="w-5 h-5 rounded-full bg-gradient-to-br from-amber-400 via-orange-500 to-red-500 shadow"></div>
+                <span className="text-sm font-medium text-gray-700">Root User</span>
               </div>
-              <div className="flex items-center gap-2">
-                <div className="w-4 h-4 rounded-full bg-gradient-to-r from-gray-400 to-gray-500"></div>
-                <span className="text-sm">Inactive User</span>
+              <div className="flex items-center gap-3 p-2 rounded-lg bg-gradient-to-r from-purple-50 to-pink-50">
+                <div className="w-5 h-5 rounded-full bg-gradient-to-br from-purple-500 via-pink-500 to-rose-500 shadow"></div>
+                <span className="text-sm font-medium text-gray-700">Active User</span>
               </div>
-              <div className="flex items-center gap-2">
-                <div className="w-4 h-4 rounded-full border-2 border-dashed border-gray-300"></div>
-                <span className="text-sm">Empty Position</span>
+              <div className="flex items-center gap-3 p-2 rounded-lg bg-gray-50">
+                <div className="w-5 h-5 rounded-full bg-gradient-to-br from-gray-400 to-gray-600 shadow"></div>
+                <span className="text-sm font-medium text-gray-700">Inactive User</span>
               </div>
-              <div className="flex items-center gap-2">
-                <div className="w-4 h-1 bg-green-400"></div>
-                <span className="text-sm">Left Child Link</span>
+              <div className="flex items-center gap-3 p-2 rounded-lg bg-gray-50">
+                <div className="w-5 h-5 rounded-full border-2 border-dashed border-gray-300 bg-gray-50"></div>
+                <span className="text-sm font-medium text-gray-700">Empty Position</span>
               </div>
-              <div className="flex items-center gap-2">
-                <div className="w-4 h-1 bg-blue-400"></div>
-                <span className="text-sm">Right Child Link</span>
+              <div className="flex items-center gap-3 p-2 rounded-lg bg-green-50">
+                <div className="w-8 h-1.5 bg-gradient-to-r from-green-500 to-green-400 rounded-full"></div>
+                <span className="text-sm font-medium text-gray-700">Left Child Link</span>
+              </div>
+              <div className="flex items-center gap-3 p-2 rounded-lg bg-blue-50">
+                <div className="w-8 h-1.5 bg-gradient-to-r from-blue-400 to-blue-500 rounded-full"></div>
+                <span className="text-sm font-medium text-gray-700">Right Child Link</span>
               </div>
             </CardContent>
           </Card>

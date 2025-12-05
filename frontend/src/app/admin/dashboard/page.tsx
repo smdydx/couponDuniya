@@ -24,6 +24,8 @@ import {
   Clock,
   CheckCircle,
   AlertCircle,
+  ImageIcon,
+  RefreshCw,
 } from "lucide-react";
 import { LoadingSpinner } from "@/components/common/LoadingSpinner";
 
@@ -36,10 +38,26 @@ interface DashboardStats {
   redis: { connected: boolean; keys_count: number; memory_used: string; connected_clients: number };
 }
 
+interface RecentMerchant {
+  id: number;
+  name: string;
+  logo_url: string | null;
+  is_active: boolean;
+}
+
+interface RecentOffer {
+  id: number;
+  title: string;
+  image_url: string | null;
+  merchant_name: string;
+}
+
 export default function AdminDashboard() {
   const [stats, setStats] = useState<DashboardStats | null>(null);
   const [loading, setLoading] = useState(true);
   const [mounted, setMounted] = useState(false);
+  const [recentMerchants, setRecentMerchants] = useState<RecentMerchant[]>([]);
+  const [recentOffers, setRecentOffers] = useState<RecentOffer[]>([]);
 
   useEffect(() => {
     setMounted(true);
@@ -48,22 +66,42 @@ export default function AdminDashboard() {
   useEffect(() => {
     if (!mounted) return;
     
-    const fetchDashboardStats = async () => {
+    const fetchDashboardData = async () => {
       try {
-        const response = await fetch("http://localhost:8000/api/v1/admin/analytics/dashboard");
-        const data = await response.json();
+        const [statsResponse, merchantsResponse, offersResponse] = await Promise.all([
+          fetch("http://localhost:8000/api/v1/admin/analytics/dashboard"),
+          fetch("http://localhost:8000/api/v1/admin/merchants?limit=5"),
+          fetch("http://localhost:8000/api/v1/admin/offers?limit=5"),
+        ]);
         
-        if (data.success) {
-          setStats(data.data);
+        const statsData = await statsResponse.json();
+        const merchantsData = await merchantsResponse.json();
+        const offersData = await offersResponse.json();
+        
+        if (statsData.success) {
+          setStats(statsData.data);
+        }
+        
+        if (merchantsData.success && merchantsData.data?.merchants) {
+          setRecentMerchants(merchantsData.data.merchants);
+        }
+        
+        if (offersData.success && offersData.data?.offers) {
+          setRecentOffers(offersData.data.offers.map((o: any) => ({
+            id: o.id,
+            title: o.title,
+            image_url: o.image_url,
+            merchant_name: o.merchant?.name || "Unknown",
+          })));
         }
       } catch (error) {
-        console.error("Failed to fetch dashboard stats:", error);
+        console.error("Failed to fetch dashboard data:", error);
       } finally {
         setLoading(false);
       }
     };
 
-    fetchDashboardStats();
+    fetchDashboardData();
   }, [mounted]);
 
   if (!mounted) {
@@ -130,39 +168,35 @@ export default function AdminDashboard() {
       title: "Active Offers",
       value: stats.catalog.active_offers,
       icon: Tag,
-      color: "text-pink-600",
-      bgColor: "bg-pink-100",
+      gradient: "from-pink-500 to-rose-500",
     },
     {
       title: "Active Products",
       value: stats.catalog.available_products,
       icon: Package,
-      color: "text-indigo-600",
-      bgColor: "bg-indigo-100",
+      gradient: "from-indigo-500 to-violet-500",
     },
     {
       title: "Pending Withdrawals",
       value: stats.withdrawals.pending_count,
       icon: Wallet,
-      color: "text-amber-600",
-      bgColor: "bg-amber-100",
+      gradient: "from-amber-500 to-yellow-500",
     },
     {
       title: "Pending Amount",
       value: `₹${stats.withdrawals.pending_amount.toLocaleString()}`,
       icon: DollarSign,
-      color: "text-rose-600",
-      bgColor: "bg-rose-100",
+      gradient: "from-rose-500 to-red-500",
     },
   ];
 
   const quickActions = [
-    { title: "Add Merchant", href: "/admin/merchants", icon: Store, color: "bg-purple-500 hover:bg-purple-600" },
-    { title: "Add Offer", href: "/admin/offers", icon: Tag, color: "bg-blue-500 hover:bg-blue-600" },
-    { title: "Add Product", href: "/admin/products", icon: Gift, color: "bg-emerald-500 hover:bg-emerald-600" },
-    { title: "View Users", href: "/admin/users", icon: Users, color: "bg-orange-500 hover:bg-orange-600" },
-    { title: "Manage Orders", href: "/admin/orders", icon: ShoppingCart, color: "bg-pink-500 hover:bg-pink-600" },
-    { title: "Referrals", href: "/admin/referrals", icon: Network, color: "bg-indigo-500 hover:bg-indigo-600" },
+    { title: "Add Merchant", href: "/admin/merchants", icon: Store, color: "bg-gradient-to-br from-purple-500 to-indigo-600 hover:from-purple-600 hover:to-indigo-700" },
+    { title: "Add Offer", href: "/admin/offers", icon: Tag, color: "bg-gradient-to-br from-blue-500 to-cyan-600 hover:from-blue-600 hover:to-cyan-700" },
+    { title: "Add Product", href: "/admin/products", icon: Gift, color: "bg-gradient-to-br from-emerald-500 to-teal-600 hover:from-emerald-600 hover:to-teal-700" },
+    { title: "View Users", href: "/admin/users", icon: Users, color: "bg-gradient-to-br from-orange-500 to-amber-600 hover:from-orange-600 hover:to-amber-700" },
+    { title: "Manage Orders", href: "/admin/orders", icon: ShoppingCart, color: "bg-gradient-to-br from-pink-500 to-rose-600 hover:from-pink-600 hover:to-rose-700" },
+    { title: "Referrals", href: "/admin/referrals", icon: Network, color: "bg-gradient-to-br from-violet-500 to-purple-600 hover:from-violet-600 hover:to-purple-700" },
   ];
 
   return (
@@ -210,28 +244,30 @@ export default function AdminDashboard() {
         {secondaryStats.map((stat, index) => {
           const Icon = stat.icon;
           return (
-            <Card key={index} className="border shadow-md hover:shadow-lg transition-shadow">
-              <CardContent className="p-6">
-                <div className="flex items-center gap-4">
-                  <div className={`rounded-xl p-3 ${stat.bgColor}`}>
-                    <Icon className={`h-6 w-6 ${stat.color}`} />
-                  </div>
+            <Card key={index} className="border-0 shadow-lg hover:shadow-xl transition-all duration-300 overflow-hidden">
+              <div className={`bg-gradient-to-br ${stat.gradient} p-5`}>
+                <div className="flex items-center justify-between text-white">
                   <div>
-                    <p className="text-2xl font-bold text-gray-800">{stat.value}</p>
-                    <p className="text-sm text-gray-500">{stat.title}</p>
+                    <p className="text-3xl font-bold">{stat.value}</p>
+                    <p className="text-sm font-medium text-white/80 mt-1">{stat.title}</p>
+                  </div>
+                  <div className="rounded-xl p-3 bg-white/20 backdrop-blur-sm">
+                    <Icon className="h-7 w-7" />
                   </div>
                 </div>
-              </CardContent>
+              </div>
             </Card>
           );
         })}
       </div>
 
       <div className="grid gap-6 lg:grid-cols-2">
-        <Card className="border-0 shadow-xl bg-gradient-to-br from-white to-purple-50">
+        <Card className="border-0 shadow-xl bg-gradient-to-br from-white via-purple-50 to-indigo-50">
           <CardHeader className="pb-4">
             <CardTitle className="flex items-center gap-2 text-lg">
-              <Activity className="h-5 w-5 text-purple-600" />
+              <div className="p-2 rounded-lg bg-gradient-to-r from-purple-500 to-indigo-500">
+                <Activity className="h-5 w-5 text-white" />
+              </div>
               Quick Actions
             </CardTitle>
           </CardHeader>
@@ -242,7 +278,7 @@ export default function AdminDashboard() {
                 return (
                   <Link key={index} href={action.href}>
                     <Button
-                      className={`w-full h-auto py-4 flex flex-col gap-2 ${action.color} text-white shadow-lg hover:shadow-xl transition-all`}
+                      className={`w-full h-auto py-4 flex flex-col gap-2 ${action.color} text-white shadow-lg hover:shadow-xl transition-all border-0`}
                     >
                       <Icon className="h-6 w-6" />
                       <span className="text-xs font-medium">{action.title}</span>
@@ -254,15 +290,17 @@ export default function AdminDashboard() {
           </CardContent>
         </Card>
 
-        <Card className="border-0 shadow-xl bg-gradient-to-br from-white to-blue-50">
+        <Card className="border-0 shadow-xl bg-gradient-to-br from-white via-blue-50 to-cyan-50">
           <CardHeader className="pb-4">
             <CardTitle className="flex items-center gap-2 text-lg">
-              <BarChart3 className="h-5 w-5 text-blue-600" />
+              <div className="p-2 rounded-lg bg-gradient-to-r from-blue-500 to-cyan-500">
+                <BarChart3 className="h-5 w-5 text-white" />
+              </div>
               Today&apos;s Summary
             </CardTitle>
           </CardHeader>
           <CardContent className="space-y-4">
-            <div className="flex items-center justify-between p-4 rounded-xl bg-gradient-to-r from-blue-500 to-cyan-500 text-white">
+            <div className="flex items-center justify-between p-4 rounded-xl bg-gradient-to-r from-blue-500 to-cyan-500 text-white shadow-lg">
               <div className="flex items-center gap-3">
                 <div className="p-2 bg-white/20 rounded-lg">
                   <ShoppingCart className="h-5 w-5" />
@@ -279,7 +317,7 @@ export default function AdminDashboard() {
               </Link>
             </div>
 
-            <div className="flex items-center justify-between p-4 rounded-xl bg-gradient-to-r from-emerald-500 to-teal-500 text-white">
+            <div className="flex items-center justify-between p-4 rounded-xl bg-gradient-to-r from-emerald-500 to-teal-500 text-white shadow-lg">
               <div className="flex items-center gap-3">
                 <div className="p-2 bg-white/20 rounded-lg">
                   <DollarSign className="h-5 w-5" />
@@ -296,7 +334,7 @@ export default function AdminDashboard() {
               </Link>
             </div>
 
-            <div className="flex items-center justify-between p-4 rounded-xl bg-gradient-to-r from-violet-500 to-purple-500 text-white">
+            <div className="flex items-center justify-between p-4 rounded-xl bg-gradient-to-r from-violet-500 to-purple-500 text-white shadow-lg">
               <div className="flex items-center gap-3">
                 <div className="p-2 bg-white/20 rounded-lg">
                   <UserPlus className="h-5 w-5" />
@@ -317,25 +355,25 @@ export default function AdminDashboard() {
       </div>
 
       <div className="grid gap-6 lg:grid-cols-3">
-        <Card className="border-0 shadow-xl">
-          <CardHeader className="bg-gradient-to-r from-orange-500 to-amber-500 text-white rounded-t-lg">
+        <Card className="border-0 shadow-xl overflow-hidden">
+          <CardHeader className="bg-gradient-to-r from-orange-500 to-amber-500 text-white">
             <CardTitle className="flex items-center gap-2 text-lg">
               <Wallet className="h-5 w-5" />
               Pending Withdrawals
             </CardTitle>
           </CardHeader>
-          <CardContent className="p-6">
+          <CardContent className="p-6 bg-gradient-to-br from-orange-50 to-amber-50">
             <div className="space-y-4">
-              <div className="flex items-center justify-between">
-                <span className="text-gray-600">Pending Count</span>
+              <div className="flex items-center justify-between p-3 bg-white rounded-lg shadow-sm">
+                <span className="text-gray-600 font-medium">Pending Count</span>
                 <span className="text-2xl font-bold text-orange-600">{stats.withdrawals.pending_count}</span>
               </div>
-              <div className="flex items-center justify-between">
-                <span className="text-gray-600">Pending Amount</span>
+              <div className="flex items-center justify-between p-3 bg-white rounded-lg shadow-sm">
+                <span className="text-gray-600 font-medium">Pending Amount</span>
                 <span className="text-2xl font-bold text-amber-600">₹{stats.withdrawals.pending_amount.toLocaleString()}</span>
               </div>
               <Link href="/admin/withdrawals">
-                <Button className="w-full bg-gradient-to-r from-orange-500 to-amber-500 hover:from-orange-600 hover:to-amber-600">
+                <Button className="w-full bg-gradient-to-r from-orange-500 to-amber-500 hover:from-orange-600 hover:to-amber-600 shadow-lg">
                   Manage Withdrawals <ArrowRight className="h-4 w-4 ml-2" />
                 </Button>
               </Link>
@@ -343,66 +381,152 @@ export default function AdminDashboard() {
           </CardContent>
         </Card>
 
-        <Card className="border-0 shadow-xl">
-          <CardHeader className="bg-gradient-to-r from-purple-500 to-pink-500 text-white rounded-t-lg">
+        <Card className="border-0 shadow-xl overflow-hidden">
+          <CardHeader className="bg-gradient-to-r from-purple-500 to-pink-500 text-white">
             <CardTitle className="flex items-center gap-2 text-lg">
               <Store className="h-5 w-5" />
               Catalog Status
             </CardTitle>
           </CardHeader>
-          <CardContent className="p-6">
+          <CardContent className="p-6 bg-gradient-to-br from-purple-50 to-pink-50">
             <div className="space-y-4">
-              <div className="flex items-center justify-between">
-                <span className="text-gray-600">Active Merchants</span>
+              <div className="flex items-center justify-between p-3 bg-white rounded-lg shadow-sm">
+                <span className="text-gray-600 font-medium">Active Merchants</span>
                 <span className="text-2xl font-bold text-purple-600">{stats.catalog.active_merchants}</span>
               </div>
-              <div className="flex items-center justify-between">
-                <span className="text-gray-600">Active Offers</span>
+              <div className="flex items-center justify-between p-3 bg-white rounded-lg shadow-sm">
+                <span className="text-gray-600 font-medium">Active Offers</span>
                 <span className="text-2xl font-bold text-pink-600">{stats.catalog.active_offers}</span>
               </div>
-              <div className="flex items-center justify-between">
-                <span className="text-gray-600">Active Products</span>
+              <div className="flex items-center justify-between p-3 bg-white rounded-lg shadow-sm">
+                <span className="text-gray-600 font-medium">Active Products</span>
                 <span className="text-2xl font-bold text-indigo-600">{stats.catalog.available_products}</span>
               </div>
             </div>
           </CardContent>
         </Card>
 
-        <Card className="border-0 shadow-xl">
-          <CardHeader className="bg-gradient-to-r from-emerald-500 to-teal-500 text-white rounded-t-lg">
+        <Card className="border-0 shadow-xl overflow-hidden">
+          <CardHeader className="bg-gradient-to-r from-emerald-500 to-teal-500 text-white">
             <CardTitle className="flex items-center gap-2 text-lg">
               <Activity className="h-5 w-5" />
               System Status
             </CardTitle>
           </CardHeader>
-          <CardContent className="p-6">
+          <CardContent className="p-6 bg-gradient-to-br from-emerald-50 to-teal-50">
             <div className="space-y-4">
-              <div className="flex items-center justify-between">
-                <span className="text-gray-600">Redis Status</span>
+              <div className="flex items-center justify-between p-3 bg-white rounded-lg shadow-sm">
+                <span className="text-gray-600 font-medium">Redis Status</span>
                 <span className={`flex items-center gap-1 font-semibold ${stats.redis.connected ? 'text-green-600' : 'text-red-600'}`}>
                   {stats.redis.connected ? (
                     <><CheckCircle className="h-4 w-4" /> Connected</>
                   ) : (
-                    <><AlertCircle className="h-4 w-4" /> Disconnected</>
+                    <><AlertCircle className="h-4 w-4" /> Offline</>
                   )}
                 </span>
               </div>
-              <div className="flex items-center justify-between">
-                <span className="text-gray-600">Cache Keys</span>
+              <div className="flex items-center justify-between p-3 bg-white rounded-lg shadow-sm">
+                <span className="text-gray-600 font-medium">Cache Keys</span>
                 <span className="text-lg font-bold text-teal-600">{stats.redis.keys_count}</span>
               </div>
-              <div className="flex items-center justify-between">
-                <span className="text-gray-600">Memory Used</span>
+              <div className="flex items-center justify-between p-3 bg-white rounded-lg shadow-sm">
+                <span className="text-gray-600 font-medium">Memory Used</span>
                 <span className="text-lg font-bold text-emerald-600">{stats.redis.memory_used}</span>
-              </div>
-              <div className="flex items-center justify-between">
-                <span className="text-gray-600">Connected Clients</span>
-                <span className="text-lg font-bold text-cyan-600">{stats.redis.connected_clients}</span>
               </div>
             </div>
           </CardContent>
         </Card>
       </div>
+
+      {(recentMerchants.length > 0 || recentOffers.length > 0) && (
+        <div className="grid gap-6 lg:grid-cols-2">
+          {recentMerchants.length > 0 && (
+            <Card className="border-0 shadow-xl overflow-hidden">
+              <CardHeader className="bg-gradient-to-r from-indigo-500 to-blue-500 text-white">
+                <CardTitle className="flex items-center gap-2 text-lg">
+                  <Store className="h-5 w-5" />
+                  Recent Merchants
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="p-4 bg-gradient-to-br from-indigo-50 to-blue-50">
+                <div className="space-y-3">
+                  {recentMerchants.map((merchant) => (
+                    <div key={merchant.id} className="flex items-center gap-3 p-3 bg-white rounded-lg shadow-sm hover:shadow-md transition-shadow">
+                      {merchant.logo_url ? (
+                        <img 
+                          src={merchant.logo_url} 
+                          alt={merchant.name}
+                          className="w-12 h-12 rounded-lg object-contain border bg-white"
+                          onError={(e) => {
+                            (e.target as HTMLImageElement).style.display = 'none';
+                            (e.target as HTMLImageElement).nextElementSibling?.classList.remove('hidden');
+                          }}
+                        />
+                      ) : null}
+                      <div className={`w-12 h-12 rounded-lg bg-gradient-to-br from-indigo-400 to-blue-500 flex items-center justify-center text-white font-bold ${merchant.logo_url ? 'hidden' : ''}`}>
+                        {merchant.name.charAt(0).toUpperCase()}
+                      </div>
+                      <div className="flex-1">
+                        <p className="font-semibold text-gray-800">{merchant.name}</p>
+                        <p className={`text-xs ${merchant.is_active ? 'text-green-600' : 'text-gray-400'}`}>
+                          {merchant.is_active ? 'Active' : 'Inactive'}
+                        </p>
+                      </div>
+                      <Link href={`/admin/merchants`}>
+                        <Button size="sm" variant="ghost" className="text-indigo-600 hover:text-indigo-800 hover:bg-indigo-100">
+                          <Eye className="h-4 w-4" />
+                        </Button>
+                      </Link>
+                    </div>
+                  ))}
+                </div>
+              </CardContent>
+            </Card>
+          )}
+
+          {recentOffers.length > 0 && (
+            <Card className="border-0 shadow-xl overflow-hidden">
+              <CardHeader className="bg-gradient-to-r from-rose-500 to-pink-500 text-white">
+                <CardTitle className="flex items-center gap-2 text-lg">
+                  <Tag className="h-5 w-5" />
+                  Recent Offers
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="p-4 bg-gradient-to-br from-rose-50 to-pink-50">
+                <div className="space-y-3">
+                  {recentOffers.map((offer) => (
+                    <div key={offer.id} className="flex items-center gap-3 p-3 bg-white rounded-lg shadow-sm hover:shadow-md transition-shadow">
+                      {offer.image_url ? (
+                        <img 
+                          src={offer.image_url} 
+                          alt={offer.title}
+                          className="w-12 h-12 rounded-lg object-cover border"
+                          onError={(e) => {
+                            (e.target as HTMLImageElement).style.display = 'none';
+                            (e.target as HTMLImageElement).nextElementSibling?.classList.remove('hidden');
+                          }}
+                        />
+                      ) : null}
+                      <div className={`w-12 h-12 rounded-lg bg-gradient-to-br from-rose-400 to-pink-500 flex items-center justify-center ${offer.image_url ? 'hidden' : ''}`}>
+                        <Tag className="h-6 w-6 text-white" />
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <p className="font-semibold text-gray-800 truncate">{offer.title}</p>
+                        <p className="text-xs text-gray-500">{offer.merchant_name}</p>
+                      </div>
+                      <Link href={`/admin/offers`}>
+                        <Button size="sm" variant="ghost" className="text-rose-600 hover:text-rose-800 hover:bg-rose-100">
+                          <Eye className="h-4 w-4" />
+                        </Button>
+                      </Link>
+                    </div>
+                  ))}
+                </div>
+              </CardContent>
+            </Card>
+          )}
+        </div>
+      )}
     </div>
   );
 }
