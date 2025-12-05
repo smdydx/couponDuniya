@@ -361,15 +361,15 @@ export default function AdminMerchantsPage() {
       </Card>
 
       <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
-        <DialogContent className="sm:max-w-lg">
-          <DialogHeader>
-            <DialogTitle>
+        <DialogContent className="sm:max-w-md md:max-w-lg">
+          <DialogHeader className="pb-4 border-b">
+            <DialogTitle className="text-xl font-semibold">
               {editingMerchant ? "Edit Merchant" : "Add New Merchant"}
             </DialogTitle>
           </DialogHeader>
-          <div className="grid gap-4 py-4">
+          <div className="grid gap-5 py-4 max-h-[60vh] overflow-y-auto pr-1">
             <div className="grid gap-2">
-              <Label htmlFor="name">Name *</Label>
+              <Label htmlFor="name" className="text-sm font-medium">Name *</Label>
               <Input
                 id="name"
                 value={formData.name}
@@ -382,10 +382,11 @@ export default function AdminMerchantsPage() {
                   }));
                 }}
                 placeholder="Enter merchant name"
+                className="h-11"
               />
             </div>
             <div className="grid gap-2">
-              <Label htmlFor="slug">Slug *</Label>
+              <Label htmlFor="slug" className="text-sm font-medium">Slug *</Label>
               <Input
                 id="slug"
                 value={formData.slug}
@@ -393,10 +394,11 @@ export default function AdminMerchantsPage() {
                   setFormData((prev) => ({ ...prev, slug: e.target.value }))
                 }
                 placeholder="merchant-url-slug"
+                className="h-11"
               />
             </div>
             <div className="grid gap-2">
-              <Label htmlFor="description">Description</Label>
+              <Label htmlFor="description" className="text-sm font-medium">Description</Label>
               <Textarea
                 id="description"
                 value={formData.description}
@@ -405,6 +407,7 @@ export default function AdminMerchantsPage() {
                 }
                 placeholder="Brief description about the merchant"
                 rows={3}
+                className="resize-none"
               />
             </div>
             <ImageUploader
@@ -414,10 +417,10 @@ export default function AdminMerchantsPage() {
               category="merchants"
               aspectRatio="square"
             />
-            <div className="flex items-center justify-between rounded-lg border p-4">
+            <div className="flex items-center justify-between rounded-xl border border-gray-200 p-4 bg-gray-50/50">
               <div className="space-y-0.5">
-                <Label>Active</Label>
-                <p className="text-xs text-muted-foreground">
+                <Label className="text-sm font-medium">Active</Label>
+                <p className="text-xs text-gray-500">
                   Show this merchant on the website
                 </p>
               </div>
@@ -428,10 +431,10 @@ export default function AdminMerchantsPage() {
                 }
               />
             </div>
-            <div className="flex items-center justify-between rounded-lg border p-4">
+            <div className="flex items-center justify-between rounded-xl border border-gray-200 p-4 bg-gray-50/50">
               <div className="space-y-0.5">
-                <Label>Featured</Label>
-                <p className="text-xs text-muted-foreground">
+                <Label className="text-sm font-medium">Featured</Label>
+                <p className="text-xs text-gray-500">
                   Display on homepage and featured sections
                 </p>
               </div>
@@ -443,11 +446,15 @@ export default function AdminMerchantsPage() {
               />
             </div>
           </div>
-          <DialogFooter>
-            <Button variant="outline" onClick={() => setDialogOpen(false)}>
+          <DialogFooter className="pt-4 border-t gap-2 sm:gap-0">
+            <Button variant="outline" onClick={() => setDialogOpen(false)} className="w-full sm:w-auto">
               Cancel
             </Button>
-            <Button onClick={handleSave} disabled={saving || !formData.name || !formData.slug}>
+            <Button 
+              onClick={handleSave} 
+              disabled={saving || !formData.name || !formData.slug}
+              className="w-full sm:w-auto bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700"
+            >
               {saving ? "Saving..." : editingMerchant ? "Update" : "Create"}
             </Button>
           </DialogFooter>

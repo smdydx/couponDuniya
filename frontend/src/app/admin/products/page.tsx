@@ -368,22 +368,22 @@ export default function AdminProductsPage() {
       </Card>
 
       <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
-        <DialogContent className="sm:max-w-lg">
-          <DialogHeader>
-            <DialogTitle>
+        <DialogContent className="sm:max-w-md md:max-w-lg">
+          <DialogHeader className="pb-4 border-b">
+            <DialogTitle className="text-xl font-semibold">
               {editingProduct ? "Edit Product" : "Add New Product"}
             </DialogTitle>
           </DialogHeader>
-          <div className="grid gap-4 py-4 max-h-[60vh] overflow-y-auto">
+          <div className="grid gap-5 py-4 max-h-[60vh] overflow-y-auto pr-1">
             <div className="grid gap-2">
-              <Label htmlFor="merchant">Merchant *</Label>
+              <Label htmlFor="merchant" className="text-sm font-medium">Merchant *</Label>
               <Select
                 value={String(formData.merchant_id)}
                 onValueChange={(value) =>
                   setFormData((prev) => ({ ...prev, merchant_id: parseInt(value) }))
                 }
               >
-                <SelectTrigger>
+                <SelectTrigger className="h-11">
                   <SelectValue placeholder="Select merchant" />
                 </SelectTrigger>
                 <SelectContent>
@@ -396,7 +396,7 @@ export default function AdminProductsPage() {
               </Select>
             </div>
             <div className="grid gap-2">
-              <Label htmlFor="name">Name *</Label>
+              <Label htmlFor="name" className="text-sm font-medium">Name *</Label>
               <Input
                 id="name"
                 value={formData.name}
@@ -409,10 +409,11 @@ export default function AdminProductsPage() {
                   }));
                 }}
                 placeholder="Product name"
+                className="h-11"
               />
             </div>
             <div className="grid gap-2">
-              <Label htmlFor="slug">Slug *</Label>
+              <Label htmlFor="slug" className="text-sm font-medium">Slug *</Label>
               <Input
                 id="slug"
                 value={formData.slug}
@@ -420,10 +421,11 @@ export default function AdminProductsPage() {
                   setFormData((prev) => ({ ...prev, slug: e.target.value }))
                 }
                 placeholder="product-url-slug"
+                className="h-11"
               />
             </div>
             <div className="grid gap-2">
-              <Label htmlFor="description">Description</Label>
+              <Label htmlFor="description" className="text-sm font-medium">Description</Label>
               <Textarea
                 id="description"
                 value={formData.description}
@@ -432,11 +434,12 @@ export default function AdminProductsPage() {
                 }
                 placeholder="Product description"
                 rows={3}
+                className="resize-none"
               />
             </div>
             <div className="grid grid-cols-2 gap-4">
               <div className="grid gap-2">
-                <Label htmlFor="price">Price *</Label>
+                <Label htmlFor="price" className="text-sm font-medium">Price *</Label>
                 <Input
                   id="price"
                   type="number"
@@ -447,10 +450,11 @@ export default function AdminProductsPage() {
                     setFormData((prev) => ({ ...prev, price: parseFloat(e.target.value) || 0 }))
                   }
                   placeholder="0.00"
+                  className="h-11"
                 />
               </div>
               <div className="grid gap-2">
-                <Label htmlFor="stock">Stock</Label>
+                <Label htmlFor="stock" className="text-sm font-medium">Stock</Label>
                 <Input
                   id="stock"
                   type="number"
@@ -460,6 +464,7 @@ export default function AdminProductsPage() {
                     setFormData((prev) => ({ ...prev, stock: parseInt(e.target.value) || 0 }))
                   }
                   placeholder="0"
+                  className="h-11"
                 />
               </div>
             </div>
@@ -470,10 +475,10 @@ export default function AdminProductsPage() {
               category="products"
               aspectRatio="square"
             />
-            <div className="flex items-center justify-between rounded-lg border p-4">
+            <div className="flex items-center justify-between rounded-xl border border-gray-200 p-4 bg-gray-50/50">
               <div className="space-y-0.5">
-                <Label>Active</Label>
-                <p className="text-xs text-muted-foreground">
+                <Label className="text-sm font-medium">Active</Label>
+                <p className="text-xs text-gray-500">
                   Show this product on the website
                 </p>
               </div>
@@ -485,11 +490,15 @@ export default function AdminProductsPage() {
               />
             </div>
           </div>
-          <DialogFooter>
-            <Button variant="outline" onClick={() => setDialogOpen(false)}>
+          <DialogFooter className="pt-4 border-t gap-2 sm:gap-0">
+            <Button variant="outline" onClick={() => setDialogOpen(false)} className="w-full sm:w-auto">
               Cancel
             </Button>
-            <Button onClick={handleSave} disabled={saving || !formData.name || !formData.slug || !formData.merchant_id}>
+            <Button 
+              onClick={handleSave} 
+              disabled={saving || !formData.name || !formData.slug || !formData.merchant_id}
+              className="w-full sm:w-auto bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700"
+            >
               {saving ? "Saving..." : editingProduct ? "Update" : "Create"}
             </Button>
           </DialogFooter>

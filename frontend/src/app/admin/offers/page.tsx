@@ -361,22 +361,22 @@ export default function AdminOffersPage() {
       </Card>
 
       <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
-        <DialogContent className="sm:max-w-lg">
-          <DialogHeader>
-            <DialogTitle>
+        <DialogContent className="sm:max-w-md md:max-w-lg">
+          <DialogHeader className="pb-4 border-b">
+            <DialogTitle className="text-xl font-semibold">
               {editingOffer ? "Edit Offer" : "Add New Offer"}
             </DialogTitle>
           </DialogHeader>
-          <div className="grid gap-4 py-4 max-h-[60vh] overflow-y-auto">
+          <div className="grid gap-5 py-4 max-h-[60vh] overflow-y-auto pr-1">
             <div className="grid gap-2">
-              <Label htmlFor="merchant">Merchant *</Label>
+              <Label htmlFor="merchant" className="text-sm font-medium">Merchant *</Label>
               <Select
                 value={String(formData.merchant_id)}
                 onValueChange={(value) =>
                   setFormData((prev) => ({ ...prev, merchant_id: parseInt(value) }))
                 }
               >
-                <SelectTrigger>
+                <SelectTrigger className="h-11">
                   <SelectValue placeholder="Select merchant" />
                 </SelectTrigger>
                 <SelectContent>
@@ -389,7 +389,7 @@ export default function AdminOffersPage() {
               </Select>
             </div>
             <div className="grid gap-2">
-              <Label htmlFor="title">Title *</Label>
+              <Label htmlFor="title" className="text-sm font-medium">Title *</Label>
               <Input
                 id="title"
                 value={formData.title}
@@ -397,10 +397,11 @@ export default function AdminOffersPage() {
                   setFormData((prev) => ({ ...prev, title: e.target.value }))
                 }
                 placeholder="Enter offer title"
+                className="h-11"
               />
             </div>
             <div className="grid gap-2">
-              <Label htmlFor="description">Description</Label>
+              <Label htmlFor="description" className="text-sm font-medium">Description</Label>
               <Textarea
                 id="description"
                 value={formData.description}
@@ -409,10 +410,11 @@ export default function AdminOffersPage() {
                 }
                 placeholder="Offer description"
                 rows={3}
+                className="resize-none"
               />
             </div>
             <div className="grid gap-2">
-              <Label htmlFor="code">Coupon Code</Label>
+              <Label htmlFor="code" className="text-sm font-medium">Coupon Code</Label>
               <Input
                 id="code"
                 value={formData.code}
@@ -420,6 +422,7 @@ export default function AdminOffersPage() {
                   setFormData((prev) => ({ ...prev, code: e.target.value.toUpperCase() }))
                 }
                 placeholder="SAVE20"
+                className="h-11 font-mono"
               />
             </div>
             <ImageUploader
@@ -430,7 +433,7 @@ export default function AdminOffersPage() {
               aspectRatio="video"
             />
             <div className="grid gap-2">
-              <Label htmlFor="priority">Priority</Label>
+              <Label htmlFor="priority" className="text-sm font-medium">Priority</Label>
               <Input
                 id="priority"
                 type="number"
@@ -440,13 +443,14 @@ export default function AdminOffersPage() {
                   setFormData((prev) => ({ ...prev, priority: parseInt(e.target.value) || 0 }))
                 }
                 placeholder="0"
+                className="h-11"
               />
-              <p className="text-xs text-muted-foreground">Higher priority offers appear first</p>
+              <p className="text-xs text-gray-500">Higher priority offers appear first</p>
             </div>
-            <div className="flex items-center justify-between rounded-lg border p-4">
+            <div className="flex items-center justify-between rounded-xl border border-gray-200 p-4 bg-gray-50/50">
               <div className="space-y-0.5">
-                <Label>Active</Label>
-                <p className="text-xs text-muted-foreground">
+                <Label className="text-sm font-medium">Active</Label>
+                <p className="text-xs text-gray-500">
                   Show this offer on the website
                 </p>
               </div>
@@ -458,11 +462,15 @@ export default function AdminOffersPage() {
               />
             </div>
           </div>
-          <DialogFooter>
-            <Button variant="outline" onClick={() => setDialogOpen(false)}>
+          <DialogFooter className="pt-4 border-t gap-2 sm:gap-0">
+            <Button variant="outline" onClick={() => setDialogOpen(false)} className="w-full sm:w-auto">
               Cancel
             </Button>
-            <Button onClick={handleSave} disabled={saving || !formData.title || !formData.merchant_id}>
+            <Button 
+              onClick={handleSave} 
+              disabled={saving || !formData.title || !formData.merchant_id}
+              className="w-full sm:w-auto bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700"
+            >
               {saving ? "Saving..." : editingOffer ? "Update" : "Create"}
             </Button>
           </DialogFooter>

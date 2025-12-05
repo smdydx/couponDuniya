@@ -276,15 +276,15 @@ export default function AdminBannersPage() {
       </Card>
 
       <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
-        <DialogContent className="sm:max-w-lg">
-          <DialogHeader>
-            <DialogTitle>
+        <DialogContent className="sm:max-w-md md:max-w-lg">
+          <DialogHeader className="pb-4 border-b">
+            <DialogTitle className="text-xl font-semibold">
               {editingBanner ? "Edit Banner" : "Add New Banner"}
             </DialogTitle>
           </DialogHeader>
-          <div className="grid gap-4 py-4 max-h-[60vh] overflow-y-auto">
+          <div className="grid gap-5 py-4 max-h-[60vh] overflow-y-auto pr-1">
             <div className="grid gap-2">
-              <Label htmlFor="title">Title *</Label>
+              <Label htmlFor="title" className="text-sm font-medium">Title *</Label>
               <Input
                 id="title"
                 value={formData.title}
@@ -292,6 +292,7 @@ export default function AdminBannersPage() {
                   setFormData((prev) => ({ ...prev, title: e.target.value }))
                 }
                 placeholder="Enter banner title"
+                className="h-11"
               />
             </div>
             <ImageUploader
@@ -302,7 +303,7 @@ export default function AdminBannersPage() {
               aspectRatio="banner"
             />
             <div className="grid gap-2">
-              <Label htmlFor="link_url">Link URL (optional)</Label>
+              <Label htmlFor="link_url" className="text-sm font-medium">Link URL (optional)</Label>
               <Input
                 id="link_url"
                 type="url"
@@ -311,12 +312,13 @@ export default function AdminBannersPage() {
                   setFormData((prev) => ({ ...prev, link_url: e.target.value }))
                 }
                 placeholder="https://example.com"
+                className="h-11"
               />
             </div>
-            <div className="flex items-center justify-between rounded-lg border p-4">
+            <div className="flex items-center justify-between rounded-xl border border-gray-200 p-4 bg-gray-50/50">
               <div className="space-y-0.5">
-                <Label>Active</Label>
-                <p className="text-xs text-muted-foreground">
+                <Label className="text-sm font-medium">Active</Label>
+                <p className="text-xs text-gray-500">
                   Show this banner on the homepage
                 </p>
               </div>
@@ -328,11 +330,15 @@ export default function AdminBannersPage() {
               />
             </div>
           </div>
-          <DialogFooter>
-            <Button variant="outline" onClick={() => setDialogOpen(false)}>
+          <DialogFooter className="pt-4 border-t gap-2 sm:gap-0">
+            <Button variant="outline" onClick={() => setDialogOpen(false)} className="w-full sm:w-auto">
               Cancel
             </Button>
-            <Button onClick={handleSave} disabled={saving || !formData.title || !formData.image_url}>
+            <Button 
+              onClick={handleSave} 
+              disabled={saving || !formData.title || !formData.image_url}
+              className="w-full sm:w-auto bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700"
+            >
               {saving ? "Saving..." : editingBanner ? "Update" : "Create"}
             </Button>
           </DialogFooter>
