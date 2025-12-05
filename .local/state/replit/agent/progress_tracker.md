@@ -29,6 +29,12 @@
 [x] 27. Fixed admin login - created admin user (admin@couponlai / admin123)
 [x] 28. Fixed normalizeUser function to correctly pass role and is_admin from backend
 
+## Session Update (Dec 05, 2025):
+[x] 29. Fixed adminApiClient authentication - changed from admin-auth-storage to auth-storage
+[x] 30. Updated API base URL to http://127.0.0.1:8000/api/v1 for Replit environment
+[x] 31. Fixed API response parsing in admin.ts for merchants and offers
+[x] 32. Created admin user and sample data for testing
+
 ## Completed Features:
 - Admin Dashboard with colorful gradient cards (purple, blue, green, orange, pink)
 - Secondary stats with full gradient backgrounds (pink, indigo, amber, rose)
