@@ -1,5 +1,6 @@
 from fastapi import Depends, HTTPException, Header, Request
 from sqlalchemy.orm import Session
+from sqlalchemy import select
 from jose import jwt, JWTError
 from .config import get_settings
 from .database import get_db
@@ -35,6 +36,9 @@ def get_current_admin(current_user: User = Depends(get_current_user)):
     if current_user.role != "admin" and not current_user.is_admin:
         raise HTTPException(status_code=403, detail="Admin access required")
     return current_user
+
+# Alias for backward compatibility
+require_admin = get_current_admin
 
 def verify_admin_ip(request: Request):
     """Verify admin IP - disabled in development"""
