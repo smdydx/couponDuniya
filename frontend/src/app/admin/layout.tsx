@@ -8,7 +8,6 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { getInitials } from "@/lib/utils";
-import { ThemeToggle } from "@/components/theme/ThemeToggle";
 import { Sidebar } from "@/components/layout/Sidebar";
 
 const mockAdminUser = {
@@ -35,7 +34,7 @@ export default function AdminLayout({
   const user = mockAdminUser;
 
   return (
-    <div className="min-h-screen bg-muted/30">
+    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-purple-50 to-pink-50">
       {/* Mobile Sidebar Overlay */}
       {mounted && isSidebarOpen && (
         <div
@@ -50,39 +49,38 @@ export default function AdminLayout({
       {/* Main Content */}
       <div className="lg:pl-64">
         {/* Top Bar */}
-        <header className="sticky top-0 z-30 flex h-16 items-center justify-between border-b bg-background px-6">
+        <header className="sticky top-0 z-30 flex h-16 items-center justify-between border-b border-white/30 bg-white/80 backdrop-blur-md px-6">
           <div className="relative w-64">
-            <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-            <Input placeholder="Search..." className="pl-10" />
+            <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-400" />
+            <Input placeholder="Search..." className="pl-10 bg-gray-50 border-gray-200" />
           </div>
 
           <div className="flex items-center gap-4">
-            {mounted && <ThemeToggle />}
-            <Button variant="ghost" size="icon">
-              <Bell className="h-5 w-5" />
+            <Button variant="ghost" size="icon" className="hover:bg-blue-100">
+              <Bell className="h-5 w-5 text-gray-600" />
             </Button>
 
             {user && (
               <>
                 <div className="flex items-center gap-2">
-                  <Avatar className="h-8 w-8">
+                  <Avatar className="h-8 w-8 border-2 border-purple-400">
                     <AvatarImage src={user.avatar_url} />
-                    <AvatarFallback>
+                    <AvatarFallback className="bg-gradient-to-br from-purple-400 to-blue-400 text-white">
                       {getInitials(user.first_name, user.last_name)}
                     </AvatarFallback>
                   </Avatar>
                   <div className="hidden md:block">
-                    <p className="text-sm font-medium">
+                    <p className="text-sm font-medium text-gray-800">
                       {user.first_name} {user.last_name}
                     </p>
-                    <p className="text-xs text-muted-foreground capitalize">
+                    <p className="text-xs text-gray-500 capitalize">
                       {user.role?.replace("_", " ") || "User"}
                     </p>
                   </div>
                 </div>
 
-                <Button variant="ghost" size="icon" onClick={() => {}}>
-                  <LogOut className="h-5 w-5" />
+                <Button variant="ghost" size="icon" className="hover:bg-red-100" onClick={() => {}}>
+                  <LogOut className="h-5 w-5 text-gray-600" />
                 </Button>
               </>
             )}
