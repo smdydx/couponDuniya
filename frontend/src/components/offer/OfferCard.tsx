@@ -38,126 +38,128 @@ export function OfferCard({ offer, onClickTrack }: OfferCardProps) {
   };
 
   return (
-    <Card className="group relative overflow-hidden transition-all hover:shadow-md border h-full flex flex-col">
+    <Card className="group relative overflow-hidden transition-all hover:shadow-lg hover:border-primary/60 border h-full flex flex-col bg-white">
       {/* Badges */}
-      <div className="absolute right-1 top-1 z-10 flex flex-col gap-0.5">
+      <div className="absolute right-2 top-2 z-10 flex flex-col gap-1">
         {offer.is_exclusive && (
-          <Badge variant="exclusive" className="text-[8px] font-semibold shadow-sm backdrop-blur-sm bg-purple-600/90 px-1 py-0">
+          <Badge variant="exclusive" className="text-[9px] font-semibold shadow-md backdrop-blur-sm bg-purple-600/95 px-2 py-0.5">
             Exclusive
           </Badge>
         )}
         {offer.is_verified && (
-          <Badge className="gap-0.5 text-[8px] font-semibold shadow-sm backdrop-blur-sm bg-green-600/90 text-white px-1 py-0">
-            <CheckCircle className="h-2 w-2" />
+          <Badge className="gap-1 text-[9px] font-semibold shadow-md backdrop-blur-sm bg-green-600/95 text-white px-2 py-0.5">
+            <CheckCircle className="h-2.5 w-2.5" />
             Verified
           </Badge>
         )}
       </div>
 
-      <CardHeader className="p-2 pb-1">
-        <div className="flex items-start gap-1.5">
-          {/* Merchant Logo */}
+      <CardHeader className="p-0">
+        {/* Offer/Merchant Image - Featured */}
+        <div className="relative w-full aspect-[16/9] overflow-hidden bg-gradient-to-br from-gray-50 to-gray-100">
           {offer.merchant?.logo_url ? (
-            <div className="relative h-8 w-8 shrink-0 rounded border border-gray-200 bg-white p-0.5 flex items-center justify-center">
+            <div className="w-full h-full flex items-center justify-center p-4">
               <img
                 src={offer.merchant.logo_url}
                 alt={offer.merchant.name}
-                className="w-full h-full object-contain"
+                className="max-w-full max-h-full object-contain transition-transform duration-300 group-hover:scale-105"
               />
             </div>
           ) : (
-            <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded border border-gray-200 bg-gradient-to-br from-primary/10 to-primary/5 text-xs font-bold">
+            <div className="flex h-full w-full items-center justify-center text-3xl font-bold text-primary bg-gradient-to-br from-primary/10 to-primary/5">
               {offer.merchant?.name.charAt(0)}
             </div>
           )}
-          
-          <div className="flex-1 min-w-0">
-            {offer.merchant && (
-              <Link
-                href={ROUTES.merchantDetail(offer.merchant.slug)}
-                className="text-[9px] text-muted-foreground hover:text-primary hover:underline font-medium truncate block"
-              >
-                {offer.merchant.name}
-              </Link>
-            )}
-            <h3 className="font-semibold text-[10px] leading-tight line-clamp-2 group-hover:text-primary transition-colors mt-0.5">
-              {offer.title}
-            </h3>
-          </div>
         </div>
       </CardHeader>
 
-      <CardContent className="p-2 pt-0 flex-1 flex flex-col gap-1">
+      <CardContent className="p-3 flex-1 flex flex-col gap-2">
+        {/* Merchant Name */}
+        {offer.merchant && (
+          <Link
+            href={ROUTES.merchantDetail(offer.merchant.slug)}
+            className="text-[10px] text-muted-foreground hover:text-primary hover:underline font-semibold truncate block"
+          >
+            {offer.merchant.name}
+          </Link>
+        )}
+
+        {/* Offer Title */}
+        <h3 className="font-semibold text-xs leading-tight line-clamp-2 group-hover:text-primary transition-colors min-h-[32px]">
+          {offer.title}
+        </h3>
+
+        {/* Description */}
         {offer.description && (
-          <p className="text-[9px] text-muted-foreground line-clamp-1 leading-tight">
+          <p className="text-[10px] text-muted-foreground line-clamp-2 leading-relaxed">
             {offer.description}
           </p>
         )}
 
         {/* Cashback/Discount Info */}
-        <div className="flex flex-wrap gap-0.5">
+        <div className="flex flex-wrap gap-1.5 mt-auto">
           {offer.discount_value && (
-            <Badge variant="info" className="text-[8px] px-1 py-0 font-semibold">
+            <Badge variant="info" className="text-[10px] px-2 py-0.5 font-semibold shadow-sm">
               {offer.discount_type === "percentage"
                 ? `${offer.discount_value}% OFF`
                 : `${formatCurrency(offer.discount_value)} OFF`}
             </Badge>
           )}
           {offer.cashback_value && (
-            <Badge className="bg-purple-100 text-purple-700 hover:bg-purple-200 text-[8px] px-1 py-0 font-semibold">
+            <Badge className="bg-gradient-to-r from-purple-500 to-purple-600 text-white hover:from-purple-600 hover:to-purple-700 text-[10px] px-2 py-0.5 font-semibold shadow-sm">
               {offer.cashback_type === "percentage"
-                ? `${offer.cashback_value}% CB`
-                : `${formatCurrency(offer.cashback_value)} CB`}
+                ? `${offer.cashback_value}% Cashback`
+                : `${formatCurrency(offer.cashback_value)} Cashback`}
             </Badge>
           )}
         </div>
       </CardContent>
 
-      <CardFooter className="p-2 pt-0">
+      <CardFooter className="p-3 pt-0">
         {showCode && offer.offer_type === "code" && offer.coupon_code ? (
-          <div className="w-full space-y-1">
-            <div className="flex items-center gap-1 p-1 bg-gradient-to-r from-primary/10 to-primary/5 border border-dashed border-primary/30 rounded">
-              <code className="flex-1 text-center font-bold text-[9px] text-primary tracking-wider">
+          <div className="w-full space-y-2">
+            <div className="flex items-center gap-2 p-2 bg-gradient-to-r from-primary/10 to-primary/5 border-2 border-dashed border-primary/40 rounded-lg">
+              <code className="flex-1 text-center font-bold text-[11px] text-primary tracking-wider">
                 {offer.coupon_code}
               </code>
               <Button
                 size="sm"
                 variant="outline"
                 onClick={handleCopyCode}
-                className="shrink-0 h-5 text-[8px] px-1.5"
+                className="shrink-0 h-7 text-[10px] px-2"
               >
                 {copied ? (
                   <>
-                    <Check className="h-2 w-2 mr-0.5" />
+                    <Check className="h-3 w-3 mr-1" />
                     Copied
                   </>
                 ) : (
                   <>
-                    <Copy className="h-2 w-2 mr-0.5" />
+                    <Copy className="h-3 w-3 mr-1" />
                     Copy
                   </>
                 )}
               </Button>
             </div>
             <Button
-              className="w-full gap-1 font-semibold text-[9px] h-6"
+              className="w-full gap-1.5 font-semibold text-[11px] h-9"
               onClick={() => window.open(offer.affiliate_url, "_blank")}
             >
               Go to Store
-              <ExternalLink className="h-2 w-2" />
+              <ExternalLink className="h-3 w-3" />
             </Button>
           </div>
         ) : (
-          <Button className="w-full gap-1 font-semibold text-[9px] h-6" onClick={handleClick}>
+          <Button className="w-full gap-1.5 font-semibold text-[11px] h-9" onClick={handleClick}>
             {offer.offer_type === "code" ? (
               <>
-                <Tag className="h-2 w-2" />
+                <Tag className="h-3 w-3" />
                 Reveal Code
               </>
             ) : (
               <>
                 Get Deal
-                <ExternalLink className="h-2 w-2" />
+                <ExternalLink className="h-3 w-3" />
               </>
             )}
           </Button>
