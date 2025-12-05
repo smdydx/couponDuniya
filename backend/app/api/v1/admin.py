@@ -11,36 +11,12 @@ from ...models import User, Withdrawal, WalletTransaction, Order, Merchant, Offe
 from ...schemas.wallet_transaction import WithdrawalRead, WithdrawalStatusUpdate
 from ...queue import push_email_job, push_sms_job
 from ...config import get_settings
+from ...dependencies import get_current_admin, verify_admin_ip
 from pydantic import BaseModel, Field
 
 router = APIRouter(prefix="/admin", tags=["Admin"])
 
-def verify_admin_ip(request: Request):
-    """Enforce optional admin IP whitelist.
-    Uses ADMIN_IP_WHITELIST env (comma-separated). Always allow localhost loopback.
-    If unset, no restriction applied.
-    """
-    from ...config import get_settings
-    settings = get_settings()
-    whitelist = getattr(settings, "ADMIN_IP_WHITELIST", "") or ""
-    if not whitelist:
-        return True
-    allowed = {ip.strip() for ip in whitelist.split(',') if ip.strip()}
-    allowed.update({"127.0.0.1", "::1"})
-    client_ip = request.client.host if request.client else None
-    if client_ip not in allowed:
-        raise HTTPException(status_code=403, detail="Admin access forbidden from this IP")
-    return True
-
 settings = get_settings()
-
-
-def require_admin(authorization: str | None = Header(None), request: Request = None):
-    if not authorization or not authorization.startswith("Bearer "):
-        raise HTTPException(status_code=401, detail="Not authenticated")
-    if request:
-        verify_admin_ip(request)
-    return True
 
 
 class MerchantPayload(BaseModel):
@@ -86,7 +62,7 @@ class OrderStatusUpdate(BaseModel):
 @router.post("/merchants", response_model=dict)
 def create_merchant(
     payload: MerchantPayload,
-    _: bool = Depends(require_admin),
+    current_admin: User = Depends(get_current_admin),
     db: Session = Depends(get_db)
 ):
     """Create a new merchant"""
@@ -979,7 +955,7 @@ def complete_withdrawal(id: int, _: bool = Depends(require_admin)):
 
 @router.get("/analytics/dashboard", response_model=dict)
 def analytics_dashboard(
-    _: bool = Depends(require_admin),
+    current_admin: User = Depends(get_current_admin),
     db: Session = Depends(get_db)
 ):
     """Get admin dashboard metrics"""

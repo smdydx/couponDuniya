@@ -5,37 +5,53 @@ from .config import get_settings
 from .database import get_db
 from .redis_client import rk, cache_get, rate_limit
 from .models import User
+import os
 
 settings = get_settings()
 
 def get_current_user(db: Session = Depends(get_db), authorization: str | None = Header(None)):
+    """Extract user from JWT token"""
     if not authorization or not authorization.startswith("Bearer "):
         raise HTTPException(status_code=401, detail="Not authenticated")
-    token = authorization.split()[1]
-    # Fast path: check Redis session
-    session = cache_get(rk("session", token))
-    if session and isinstance(session, dict) and "user" in session:
-        # Minimal user object reconstruction (no DB hit). If you need fresh data remove this optimization.
-        user_payload = session["user"]
-        user = db.query(User).filter(User.id == user_payload["id"]).first()
-        if user:
-            return user
+
+    token = authorization.replace("Bearer ", "")
+
     try:
-        payload = jwt.decode(token, settings.SECRET_KEY, algorithms=[settings.JWT_ALGORITHM])
-        user_id = int(payload.get("sub"))
-    except JWTError:
-        raise HTTPException(status_code=401, detail="Invalid token")
-    user = db.query(User).filter(User.id == user_id).first()
+        payload = jwt.decode(token, settings.SECRET_KEY, algorithms=[settings.ALGORITHM])
+        user_id: int = payload.get("sub")
+        if user_id is None:
+            raise HTTPException(status_code=401, detail="Invalid token")
+    except JWTError as e:
+        raise HTTPException(status_code=401, detail=f"Invalid token: {str(e)}")
+
+    user = db.scalar(select(User).where(User.id == user_id))
     if not user:
         raise HTTPException(status_code=401, detail="User not found")
+
     return user
 
-async def require_admin(current_user: User = Depends(get_current_user)) -> bool:
-    """Require admin role"""
-    if not current_user:
-        raise HTTPException(status_code=401, detail="Authentication required")
-    if current_user.role != "admin":
+def get_current_admin(current_user: User = Depends(get_current_user)):
+    """Verify user has admin role"""
+    if current_user.role != "admin" and not current_user.is_admin:
         raise HTTPException(status_code=403, detail="Admin access required")
+    return current_user
+
+def verify_admin_ip(request: Request):
+    """Verify admin IP - disabled in development"""
+    # Skip IP check in development
+    if os.getenv("ENVIRONMENT", "development") == "development":
+        return True
+
+    whitelist = getattr(settings, "ADMIN_IP_WHITELIST", "") or ""
+    if not whitelist:
+        return True
+
+    allowed = {ip.strip() for ip in whitelist.split(',') if ip.strip()}
+    allowed.update({"127.0.0.1", "::1", "0.0.0.0"})
+
+    client_ip = request.client.host if request.client else None
+    if client_ip not in allowed:
+        raise HTTPException(status_code=403, detail="Admin access forbidden from this IP")
     return True
 
 def require_internal_service(x_internal_key: str | None = Header(None)):
