@@ -157,7 +157,14 @@ const adminApi = {
     if (params.is_active !== undefined) queryParams.append('is_active', String(params.is_active));
 
     const response = await apiClient.get(`/admin/merchants?${queryParams.toString()}`);
-    return response.data?.data || { merchants: [], pagination: { current_page: 1, total_pages: 1, total_items: 0, per_page: 20 } };
+    const data = response.data;
+    if (data?.merchants && data?.pagination) {
+      return { merchants: data.merchants, pagination: data.pagination };
+    }
+    if (data?.data?.merchants && data?.data?.pagination) {
+      return { merchants: data.data.merchants, pagination: data.data.pagination };
+    }
+    return { merchants: [], pagination: { current_page: 1, total_pages: 1, total_items: 0, per_page: 20 } };
   },
 
   createMerchant: async (data: Omit<Merchant, 'id' | 'created_at'>): Promise<Merchant> => {
@@ -182,7 +189,14 @@ const adminApi = {
     if (params.merchant_id) queryParams.append('merchant_id', String(params.merchant_id));
 
     const response = await apiClient.get(`/admin/offers?${queryParams.toString()}`);
-    return response.data?.data || { offers: response.data?.data?.items || [], pagination: { current_page: 1, total_pages: 1, total_items: 0, per_page: 20 } };
+    const data = response.data;
+    if (data?.data?.offers && data?.data?.pagination) {
+      return { offers: data.data.offers, pagination: data.data.pagination };
+    }
+    if (data?.offers && data?.pagination) {
+      return { offers: data.offers, pagination: data.pagination };
+    }
+    return { offers: [], pagination: { current_page: 1, total_pages: 1, total_items: 0, per_page: 20 } };
   },
 
   createOffer: async (data: Omit<Offer, 'id' | 'created_at'>): Promise<Offer> => {
@@ -206,7 +220,14 @@ const adminApi = {
     if (params.search) queryParams.append('search', params.search);
 
     const response = await apiClient.get(`/admin/products?${queryParams.toString()}`);
-    return response.data?.data || { products: response.data?.data?.items || [], pagination: { current_page: 1, total_pages: 1, total_items: 0, per_page: 20 } };
+    const data = response.data;
+    if (data?.data?.products && data?.data?.pagination) {
+      return { products: data.data.products, pagination: data.data.pagination };
+    }
+    if (data?.products && data?.pagination) {
+      return { products: data.products, pagination: data.pagination };
+    }
+    return { products: [], pagination: { current_page: 1, total_pages: 1, total_items: 0, per_page: 20 } };
   },
 
   createProduct: async (data: Omit<Product, 'id' | 'created_at'>): Promise<Product> => {
@@ -231,7 +252,14 @@ const adminApi = {
     if (params.role) queryParams.append('role', params.role);
 
     const response = await apiClient.get(`/admin/users?${queryParams.toString()}`);
-    return response.data?.data || { users: [], pagination: { current_page: 1, total_pages: 1, total_items: 0, per_page: 20 } };
+    const data = response.data;
+    if (data?.data?.users && data?.data?.pagination) {
+      return { users: data.data.users, pagination: data.data.pagination };
+    }
+    if (data?.users && data?.pagination) {
+      return { users: data.users, pagination: data.pagination };
+    }
+    return { users: [], pagination: { current_page: 1, total_pages: 1, total_items: 0, per_page: 20 } };
   },
 
   getOrders: async (params: { page?: number; limit?: number; status?: string } = {}): Promise<{ orders: Order[]; pagination: Pagination }> => {

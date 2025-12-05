@@ -1,7 +1,18 @@
 import axios from 'axios';
 
-const API_BASE_URL =
-  process.env.NEXT_PUBLIC_API_URL || "http://127.0.0.1:8000/api/v1";
+const getApiBaseUrl = () => {
+  if (typeof window !== 'undefined') {
+    const hostname = window.location.hostname;
+    if (hostname.includes('replit.dev') || hostname.includes('repl.co')) {
+      return `https://${hostname.replace('-00-', '-00-').replace('5000', '8000')}/api/v1`.replace(':5000', '').replace(/\/+$/, '');
+    }
+  }
+  return process.env.NEXT_PUBLIC_API_URL || "http://127.0.0.1:8000/api/v1";
+};
+
+const API_BASE_URL = typeof window !== 'undefined' 
+  ? `${window.location.protocol}//${window.location.hostname}:8000/api/v1`
+  : process.env.NEXT_PUBLIC_API_URL || "http://127.0.0.1:8000/api/v1";
 
 export const apiClient = axios.create({
   baseURL: API_BASE_URL,
@@ -11,28 +22,26 @@ export const apiClient = axios.create({
   withCredentials: false,
 });
 
+const getAuthToken = () => {
+  if (typeof window === 'undefined') return null;
+  const authStore = localStorage.getItem('auth-storage');
+  if (authStore) {
+    try {
+      const { state } = JSON.parse(authStore);
+      return state?.accessToken || null;
+    } catch {
+      return null;
+    }
+  }
+  return null;
+};
+
 // Request interceptor - add token if available
 apiClient.interceptors.request.use(
   (config) => {
-    if (typeof window !== 'undefined') {
-      const authStore = localStorage.getItem('auth-storage');
-      if (authStore) {
-        try {
-          const { state } = JSON.parse(authStore);
-          const token = state?.accessToken;
-
-          if (token) {
-            config.headers.Authorization = `Bearer ${token}`;
-            console.log('Token added to request:', config.url);
-          } else {
-            console.warn('No token found in auth store');
-          }
-        } catch (error) {
-          console.error('Error parsing auth token:', error);
-        }
-      } else {
-        console.warn('No auth-storage found in localStorage');
-      }
+    const token = getAuthToken();
+    if (token) {
+      config.headers.Authorization = `Bearer ${token}`;
     }
     return config;
   },
@@ -53,7 +62,7 @@ apiClient.interceptors.response.use(
   }
 );
 
-// Admin API client with /admin prefix
+// Admin API client with /admin prefix - uses same auth as main client
 export const adminApiClient = axios.create({
   baseURL: `${API_BASE_URL}/admin`,
   headers: {
@@ -61,10 +70,10 @@ export const adminApiClient = axios.create({
   },
 });
 
-// Request interceptor for adminApiClient to add auth token
+// Request interceptor for adminApiClient - use same auth-storage as main client
 adminApiClient.interceptors.request.use(
   (config) => {
-    const token = localStorage.getItem('auth_token'); // This should ideally also use auth-storage
+    const token = getAuthToken();
     if (token) {
       config.headers.Authorization = `Bearer ${token}`;
     }
@@ -78,7 +87,7 @@ adminApiClient.interceptors.response.use(
   (response) => response,
   (error) => {
     if (error.response?.status === 401) {
-      localStorage.removeItem('auth_token'); // This should also be updated to check auth-storage
+      console.error('Admin API unauthorized:', error.config?.url);
     }
     return Promise.reject(error);
   }

@@ -106,21 +106,19 @@ export default function AdminDashboard() {
         
         if (merchantsResponse.status === "fulfilled") {
           const merchantsData = merchantsResponse.value.data;
-          if (merchantsData?.success && merchantsData?.data?.merchants) {
-            setRecentMerchants(merchantsData.data.merchants);
-          }
+          const merchantsList = merchantsData?.merchants || merchantsData?.data?.merchants || [];
+          setRecentMerchants(merchantsList.slice(0, 5));
         }
         
         if (offersResponse.status === "fulfilled") {
           const offersData = offersResponse.value.data;
-          if (offersData?.success && offersData?.data?.offers) {
-            setRecentOffers(offersData.data.offers.map((o: any) => ({
-              id: o.id,
-              title: o.title,
-              image_url: o.image_url,
-              merchant_name: o.merchant?.name || "Unknown",
-            })));
-          }
+          const offersList = offersData?.data?.offers || offersData?.offers || [];
+          setRecentOffers(offersList.slice(0, 5).map((o: any) => ({
+            id: o.id,
+            title: o.title,
+            image_url: o.image_url,
+            merchant_name: o.merchant_name || o.merchant?.name || "Unknown",
+          })));
         }
       } catch (error) {
         console.error("Failed to fetch dashboard data:", error);
