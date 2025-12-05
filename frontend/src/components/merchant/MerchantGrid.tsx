@@ -44,7 +44,7 @@ export function MerchantGrid({ merchants, isLoading }: MerchantGridProps) {
   }
 
   return (
-    <div className="grid gap-3 grid-cols-3 sm:grid-cols-4 md:grid-cols-5 lg:grid-cols-6 xl:grid-cols-8">
+    <div className="grid gap-2.5 grid-cols-3 sm:grid-cols-4 md:grid-cols-6 lg:grid-cols-8 xl:grid-cols-10">
       {merchantList.map((merchant) => (
         <MerchantCard key={merchant.id} merchant={merchant} />
       ))}

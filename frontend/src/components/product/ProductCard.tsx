@@ -68,7 +68,7 @@ export function ProductCard({ product, compact = false }: ProductCardProps) {
   if (compact) {
     return (
       <Link href={`/products/${product.slug}`}>
-        <Card className="group overflow-hidden hover:shadow-lg transition-all h-full flex flex-col border">
+        <Card className="group overflow-hidden hover:shadow-md transition-all h-full flex flex-col border">
           <div className="relative w-full aspect-square bg-gradient-to-br from-gray-50 to-gray-100 dark:from-gray-900 dark:to-gray-800 overflow-hidden">
             <img
               src={product.image_url || '/images/gift-cards/placeholder.png'}
@@ -76,32 +76,32 @@ export function ProductCard({ product, compact = false }: ProductCardProps) {
               className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
             />
             {product.merchant?.logo_url && (
-              <div className="absolute top-1.5 left-1.5 bg-white dark:bg-gray-800 rounded-full p-1 shadow-sm">
+              <div className="absolute top-1 left-1 bg-white dark:bg-gray-800 rounded-full p-0.5 shadow-sm">
                 <img
                   src={product.merchant.logo_url}
                   alt={product.merchant.name}
-                  className="w-4 h-4 object-contain"
+                  className="w-3 h-3 object-contain"
                 />
               </div>
             )}
           </div>
-          <CardContent className="p-2 flex-1 flex flex-col justify-between">
-            <h3 className="font-semibold text-xs mb-1.5 line-clamp-2 group-hover:text-primary transition-colors min-h-[32px]">
+          <CardContent className="p-1.5 flex-1 flex flex-col justify-between">
+            <h3 className="font-semibold text-[10px] mb-1 line-clamp-2 group-hover:text-primary transition-colors min-h-[26px]">
               {product.name}
             </h3>
             <div className="flex items-center justify-between mt-auto">
               <div>
-                <p className="text-sm font-bold text-primary">
+                <p className="text-xs font-bold text-primary">
                   {formatCurrency(minPrice)}
                 </p>
                 {minPrice !== maxPrice && (
-                  <p className="text-[10px] text-muted-foreground">
+                  <p className="text-[8px] text-muted-foreground">
                     - {formatCurrency(maxPrice)}
                   </p>
                 )}
               </div>
-              <Button size="sm" variant="ghost" className="h-6 w-6 p-0 group-hover:bg-primary group-hover:text-primary-foreground transition-colors" disabled={!selectedVariant?.is_available}>
-                <ShoppingCart className="h-3 w-3" />
+              <Button size="sm" variant="ghost" className="h-5 w-5 p-0 group-hover:bg-primary group-hover:text-primary-foreground transition-colors" disabled={!selectedVariant?.is_available}>
+                <ShoppingCart className="h-2.5 w-2.5" />
               </Button>
             </div>
           </CardContent>
@@ -111,18 +111,18 @@ export function ProductCard({ product, compact = false }: ProductCardProps) {
   }
 
   return (
-    <Card className="group relative overflow-hidden border hover:shadow-lg transition-all">
+    <Card className="group relative overflow-hidden border hover:shadow-md transition-all">
       {/* Bestseller Badge */}
       {product.is_bestseller && (
-        <Badge className="absolute right-1.5 top-1.5 z-10 gap-0.5 text-[9px] px-1.5 py-0.5" variant="warning">
-          <Star className="h-2.5 w-2.5" />
+        <Badge className="absolute right-1 top-1 z-10 gap-0.5 text-[8px] px-1 py-0" variant="warning">
+          <Star className="h-2 w-2" />
           Bestseller
         </Badge>
       )}
 
       <CardHeader className="p-0">
         <Link href={ROUTES.productDetail(product.slug)}>
-          <div className="relative aspect-[4/3] overflow-hidden">
+          <div className="relative aspect-square overflow-hidden">
             {product.image_url ? (
               <img
                 src={product.image_url}
@@ -130,7 +130,7 @@ export function ProductCard({ product, compact = false }: ProductCardProps) {
                 className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105"
               />
             ) : (
-              <div className="flex h-full w-full items-center justify-center bg-muted text-2xl font-bold text-muted-foreground">
+              <div className="flex h-full w-full items-center justify-center bg-muted text-xl font-bold text-muted-foreground">
                 {product.name.charAt(0)}
               </div>
             )}
@@ -138,19 +138,19 @@ export function ProductCard({ product, compact = false }: ProductCardProps) {
         </Link>
       </CardHeader>
 
-      <CardContent className="p-2.5">
+      <CardContent className="p-2">
         <Link href={ROUTES.productDetail(product.slug)}>
-          <h3 className="font-semibold text-xs line-clamp-2 transition-colors group-hover:text-primary">{product.name}</h3>
+          <h3 className="font-semibold text-[10px] line-clamp-2 transition-colors group-hover:text-primary">{product.name}</h3>
         </Link>
         {product.merchant && (
-          <p className="mt-0.5 text-[10px] text-muted-foreground">{product.merchant.name}</p>
+          <p className="mt-0.5 text-[9px] text-muted-foreground">{product.merchant.name}</p>
         )}
 
         {/* Variant Selection */}
         {product.variants.length > 1 && (
-          <div className="mt-2">
-            <p className="mb-1 text-[10px] font-medium text-muted-foreground">Select Amount</p>
-            <div className="flex flex-wrap gap-1">
+          <div className="mt-1.5">
+            <p className="mb-0.5 text-[9px] font-medium text-muted-foreground">Select Amount</p>
+            <div className="flex flex-wrap gap-0.5">
               {product.variants.slice(0, 3).map((variant) => (
                 <Button
                   key={variant.id}
@@ -158,7 +158,7 @@ export function ProductCard({ product, compact = false }: ProductCardProps) {
                   size="sm"
                   onClick={() => setSelectedVariant(variant)}
                   disabled={!variant.is_available}
-                  className="h-6 px-2 text-[10px]"
+                  className="h-5 px-1.5 text-[9px]"
                 >
                   {formatCurrency(variant.denomination)}
                 </Button>
@@ -166,7 +166,7 @@ export function ProductCard({ product, compact = false }: ProductCardProps) {
               {product.variants.length > 3 && (
                 <Link
                   href={ROUTES.productDetail(product.slug)}
-                  className="flex h-6 items-center px-1.5 text-[10px] text-primary hover:underline"
+                  className="flex h-5 items-center px-1 text-[9px] text-primary hover:underline"
                 >
                   +{product.variants.length - 3}
                 </Link>
@@ -176,22 +176,22 @@ export function ProductCard({ product, compact = false }: ProductCardProps) {
         )}
       </CardContent>
 
-      <CardFooter className="flex items-center justify-between border-t p-2.5">
+      <CardFooter className="flex items-center justify-between border-t p-2">
         <div>
           {selectedVariant && (
             <>
-              <div className="flex items-center gap-1">
-                <span className="text-sm font-bold">
+              <div className="flex items-center gap-0.5">
+                <span className="text-xs font-bold">
                   {formatCurrency(selectedVariant.selling_price)}
                 </span>
                 {discount > 0 && (
-                  <Badge className="bg-purple-100 text-purple-700 font-semibold text-[9px] px-1 py-0">
+                  <Badge className="bg-purple-100 text-purple-700 font-semibold text-[8px] px-0.5 py-0">
                     {discount}% off
                   </Badge>
                 )}
               </div>
               {discount > 0 && (
-                <span className="text-[10px] text-muted-foreground line-through">
+                <span className="text-[9px] text-muted-foreground line-through">
                   {formatCurrency(selectedVariant.denomination)}
                 </span>
               )}
@@ -202,9 +202,9 @@ export function ProductCard({ product, compact = false }: ProductCardProps) {
           size="sm"
           onClick={handleAddToCart}
           disabled={!selectedVariant?.is_available}
-          className="gap-1 h-7 text-[10px] px-2"
+          className="gap-0.5 h-6 text-[9px] px-1.5"
         >
-          <ShoppingCart className="h-3 w-3" />
+          <ShoppingCart className="h-2.5 w-2.5" />
           Add
         </Button>
       </CardFooter>
