@@ -961,12 +961,12 @@ def analytics_dashboard(
     """Get admin dashboard metrics"""
     from datetime import datetime, timedelta
     import logging
-    
+
     logger = logging.getLogger(__name__)
-    
+
     try:
         logger.info(f"Admin dashboard accessed by user: {current_admin.id}")
-        
+
         # Total orders count
         total_orders = db.scalar(select(func.count()).select_from(Order)) or 0
         logger.info(f"Total orders: {total_orders}")
@@ -1096,10 +1096,10 @@ def analytics_dashboard(
                 "redis": redis_stats,
             }
         }
-        
+
         logger.info(f"Dashboard response: {response_data}")
         return response_data
-        
+
     except Exception as e:
         logger.error(f"❌ Dashboard error: {str(e)}", exc_info=True)
         # Return empty data on error but log the actual error
@@ -1113,11 +1113,6 @@ def analytics_dashboard(
                 "withdrawals": {"pending_count": 0, "pending_amount": 0.0},
                 "catalog": {"active_merchants": 0, "active_offers": 0, "available_products": 0},
                 "redis": {"connected": False, "keys_count": 0, "memory_used": "0 MB", "connected_clients": 0}
-            }
-        }},
-                "withdrawals": {"pending_count": 0, "pending_amount": 0.0},
-                "catalog": {"active_merchants": 0, "active_offers": 0, "available_products": 0},
-                "redis": {"connected": False, "keys_count": 0, "memory_used": "N/A", "connected_clients": 0},
             }
         }
 
