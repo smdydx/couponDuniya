@@ -11,8 +11,28 @@ export const apiClient = axios.create({
   },
 });
 
+// Admin API client with /admin prefix
+export const adminApiClient = axios.create({
+  baseURL: `${API_BASE_URL}/admin`,
+  headers: {
+    'Content-Type': 'application/json',
+  },
+});
+
 // Request interceptor to add auth token
 apiClient.interceptors.request.use(
+  (config) => {
+    const token = localStorage.getItem('auth_token');
+    if (token) {
+      config.headers.Authorization = `Bearer ${token}`;
+    }
+    return config;
+  },
+  (error) => Promise.reject(error)
+);
+
+// Request interceptor for admin API client
+adminApiClient.interceptors.request.use(
   (config) => {
     const token = localStorage.getItem('auth_token');
     if (token) {
@@ -31,6 +51,17 @@ apiClient.interceptors.response.use(
       localStorage.removeItem('auth_token');
       // Disable auto-redirect to /login - let components handle auth errors gracefully
       // This allows admin dashboard to load and show placeholder data when not authenticated
+    }
+    return Promise.reject(error);
+  }
+);
+
+// Response interceptor for admin API client
+adminApiClient.interceptors.response.use(
+  (response) => response,
+  (error) => {
+    if (error.response?.status === 401) {
+      localStorage.removeItem('auth_token');
     }
     return Promise.reject(error);
   }
