@@ -9,6 +9,7 @@ import { Input } from "@/components/ui/input";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { getInitials } from "@/lib/utils";
 import { Sidebar } from "@/components/layout/Sidebar";
+import { useRouter } from "next/navigation";
 
 const mockAdminUser = {
   id: 1,
@@ -26,12 +27,48 @@ export default function AdminLayout({
 }) {
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const [mounted, setMounted] = useState(false);
+  const router = useRouter();
+  const [isAuthenticated, setIsAuthenticated] = useState(false);
+
+  useEffect(() => {
+    const token = localStorage.getItem('auth_token');
+    const userStr = localStorage.getItem('user');
+
+    if (!token) {
+      router.push('/login');
+      return;
+    }
+
+    // Check if user is admin
+    try {
+      const user = userStr ? JSON.parse(userStr) : null;
+      if (!user || (!user.is_admin && user.role !== 'admin')) {
+        router.push('/');
+        return;
+      }
+      setIsAuthenticated(true);
+    } catch (error) {
+      console.error('Auth check failed:', error);
+      router.push('/login');
+    }
+  }, [router]);
 
   useEffect(() => {
     setMounted(true);
   }, []);
 
   const user = mockAdminUser;
+
+  if (!isAuthenticated) {
+    return (
+      <div className="flex h-screen items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
+          <p className="text-gray-600">Checking authentication...</p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 via-purple-50 to-pink-50">

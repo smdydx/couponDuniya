@@ -13,10 +13,11 @@ import { Separator } from "@/components/ui/separator";
 import { useAuthStore } from "@/store/authStore";
 import { ROUTES } from "@/lib/constants";
 import type { LoginCredentials } from "@/types";
+import apiClient from "@/lib/apiClient"; // Assuming apiClient is set up to handle authentication
 
 export default function LoginPage() {
   const router = useRouter();
-  const { login, isLoading, error, clearError } = useAuthStore();
+  const { login, isLoading, error, setError, clearError } = useAuthStore(); // Modified to include setError and clearError
   const [showPassword, setShowPassword] = useState(false);
 
   const {
@@ -27,8 +28,9 @@ export default function LoginPage() {
 
   const onSubmit = async (data: LoginCredentials) => {
     try {
+      // The login function in the store will handle the API call and token storage
       await login(data);
-      router.push(ROUTES.home);
+      // The redirection logic is now handled within the login function in the store
     } catch (err) {
       // Error is handled by store
     }

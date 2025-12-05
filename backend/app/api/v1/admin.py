@@ -85,7 +85,7 @@ class OrderStatusUpdate(BaseModel):
 @router.post("/merchants", response_model=dict)
 def create_merchant(
     payload: MerchantPayload,
-    # _: bool = Depends(require_admin),
+    _: bool = Depends(require_admin),
     db: Session = Depends(get_db)
 ):
     """Create a new merchant"""
@@ -127,7 +127,7 @@ def list_merchants(
     limit: int = 20,
     search: str | None = None,
     is_active: bool | None = None,
-    # _: bool = Depends(require_admin),
+    _: bool = Depends(require_admin),
     db: Session = Depends(get_db)
 ):
     """List all merchants with pagination and filters"""
@@ -182,7 +182,7 @@ def list_merchants(
 def update_merchant(
     id: int,
     payload: MerchantPayload,
-    # _: bool = Depends(require_admin),
+    _: bool = Depends(require_admin),
     db: Session = Depends(get_db)
 ):
     """Update a merchant"""
@@ -340,7 +340,7 @@ def delete_offer(
 @router.post("/products", response_model=dict)
 def create_product(
     payload: ProductPayload,
-    # _: bool = Depends(require_admin),
+    _: bool = Depends(require_admin),
     db: Session = Depends(get_db)
 ):
     """Create a new product"""
@@ -384,7 +384,7 @@ def create_product(
 def update_product(
     id: int,
     payload: ProductPayload,
-    # _: bool = Depends(require_admin),
+    _: bool = Depends(require_admin),
     db: Session = Depends(get_db)
 ):
     """Update a product"""
@@ -427,7 +427,7 @@ def update_product(
 def add_variant(
     product_id: int,
     payload: ProductVariantPayload,
-    # _: bool = Depends(require_admin),
+    _: bool = Depends(require_admin),
     db: Session = Depends(get_db)
 ):
     """Add a variant to a product"""
