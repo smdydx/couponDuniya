@@ -17,8 +17,10 @@ import {
   Wallet,
   FileText,
   Shield,
-  FolderOpen, // Added for Categories
-  ImageIcon, // Added for Banners
+  FolderOpen,
+  ImageIcon,
+  Network,
+  GitBranch,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
@@ -90,6 +92,16 @@ const adminNavItems = [
     title: "Analytics",
     href: ROUTES.admin.analytics,
     icon: BarChart3,
+  },
+  {
+    title: "Referrals",
+    href: ROUTES.admin.referrals,
+    icon: Network,
+  },
+  {
+    title: "Referral Tree",
+    href: ROUTES.admin.referralTree,
+    icon: GitBranch,
   },
   {
     title: "Access Control",

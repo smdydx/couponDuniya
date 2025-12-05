@@ -99,6 +99,8 @@ export const ROUTES = {
     merchants: '/admin/merchants',
     offers: '/admin/offers',
     products: '/admin/products',
+    categories: '/admin/categories',
+    banners: '/admin/banners',
     orders: '/admin/orders',
     users: '/admin/users',
     analytics: '/admin/analytics',
@@ -106,5 +108,7 @@ export const ROUTES = {
     queues: '/admin/queues',
     giftCards: '/admin/gift-cards',
     cms: '/admin/cms',
+    referrals: '/admin/referrals',
+    referralTree: '/admin/referrals/tree',
   },
 } as const;

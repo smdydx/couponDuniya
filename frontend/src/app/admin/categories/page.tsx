@@ -1,12 +1,11 @@
-
 "use client";
 
 import { useEffect, useState } from "react";
-import { Plus, Search, Edit, Trash2, RefreshCw, ChevronLeft, ChevronRight, FolderOpen } from "lucide-react";
+import { Plus, Search, Edit, Trash2, RefreshCw, FolderOpen, Layers, CheckCircle, XCircle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Card, CardContent, CardHeader } from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Switch } from "@/components/ui/switch";
@@ -34,6 +33,7 @@ interface Category {
   slug: string;
   icon_url?: string;
   is_active: boolean;
+  products_count?: number;
   created_at?: string;
 }
 
@@ -44,6 +44,9 @@ export default function AdminCategoriesPage() {
   const [dialogOpen, setDialogOpen] = useState(false);
   const [editingCategory, setEditingCategory] = useState<Category | null>(null);
   const [saving, setSaving] = useState(false);
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+  const [deletingCategory, setDeletingCategory] = useState<Category | null>(null);
+  
   const [formData, setFormData] = useState({
     name: "",
     slug: "",
@@ -109,6 +112,18 @@ export default function AdminCategoriesPage() {
     }
   };
 
+  const handleDelete = async () => {
+    if (!deletingCategory) return;
+    try {
+      await apiClient.delete(`/admin/categories/${deletingCategory.id}`);
+      setDeleteDialogOpen(false);
+      setDeletingCategory(null);
+      fetchCategories();
+    } catch (error) {
+      console.error("Failed to delete category:", error);
+    }
+  };
+
   const generateSlug = (name: string) => {
     return name
       .toLowerCase()
@@ -120,36 +135,88 @@ export default function AdminCategoriesPage() {
     search ? cat.name.toLowerCase().includes(search.toLowerCase()) : true
   );
 
+  const activeCount = categories.filter(c => c.is_active).length;
+  const inactiveCount = categories.filter(c => !c.is_active).length;
+
   return (
     <div className="space-y-6">
       <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
         <div>
-          <h1 className="text-2xl font-bold tracking-tight">Categories</h1>
-          <p className="text-muted-foreground">
+          <h1 className="text-3xl font-bold bg-gradient-to-r from-purple-600 to-pink-600 bg-clip-text text-transparent">
+            Categories
+          </h1>
+          <p className="text-gray-500 mt-1">
             Manage product and offer categories
           </p>
         </div>
-        <Button onClick={handleOpenCreate}>
+        <Button 
+          onClick={handleOpenCreate}
+          className="bg-gradient-to-r from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600"
+        >
           <Plus className="mr-2 h-4 w-4" />
           Add Category
         </Button>
       </div>
 
-      <Card>
+      <div className="grid gap-4 md:grid-cols-3">
+        <Card className="border-0 shadow-lg bg-gradient-to-br from-purple-500 to-indigo-500 text-white">
+          <CardContent className="p-6">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-purple-100 text-sm">Total Categories</p>
+                <p className="text-3xl font-bold">{categories.length}</p>
+              </div>
+              <Layers className="h-10 w-10 text-purple-200" />
+            </div>
+          </CardContent>
+        </Card>
+        
+        <Card className="border-0 shadow-lg bg-gradient-to-br from-emerald-500 to-teal-500 text-white">
+          <CardContent className="p-6">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-emerald-100 text-sm">Active Categories</p>
+                <p className="text-3xl font-bold">{activeCount}</p>
+              </div>
+              <CheckCircle className="h-10 w-10 text-emerald-200" />
+            </div>
+          </CardContent>
+        </Card>
+        
+        <Card className="border-0 shadow-lg bg-gradient-to-br from-orange-500 to-amber-500 text-white">
+          <CardContent className="p-6">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-orange-100 text-sm">Inactive Categories</p>
+                <p className="text-3xl font-bold">{inactiveCount}</p>
+              </div>
+              <XCircle className="h-10 w-10 text-orange-200" />
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+
+      <Card className="border-0 shadow-xl">
         <CardHeader>
           <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-            <div className="relative flex-1 max-w-sm">
-              <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-              <Input
-                placeholder="Search categories..."
-                value={search}
-                onChange={(e) => setSearch(e.target.value)}
-                className="pl-10"
-              />
+            <CardTitle className="flex items-center gap-2">
+              <FolderOpen className="h-5 w-5 text-purple-600" />
+              Category List
+            </CardTitle>
+            <div className="flex items-center gap-3">
+              <div className="relative flex-1 min-w-[200px]">
+                <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-400" />
+                <Input
+                  placeholder="Search categories..."
+                  value={search}
+                  onChange={(e) => setSearch(e.target.value)}
+                  className="pl-10"
+                />
+              </div>
+              <Button variant="outline" size="icon" onClick={fetchCategories}>
+                <RefreshCw className="h-4 w-4" />
+              </Button>
             </div>
-            <Button variant="ghost" size="icon" onClick={fetchCategories}>
-              <RefreshCw className="h-4 w-4" />
-            </Button>
           </div>
         </CardHeader>
         <CardContent>
@@ -167,69 +234,87 @@ export default function AdminCategoriesPage() {
               ))}
             </div>
           ) : filteredCategories.length === 0 ? (
-            <div className="flex flex-col items-center justify-center py-12">
-              <FolderOpen className="h-12 w-12 text-muted-foreground" />
-              <h3 className="mt-4 text-lg font-semibold">No categories found</h3>
-              <p className="text-muted-foreground">
+            <div className="flex flex-col items-center justify-center py-16">
+              <div className="w-20 h-20 rounded-full bg-gradient-to-br from-purple-100 to-pink-100 flex items-center justify-center mb-4">
+                <FolderOpen className="h-10 w-10 text-purple-500" />
+              </div>
+              <h3 className="text-lg font-semibold text-gray-800">No categories found</h3>
+              <p className="text-gray-500 mt-1">
                 {search ? "Try a different search term" : "Get started by adding a category"}
               </p>
               {!search && (
-                <Button className="mt-4" onClick={handleOpenCreate}>
+                <Button className="mt-4 bg-gradient-to-r from-purple-500 to-pink-500" onClick={handleOpenCreate}>
                   <Plus className="mr-2 h-4 w-4" />
                   Add Category
                 </Button>
               )}
             </div>
           ) : (
-            <div className="rounded-md border">
+            <div className="rounded-lg border overflow-hidden">
               <Table>
                 <TableHeader>
-                  <TableRow>
-                    <TableHead>Category</TableHead>
-                    <TableHead>Slug</TableHead>
-                    <TableHead>Status</TableHead>
-                    <TableHead className="text-right">Actions</TableHead>
+                  <TableRow className="bg-gradient-to-r from-gray-50 to-purple-50">
+                    <TableHead className="font-semibold">Category</TableHead>
+                    <TableHead className="font-semibold">Slug</TableHead>
+                    <TableHead className="font-semibold">Products</TableHead>
+                    <TableHead className="font-semibold">Status</TableHead>
+                    <TableHead className="text-right font-semibold">Actions</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
                   {filteredCategories.map((category) => (
-                    <TableRow key={category.id}>
+                    <TableRow key={category.id} className="hover:bg-purple-50/30">
                       <TableCell>
                         <div className="flex items-center gap-3">
                           {category.icon_url ? (
                             <img
                               src={category.icon_url}
                               alt={category.name}
-                              className="h-10 w-10 rounded-lg object-contain bg-muted"
+                              className="h-12 w-12 rounded-lg object-contain border shadow-sm bg-white"
                             />
                           ) : (
-                            <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-primary/10">
-                              <FolderOpen className="h-5 w-5 text-primary" />
+                            <div className="flex h-12 w-12 items-center justify-center rounded-lg bg-gradient-to-br from-purple-100 to-pink-100">
+                              <FolderOpen className="h-6 w-6 text-purple-500" />
                             </div>
                           )}
                           <div>
-                            <p className="font-medium">{category.name}</p>
+                            <p className="font-medium text-gray-800">{category.name}</p>
                           </div>
                         </div>
                       </TableCell>
                       <TableCell>
-                        <code className="text-xs bg-muted px-2 py-1 rounded">
+                        <code className="text-sm bg-purple-100 text-purple-700 px-2 py-1 rounded">
                           {category.slug}
                         </code>
                       </TableCell>
                       <TableCell>
-                        <Badge variant={category.is_active ? "success" : "secondary"}>
+                        <span className="font-medium text-gray-600">{category.products_count || 0}</span>
+                      </TableCell>
+                      <TableCell>
+                        <Badge className={category.is_active ? "bg-green-100 text-green-700" : "bg-gray-100 text-gray-500"}>
                           {category.is_active ? "Active" : "Inactive"}
                         </Badge>
                       </TableCell>
                       <TableCell className="text-right">
-                        <div className="flex items-center justify-end gap-2">
+                        <div className="flex items-center justify-end gap-1">
                           <Button
                             variant="ghost"
-                            size="icon"
+                            size="sm"
                             onClick={() => handleOpenEdit(category)}
+                            className="text-purple-600 hover:text-purple-800 hover:bg-purple-100"
                           >
                             <Edit className="h-4 w-4" />
+                          </Button>
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => {
+                              setDeletingCategory(category);
+                              setDeleteDialogOpen(true);
+                            }}
+                            className="text-red-600 hover:text-red-800 hover:bg-red-100"
+                          >
+                            <Trash2 className="h-4 w-4" />
                           </Button>
                         </div>
                       </TableCell>
@@ -243,13 +328,14 @@ export default function AdminCategoriesPage() {
       </Card>
 
       <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
-        <DialogContent className="sm:max-w-md md:max-w-lg">
+        <DialogContent className="sm:max-w-md">
           <DialogHeader className="pb-4 border-b">
-            <DialogTitle className="text-xl font-semibold">
+            <DialogTitle className="text-xl font-semibold flex items-center gap-2">
+              <FolderOpen className="h-5 w-5 text-purple-500" />
               {editingCategory ? "Edit Category" : "Add New Category"}
             </DialogTitle>
           </DialogHeader>
-          <div className="grid gap-5 py-4 max-h-[60vh] overflow-y-auto pr-1">
+          <div className="grid gap-5 py-4">
             <div className="grid gap-2">
               <Label htmlFor="name" className="text-sm font-medium">Name *</Label>
               <Input
@@ -286,7 +372,7 @@ export default function AdminCategoriesPage() {
               category="categories"
               aspectRatio="square"
             />
-            <div className="flex items-center justify-between rounded-xl border border-gray-200 p-4 bg-gray-50/50">
+            <div className="flex items-center justify-between rounded-xl border border-gray-200 p-4 bg-gradient-to-r from-gray-50 to-purple-50">
               <div className="space-y-0.5">
                 <Label className="text-sm font-medium">Active</Label>
                 <p className="text-xs text-gray-500">
@@ -308,9 +394,32 @@ export default function AdminCategoriesPage() {
             <Button 
               onClick={handleSave} 
               disabled={saving || !formData.name || !formData.slug}
-              className="w-full sm:w-auto bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700"
+              className="w-full sm:w-auto bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700"
             >
-              {saving ? "Saving..." : editingCategory ? "Update" : "Create"}
+              {saving ? "Saving..." : editingCategory ? "Update Category" : "Create Category"}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      <Dialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2 text-red-600">
+              <Trash2 className="h-5 w-5" />
+              Delete Category
+            </DialogTitle>
+          </DialogHeader>
+          <p className="text-gray-600">
+            Are you sure you want to delete <span className="font-semibold">{deletingCategory?.name}</span>? 
+            Products in this category may be affected.
+          </p>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setDeleteDialogOpen(false)}>
+              Cancel
+            </Button>
+            <Button variant="destructive" onClick={handleDelete}>
+              Delete Category
             </Button>
           </DialogFooter>
         </DialogContent>
