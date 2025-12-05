@@ -25,13 +25,12 @@ def create_test_admin():
         admin = User(
             email="admin@test.com",
             full_name="Test Admin",
-            first_name="Test",
-            last_name="Admin",
             password_hash=get_password_hash("admin123"),
             role="admin",
             is_active=True,
             is_verified=True,
             wallet_balance=0,
+            referral_code=f"ADMIN{datetime.utcnow().strftime('%Y%m%d')}",
             created_at=datetime.utcnow()
         )
         
