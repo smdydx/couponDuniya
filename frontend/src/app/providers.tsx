@@ -8,7 +8,7 @@ import { CartDrawer } from "@/components/cart/CartDrawer";
 import { StoreHydration } from "@/components/providers/StoreHydration";
 import { AuthHydration } from "@/components/providers/AuthHydration";
 
-export default function Providers({ children }: { children: React.ReactNode }) {
+export function Providers({ children }: { children: React.ReactNode }) {
   const [queryClient] = useState(
     () =>
       new QueryClient({
