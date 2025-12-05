@@ -50,13 +50,15 @@ export const useAuthStore = createWithEqualityFn<AuthState>()(
             isLoading: false,
           });
           
-          // Redirect based on role
+          // Redirect based on role - use setTimeout to ensure state is updated first
           if (typeof window !== 'undefined') {
-            if (user.is_admin || user.role === 'admin') {
-              window.location.href = '/admin/dashboard';
-            } else {
-              window.location.href = '/';
-            }
+            setTimeout(() => {
+              if (user.is_admin || user.role === 'admin') {
+                window.location.href = '/admin/dashboard';
+              } else {
+                window.location.href = '/';
+              }
+            }, 100);
           }
         } catch (error) {
           set({

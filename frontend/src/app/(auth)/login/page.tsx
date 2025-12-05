@@ -29,8 +29,9 @@ export default function LoginPage() {
   const onSubmit = async (data: LoginCredentials) => {
     try {
       await login(data);
-      // Redirection is handled automatically in the login function based on user role
+      // Redirection is handled in authStore after successful login
     } catch (err) {
+      console.error('Login error:', err);
       // Error is handled by store
     }
   };
