@@ -18,7 +18,7 @@ def get_current_user(db: Session = Depends(get_db), authorization: str | None = 
     token = authorization.replace("Bearer ", "")
 
     try:
-        payload = jwt.decode(token, settings.SECRET_KEY, algorithms=[settings.ALGORITHM])
+        payload = jwt.decode(token, settings.SECRET_KEY, algorithms=[settings.JWT_ALGORITHM])
         user_id: int = payload.get("sub")
         if user_id is None:
             raise HTTPException(status_code=401, detail="Invalid token")
