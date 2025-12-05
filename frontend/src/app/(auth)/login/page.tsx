@@ -161,10 +161,11 @@ export default function LoginPage() {
         </div>
 
         <Button
+          type="button"
           variant="outline"
           className="w-full flex items-center justify-center gap-2"
           onClick={() => {
-            setGoogleError(null); // Clear any previous Google errors
+            setGoogleError(null);
             const clientId = "433927974317-omujf5cn8ndhtdrofprnv9sb0uo3irl1.apps.googleusercontent.com";
             const redirectUri = `${window.location.origin}/auth/google/callback`;
             const scope = "openid email profile";
