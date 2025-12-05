@@ -17,6 +17,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { MerchantGrid } from "@/components/merchant/MerchantGrid";
+import { MerchantCard } from "@/components/merchant/MerchantCard";
 import { OfferGrid } from "@/components/offer/OfferGrid";
 import { ProductCard } from "@/components/product/ProductCard";
 import { ROUTES } from "@/lib/constants";
