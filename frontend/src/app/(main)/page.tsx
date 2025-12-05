@@ -498,7 +498,7 @@ export default function HomePage() {
         />
         {featured_merchants.length > 0 ? (
           <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-4">
-            {featured_merchants.slice(0, 6).map((merchant: any) => (
+            {featured_merchants.slice(0, 12).map((merchant: any) => (
               <MerchantCard key={merchant.id} merchant={merchant} />
             ))}
           </div>
@@ -527,7 +527,7 @@ export default function HomePage() {
               subtitle="Special offers only for members"
               viewAllLink={ROUTES.coupons}
             />
-            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
+            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-4">
               {exclusive_offers.slice(0, 6).map((offer: any) => (
                 <OfferCard key={offer.id} offer={offer} />
               ))}
@@ -572,7 +572,7 @@ export default function HomePage() {
           viewAllLink={ROUTES.coupons}
         />
         {featured_offers.length > 0 ? (
-          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
+          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-4">
             {featured_offers.slice(0, 6).map((offer: any) => (
               <OfferCard key={offer.id} offer={offer} />
             ))}

@@ -28,12 +28,13 @@ export function MerchantCard({ merchant }: MerchantCardProps) {
         <CardContent className="p-4">
           <div className="flex flex-col items-center text-center gap-3">
             {/* Logo Section - Fixed aspect ratio */}
-            <div className="relative w-full aspect-square max-w-[80px] shrink-0 overflow-hidden rounded-lg border-2 border-gray-100 bg-white shadow-sm transition-all duration-300 group-hover:scale-110 group-hover:shadow-md">
+            <div className="relative w-full aspect-square max-w-[100px] shrink-0 overflow-hidden rounded-lg border-2 border-gray-100 bg-white shadow-sm transition-all duration-300 group-hover:scale-110 group-hover:shadow-md">
               {merchant.logo_url ? (
                 <img
                   src={merchant.logo_url}
                   alt={merchant.name}
-                  className="w-full h-full object-contain p-2"
+                  className="w-full h-full object-contain p-3"
+                  loading="lazy"
                 />
               ) : (
                 <div className="flex h-full w-full items-center justify-center text-2xl font-bold text-primary bg-gradient-to-br from-primary/10 to-primary/5">
