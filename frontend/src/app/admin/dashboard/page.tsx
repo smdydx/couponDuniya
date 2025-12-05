@@ -80,8 +80,8 @@ export default function AdminDashboard() {
       try {
         const [statsResponse, merchantsResponse, offersResponse] = await Promise.allSettled([
           apiClient.get("/admin/analytics/dashboard"),
-          apiClient.get("/admin/merchants?limit=5"),
-          apiClient.get("/admin/offers?limit=5"),
+          apiClient.get("/admin/merchants", { params: { limit: 5 } }),
+          apiClient.get("/admin/offers", { params: { limit: 5 } }),
         ]);
         
         if (statsResponse.status === "fulfilled") {
