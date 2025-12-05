@@ -87,7 +87,11 @@ export default function AdminProductsPage() {
       setCategories(categoriesResponse.data?.data?.categories || []);
     } catch (error: any) {
       console.error("Failed to fetch products:", error);
+      console.error("Error details:", error.response?.data || error.message);
       setProducts([]);
+      setPagination(null);
+      setMerchants([]);
+      setCategories([]);
     } finally {
       setLoading(false);
     }
