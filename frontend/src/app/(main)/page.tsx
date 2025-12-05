@@ -497,21 +497,10 @@ export default function HomePage() {
           viewAllLink={ROUTES.merchants}
         />
         {featured_merchants.length > 0 ? (
-          <div className="space-y-4">
-            {/* First Row - 6 Merchants */}
-            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-4">
-              {featured_merchants.slice(0, 6).map((merchant: any) => (
-                <MerchantCard key={merchant.id} merchant={merchant} />
-              ))}
-            </div>
-            {/* Second Row - 6 Merchants */}
-            {featured_merchants.length > 6 && (
-              <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-4">
-                {featured_merchants.slice(6, 12).map((merchant: any) => (
-                  <MerchantCard key={merchant.id} merchant={merchant} />
-                ))}
-              </div>
-            )}
+          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-4">
+            {featured_merchants.slice(0, 6).map((merchant: any) => (
+              <MerchantCard key={merchant.id} merchant={merchant} />
+            ))}
           </div>
         ) : (
           <div className="text-center py-12 bg-muted/30 rounded-lg">
@@ -538,27 +527,16 @@ export default function HomePage() {
               subtitle="Special offers only for members"
               viewAllLink={ROUTES.coupons}
             />
-            <div className="space-y-4">
-              {/* First Row - 6 Offers */}
-              <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
-                {exclusive_offers.slice(0, 6).map((offer: any) => (
-                  <OfferCard key={offer.id} offer={offer} />
-                ))}
-              </div>
-              {/* Second Row - 6 Offers */}
-              {exclusive_offers.length > 6 && (
-                <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
-                  {exclusive_offers.slice(6, 12).map((offer: any) => (
-                    <OfferCard key={offer.id} offer={offer} />
-                  ))}
-                </div>
-              )}
+            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
+              {exclusive_offers.slice(0, 6).map((offer: any) => (
+                <OfferCard key={offer.id} offer={offer} />
+              ))}
             </div>
           </div>
         </section>
       )}
 
-      {/* Featured Products - 6+6 Grid */}
+      {/* Featured Products */}
       {featured_products.length > 0 && (
         <section className="container py-8 sm:py-12">
           <div className="flex items-center justify-between mb-6">
@@ -578,22 +556,10 @@ export default function HomePage() {
             </Button>
           </div>
 
-          <div className="space-y-4">
-            {/* First Row - 6 Products */}
-            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-4">
-              {featured_products.slice(0, 6).map((product: any) => (
-                <ProductCard key={product.id} product={product} compact />
-              ))}
-            </div>
-
-            {/* Second Row - 6 Products */}
-            {featured_products.length > 6 && (
-              <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-4">
-                {featured_products.slice(6, 12).map((product: any) => (
-                  <ProductCard key={product.id} product={product} compact />
-                ))}
-              </div>
-            )}
+          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-4">
+            {featured_products.slice(0, 6).map((product: any) => (
+              <ProductCard key={product.id} product={product} compact />
+            ))}
           </div>
         </section>
       )}
@@ -606,21 +572,10 @@ export default function HomePage() {
           viewAllLink={ROUTES.coupons}
         />
         {featured_offers.length > 0 ? (
-          <div className="space-y-4">
-            {/* First Row - 6 Offers */}
-            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
-              {featured_offers.slice(0, 6).map((offer: any) => (
-                <OfferCard key={offer.id} offer={offer} />
-              ))}
-            </div>
-            {/* Second Row - 6 Offers */}
-            {featured_offers.length > 6 && (
-              <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
-                {featured_offers.slice(6, 12).map((offer: any) => (
-                  <OfferCard key={offer.id} offer={offer} />
-                ))}
-              </div>
-            )}
+          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
+            {featured_offers.slice(0, 6).map((offer: any) => (
+              <OfferCard key={offer.id} offer={offer} />
+            ))}
           </div>
         ) : (
           <div className="text-center py-12 bg-muted/30 rounded-lg">
