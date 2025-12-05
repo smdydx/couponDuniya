@@ -102,18 +102,18 @@ export default function MerchantsPage() {
             </div>
 
             <MerchantGrid merchants={merchants} />
-
-            {/* Pagination */}
-            {pagination && pagination.total_pages > 1 && (
-              <div className="mt-6 sm:mt-8">
-                <Pagination
-                  currentPage={pagination.current_page}
-                  totalPages={pagination.total_pages}
-                  onPageChange={setPage}
-                />
-              </div>
-            )}
           </>
+        )}
+
+        {/* Pagination at bottom */}
+        {!isLoading && !error && merchants.length > 0 && pagination && pagination.total_pages > 1 && (
+          <div className="mt-8 pb-6">
+            <Pagination
+              currentPage={pagination.current_page}
+              totalPages={pagination.total_pages}
+              onPageChange={setPage}
+            />
+          </div>
         )}
       </div>
     </div>

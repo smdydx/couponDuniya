@@ -130,21 +130,21 @@ export default function CouponsPage() {
                 ) : (
                   <p className="text-center text-muted-foreground py-12">No offers found</p>
                 )}
-
-                {/* Pagination */}
-                {totalPages > 1 && (
-                  <div className="mt-6 sm:mt-8">
-                    <Pagination
-                      currentPage={currentPage}
-                      totalPages={totalPages}
-                      onPageChange={setCurrentPage}
-                    />
-                  </div>
-                )}
               </>
             )}
           </div>
         </div>
+
+        {/* Pagination at bottom */}
+        {!isLoading && !error && totalPages > 1 && (
+          <div className="mt-8 pb-6">
+            <Pagination
+              currentPage={currentPage}
+              totalPages={totalPages}
+              onPageChange={setCurrentPage}
+            />
+          </div>
+        )}
       </div>
     </div>
   );

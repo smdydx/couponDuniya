@@ -118,18 +118,18 @@ export default function ProductsPage() {
             ) : (
               <p className="text-center text-muted-foreground py-12">No gift cards found</p>
             )}
-
-            {/* Pagination */}
-            {totalPages > 1 && (
-              <div className="mt-6 sm:mt-8">
-                <Pagination
-                  currentPage={currentPage}
-                  totalPages={totalPages}
-                  onPageChange={setCurrentPage}
-                />
-              </div>
-            )}
           </>
+        )}
+
+        {/* Pagination at bottom */}
+        {!isLoading && !error && products.length > 0 && totalPages > 1 && (
+          <div className="mt-8 pb-6">
+            <Pagination
+              currentPage={currentPage}
+              totalPages={totalPages}
+              onPageChange={setCurrentPage}
+            />
+          </div>
         )}
       </div>
     </div>
