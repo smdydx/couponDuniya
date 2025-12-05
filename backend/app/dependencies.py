@@ -12,7 +12,7 @@ settings = get_settings()
 
 # Placeholder for oauth2_scheme as it's not provided in the original code.
 # In a real scenario, this would be imported or defined elsewhere.
-oauth2_scheme = None 
+oauth2_scheme = None
 
 def get_current_user(db: Session = Depends(get_db), authorization: str | None = Header(None)):
     """Extract user from JWT token"""

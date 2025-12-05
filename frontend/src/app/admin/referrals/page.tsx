@@ -92,6 +92,14 @@ export default function AdminReferralsPage() {
   const [selectedUser, setSelectedUser] = useState<ReferralUser | null>(null);
   const [detailDialogOpen, setDetailDialogOpen] = useState(false);
   const [levelPage, setLevelPage] = useState(1);
+  const [isMobile, setIsMobile] = useState(false);
+
+  useEffect(() => {
+    const checkMobile = () => setIsMobile(window.innerWidth < 768);
+    checkMobile();
+    window.addEventListener('resize', checkMobile);
+    return () => window.removeEventListener('resize', checkMobile);
+  }, []);
 
   const fetchData = async () => {
     setLoading(true);
@@ -232,15 +240,15 @@ export default function AdminReferralsPage() {
         </Link>
       </div>
 
-      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-5">
+      <div className="grid gap-3 sm:gap-4 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5">
         <Card className="border-0 shadow-lg bg-gradient-to-br from-purple-500 to-indigo-600 text-white">
-          <CardContent className="p-6">
+          <CardContent className="p-4 sm:p-6">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-purple-100 text-sm">Total Users</p>
-                <p className="text-3xl font-bold">{stats?.total_users?.toLocaleString() || 0}</p>
+                <p className="text-purple-100 text-xs sm:text-sm">Total Users</p>
+                <p className="text-2xl sm:text-3xl font-bold">{stats?.total_users?.toLocaleString() || 0}</p>
               </div>
-              <Users className="h-10 w-10 text-purple-200" />
+              <Users className="h-8 w-8 sm:h-10 sm:w-10 text-purple-200" />
             </div>
           </CardContent>
         </Card>

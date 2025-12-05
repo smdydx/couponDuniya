@@ -171,7 +171,7 @@ export default function AdminDashboard() {
         router.push("/");
         return;
       }
-      
+
       console.log("✅ Admin access granted - loading dashboard data");
       setAuthChecked(true);
     };
@@ -282,9 +282,9 @@ export default function AdminDashboard() {
   ];
 
   return (
-    <div className="space-y-8">
+    <div className="space-y-8 p-4 sm:p-6 lg:p-8">
       <div className="flex flex-col gap-2">
-        <h1 className="text-3xl font-bold bg-gradient-to-r from-purple-600 via-blue-600 to-indigo-600 bg-clip-text text-transparent">
+        <h1 className="text-3xl sm:text-4xl font-bold bg-gradient-to-r from-purple-600 via-blue-600 to-indigo-600 bg-clip-text text-transparent">
           Admin Dashboard
         </h1>
         <p className="text-gray-500">
@@ -292,7 +292,7 @@ export default function AdminDashboard() {
         </p>
       </div>
 
-      <div className="grid gap-6 md:grid-cols-2 xl:grid-cols-4">
+      <div className="grid gap-3 sm:gap-4 grid-cols-1 sm:grid-cols-2 lg:grid-cols-4">
         {mainStats.map((stat, index) => {
           const Icon = stat.icon;
           return (
@@ -322,7 +322,7 @@ export default function AdminDashboard() {
         })}
       </div>
 
-      <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-4">
+      <div className="grid gap-3 sm:gap-4 grid-cols-1 sm:grid-cols-2 lg:grid-cols-4">
         {secondaryStats.map((stat, index) => {
           const Icon = stat.icon;
           return (
@@ -343,7 +343,7 @@ export default function AdminDashboard() {
         })}
       </div>
 
-      <div className="grid gap-6 lg:grid-cols-2">
+      <div className="grid gap-3 sm:gap-4 lg:grid-cols-2">
         <Card className="border-0 shadow-xl bg-gradient-to-br from-white via-purple-50 to-indigo-50">
           <CardHeader className="pb-4">
             <CardTitle className="flex items-center gap-2 text-lg">
@@ -436,7 +436,7 @@ export default function AdminDashboard() {
         </Card>
       </div>
 
-      <div className="grid gap-6 lg:grid-cols-3">
+      <div className="grid gap-3 sm:gap-4 lg:grid-cols-3">
         <Card className="border-0 shadow-xl overflow-hidden">
           <CardHeader className="bg-gradient-to-r from-orange-500 to-amber-500 text-white">
             <CardTitle className="flex items-center gap-2 text-lg">
@@ -521,7 +521,7 @@ export default function AdminDashboard() {
       </div>
 
       {(recentMerchants.length > 0 || recentOffers.length > 0) && (
-        <div className="grid gap-6 lg:grid-cols-2">
+        <div className="grid gap-3 sm:gap-4 lg:grid-cols-2">
           {recentMerchants.length > 0 && (
             <Card className="border-0 shadow-xl overflow-hidden">
               <CardHeader className="bg-gradient-to-r from-indigo-500 to-blue-500 text-white">
@@ -609,6 +609,19 @@ export default function AdminDashboard() {
           )}
         </div>
       )}
+      {/* Logout button added here */}
+      <div className="flex justify-center mt-8">
+        <Button
+          onClick={() => {
+            useAuthStore.setState({ user: null, accessToken: null, isAuthenticated: false });
+            router.push("/login");
+          }}
+          variant="destructive"
+          className="px-6 py-3 text-lg font-semibold shadow-md hover:shadow-lg"
+        >
+          Logout
+        </Button>
+      </div>
     </div>
   );
 }
