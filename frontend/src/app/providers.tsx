@@ -2,8 +2,6 @@
 
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { useEffect, useState } from "react";
-import { useAuthStore } from "@/store/authStore";
-import { useCartStore } from "@/store/cartStore";
 import { CartDrawer } from "@/components/cart/CartDrawer";
 import { StoreHydration } from "@/components/providers/StoreHydration";
 import { AuthHydration } from "@/components/providers/AuthHydration";
@@ -28,9 +26,6 @@ export function Providers({ children }: { children: React.ReactNode }) {
     const root = document.documentElement;
     root.classList.remove("light", "dark");
     root.classList.add(savedTheme);
-
-    useAuthStore.persist.rehydrate();
-    useCartStore.persist.rehydrate();
   }, []);
 
   useEffect(() => {

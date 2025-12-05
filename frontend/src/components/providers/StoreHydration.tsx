@@ -4,31 +4,16 @@ import { useEffect, useState } from "react";
 import { useAuthStore } from "@/store/authStore";
 import { useCartStore } from "@/store/cartStore";
 
-interface StoreHydrationProps {
-  children: React.ReactNode;
-}
-
-export function StoreHydration({ children }: StoreHydrationProps) {
-  const [isHydrated, setIsHydrated] = useState(false);
+export function StoreHydration() {
+  const [hydrated, setHydrated] = useState(false);
 
   useEffect(() => {
-    const unsubAuth = useAuthStore.persist.onFinishHydration(() => {});
-    const unsubCart = useCartStore.persist.onFinishHydration(() => {});
-    
-    useAuthStore.persist.rehydrate();
-    useCartStore.persist.rehydrate();
-    
-    setIsHydrated(true);
-    
-    return () => {
-      unsubAuth();
-      unsubCart();
-    };
-  }, []);
+    if (!hydrated) {
+      useAuthStore.persist.rehydrate();
+      useCartStore.persist.rehydrate();
+      setHydrated(true);
+    }
+  }, [hydrated]);
 
-  if (!isHydrated) {
-    return <>{children}</>;
-  }
-
-  return <>{children}</>;
+  return null;
 }
