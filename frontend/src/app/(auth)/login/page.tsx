@@ -159,8 +159,23 @@ export default function LoginPage() {
           </span>
         </div>
 
-        <Button variant="outline" className="w-full" disabled>
-          Continue with Google (Coming Soon)
+        <Button 
+          variant="outline" 
+          className="w-full flex items-center justify-center gap-2" 
+          onClick={() => {
+            const clientId = "433927974317-omujf5cn8ndhtdrofprnv9sb0uo3irl1.apps.googleusercontent.com";
+            const redirectUri = `${window.location.origin}/auth/google/callback`;
+            const scope = "openid email profile";
+            const responseType = "id_token token";
+            const nonce = Math.random().toString(36).substring(7);
+            
+            const authUrl = `https://accounts.google.com/o/oauth2/v2/auth?client_id=${clientId}&redirect_uri=${redirectUri}&response_type=${responseType}&scope=${scope}&nonce=${nonce}`;
+            
+            window.location.href = authUrl;
+          }}
+        >
+          <img src="/images/icons/google.png" alt="Google" className="w-5 h-5" />
+          Continue with Google
         </Button>
       </CardContent>
       <CardFooter className="justify-center">

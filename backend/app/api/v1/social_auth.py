@@ -99,6 +99,7 @@ async def login_with_google(
     db: Session = Depends(get_db)
 ):
     """Login or register with Google"""
+    from ...security import create_access_token
 
     # Verify token and get user info
     user_info = await verify_google_token(payload.token)

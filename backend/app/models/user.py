@@ -30,3 +30,4 @@ class User(Base):
     
     # Relationships
     orders = relationship("Order", back_populates="user")
+    social_accounts = relationship("SocialAccount", back_populates="user")
