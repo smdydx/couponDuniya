@@ -48,6 +48,6 @@
 ## Notes:
 - Backend running on port 8000
 - Frontend running on port 5000
-- Admin login credentials: admin@couponlai / admin123
+- Admin login credentials: admin@couponali.com / admin123
 - Login at /login page, then redirects to /admin/dashboard
 - WebSocket HMR warnings are expected in Replit's proxy environment (doesn't affect functionality)
