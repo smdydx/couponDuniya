@@ -434,6 +434,29 @@ def update_product(
     }
 
 
+@router.delete("/products/{id}", response_model=dict)
+def delete_product(
+    id: int,
+    _: bool = Depends(require_admin),
+    db: Session = Depends(get_db)
+):
+    """Soft delete a product"""
+    product = db.scalar(select(Product).where(Product.id == id))
+    if not product:
+        raise HTTPException(status_code=404, detail="Product not found")
+
+    product.is_active = False
+    db.commit()
+
+    cache_invalidate_prefix(rk("cache", "products"))
+    cache_invalidate_prefix(rk("cache", "product"))
+
+    return {
+        "success": True,
+        "message": f"Product '{product.name}' deactivated successfully"
+    }
+
+
 @router.post("/products/{product_id}/variants", response_model=dict)
 def add_variant(
     product_id: int,
@@ -954,11 +977,12 @@ def complete_withdrawal(id: int, _: bool = Depends(require_admin)):
     return {"success": True, "data": {"id": id, "status": "completed"}}
 
 
-@router.get("/admin/analytics/dashboard", response_model=dict)
+@router.get("/analytics/dashboard", response_model=dict)
 def analytics_dashboard(
+    _: bool = Depends(require_admin),
     db: Session = Depends(get_db)
 ):
-    """Get admin dashboard metrics - Temporarily without auth for debugging"""
+    """Get admin dashboard metrics"""
     from datetime import datetime, timedelta
 
     try:

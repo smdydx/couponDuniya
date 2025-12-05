@@ -116,17 +116,17 @@ const adminApi = {
     try {
       const response = await apiClient.get('/analytics/dashboard');
       console.log("Dashboard response:", response.data);
-      
+
       if (response.data?.data) {
         return response.data.data;
       } else if (response.data) {
         return response.data;
       }
-      
+
       throw new Error("Invalid response format");
     } catch (error: any) {
       console.error("Dashboard API error:", error.message, error.response?.data);
-      
+
       // Return empty data structure on error instead of throwing
       return {
         orders: { total: 0, today: 0 },
