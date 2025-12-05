@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
+import { useAuthStore } from "@/store/authStore";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import Link from "next/link";
@@ -66,49 +67,42 @@ export default function AdminDashboard() {
     setMounted(true);
   }, []);
 
+  const { user, accessToken, isAuthenticated } = useAuthStore();
+
   useEffect(() => {
     if (!mounted) return;
 
-    const checkAuth = async () => {
-      const token = localStorage.getItem("token");
-      const userStr = localStorage.getItem("user");
+    // Wait a tick for hydration to complete
+    const checkAuth = () => {
+      console.log("🔐 Admin auth check:", { 
+        hasToken: !!accessToken, 
+        hasUser: !!user,
+        isAuthenticated 
+      });
 
-      console.log("🔐 Admin auth check:", { hasToken: !!token, hasUser: !!userStr });
-
-      if (!token || !userStr) {
+      if (!isAuthenticated || !accessToken || !user) {
         console.log("❌ No auth found, redirecting to login");
         router.push("/login");
         return;
       }
 
-      try {
-        const user = JSON.parse(userStr);
-        console.log("🔍 User details:", { 
-          email: user.email, 
-          is_admin: user.is_admin, 
-          role: user.role 
-        });
+      // Check if user is admin - either is_admin flag or role is 'admin'
+      const isAdminUser = user.is_admin === true || user.role === 'admin';
 
-        // Check if user is admin - either is_admin flag or role is 'admin'
-        const isAdminUser = user.is_admin === true || user.role === 'admin';
-
-        if (!isAdminUser) {
-          console.log("❌ Access denied - User is not admin");
-          alert("Access denied. Admin privileges required.");
-          router.push("/");
-          return;
-        }
-        
-        console.log("✅ Admin access granted - loading dashboard");
-        setLoading(false); // Allow dashboard to load
-      } catch (error) {
-        console.error("Auth check failed:", error);
-        router.push("/login");
+      if (!isAdminUser) {
+        console.log("❌ Access denied - User is not admin");
+        alert("Access denied. Admin privileges required.");
+        router.push("/");
         return;
       }
+      
+      console.log("✅ Admin access granted - loading dashboard");
+      setLoading(false); // Allow dashboard to load
     };
 
-    checkAuth();
+    // Add small delay to ensure store hydration completes
+    const timer = setTimeout(checkAuth, 100);
+    return () => clearTimeout(timer);
 
     const defaultStats: DashboardStats = {
       orders: { total: 0, today: 0 },
