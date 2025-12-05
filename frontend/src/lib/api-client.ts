@@ -36,16 +36,29 @@ const getAuthToken = () => {
   return null;
 };
 
-// Request interceptor - add token if available
+// Request interceptor to add auth token
 apiClient.interceptors.request.use(
   (config) => {
-    const token = getAuthToken();
-    if (token) {
-      config.headers.Authorization = `Bearer ${token}`;
+    if (typeof window !== "undefined") {
+      const authStorage = localStorage.getItem("auth-storage");
+      if (authStorage) {
+        try {
+          const authData = JSON.parse(authStorage);
+          const token = authData?.state?.token;
+          if (token) {
+            config.headers.Authorization = `Bearer ${token}`;
+            console.log("Auth token attached to request:", config.url);
+          }
+        } catch (error) {
+          console.error("Failed to parse auth storage:", error);
+        }
+      }
     }
     return config;
   },
-  (error) => Promise.reject(error)
+  (error) => {
+    return Promise.reject(error);
+  }
 );
 
 // Response interceptor - handle errors gracefully

@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { useRouter } from "next/navigation";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import Link from "next/link";
@@ -54,6 +55,7 @@ interface RecentOffer {
 }
 
 export default function AdminDashboard() {
+  const router = useRouter();
   const [stats, setStats] = useState<DashboardStats | null>(null);
   const [loading, setLoading] = useState(true);
   const [mounted, setMounted] = useState(false);
@@ -66,6 +68,31 @@ export default function AdminDashboard() {
 
   useEffect(() => {
     if (!mounted) return;
+
+    // Check if user is authenticated
+    const authStorage = localStorage.getItem("auth-storage");
+    if (!authStorage) {
+      router.push("/login");
+      return;
+    }
+
+    try {
+      const authData = JSON.parse(authStorage);
+      if (!authData?.state?.token || !authData?.state?.user) {
+        router.push("/login");
+        return;
+      }
+
+      // Check if user is admin
+      if (authData.state.user.role !== "admin") {
+        router.push("/");
+        return;
+      }
+    } catch (error) {
+      console.error("Auth check failed:", error);
+      router.push("/login");
+      return;
+    }
     
     const defaultStats: DashboardStats = {
       orders: { total: 0, today: 0 },
