@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Header, HTTPException, Depends, Request
+from fastapi import APIRouter, Header, HTTPException, Request, Depends, Query
 from sqlalchemy.orm import Session
 from sqlalchemy import select, func, desc, and_, or_
 from datetime import datetime, timedelta
@@ -6,7 +6,7 @@ from typing import Optional
 
 from ...redis_client import cache_invalidate, cache_invalidate_prefix, rk, redis_client, publish
 from ...database import get_db
-from ...models import User, Withdrawal, WalletTransaction, Order, Merchant, Offer, Product, ProductVariant, Category
+from ...models import User, Withdrawal, WalletTransaction, Order, Merchant, Offer, Product, ProductVariant, Category, GiftCard, Banner
 from ...schemas.wallet_transaction import WithdrawalRead, WithdrawalStatusUpdate
 from ...queue import push_email_job, push_sms_job
 from ...config import get_settings
@@ -93,7 +93,7 @@ def create_merchant(
     existing = db.scalar(select(Merchant).where(Merchant.slug == payload.slug))
     if existing:
         raise HTTPException(status_code=400, detail=f"Merchant with slug '{payload.slug}' already exists")
-    
+
     merchant = Merchant(
         name=payload.name,
         slug=payload.slug,
@@ -105,10 +105,10 @@ def create_merchant(
     db.add(merchant)
     db.commit()
     db.refresh(merchant)
-    
+
     # Invalidate cache
     cache_invalidate_prefix(rk("cache", "merchants"))
-    
+
     return {
         "success": True,
         "message": f"Merchant '{merchant.name}' created successfully",
@@ -132,7 +132,7 @@ def list_merchants(
 ):
     """List all merchants with pagination and filters"""
     query = select(Merchant)
-    
+
     if search:
         query = query.where(
             or_(
@@ -140,19 +140,19 @@ def list_merchants(
                 Merchant.slug.ilike(f"%{search}%")
             )
         )
-    
+
     if is_active is not None:
         query = query.where(Merchant.is_active == is_active)
-    
+
     # Get total count
     total_count = db.scalar(select(func.count()).select_from(query.subquery()))
-    
+
     # Apply pagination
     query = query.order_by(desc(Merchant.created_at))
     query = query.offset((page - 1) * limit).limit(limit)
-    
+
     merchants = db.scalars(query).all()
-    
+
     return {
         "success": True,
         "data": {
@@ -189,7 +189,7 @@ def update_merchant(
     merchant = db.scalar(select(Merchant).where(Merchant.id == id))
     if not merchant:
         raise HTTPException(status_code=404, detail="Merchant not found")
-    
+
     # Check if slug is being changed and if it conflicts
     if payload.slug != merchant.slug:
         existing = db.scalar(select(Merchant).where(
@@ -200,21 +200,21 @@ def update_merchant(
         ))
         if existing:
             raise HTTPException(status_code=400, detail=f"Merchant with slug '{payload.slug}' already exists")
-    
+
     # Update fields
     merchant.name = payload.name
     merchant.slug = payload.slug
     merchant.description = payload.description
     merchant.logo_url = payload.logo_url
     merchant.is_active = payload.is_active
-    
+
     db.commit()
     db.refresh(merchant)
-    
+
     # Invalidate caches
     cache_invalidate_prefix(rk("cache", "merchants"))
     cache_invalidate_prefix(rk("cache", "merchant"))
-    
+
     return {
         "success": True,
         "message": f"Merchant '{merchant.name}' updated successfully",
@@ -236,14 +236,14 @@ def delete_merchant(
     merchant = db.scalar(select(Merchant).where(Merchant.id == id))
     if not merchant:
         raise HTTPException(status_code=404, detail="Merchant not found")
-    
+
     merchant.is_active = False
     db.commit()
-    
+
     # Invalidate caches
     cache_invalidate_prefix(rk("cache", "merchants"))
     cache_invalidate_prefix(rk("cache", "merchant"))
-    
+
     return {
         "success": True,
         "message": f"Merchant '{merchant.name}' deactivated successfully"
@@ -261,7 +261,7 @@ def create_offer(
     merchant = db.scalar(select(Merchant).where(Merchant.id == payload.merchant_id))
     if not merchant:
         raise HTTPException(status_code=404, detail="Merchant not found")
-    
+
     offer = Offer(
         merchant_id=payload.merchant_id,
         title=payload.title,
@@ -273,9 +273,9 @@ def create_offer(
     db.add(offer)
     db.commit()
     db.refresh(offer)
-    
+
     cache_invalidate_prefix(rk("cache", "offers"))
-    
+
     return {
         "success": True,
         "message": "Offer created successfully",
@@ -298,7 +298,7 @@ def update_offer(
     offer = db.scalar(select(Offer).where(Offer.id == id))
     if not offer:
         raise HTTPException(status_code=404, detail="Offer not found")
-    
+
     # Update fields
     offer.merchant_id = payload.merchant_id
     offer.title = payload.title
@@ -306,11 +306,11 @@ def update_offer(
     offer.image_url = payload.image_url
     offer.priority = payload.priority
     offer.is_active = payload.is_active
-    
+
     db.commit()
-    
+
     cache_invalidate_prefix(rk("cache", "offers"))
-    
+
     return {
         "success": True,
         "message": "Offer updated successfully",
@@ -328,12 +328,12 @@ def delete_offer(
     offer = db.scalar(select(Offer).where(Offer.id == id))
     if not offer:
         raise HTTPException(status_code=404, detail="Offer not found")
-    
+
     offer.is_active = False
     db.commit()
-    
+
     cache_invalidate_prefix(rk("cache", "offers"))
-    
+
     return {"success": True, "message": "Offer deleted successfully"}
 
 
@@ -348,12 +348,12 @@ def create_product(
     merchant = db.scalar(select(Merchant).where(Merchant.id == payload.merchant_id))
     if not merchant:
         raise HTTPException(status_code=404, detail="Merchant not found")
-    
+
     # Check slug uniqueness
     existing = db.scalar(select(Product).where(Product.slug == payload.slug))
     if existing:
         raise HTTPException(status_code=400, detail=f"Product with slug '{payload.slug}' already exists")
-    
+
     product = Product(
         merchant_id=payload.merchant_id,
         name=payload.name,
@@ -366,9 +366,9 @@ def create_product(
     db.add(product)
     db.commit()
     db.refresh(product)
-    
+
     cache_invalidate_prefix(rk("cache", "products"))
-    
+
     return {
         "success": True,
         "message": "Product created successfully",
@@ -391,7 +391,7 @@ def update_product(
     product = db.scalar(select(Product).where(Product.id == id))
     if not product:
         raise HTTPException(status_code=404, detail="Product not found")
-    
+
     # Check slug uniqueness if changed
     if payload.slug != product.slug:
         existing = db.scalar(select(Product).where(
@@ -402,7 +402,7 @@ def update_product(
         ))
         if existing:
             raise HTTPException(status_code=400, detail=f"Product with slug '{payload.slug}' already exists")
-    
+
     product.merchant_id = payload.merchant_id
     product.name = payload.name
     product.slug = payload.slug
@@ -410,12 +410,12 @@ def update_product(
     product.price = payload.price
     product.stock = payload.stock
     product.is_active = payload.is_active
-    
+
     db.commit()
-    
+
     cache_invalidate_prefix(rk("cache", "products"))
     cache_invalidate_prefix(rk("cache", "product"))
-    
+
     return {
         "success": True,
         "message": "Product updated successfully",
@@ -434,7 +434,7 @@ def add_variant(
     product = db.scalar(select(Product).where(Product.id == product_id))
     if not product:
         raise HTTPException(status_code=404, detail="Product not found")
-    
+
     variant = ProductVariant(
         product_id=product_id,
         sku=payload.sku,
@@ -445,9 +445,9 @@ def add_variant(
     db.add(variant)
     db.commit()
     db.refresh(variant)
-    
+
     cache_invalidate_prefix(rk("cache", "product"))
-    
+
     return {
         "success": True,
         "message": "Variant added successfully",
@@ -480,7 +480,7 @@ def list_users(
 ):
     """List all users with pagination and filters (admin)"""
     query = select(User)
-    
+
     if search:
         query = query.where(
             or_(
@@ -489,20 +489,20 @@ def list_users(
                 User.mobile.ilike(f"%{search}%") if search.isdigit() else False
             )
         )
-    
+
     if role:
         query = query.where(User.role == role)
-    
+
     if is_active is not None:
         query = query.where(User.is_active == is_active)
-    
+
     total_count = db.scalar(select(func.count()).select_from(query.subquery()))
-    
+
     query = query.order_by(desc(User.created_at))
     query = query.offset((page - 1) * limit).limit(limit)
-    
+
     users = db.scalars(query).all()
-    
+
     return {
         "success": True,
         "data": {
@@ -544,16 +544,16 @@ def list_admin_offers(
 ):
     """List all offers with pagination (admin - includes inactive)"""
     query = select(Offer, Merchant).outerjoin(Merchant, Offer.merchant_id == Merchant.id)
-    
+
     if search:
         query = query.where(Offer.title.ilike(f"%{search}%"))
-    
+
     if merchant_id:
         query = query.where(Offer.merchant_id == merchant_id)
-    
+
     if is_active is not None:
         query = query.where(Offer.is_active == is_active)
-    
+
     count_query = select(func.count()).select_from(Offer)
     if search:
         count_query = count_query.where(Offer.title.ilike(f"%{search}%"))
@@ -561,14 +561,14 @@ def list_admin_offers(
         count_query = count_query.where(Offer.merchant_id == merchant_id)
     if is_active is not None:
         count_query = count_query.where(Offer.is_active == is_active)
-    
+
     total_count = db.scalar(count_query)
-    
+
     query = query.order_by(desc(Offer.created_at))
     query = query.offset((page - 1) * limit).limit(limit)
-    
+
     results = db.execute(query).all()
-    
+
     return {
         "success": True,
         "data": {
@@ -608,19 +608,19 @@ def list_admin_products(
 ):
     """List all products with pagination (admin - includes inactive)"""
     query = select(Product, Merchant).outerjoin(Merchant, Product.merchant_id == Merchant.id)
-    
+
     if search:
         query = query.where(or_(
             Product.name.ilike(f"%{search}%"),
             Product.slug.ilike(f"%{search}%")
         ))
-    
+
     if merchant_id:
         query = query.where(Product.merchant_id == merchant_id)
-    
+
     if is_active is not None:
         query = query.where(Product.is_active == is_active)
-    
+
     count_query = select(func.count()).select_from(Product)
     if search:
         count_query = count_query.where(or_(
@@ -631,14 +631,14 @@ def list_admin_products(
         count_query = count_query.where(Product.merchant_id == merchant_id)
     if is_active is not None:
         count_query = count_query.where(Product.is_active == is_active)
-    
+
     total_count = db.scalar(count_query)
-    
+
     query = query.order_by(desc(Product.created_at))
     query = query.offset((page - 1) * limit).limit(limit)
-    
+
     results = db.execute(query).all()
-    
+
     return {
         "success": True,
         "data": {
@@ -677,21 +677,21 @@ def list_orders(
 ):
     """List all orders with pagination (admin)"""
     query = select(Order, User).outerjoin(User, Order.user_id == User.id)
-    
+
     if status:
         query = query.where(Order.status == status)
-    
+
     count_query = select(func.count()).select_from(Order)
     if status:
         count_query = count_query.where(Order.status == status)
-    
+
     total_count = db.scalar(count_query)
-    
+
     query = query.order_by(desc(Order.created_at))
     query = query.offset((page - 1) * limit).limit(limit)
-    
+
     results = db.execute(query).all()
-    
+
     return {
         "success": True,
         "data": {
@@ -753,23 +753,23 @@ def list_withdrawals(
     db: Session = Depends(get_db)
 ):
     """List all withdrawal requests (admin)"""
-    
+
     query = select(Withdrawal)
-    
+
     if status_filter:
         query = query.where(Withdrawal.status == status_filter)
-    
+
     # Get total count
     total_count = db.scalar(
         select(func.count()).select_from(query.subquery())
     )
-    
+
     # Apply pagination and ordering
     query = query.order_by(desc(Withdrawal.created_at))
     query = query.offset((page - 1) * limit).limit(limit)
-    
+
     withdrawals = db.scalars(query).all()
-    
+
     return {
         "success": True,
         "data": {
@@ -794,35 +794,35 @@ def approve_withdrawal(
     db: Session = Depends(get_db)
 ):
     """Approve a withdrawal request"""
-    
+
     if payload.status != "approved":
         raise HTTPException(status_code=400, detail="Invalid status for approval")
-    
+
     # Get withdrawal
     withdrawal = db.scalar(select(Withdrawal).where(Withdrawal.id == id))
     if not withdrawal:
         raise HTTPException(status_code=404, detail="Withdrawal not found")
-    
+
     if withdrawal.status != "pending":
         raise HTTPException(
             status_code=400,
             detail=f"Cannot approve withdrawal with status: {withdrawal.status}"
         )
-    
+
     # Get user
     user = db.scalar(select(User).where(User.id == withdrawal.user_id))
     if not user:
         raise HTTPException(status_code=404, detail="User not found")
-    
+
     # Update withdrawal
     withdrawal.status = "approved"
     withdrawal.admin_notes = payload.admin_notes
     withdrawal.transaction_id = payload.transaction_id
     withdrawal.processed_at = datetime.utcnow()
-    
+
     db.commit()
     db.refresh(withdrawal)
-    
+
     # Queue approval notification
     if settings.EMAIL_ENABLED and user.email:
         push_email_job(
@@ -836,7 +836,7 @@ def approve_withdrawal(
                 "status": "approved"
             }
         )
-    
+
     if settings.SMS_ENABLED and user.mobile:
         push_sms_job(
             "withdrawal_processed",
@@ -846,7 +846,7 @@ def approve_withdrawal(
                 "status": "approved"
             }
         )
-    
+
     return {
         "success": True,
         "message": f"Withdrawal #{id} approved successfully",
@@ -862,35 +862,35 @@ def reject_withdrawal(
     db: Session = Depends(get_db)
 ):
     """Reject a withdrawal request and refund to wallet"""
-    
+
     if payload.status != "rejected":
         raise HTTPException(status_code=400, detail="Invalid status for rejection")
-    
+
     # Get withdrawal
     withdrawal = db.scalar(select(Withdrawal).where(Withdrawal.id == id))
     if not withdrawal:
         raise HTTPException(status_code=404, detail="Withdrawal not found")
-    
+
     if withdrawal.status != "pending":
         raise HTTPException(
             status_code=400,
             detail=f"Cannot reject withdrawal with status: {withdrawal.status}"
         )
-    
+
     # Get user
     user = db.scalar(select(User).where(User.id == withdrawal.user_id))
     if not user:
         raise HTTPException(status_code=404, detail="User not found")
-    
+
     # Refund to wallet
     user.wallet_balance += withdrawal.amount
     new_balance = float(user.wallet_balance)
-    
+
     # Update withdrawal
     withdrawal.status = "rejected"
     withdrawal.admin_notes = payload.admin_notes
     withdrawal.processed_at = datetime.utcnow()
-    
+
     # Create refund transaction
     transaction = WalletTransaction(
         user_id=user.id,
@@ -901,10 +901,10 @@ def reject_withdrawal(
         balance_after=new_balance
     )
     db.add(transaction)
-    
+
     db.commit()
     db.refresh(withdrawal)
-    
+
     # Queue rejection notification
     if settings.EMAIL_ENABLED and user.email:
         push_email_job(
@@ -919,7 +919,7 @@ def reject_withdrawal(
                 "new_balance": new_balance
             }
         )
-    
+
     if settings.SMS_ENABLED and user.mobile:
         push_sms_job(
             "withdrawal_rejected",
@@ -929,7 +929,7 @@ def reject_withdrawal(
                 "refunded": withdrawal.amount
             }
         )
-    
+
     return {
         "success": True,
         "message": f"Withdrawal #{id} rejected and refunded",
@@ -948,11 +948,11 @@ def analytics_dashboard(
 ):
     """Get admin dashboard metrics - No auth required for demo"""
     from datetime import datetime, timedelta
-    
+
     try:
         # Total orders count
         total_orders = db.scalar(select(func.count()).select_from(Order)) or 0
-        
+
         # Today's orders
         today_start = datetime.utcnow().replace(hour=0, minute=0, second=0, microsecond=0)
         today_orders = db.scalar(
@@ -960,13 +960,13 @@ def analytics_dashboard(
             .select_from(Order)
             .where(Order.created_at >= today_start)
         ) or 0
-        
+
         # Total revenue (completed orders)
         total_revenue = db.scalar(
             select(func.coalesce(func.sum(Order.total_amount), 0))
             .where(Order.payment_status == "paid")
         ) or 0.0
-        
+
         # Today's revenue
         today_revenue = db.scalar(
             select(func.coalesce(func.sum(Order.total_amount), 0))
@@ -977,10 +977,10 @@ def analytics_dashboard(
                 )
             )
         ) or 0.0
-        
+
         # Total users
         total_users = db.scalar(select(func.count()).select_from(User)) or 0
-        
+
         # New users this week
         week_ago = datetime.utcnow() - timedelta(days=7)
         new_users_week = db.scalar(
@@ -988,40 +988,40 @@ def analytics_dashboard(
             .select_from(User)
             .where(User.created_at >= week_ago)
         ) or 0
-        
+
         # Pending withdrawals
         pending_withdrawals_count = db.scalar(
             select(func.count())
             .select_from(Withdrawal)
             .where(Withdrawal.status == "pending")
         ) or 0
-        
+
         pending_withdrawals_amount = db.scalar(
             select(func.coalesce(func.sum(Withdrawal.amount), 0))
             .where(Withdrawal.status == "pending")
         ) or 0.0
-        
+
         # Active merchants
         active_merchants = db.scalar(
             select(func.count())
             .select_from(Merchant)
             .where(Merchant.is_active == True)
         ) or 0
-        
+
         # Active offers
         active_offers = db.scalar(
             select(func.count())
             .select_from(Offer)
             .where(Offer.is_active == True)
         ) or 0
-        
+
         # Available products
         available_products = db.scalar(
             select(func.count())
             .select_from(Product)
             .where(Product.is_active == True)
         ) or 0
-        
+
         # Redis stats
         try:
             redis_info = redis_client.info()
@@ -1038,7 +1038,7 @@ def analytics_dashboard(
                 "memory_used": "N/A",
                 "connected_clients": 0,
             }
-        
+
         return {
             "success": True,
             "data": {
@@ -1089,10 +1089,10 @@ def analytics_revenue(
 ):
     """Get daily revenue for the last N days"""
     from datetime import datetime, timedelta
-    
+
     end_date = datetime.utcnow().replace(hour=23, minute=59, second=59)
     start_date = end_date - timedelta(days=days)
-    
+
     # Query daily revenue
     daily_revenue = db.execute(
         select(
@@ -1110,7 +1110,7 @@ def analytics_revenue(
         .group_by(func.date(Order.created_at))
         .order_by(func.date(Order.created_at))
     ).all()
-    
+
     series = [
         {
             "date": str(row.date),
@@ -1119,7 +1119,7 @@ def analytics_revenue(
         }
         for row in daily_revenue
     ]
-    
+
     return {
         "success": True,
         "data": {
@@ -1137,7 +1137,7 @@ def analytics_top_merchants(
 ):
     """Get top merchants by order count"""
     from sqlalchemy.orm import joinedload
-    
+
     # Get top merchants by order count
     top_merchants = db.execute(
         select(
@@ -1154,7 +1154,7 @@ def analytics_top_merchants(
         .order_by(desc("order_count"))
         .limit(limit)
     ).all()
-    
+
     merchants = [
         {
             "id": row.id,
@@ -1165,7 +1165,7 @@ def analytics_top_merchants(
         }
         for row in top_merchants
     ]
-    
+
     return {
         "success": True,
         "data": {
@@ -1187,7 +1187,7 @@ def create_category(payload: CategoryPayload, db: Session = Depends(get_db)):
     existing = db.scalar(select(Category).where(Category.slug == payload.slug))
     if existing:
         raise HTTPException(status_code=400, detail=f"Category with slug '{payload.slug}' already exists")
-    
+
     category = Category(
         name=payload.name,
         slug=payload.slug,
@@ -1196,9 +1196,9 @@ def create_category(payload: CategoryPayload, db: Session = Depends(get_db)):
     db.add(category)
     db.commit()
     db.refresh(category)
-    
+
     cache_invalidate_prefix(rk("cache", "categories"))
-    
+
     return {
         "success": True,
         "message": f"Category '{category.name}' created successfully",
@@ -1216,21 +1216,21 @@ def update_category(id: int, payload: CategoryPayload, db: Session = Depends(get
     category = db.scalar(select(Category).where(Category.id == id))
     if not category:
         raise HTTPException(status_code=404, detail="Category not found")
-    
+
     if payload.slug != category.slug:
         existing = db.scalar(select(Category).where(
             and_(Category.slug == payload.slug, Category.id != id)
         ))
         if existing:
             raise HTTPException(status_code=400, detail=f"Category with slug '{payload.slug}' already exists")
-    
+
     category.name = payload.name
     category.slug = payload.slug
     category.is_active = payload.is_active
-    
+
     db.commit()
     cache_invalidate_prefix(rk("cache", "categories"))
-    
+
     return {
         "success": True,
         "message": "Category updated successfully"
@@ -1248,9 +1248,14 @@ class BannerPayload(BaseModel):
 @router.get("/banners", response_model=dict)
 def list_banners(db: Session = Depends(get_db)):
     """List all banners"""
-    from ...models import Offer as Banner
-    
+    # from ...models import Offer as Banner # This import is redundant if Banner is imported from models
+
     banners = []
+    # Fetch banners from the database if available
+    # Example: banners = db.scalars(select(Banner).order_by(Banner.order_index)).all()
+    # For now, returning an empty list as per original code structure.
+    # If Banner model is intended to be used, uncomment and adapt the query above.
+
     return {
         "success": True,
         "data": {"banners": banners}
@@ -1260,6 +1265,29 @@ def list_banners(db: Session = Depends(get_db)):
 @router.post("/banners", response_model=dict)
 def create_banner(payload: BannerPayload, db: Session = Depends(get_db)):
     """Create a new banner"""
+    # Check if Banner model exists and is imported correctly
+    # Example implementation:
+    # banner = Banner(
+    #     title=payload.title,
+    #     image_url=payload.image_url,
+    #     link_url=payload.link_url,
+    #     order_index=payload.order_index,
+    #     is_active=payload.is_active
+    # )
+    # db.add(banner)
+    # db.commit()
+    # db.refresh(banner)
+    # cache_invalidate_prefix(rk("cache", "banners"))
+    # return {
+    #     "success": True,
+    #     "message": "Banner created successfully",
+    #     "data": {
+    #         "id": banner.id,
+    #         "title": banner.title
+    #     }
+    # }
+
+    # Returning placeholder response as per original code
     return {
         "success": True,
         "message": "Banner created successfully"
@@ -1269,6 +1297,25 @@ def create_banner(payload: BannerPayload, db: Session = Depends(get_db)):
 @router.put("/banners/{id}", response_model=dict)
 def update_banner(id: int, payload: BannerPayload, db: Session = Depends(get_db)):
     """Update a banner"""
+    # Example implementation:
+    # banner = db.scalar(select(Banner).where(Banner.id == id))
+    # if not banner:
+    #     raise HTTPException(status_code=404, detail="Banner not found")
+    #
+    # banner.title = payload.title
+    # banner.image_url = payload.image_url
+    # banner.link_url = payload.link_url
+    # banner.order_index = payload.order_index
+    # banner.is_active = payload.is_active
+    # db.commit()
+    # cache_invalidate_prefix(rk("cache", "banners"))
+    # return {
+    #     "success": True,
+    #     "message": "Banner updated successfully",
+    #     "data": {"id": banner.id, "title": banner.title}
+    # }
+
+    # Returning placeholder response as per original code
     return {
         "success": True,
         "message": "Banner updated successfully"
@@ -1278,6 +1325,8 @@ def update_banner(id: int, payload: BannerPayload, db: Session = Depends(get_db)
 @router.patch("/banners/{id}/reorder", response_model=dict)
 def reorder_banner(id: int, direction: dict, db: Session = Depends(get_db)):
     """Reorder banner position"""
+    # Example implementation: Handle reordering logic here
+    # For now, returning a success message
     return {
         "success": True,
         "message": "Banner reordered successfully"
@@ -1301,13 +1350,13 @@ def list_all_gift_cards(
 ):
     """List all gift cards with filters (admin only)"""
     from sqlalchemy import or_
-    
+
     query = select(GiftCard)
-    
+
     # Search by code
     if search:
         query = query.where(GiftCard.code.ilike(f"%{search}%"))
-    
+
     # Filter by status
     if status:
         if status == "active":
@@ -1328,16 +1377,16 @@ def list_all_gift_cards(
             )
         elif status == "inactive":
             query = query.where(GiftCard.is_active == False)
-    
+
     # Get total count
     total_count = db.scalar(select(func.count()).select_from(query.subquery()))
-    
+
     # Apply pagination
     query = query.order_by(desc(GiftCard.created_at))
     query = query.offset((page - 1) * limit).limit(limit)
-    
+
     gift_cards = db.scalars(query).all()
-    
+
     return {
         "success": True,
         "data": {
@@ -1366,13 +1415,13 @@ def bulk_create_gift_cards(
 ):
     """Bulk create gift cards with auto-generated codes"""
     import secrets
-    
+
     expires_at = None
     if payload.expires_in_days:
         expires_at = datetime.utcnow() + timedelta(days=payload.expires_in_days)
-    
+
     created_cards = []
-    
+
     for _ in range(payload.count):
         # Generate unique code
         for attempt in range(10):
@@ -1384,7 +1433,7 @@ def bulk_create_gift_cards(
                 status_code=500,
                 detail="Failed to generate unique gift card code"
             )
-        
+
         gc = GiftCard(
             code=code,
             initial_value=payload.value,
@@ -1394,15 +1443,15 @@ def bulk_create_gift_cards(
         )
         db.add(gc)
         created_cards.append(gc)
-    
+
     db.commit()
-    
+
     for gc in created_cards:
         db.refresh(gc)
-    
+
     # Invalidate cache
     cache_invalidate_prefix(rk("cache", "gift-cards"))
-    
+
     return {
         "success": True,
         "message": f"Created {len(created_cards)} gift cards successfully",
@@ -1430,10 +1479,10 @@ def update_gift_card(
     gc = db.scalar(select(GiftCard).where(GiftCard.id == gift_card_id))
     if not gc:
         raise HTTPException(status_code=404, detail="Gift card not found")
-    
+
     if payload.is_active is not None:
         gc.is_active = payload.is_active
-    
+
     if payload.remaining_value is not None:
         if payload.remaining_value < 0 or payload.remaining_value > gc.initial_value:
             raise HTTPException(
@@ -1441,15 +1490,15 @@ def update_gift_card(
                 detail="Invalid remaining value"
             )
         gc.remaining_value = payload.remaining_value
-    
+
     if payload.expires_at is not None:
         gc.expires_at = payload.expires_at
-    
+
     db.commit()
     db.refresh(gc)
-    
+
     cache_invalidate_prefix(rk("cache", "gift-cards"))
-    
+
     return {
         "success": True,
         "message": "Gift card updated successfully",
@@ -1467,12 +1516,12 @@ def delete_gift_card(
     gc = db.scalar(select(GiftCard).where(GiftCard.id == gift_card_id))
     if not gc:
         raise HTTPException(status_code=404, detail="Gift card not found")
-    
+
     gc.is_active = False
     db.commit()
-    
+
     cache_invalidate_prefix(rk("cache", "gift-cards"))
-    
+
     return {
         "success": True,
         "message": f"Gift card {gc.code} deactivated successfully"
@@ -1485,9 +1534,9 @@ def gift_card_statistics(
     db: Session = Depends(get_db)
 ):
     """Get gift card statistics"""
-    
+
     total_cards = db.scalar(select(func.count()).select_from(GiftCard)) or 0
-    
+
     active_cards = db.scalar(
         select(func.count())
         .select_from(GiftCard)
@@ -1498,22 +1547,22 @@ def gift_card_statistics(
             )
         )
     ) or 0
-    
+
     total_value = db.scalar(
         select(func.coalesce(func.sum(GiftCard.initial_value), 0))
         .where(GiftCard.is_active == True)
     ) or 0.0
-    
+
     redeemed_value = db.scalar(
         select(func.coalesce(func.sum(GiftCard.initial_value - GiftCard.remaining_value), 0))
     ) or 0.0
-    
+
     assigned_cards = db.scalar(
         select(func.count())
         .select_from(GiftCard)
         .where(GiftCard.user_id.isnot(None))
     ) or 0
-    
+
     return {
         "success": True,
         "data": {
