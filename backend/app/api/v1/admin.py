@@ -960,10 +960,16 @@ def analytics_dashboard(
 ):
     """Get admin dashboard metrics"""
     from datetime import datetime, timedelta
-
+    import logging
+    
+    logger = logging.getLogger(__name__)
+    
     try:
+        logger.info(f"Admin dashboard accessed by user: {current_admin.id}")
+        
         # Total orders count
         total_orders = db.scalar(select(func.count()).select_from(Order)) or 0
+        logger.info(f"Total orders: {total_orders}")
 
         # Today's orders
         today_start = datetime.utcnow().replace(hour=0, minute=0, second=0, microsecond=0)
@@ -972,12 +978,14 @@ def analytics_dashboard(
             .select_from(Order)
             .where(Order.created_at >= today_start)
         ) or 0
+        logger.info(f"Today's orders: {today_orders}")
 
         # Total revenue (completed orders)
         total_revenue = db.scalar(
             select(func.coalesce(func.sum(Order.total_amount), 0))
             .where(Order.payment_status == "paid")
         ) or 0.0
+        logger.info(f"Total revenue: {total_revenue}")
 
         # Today's revenue
         today_revenue = db.scalar(
@@ -989,9 +997,11 @@ def analytics_dashboard(
                 )
             )
         ) or 0.0
+        logger.info(f"Today's revenue: {today_revenue}")
 
         # Total users
         total_users = db.scalar(select(func.count()).select_from(User)) or 0
+        logger.info(f"Total users: {total_users}")
 
         # New users this week
         week_ago = datetime.utcnow() - timedelta(days=7)
@@ -1000,6 +1010,7 @@ def analytics_dashboard(
             .select_from(User)
             .where(User.created_at >= week_ago)
         ) or 0
+        logger.info(f"New users this week: {new_users_week}")
 
         # Pending withdrawals
         pending_withdrawals_count = db.scalar(
@@ -1007,11 +1018,13 @@ def analytics_dashboard(
             .select_from(Withdrawal)
             .where(Withdrawal.status == "pending")
         ) or 0
+        logger.info(f"Pending withdrawals count: {pending_withdrawals_count}")
 
         pending_withdrawals_amount = db.scalar(
             select(func.coalesce(func.sum(Withdrawal.amount), 0))
             .where(Withdrawal.status == "pending")
         ) or 0.0
+        logger.info(f"Pending withdrawals amount: {pending_withdrawals_amount}")
 
         # Active merchants
         active_merchants = db.scalar(
@@ -1019,6 +1032,7 @@ def analytics_dashboard(
             .select_from(Merchant)
             .where(Merchant.is_active == True)
         ) or 0
+        logger.info(f"Active merchants: {active_merchants}")
 
         # Active offers
         active_offers = db.scalar(
@@ -1026,6 +1040,7 @@ def analytics_dashboard(
             .select_from(Offer)
             .where(Offer.is_active == True)
         ) or 0
+        logger.info(f"Active offers: {active_offers}")
 
         # Available products
         available_products = db.scalar(
@@ -1033,6 +1048,7 @@ def analytics_dashboard(
             .select_from(Product)
             .where(Product.is_active == True)
         ) or 0
+        logger.info(f"Available products: {available_products}")
 
         # Redis stats
         try:
@@ -1043,7 +1059,9 @@ def analytics_dashboard(
                 "memory_used": redis_info.get("used_memory_human", "N/A"),
                 "connected_clients": redis_info.get("connected_clients", 0),
             }
-        except Exception:
+            logger.info(f"Redis stats: {redis_stats}")
+        except Exception as redis_err:
+            logger.error(f"Redis connection error: {redis_err}")
             redis_stats = {
                 "connected": False,
                 "keys_count": 0,
@@ -1051,7 +1069,7 @@ def analytics_dashboard(
                 "connected_clients": 0,
             }
 
-        return {
+        response_data = {
             "success": True,
             "data": {
                 "orders": {
@@ -1078,14 +1096,20 @@ def analytics_dashboard(
                 "redis": redis_stats,
             }
         }
+        
+        logger.info(f"Dashboard response: {response_data}")
+        return response_data
+        
     except Exception as e:
-        # Return empty data on error
+        logger.error(f"❌ Dashboard error: {str(e)}", exc_info=True)
+        # Return empty data on error but log the actual error
         return {
-            "success": True,
+            "success": False,
+            "error": str(e),
             "data": {
                 "orders": {"total": 0, "today": 0},
                 "revenue": {"total": 0.0, "today": 0.0},
-                "users": {"total": 1, "new_this_week": 0},
+                "users": {"total": 0, "new_this_week": 0},
                 "withdrawals": {"pending_count": 0, "pending_amount": 0.0},
                 "catalog": {"active_merchants": 0, "active_offers": 0, "available_products": 0},
                 "redis": {"connected": False, "keys_count": 0, "memory_used": "N/A", "connected_clients": 0},
