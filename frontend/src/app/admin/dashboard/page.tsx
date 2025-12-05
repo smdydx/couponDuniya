@@ -78,14 +78,20 @@ export default function AdminDashboard() {
 
     const fetchDashboardData = async () => {
       try {
+        console.log("Fetching dashboard data...");
         const [statsResponse, merchantsResponse, offersResponse] = await Promise.allSettled([
           apiClient.get("/admin/analytics/dashboard"),
           apiClient.get("/admin/merchants", { params: { limit: 5 } }),
           apiClient.get("/admin/offers", { params: { limit: 5 } }),
         ]);
         
+        console.log("Stats response:", statsResponse);
+        console.log("Merchants response:", merchantsResponse);
+        console.log("Offers response:", offersResponse);
+        
         if (statsResponse.status === "fulfilled") {
           const statsData = statsResponse.value.data;
+          console.log("Stats data received:", statsData);
           if (statsData?.success && statsData?.data) {
             setStats(statsData.data);
           } else if (statsData?.data) {

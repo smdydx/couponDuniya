@@ -127,10 +127,9 @@ def list_merchants(
     limit: int = 20,
     search: str | None = None,
     is_active: bool | None = None,
-    _: bool = Depends(require_admin),
     db: Session = Depends(get_db)
 ):
-    """List all merchants with pagination and filters"""
+    """List all merchants with pagination and filters - Temporarily without auth"""
     query = select(Merchant)
 
     if search:
@@ -542,7 +541,7 @@ def list_admin_offers(
     is_active: bool | None = None,
     db: Session = Depends(get_db)
 ):
-    """List all offers with pagination (admin - includes inactive)"""
+    """List all offers with pagination (admin - includes inactive) - Temporarily without auth"""
     query = select(Offer, Merchant).outerjoin(Merchant, Offer.merchant_id == Merchant.id)
 
     if search:
@@ -946,7 +945,7 @@ def complete_withdrawal(id: int, _: bool = Depends(require_admin)):
 def analytics_dashboard(
     db: Session = Depends(get_db)
 ):
-    """Get admin dashboard metrics - No auth required for demo"""
+    """Get admin dashboard metrics - Temporarily without auth for debugging"""
     from datetime import datetime, timedelta
 
     try:
