@@ -56,20 +56,24 @@ The admin dashboard has been completely redesigned with a vibrant, professional 
 
 **Navigation**: Referrals and Referral Tree menu items added to admin sidebar
 
-### Admin Dashboard Bypass Authentication (December 2024)
-The admin dashboard is now accessible without login for testing purposes. Fixed multiple redirect issues:
+### Admin Dashboard Authentication (December 2024)
+The admin dashboard requires login for security. The login flow works correctly:
 
-1. **Removed 401 Redirect**: Both `/lib/api-client.ts` and `/lib/api/client.ts` no longer auto-redirect to /login on 401 errors
-2. **Added Providers Wrapper**: Admin layout now properly wraps children in Providers component for Zustand/React Query support
-3. **Graceful Error Handling**: Dashboard page uses Promise.allSettled and shows placeholder data when API calls fail
-4. **Fixed Multiple API Clients**: Consolidated imports to use the correct api-client across all admin pages
+1. **Login Page**: Go to `/login` with email: `admin@couponali.com` password: `admin123`
+2. **Auto-Redirect**: After successful login, admin users are automatically redirected to `/admin/dashboard`
+3. **Token Storage**: JWT tokens are stored in localStorage (`auth-storage`) and automatically sent with API requests
+4. **Graceful Error Handling**: Dashboard page uses Promise.allSettled and shows placeholder data when API calls fail
 
-**Key Files Changed:**
-- `frontend/src/lib/api-client.ts` - Disabled 401 redirect
-- `frontend/src/lib/api/client.ts` - Disabled 401 redirect
-- `frontend/src/app/admin/layout.tsx` - Added Providers wrapper
-- `frontend/src/app/admin/dashboard/page.tsx` - Uses apiClient with error handling
-- `frontend/src/app/(auth)/login/page.tsx` - Fixed import path
+**Password Hashing Note:**
+- The app uses `passlib` with `pbkdf2_sha256` scheme for password hashing
+- Do NOT use bcrypt directly when creating users programmatically
+- Always use `app.security.get_password_hash()` to hash passwords
+
+**Key Files:**
+- `frontend/src/lib/api-client.ts` - API client with auth interceptors
+- `frontend/src/store/authStore.ts` - Zustand store for auth state
+- `frontend/src/lib/api/auth.ts` - Auth API calls (maps email → identifier)
+- `backend/app/security.py` - Password hashing with passlib
 
 ### Admin Dashboard Fix - Zustand Hydration Issue
 The admin dashboard was failing with "getServerSnapshot should be cached" and hydration errors. Fixed by:
