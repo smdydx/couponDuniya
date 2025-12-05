@@ -21,6 +21,9 @@ import {
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { ROUTES } from "@/lib/constants";
+import { useState } from "react";
+import { useRouter } from "next/navigation";
+import { LogOut } from "lucide-react";
 
 const adminNavItems = [
   {
@@ -102,17 +105,30 @@ interface AdminSidebarProps {
 
 export function AdminSidebar({ isOpen, onToggle }: AdminSidebarProps) {
   const pathname = usePathname();
+  const router = useRouter();
+  const [isSidebarOpen, setIsSidebarOpen] = useState(isOpen);
+
+  const handleToggleSidebar = () => {
+    setIsSidebarOpen(!isSidebarOpen);
+    onToggle();
+  };
+
+  const handleLogout = () => {
+    localStorage.removeItem('admin_token');
+    localStorage.removeItem('admin_user');
+    router.push('/login');
+  };
 
   return (
     <aside
       className={cn(
         "fixed left-0 top-0 z-40 h-screen border-r bg-background transition-all duration-300",
-        isOpen ? "w-64" : "w-16",
-        isOpen ? "translate-x-0" : "-translate-x-full lg:translate-x-0"
+        isSidebarOpen ? "w-64" : "w-16",
+        isSidebarOpen ? "translate-x-0" : "-translate-x-full lg:translate-x-0"
       )}
     >
       <div className="flex h-16 items-center justify-between border-b px-4">
-        {isOpen && (
+        {isSidebarOpen && (
           <Link href={ROUTES.admin.dashboard} className="flex items-center gap-2">
             <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary text-primary-foreground text-sm font-bold">
               BC
@@ -125,10 +141,10 @@ export function AdminSidebar({ isOpen, onToggle }: AdminSidebarProps) {
             variant="ghost"
             size="icon"
             className="h-8 w-8 hidden lg:flex"
-            onClick={onToggle}
+            onClick={handleToggleSidebar}
             aria-label="Toggle sidebar"
           >
-            {isOpen ? (
+            {isSidebarOpen ? (
               <ChevronLeft className="h-4 w-4" />
             ) : (
               <ChevronRight className="h-4 w-4" />
@@ -151,43 +167,35 @@ export function AdminSidebar({ isOpen, onToggle }: AdminSidebarProps) {
                 isActive
                   ? "bg-primary text-primary-foreground"
                   : "text-muted-foreground hover:bg-accent hover:text-foreground",
-                !isOpen && "justify-center px-2"
+                !isSidebarOpen && "justify-center px-2"
               )}
-              title={!isOpen ? item.title : undefined}
+              title={!isSidebarOpen ? item.title : undefined}
             >
               <Icon className="h-5 w-5 shrink-0" />
-              {isOpen && <span>{item.title}</span>}
+              {isSidebarOpen && <span>{item.title}</span>}
             </Link>
           );
         })}
       </nav>
 
-      {isOpen && (
-        <div className="absolute bottom-4 left-0 right-0 px-4 space-y-2">
-          <button
-            onClick={() => {
-              localStorage.clear();
-              window.location.href = '/login';
-            }}
-            className="w-full flex items-center gap-2 rounded-md px-3 py-2 text-sm font-medium text-destructive hover:bg-destructive/10 transition-colors"
-          >
-            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-              <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/>
-              <polyline points="16 17 21 12 16 7"/>
-              <line x1="21" y1="12" x2="9" y2="12"/>
-            </svg>
-            Logout
-          </button>
-          <div className="rounded-lg border bg-muted/50 p-4">
-            <p className="text-xs text-muted-foreground">
-              Need help? Check the{" "}
-              <Link href="/admin/docs" className="text-primary hover:underline">
-                documentation
-              </Link>
-            </p>
-          </div>
+      <div className="absolute bottom-4 left-0 right-0 px-4 space-y-2">
+        <Button
+          variant="ghost"
+          className="w-full justify-start text-red-600 hover:text-red-700 hover:bg-red-50 dark:hover:bg-red-950"
+          onClick={handleLogout}
+        >
+          <LogOut className="mr-3 h-5 w-5" />
+          {isSidebarOpen && <span>Logout</span>}
+        </Button>
+        <div className="rounded-lg border bg-muted/50 p-4">
+          <p className="text-xs text-muted-foreground">
+            Need help? Check the{" "}
+            <Link href="/admin/docs" className="text-primary hover:underline">
+              documentation
+            </Link>
+          </p>
         </div>
-      )}
+      </div>
     </aside>
   );
 }
