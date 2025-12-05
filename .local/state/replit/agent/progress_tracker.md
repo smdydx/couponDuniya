@@ -26,6 +26,8 @@
 [x] 24. Added image fetching for merchants and offers in dashboard
 [x] 25. Updated Sidebar with expandable Referral menu (Referral List + Tree View submenu)
 [x] 26. Added gradient styling to admin logo and sidebar active states
+[x] 27. Fixed admin login - created admin user (admin@couponlai / admin123)
+[x] 28. Fixed normalizeUser function to correctly pass role and is_admin from backend
 
 ## Completed Features:
 - Admin Dashboard with colorful gradient cards (purple, blue, green, orange, pink)
@@ -46,5 +48,6 @@
 ## Notes:
 - Backend running on port 8000
 - Frontend running on port 5000
-- No protected routes (testing mode enabled)
+- Admin login credentials: admin@couponlai / admin123
+- Login at /login page, then redirects to /admin/dashboard
 - WebSocket HMR warnings are expected in Replit's proxy environment (doesn't affect functionality)
