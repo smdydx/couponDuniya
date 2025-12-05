@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useRef, useCallback } from "react";
+import { useState, useRef, useCallback, useMemo } from "react";
 import { Upload, X, Link as LinkIcon, Image as ImageIcon, Loader2, Check } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -17,7 +17,17 @@ interface ImageUploaderProps {
   aspectRatio?: "square" | "video" | "banner";
 }
 
-const API_BASE = process.env.NEXT_PUBLIC_API_URL || "http://0.0.0.0:8000/api/v1";
+function getBackendUrl(): string {
+  if (typeof window !== 'undefined') {
+    const hostname = window.location.hostname;
+    if (hostname.includes('replit') || hostname.includes('pike.replit.dev')) {
+      return `https://${hostname.replace('-00-', '-8000-00-')}`;
+    }
+  }
+  return process.env.NEXT_PUBLIC_API_URL?.replace('/api/v1', '') || 'http://localhost:8000';
+}
+
+const API_BASE = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000/api/v1";
 
 export function ImageUploader({
   value,
@@ -102,8 +112,9 @@ export function ImageUploader({
       }
 
       const data = await response.json();
+      const backendUrl = getBackendUrl();
       const imageUrl = data.data.type === "local" 
-        ? `http://0.0.0.0:8000${data.data.url}` 
+        ? `${backendUrl}${data.data.url}` 
         : data.data.url;
       onChange(imageUrl);
     } catch (err: any) {
