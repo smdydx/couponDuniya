@@ -114,7 +114,7 @@ export interface RevenueSeries {
 const adminApi = {
   getDashboard: async (): Promise<DashboardStats> => {
     try {
-      const response = await apiClient.get('/analytics/dashboard');
+      const response = await apiClient.get('/admin/analytics/dashboard');
       console.log("Dashboard response:", response.data);
 
       if (response.data?.data) {
@@ -140,12 +140,12 @@ const adminApi = {
   },
 
   getRevenueAnalytics: async (days: number = 30): Promise<{ series: RevenueSeries[]; period_days: number }> => {
-    const response = await apiClient.get(`/analytics/revenue?days=${days}`);
+    const response = await apiClient.get(`/admin/analytics/revenue?days=${days}`);
     return response.data?.data || response.data;
   },
 
   getTopMerchants: async (limit: number = 10) => {
-    const response = await apiClient.get(`/analytics/top-merchants?limit=${limit}`);
+    const response = await apiClient.get(`/admin/analytics/top-merchants?limit=${limit}`);
     return response.data?.data || response.data;
   },
 
@@ -181,7 +181,7 @@ const adminApi = {
     if (params.search) queryParams.append('search', params.search);
     if (params.merchant_id) queryParams.append('merchant_id', String(params.merchant_id));
 
-    const response = await apiClient.get(`/offers?${queryParams.toString()}`);
+    const response = await apiClient.get(`/admin/offers?${queryParams.toString()}`);
     return response.data?.data || { offers: response.data?.data?.items || [], pagination: { current_page: 1, total_pages: 1, total_items: 0, per_page: 20 } };
   },
 
@@ -205,7 +205,7 @@ const adminApi = {
     if (params.limit) queryParams.append('limit', String(params.limit));
     if (params.search) queryParams.append('search', params.search);
 
-    const response = await apiClient.get(`/products?${queryParams.toString()}`);
+    const response = await apiClient.get(`/admin/products?${queryParams.toString()}`);
     return response.data?.data || { products: response.data?.data?.items || [], pagination: { current_page: 1, total_pages: 1, total_items: 0, per_page: 20 } };
   },
 
@@ -217,6 +217,10 @@ const adminApi = {
   updateProduct: async (id: number, data: Omit<Product, 'id' | 'created_at'>): Promise<Product> => {
     const response = await apiClient.put(`/admin/products/${id}`, data);
     return response.data?.data || response.data;
+  },
+
+  deleteProduct: async (id: number): Promise<void> => {
+    await apiClient.delete(`/admin/products/${id}`);
   },
 
   getUsers: async (params: { page?: number; limit?: number; search?: string; role?: string } = {}): Promise<{ users: User[]; pagination: Pagination }> => {

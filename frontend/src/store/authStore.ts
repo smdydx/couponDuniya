@@ -35,16 +35,24 @@ export const useAuthStore = createWithEqualityFn<AuthState>()(
         set({ isLoading: true, error: null });
         try {
           const response: AuthResponse = await authAPI.login(credentials);
+          
+          // Ensure user object has proper role
+          const user = {
+            ...response.user,
+            is_admin: response.user.role === 'admin' || response.user.is_admin,
+          };
+          
           set({
-            user: response.user,
+            user,
             accessToken: response.access_token,
             refreshToken: response.refresh_token,
             isAuthenticated: true,
             isLoading: false,
           });
+          
           // Redirect based on role
           if (typeof window !== 'undefined') {
-            if (response.user.is_admin || response.user.role === 'admin') {
+            if (user.is_admin || user.role === 'admin') {
               window.location.href = '/admin/dashboard';
             } else {
               window.location.href = '/';

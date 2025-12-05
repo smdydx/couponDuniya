@@ -19,7 +19,7 @@ export const adminApiClient = axios.create({
   },
 });
 
-// Request interceptor to add auth token
+// Request interceptor to add auth token to apiClient
 apiClient.interceptors.request.use(
   (config) => {
     const token = localStorage.getItem('auth_token');
@@ -31,7 +31,7 @@ apiClient.interceptors.request.use(
   (error) => Promise.reject(error)
 );
 
-// Request interceptor for admin API client
+// Request interceptor for adminApiClient to add auth token
 adminApiClient.interceptors.request.use(
   (config) => {
     const token = localStorage.getItem('auth_token');
@@ -43,7 +43,7 @@ adminApiClient.interceptors.request.use(
   (error) => Promise.reject(error)
 );
 
-// Response interceptor for error handling
+// Response interceptor for error handling for apiClient
 apiClient.interceptors.response.use(
   (response) => response,
   (error) => {
@@ -56,7 +56,7 @@ apiClient.interceptors.response.use(
   }
 );
 
-// Response interceptor for admin API client
+// Response interceptor for adminApiClient
 adminApiClient.interceptors.response.use(
   (response) => response,
   (error) => {
