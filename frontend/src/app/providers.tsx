@@ -5,6 +5,9 @@ import { useEffect, useState } from "react";
 import { useAuthStore } from "@/store/authStore";
 import { useCartStore } from "@/store/cartStore";
 import { CartDrawer } from "@/components/cart/CartDrawer";
+import { ThemeProvider } from "next-themes";
+import { StoreHydration } from "@/components/providers/StoreHydration";
+import { AuthHydration } from "@/components/providers/AuthHydration";
 
 export function Providers({ children }: { children: React.ReactNode }) {
   const [queryClient] = useState(
@@ -43,9 +46,13 @@ export function Providers({ children }: { children: React.ReactNode }) {
   }, []);
 
   return (
-    <QueryClientProvider client={queryClient}>
-      {children}
-      {mounted && <CartDrawer />}
-    </QueryClientProvider>
+    <ThemeProvider attribute="class" defaultTheme="light" enableSystem>
+      <QueryClientProvider client={queryClient}>
+        <StoreHydration />
+        <AuthHydration />
+        {children}
+        {mounted && <CartDrawer />}
+      </QueryClientProvider>
+    </ThemeProvider>
   );
 }

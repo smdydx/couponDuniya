@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useForm } from "react-hook-form";
@@ -17,8 +17,20 @@ import apiClient from "@/lib/api-client";
 
 export default function LoginPage() {
   const router = useRouter();
-  const { login, isLoading, error, setError, clearError } = useAuthStore(); // Modified to include setError and clearError
+  const { login, isLoading, error, setError, clearError, user, isAuthenticated } = useAuthStore();
   const [showPassword, setShowPassword] = useState(false);
+
+  // Redirect if already logged in
+  useEffect(() => {
+    if (isAuthenticated && user) {
+      const redirectUrl = (user.is_admin || user.role === 'admin') 
+        ? '/admin/dashboard' 
+        : '/';
+      
+      console.log('Already authenticated, redirecting to:', redirectUrl);
+      router.replace(redirectUrl);
+    }
+  }, [isAuthenticated, user, router]);
 
   const {
     register,

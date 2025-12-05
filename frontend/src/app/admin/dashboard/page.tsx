@@ -97,7 +97,9 @@ export default function AdminDashboard() {
         return;
       }
       
-      console.log("✅ Admin access granted");
+      console.log("✅ Admin access granted - loading dashboard");
+      setLoading(false); // Allow dashboard to load
+      return;
     } catch (error) {
       console.error("Auth check failed:", error);
       router.push("/login");
