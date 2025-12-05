@@ -28,7 +28,10 @@ export default function LoginPage() {
 
   const onSubmit = async (data: LoginCredentials) => {
     try {
+      console.log('Attempting login...');
       const user = await login(data);
+      
+      console.log('Login successful, user data:', user);
       
       // Redirect based on user role
       if (user) {
@@ -36,8 +39,14 @@ export default function LoginPage() {
           ? '/admin/dashboard' 
           : '/';
         
-        console.log('Login successful, redirecting to:', redirectUrl);
-        router.push(redirectUrl);
+        console.log('Redirecting to:', redirectUrl);
+        
+        // Force redirect with window.location if router.push fails
+        setTimeout(() => {
+          window.location.href = redirectUrl;
+        }, 100);
+      } else {
+        console.error('Login returned null/undefined user');
       }
     } catch (err) {
       console.error('Login error:', err);
