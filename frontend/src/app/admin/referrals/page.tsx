@@ -227,7 +227,7 @@ export default function AdminReferralsPage() {
         <Link href="/admin/referrals/tree">
           <Button className="bg-gradient-to-r from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600">
             <GitBranch className="h-4 w-4 mr-2" />
-            View Tree Structure
+            View Binary Tree
           </Button>
         </Link>
       </div>

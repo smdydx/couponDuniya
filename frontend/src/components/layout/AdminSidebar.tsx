@@ -16,6 +16,7 @@ import {
   Wallet,
   FileText,
   Shield,
+  Network,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
@@ -51,6 +52,11 @@ const adminNavItems = [
     title: "Users",
     href: ROUTES.admin.users,
     icon: Users,
+  },
+  {
+    title: "Referrals",
+    href: "/admin/referrals",
+    icon: Network,
   },
   {
     title: "Withdrawals",

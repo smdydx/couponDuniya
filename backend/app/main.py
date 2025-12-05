@@ -41,6 +41,7 @@ from .api.v1 import (
     blog_uploads,
     homepage,
     uploads,
+    admin_referrals,
 )
 from fastapi.openapi.utils import get_openapi
 from fastapi.staticfiles import StaticFiles
@@ -231,6 +232,7 @@ app.include_router(products.router, prefix="/api/v1")
 app.include_router(orders.router, prefix="/api/v1")
 app.include_router(wallet.router, prefix="/api/v1")
 app.include_router(admin.router, prefix="/api/v1")
+app.include_router(admin_referrals.router, prefix="/api/v1")
 app.include_router(access.router, prefix="/api/v1")
 app.include_router(gift_cards.router, prefix="/api/v1")
 app.include_router(referrals.router, prefix="/api/v1")

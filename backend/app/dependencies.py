@@ -10,6 +10,10 @@ import os
 
 settings = get_settings()
 
+# Placeholder for oauth2_scheme as it's not provided in the original code.
+# In a real scenario, this would be imported or defined elsewhere.
+oauth2_scheme = None 
+
 def get_current_user(db: Session = Depends(get_db), authorization: str | None = Header(None)):
     """Extract user from JWT token"""
     if not authorization or not authorization.startswith("Bearer "):
@@ -31,14 +35,14 @@ def get_current_user(db: Session = Depends(get_db), authorization: str | None = 
 
     return user
 
-def get_current_admin(current_user: User = Depends(get_current_user)):
+def get_current_admin_user(current_user: User = Depends(get_current_user)):
     """Verify user has admin role"""
     if current_user.role != "admin" and not current_user.is_admin:
         raise HTTPException(status_code=403, detail="Admin access required")
     return current_user
 
 # Alias for backward compatibility
-require_admin = get_current_admin
+require_admin = get_current_admin_user
 
 def verify_admin_ip(request: Request):
     """Verify admin IP - disabled in development"""
