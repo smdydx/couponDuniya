@@ -30,10 +30,13 @@ def get_current_user(db: Session = Depends(get_db), authorization: str | None = 
         raise HTTPException(status_code=401, detail="User not found")
     return user
 
-def require_admin(user: User = Depends(get_current_user)):
-    if not user.is_admin:
-        raise HTTPException(status_code=403, detail="Admin only")
-    return user
+async def require_admin(current_user: User = Depends(get_current_user)) -> bool:
+    """Require admin role"""
+    if not current_user:
+        raise HTTPException(status_code=401, detail="Authentication required")
+    if current_user.role != "admin":
+        raise HTTPException(status_code=403, detail="Admin access required")
+    return True
 
 def require_internal_service(x_internal_key: str | None = Header(None)):
     """Guard endpoints meant for service-to-service calls."""

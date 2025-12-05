@@ -3,6 +3,7 @@ from sqlalchemy.orm import Session
 from sqlalchemy import select, func, desc, and_, or_
 from datetime import datetime, timedelta
 from typing import Optional
+from math import ceil
 
 from ...redis_client import cache_invalidate, cache_invalidate_prefix, rk, redis_client, publish
 from ...database import get_db
@@ -122,58 +123,69 @@ def create_merchant(
 
 
 @router.get("/merchants", response_model=dict)
-def list_merchants(
+def list_admin_merchants(
     page: int = 1,
     limit: int = 20,
     search: str | None = None,
     is_active: bool | None = None,
+    _: bool = Depends(require_admin),
     db: Session = Depends(get_db)
 ):
-    """List all merchants with pagination and filters - Temporarily without auth"""
+    """List all merchants with pagination (admin - includes inactive)"""
     query = select(Merchant)
 
     if search:
-        query = query.where(
-            or_(
-                Merchant.name.ilike(f"%{search}%"),
-                Merchant.slug.ilike(f"%{search}%")
-            )
-        )
+        query = query.where(Merchant.name.ilike(f"%{search}%"))
 
     if is_active is not None:
         query = query.where(Merchant.is_active == is_active)
 
-    # Get total count
-    total_count = db.scalar(select(func.count()).select_from(query.subquery()))
+    # Count total
+    count_query = select(func.count()).select_from(Merchant)
+    if search:
+        count_query = count_query.where(Merchant.name.ilike(f"%{search}%"))
+    if is_active is not None:
+        count_query = count_query.where(Merchant.is_active == is_active)
 
-    # Apply pagination
+    total_count = db.scalar(count_query) or 0
+
+    # Order and paginate
     query = query.order_by(desc(Merchant.created_at))
     query = query.offset((page - 1) * limit).limit(limit)
 
     merchants = db.scalars(query).all()
 
+    merchants_data = []
+    for m in merchants:
+        # Count offers for this merchant
+        offers_count = db.scalar(
+            select(func.count(Offer.id)).where(
+                Offer.merchant_id == m.id,
+                Offer.is_active == True
+            )
+        ) or 0
+
+        merchants_data.append({
+            "id": m.id,
+            "name": m.name,
+            "slug": m.slug,
+            "logo_url": m.logo_url,
+            "description": m.description,
+            "is_active": m.is_active,
+            "is_featured": m.is_featured,
+            "offers_count": offers_count,
+            "created_at": m.created_at.isoformat() if m.created_at else None,
+        })
+
     return {
         "success": True,
-        "data": {
-            "merchants": [
-                {
-                    "id": m.id,
-                    "name": m.name,
-                    "slug": m.slug,
-                    "description": m.description,
-                    "logo_url": m.logo_url,
-                    "is_active": m.is_active,
-                    "created_at": m.created_at.isoformat() if m.created_at else None
-                }
-                for m in merchants
-            ],
-            "pagination": {
-                "current_page": page,
-                "total_pages": (total_count + limit - 1) // limit,
-                "total_items": total_count,
-                "per_page": limit
-            }
-        }
+        "merchants": merchants_data,
+        "pagination": {
+            "current_page": page,
+            "total_pages": ceil(total_count / limit) if total_count else 0,
+            "total_items": total_count,
+            "per_page": limit,
+        },
     }
 
 
@@ -539,9 +551,10 @@ def list_admin_offers(
     search: str | None = None,
     merchant_id: int | None = None,
     is_active: bool | None = None,
+    _: bool = Depends(require_admin),
     db: Session = Depends(get_db)
 ):
-    """List all offers with pagination (admin - includes inactive) - Temporarily without auth"""
+    """List all offers with pagination (admin - includes inactive)"""
     query = select(Offer, Merchant).outerjoin(Merchant, Offer.merchant_id == Merchant.id)
 
     if search:
@@ -561,7 +574,7 @@ def list_admin_offers(
     if is_active is not None:
         count_query = count_query.where(Offer.is_active == is_active)
 
-    total_count = db.scalar(count_query)
+    total_count = db.scalar(count_query) or 0
 
     query = query.order_by(desc(Offer.created_at))
     query = query.offset((page - 1) * limit).limit(limit)
