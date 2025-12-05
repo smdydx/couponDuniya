@@ -72,23 +72,32 @@ export default function AdminDashboard() {
     // Check if user is authenticated
     const authStorage = localStorage.getItem("auth-storage");
     if (!authStorage) {
+      console.log("No auth storage, redirecting to login");
       router.push("/login");
       return;
     }
 
     try {
       const authData = JSON.parse(authStorage);
+      console.log("Auth data:", authData);
+      
       if (!authData?.state?.accessToken || !authData?.state?.user) {
+        console.log("No token or user, redirecting to login");
         router.push("/login");
         return;
       }
 
       // Check if user is admin
       const user = authData.state.user;
+      console.log("User role check:", user.role, "is_admin:", user.is_admin);
+      
       if (user.role !== "admin" && !user.is_admin) {
+        console.log("Not an admin, redirecting to home");
         router.push("/");
         return;
       }
+      
+      console.log("✅ Admin access granted");
     } catch (error) {
       console.error("Auth check failed:", error);
       router.push("/login");

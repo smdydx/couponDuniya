@@ -28,8 +28,17 @@ export default function LoginPage() {
 
   const onSubmit = async (data: LoginCredentials) => {
     try {
-      await login(data);
-      // Redirection is handled in authStore after successful login
+      const user = await login(data);
+      
+      // Redirect based on user role
+      if (user) {
+        const redirectUrl = (user.is_admin || user.role === 'admin') 
+          ? '/admin/dashboard' 
+          : '/';
+        
+        console.log('Login successful, redirecting to:', redirectUrl);
+        router.push(redirectUrl);
+      }
     } catch (err) {
       console.error('Login error:', err);
       // Error is handled by store

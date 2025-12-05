@@ -52,15 +52,8 @@ export const useAuthStore = createWithEqualityFn<AuthState>()(
             error: null,
           });
           
-          // Redirect based on role
-          if (typeof window !== 'undefined') {
-            const redirectUrl = (user.is_admin || user.role === 'admin') 
-              ? '/admin/dashboard' 
-              : '/';
-            
-            console.log('Login successful, redirecting to:', redirectUrl);
-            window.location.href = redirectUrl;
-          }
+          // Return user object so login page can handle redirect
+          return user;
         } catch (error) {
           set({
             error: error instanceof Error ? error.message : 'Login failed',
