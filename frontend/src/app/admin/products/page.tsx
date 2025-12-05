@@ -79,12 +79,13 @@ export default function AdminProductsPage() {
       const [productsData, merchantsData, categoriesResponse] = await Promise.all([
         adminApi.getProducts({ page, limit: 20, search: search || undefined }),
         adminApi.getMerchants({ limit: 100 }),
-        apiClient.get('/categories'),
+        apiClient.get('/categories/'),
       ]);
       setProducts(productsData.products || []);
       setPagination(productsData.pagination);
       setMerchants(merchantsData.merchants || []);
-      setCategories(categoriesResponse.data?.data?.categories || []);
+      const catData = categoriesResponse.data?.data?.categories || categoriesResponse.data?.categories || [];
+      setCategories(catData);
     } catch (error: any) {
       console.error("Failed to fetch products:", error);
       console.error("Error details:", error.response?.data || error.message);

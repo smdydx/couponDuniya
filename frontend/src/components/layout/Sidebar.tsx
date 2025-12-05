@@ -22,6 +22,7 @@ import {
   Network,
   GitBranch,
   ChevronDown,
+  RefreshCw,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
@@ -117,6 +118,11 @@ const adminNavItems: NavItem[] = [
         icon: GitBranch,
       },
     ],
+  },
+  {
+    title: "Refresh Cache",
+    href: "/admin/refresh",
+    icon: RefreshCw,
   },
   {
     title: "Access Control",
