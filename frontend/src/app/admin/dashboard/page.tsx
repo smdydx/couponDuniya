@@ -28,6 +28,7 @@ import {
   RefreshCw,
 } from "lucide-react";
 import { LoadingSpinner } from "@/components/common/LoadingSpinner";
+import apiClient from "@/lib/api-client";
 
 interface DashboardStats {
   orders: { total: number; today: number };
@@ -66,36 +67,58 @@ export default function AdminDashboard() {
   useEffect(() => {
     if (!mounted) return;
     
+    const defaultStats: DashboardStats = {
+      orders: { total: 0, today: 0 },
+      revenue: { total: 0, today: 0 },
+      users: { total: 0, new_this_week: 0 },
+      withdrawals: { pending_count: 0, pending_amount: 0 },
+      catalog: { active_merchants: 0, active_offers: 0, available_products: 0 },
+      redis: { connected: false, keys_count: 0, memory_used: "0 MB", connected_clients: 0 },
+    };
+
     const fetchDashboardData = async () => {
       try {
-        const [statsResponse, merchantsResponse, offersResponse] = await Promise.all([
-          fetch("http://localhost:8000/api/v1/admin/analytics/dashboard"),
-          fetch("http://localhost:8000/api/v1/admin/merchants?limit=5"),
-          fetch("http://localhost:8000/api/v1/admin/offers?limit=5"),
+        const [statsResponse, merchantsResponse, offersResponse] = await Promise.allSettled([
+          apiClient.get("/admin/analytics/dashboard"),
+          apiClient.get("/admin/merchants?limit=5"),
+          apiClient.get("/admin/offers?limit=5"),
         ]);
         
-        const statsData = await statsResponse.json();
-        const merchantsData = await merchantsResponse.json();
-        const offersData = await offersResponse.json();
-        
-        if (statsData.success) {
-          setStats(statsData.data);
+        if (statsResponse.status === "fulfilled") {
+          const statsData = statsResponse.value.data;
+          if (statsData?.success && statsData?.data) {
+            setStats(statsData.data);
+          } else if (statsData?.data) {
+            setStats(statsData.data);
+          } else {
+            setStats(defaultStats);
+          }
+        } else {
+          console.error("Stats fetch failed:", statsResponse.reason);
+          setStats(defaultStats);
         }
         
-        if (merchantsData.success && merchantsData.data?.merchants) {
-          setRecentMerchants(merchantsData.data.merchants);
+        if (merchantsResponse.status === "fulfilled") {
+          const merchantsData = merchantsResponse.value.data;
+          if (merchantsData?.success && merchantsData?.data?.merchants) {
+            setRecentMerchants(merchantsData.data.merchants);
+          }
         }
         
-        if (offersData.success && offersData.data?.offers) {
-          setRecentOffers(offersData.data.offers.map((o: any) => ({
-            id: o.id,
-            title: o.title,
-            image_url: o.image_url,
-            merchant_name: o.merchant?.name || "Unknown",
-          })));
+        if (offersResponse.status === "fulfilled") {
+          const offersData = offersResponse.value.data;
+          if (offersData?.success && offersData?.data?.offers) {
+            setRecentOffers(offersData.data.offers.map((o: any) => ({
+              id: o.id,
+              title: o.title,
+              image_url: o.image_url,
+              merchant_name: o.merchant?.name || "Unknown",
+            })));
+          }
         }
       } catch (error) {
         console.error("Failed to fetch dashboard data:", error);
+        setStats(defaultStats);
       } finally {
         setLoading(false);
       }

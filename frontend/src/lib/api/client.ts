@@ -68,11 +68,8 @@ apiClient.interceptors.response.use(
           }
         }
       } catch {
-        // Refresh failed, clear auth and redirect to login
+        // Refresh failed, clear auth but don't redirect - let components handle auth errors gracefully
         localStorage.removeItem('auth-storage');
-        if (typeof window !== 'undefined') {
-          window.location.href = '/login';
-        }
       }
     }
 

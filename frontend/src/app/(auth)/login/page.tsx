@@ -13,7 +13,7 @@ import { Separator } from "@/components/ui/separator";
 import { useAuthStore } from "@/store/authStore";
 import { ROUTES } from "@/lib/constants";
 import type { LoginCredentials } from "@/types";
-import apiClient from "@/lib/apiClient"; // Assuming apiClient is set up to handle authentication
+import apiClient from "@/lib/api-client";
 
 export default function LoginPage() {
   const router = useRouter();

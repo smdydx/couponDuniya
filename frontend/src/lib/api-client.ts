@@ -29,7 +29,8 @@ apiClient.interceptors.response.use(
   (error) => {
     if (error.response?.status === 401) {
       localStorage.removeItem('auth_token');
-      window.location.href = '/login';
+      // Disable auto-redirect to /login - let components handle auth errors gracefully
+      // This allows admin dashboard to load and show placeholder data when not authenticated
     }
     return Promise.reject(error);
   }
