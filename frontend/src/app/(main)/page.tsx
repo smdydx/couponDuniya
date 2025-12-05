@@ -281,15 +281,16 @@ export default function HomePage() {
     async function fetchData() {
       setIsLoading(true);
       try {
-        const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000/api/v1";
+        const API_URL =
+          process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000/api/v1";
         const res = await fetch(
           `${API_URL}/homepage/?limit_merchants=12&limit_featured_offers=8&limit_exclusive_offers=6&limit_products=12&limit_banners=5`,
           {
-            method: 'GET',
+            method: "GET",
             headers: {
-              'Content-Type': 'application/json',
+              "Content-Type": "application/json",
             },
-          }
+          },
         );
 
         if (res.ok) {
@@ -343,6 +344,65 @@ export default function HomePage() {
 
   return (
     <div className="flex flex-col">
+      {/* Hero Section - CouponDunia Style */}
+      <section className="bg-gradient-to-b from-white to-purple-50 dark:from-gray-900 dark:to-gray-800 py-12 sm:py-16">
+        <div className="container text-center">
+          <h1 className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-bold mb-4">
+            Save Money with Verified
+          </h1>
+          <h2 className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-bold mb-6 bg-gradient-to-r from-purple-600 to-purple-800 dark:from-purple-400 dark:to-purple-600 bg-clip-text text-transparent">
+            Coupons & Cashback
+          </h2>
+          <p className="text-base sm:text-lg text-muted-foreground mb-8 max-w-3xl mx-auto">
+            Get the best deals, exclusive coupons, and instant cashback from
+            1000+ top brands. Start saving today!
+          </p>
+          <div className="flex flex-col sm:flex-row gap-4 justify-center items-center mb-12">
+            <Button
+              size="lg"
+              className="bg-purple-600 hover:bg-purple-700 text-white px-8"
+              asChild
+            >
+              <Link href={ROUTES.coupons}>
+                Browse Coupons
+                <ArrowRight className="ml-2 h-5 w-5" />
+              </Link>
+            </Button>
+            <Button size="lg" variant="outline" asChild>
+              <Link href={ROUTES.merchants}>View All Stores</Link>
+            </Button>
+          </div>
+
+          {/* Stats Section - Inside Hero */}
+          <div className="grid gap-6 sm:gap-8 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 max-w-5xl mx-auto">
+            <div className="bg-gradient-to-br from-purple-50 to-purple-100 dark:from-purple-950/30 dark:to-purple-900/20 rounded-xl p-6 sm:p-8 text-center">
+              <h3 className="text-3xl sm:text-4xl font-bold text-purple-600 dark:text-purple-400 mb-2">
+                50,000+
+              </h3>
+              <p className="text-sm sm:text-base text-gray-600 dark:text-gray-300">
+                Verified Coupons
+              </p>
+            </div>
+            <div className="bg-gradient-to-br from-blue-50 to-blue-100 dark:from-blue-950/30 dark:to-blue-900/20 rounded-xl p-6 sm:p-8 text-center">
+              <h3 className="text-3xl sm:text-4xl font-bold text-blue-600 dark:text-blue-400 mb-2">
+                1000+
+              </h3>
+              <p className="text-sm sm:text-base text-gray-600 dark:text-gray-300">
+                Partner Stores
+              </p>
+            </div>
+            <div className="bg-gradient-to-br from-green-50 to-green-100 dark:from-green-950/30 dark:to-green-900/20 rounded-xl p-6 sm:p-8 text-center sm:col-span-2 lg:col-span-1">
+              <h3 className="text-3xl sm:text-4xl font-bold text-green-600 dark:text-green-400 mb-2">
+                ₹50 Cr+
+              </h3>
+              <p className="text-sm sm:text-base text-gray-600 dark:text-gray-300">
+                Cashback Given
+              </p>
+            </div>
+          </div>
+        </div>
+      </section>
+
       {/* Hero Slider Section - At the Very Top */}
       {banners.length > 0 && (
         <section className="relative w-full bg-gradient-to-b from-primary/5 to-transparent">
@@ -433,59 +493,6 @@ export default function HomePage() {
       <section className="bg-gradient-to-r from-blue-50 to-purple-50 dark:from-gray-900 dark:to-gray-800 py-8 sm:py-12">
         <div className="container">
           <PromoSlider />
-        </div>
-      </section>
-
-      {/* Hero Section - CouponDunia Style */}
-      <section className="bg-gradient-to-b from-white to-purple-50 dark:from-gray-900 dark:to-gray-800 py-12 sm:py-16">
-        <div className="container text-center">
-          <h1 className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-bold mb-4">
-            Save Money with Verified
-          </h1>
-          <h2 className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-bold mb-6 bg-gradient-to-r from-purple-600 to-purple-800 dark:from-purple-400 dark:to-purple-600 bg-clip-text text-transparent">
-            Coupons & Cashback
-          </h2>
-          <p className="text-base sm:text-lg text-muted-foreground mb-8 max-w-3xl mx-auto">
-            Get the best deals, exclusive coupons, and instant cashback from
-            1000+ top brands. Start saving today!
-          </p>
-          <div className="flex flex-col sm:flex-row gap-4 justify-center items-center mb-12">
-            <Button
-              size="lg"
-              className="bg-purple-600 hover:bg-purple-700 text-white px-8"
-              asChild
-            >
-              <Link href={ROUTES.coupons}>
-                Browse Coupons
-                <ArrowRight className="ml-2 h-5 w-5" />
-              </Link>
-            </Button>
-            <Button size="lg" variant="outline" asChild>
-              <Link href={ROUTES.merchants}>View All Stores</Link>
-            </Button>
-          </div>
-
-          {/* Stats Section - Inside Hero */}
-          <div className="grid gap-6 sm:gap-8 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 max-w-5xl mx-auto">
-            <div className="bg-gradient-to-br from-purple-50 to-purple-100 dark:from-purple-950/30 dark:to-purple-900/20 rounded-xl p-6 sm:p-8 text-center">
-              <h3 className="text-3xl sm:text-4xl font-bold text-purple-600 dark:text-purple-400 mb-2">
-                50,000+
-              </h3>
-              <p className="text-sm sm:text-base text-gray-600 dark:text-gray-300">Verified Coupons</p>
-            </div>
-            <div className="bg-gradient-to-br from-blue-50 to-blue-100 dark:from-blue-950/30 dark:to-blue-900/20 rounded-xl p-6 sm:p-8 text-center">
-              <h3 className="text-3xl sm:text-4xl font-bold text-blue-600 dark:text-blue-400 mb-2">
-                1000+
-              </h3>
-              <p className="text-sm sm:text-base text-gray-600 dark:text-gray-300">Partner Stores</p>
-            </div>
-            <div className="bg-gradient-to-br from-green-50 to-green-100 dark:from-green-950/30 dark:to-green-900/20 rounded-xl p-6 sm:p-8 text-center sm:col-span-2 lg:col-span-1">
-              <h3 className="text-3xl sm:text-4xl font-bold text-green-600 dark:text-green-400 mb-2">
-                ₹50 Cr+
-              </h3>
-              <p className="text-sm sm:text-base text-gray-600 dark:text-gray-300">Cashback Given</p>
-            </div>
-          </div>
         </div>
       </section>
 
