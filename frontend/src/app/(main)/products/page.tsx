@@ -1,4 +1,3 @@
-
 "use client";
 
 import { useState } from "react";
@@ -109,15 +108,14 @@ export default function ProductsPage() {
           </div>
         ) : (
           <>
-            <div className="mb-4 text-xs sm:text-sm text-muted-foreground">
-              Showing {products.length} gift cards
-            </div>
-
-            {products.length > 0 ? (
-              <ProductGrid products={products} />
-            ) : (
-              <p className="text-center text-muted-foreground py-12">No gift cards found</p>
-            )}
+            <div className="mb-3 text-xs text-muted-foreground">
+                  Showing {products.length} gift cards
+                </div>
+                {products.length > 0 ? (
+                  <ProductGrid products={products} compact={false} />
+                ) : (
+                  <p className="text-center text-muted-foreground py-12">No gift cards found</p>
+                )}
           </>
         )}
 
