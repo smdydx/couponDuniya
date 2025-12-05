@@ -11,7 +11,7 @@ from ...models import User, Withdrawal, WalletTransaction, Order, Merchant, Offe
 from ...schemas.wallet_transaction import WithdrawalRead, WithdrawalStatusUpdate
 from ...queue import push_email_job, push_sms_job
 from ...config import get_settings
-from ...dependencies import get_current_admin, verify_admin_ip
+from ...dependencies import get_current_admin, require_admin, verify_admin_ip
 from pydantic import BaseModel, Field
 
 router = APIRouter(prefix="/admin", tags=["Admin"])
