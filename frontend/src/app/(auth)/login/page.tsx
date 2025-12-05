@@ -28,9 +28,8 @@ export default function LoginPage() {
 
   const onSubmit = async (data: LoginCredentials) => {
     try {
-      // The login function in the store will handle the API call and token storage
       await login(data);
-      // The redirection logic is now handled within the login function in the store
+      // Redirection is handled automatically in the login function based on user role
     } catch (err) {
       // Error is handled by store
     }

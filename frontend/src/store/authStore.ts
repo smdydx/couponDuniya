@@ -42,6 +42,14 @@ export const useAuthStore = createWithEqualityFn<AuthState>()(
             isAuthenticated: true,
             isLoading: false,
           });
+          // Redirect based on role
+          if (typeof window !== 'undefined') {
+            if (response.user.is_admin || response.user.role === 'admin') {
+              window.location.href = '/admin/dashboard';
+            } else {
+              window.location.href = '/';
+            }
+          }
         } catch (error) {
           set({
             error: error instanceof Error ? error.message : 'Login failed',

@@ -42,11 +42,16 @@ export default function AdminLayout({
     // Check if user is admin
     try {
       const user = userStr ? JSON.parse(userStr) : null;
-      if (!user || (!user.is_admin && user.role !== 'admin')) {
-        router.push('/');
+      if (!user) {
+        router.push('/login');
         return;
       }
-      setIsAuthenticated(true);
+
+      if (user.role === 'super_admin') {
+        setIsAuthenticated(true);
+      } else {
+        router.push('/'); // Redirect regular users to home page
+      }
     } catch (error) {
       console.error('Auth check failed:', error);
       router.push('/login');
@@ -57,7 +62,7 @@ export default function AdminLayout({
     setMounted(true);
   }, []);
 
-  const user = mockAdminUser;
+  const user = mockAdminUser; // In a real app, fetch this from authentication context or API
 
   if (!isAuthenticated) {
     return (
@@ -116,7 +121,11 @@ export default function AdminLayout({
                   </div>
                 </div>
 
-                <Button variant="ghost" size="icon" className="hover:bg-red-100" onClick={() => {}}>
+                <Button variant="ghost" size="icon" className="hover:bg-red-100" onClick={() => {
+                  localStorage.removeItem('auth_token');
+                  localStorage.removeItem('user');
+                  router.push('/login');
+                }}>
                   <LogOut className="h-5 w-5 text-gray-600" />
                 </Button>
               </>
