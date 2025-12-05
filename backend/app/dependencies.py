@@ -42,6 +42,7 @@ def get_current_admin_user(current_user: User = Depends(get_current_user)):
     return current_user
 
 # Alias for backward compatibility
+get_current_admin = get_current_admin_user
 require_admin = get_current_admin_user
 
 def verify_admin_ip(request: Request):
