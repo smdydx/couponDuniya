@@ -114,7 +114,7 @@ export interface RevenueSeries {
 const adminApi = {
   getDashboard: async (): Promise<DashboardStats> => {
     try {
-      const response = await apiClient.get('/admin/analytics/dashboard');
+      const response = await apiClient.get('/analytics/dashboard');
       console.log("Dashboard response:", response.data);
       
       if (response.data?.data) {
@@ -140,12 +140,12 @@ const adminApi = {
   },
 
   getRevenueAnalytics: async (days: number = 30): Promise<{ series: RevenueSeries[]; period_days: number }> => {
-    const response = await apiClient.get(`/admin/analytics/revenue?days=${days}`);
+    const response = await apiClient.get(`/analytics/revenue?days=${days}`);
     return response.data?.data || response.data;
   },
 
   getTopMerchants: async (limit: number = 10) => {
-    const response = await apiClient.get(`/admin/analytics/top-merchants?limit=${limit}`);
+    const response = await apiClient.get(`/analytics/top-merchants?limit=${limit}`);
     return response.data?.data || response.data;
   },
 

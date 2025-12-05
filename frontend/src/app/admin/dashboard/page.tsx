@@ -28,7 +28,7 @@ import {
   RefreshCw,
 } from "lucide-react";
 import { LoadingSpinner } from "@/components/common/LoadingSpinner";
-import apiClient from "@/lib/api-client";
+import { adminApiClient } from "@/lib/api-client";
 
 interface DashboardStats {
   orders: { total: number; today: number };
@@ -80,9 +80,9 @@ export default function AdminDashboard() {
       try {
         console.log("Fetching dashboard data...");
         const [statsResponse, merchantsResponse, offersResponse] = await Promise.allSettled([
-          apiClient.get("/admin/analytics/dashboard"),
-          apiClient.get("/admin/merchants", { params: { limit: 5 } }),
-          apiClient.get("/admin/offers", { params: { limit: 5 } }),
+          adminApiClient.get("/analytics/dashboard"),
+          adminApiClient.get("/merchants", { params: { limit: 5 } }),
+          adminApiClient.get("/offers", { params: { limit: 5 } }),
         ]);
         
         console.log("Stats response:", statsResponse);

@@ -941,7 +941,7 @@ def complete_withdrawal(id: int, _: bool = Depends(require_admin)):
     return {"success": True, "data": {"id": id, "status": "completed"}}
 
 
-@router.get("/analytics/dashboard", response_model=dict)
+@router.get("/admin/analytics/dashboard", response_model=dict)
 def analytics_dashboard(
     db: Session = Depends(get_db)
 ):
