@@ -29,12 +29,15 @@ export default function GoogleCallbackPage() {
         if (response.data.success) {
           const { access_token, refresh_token, user } = response.data.data;
           
-          // Store auth data directly using the store's setState
+          // Store tokens in localStorage
+          localStorage.setItem('access_token', access_token);
+          if (refresh_token) {
+            localStorage.setItem('refresh_token', refresh_token);
+          }
+          
+          // Update auth store state
           useAuthStore.setState({
-            user: {
-              ...user,
-              is_admin: user.role === 'admin' || user.is_admin,
-            },
+            user: user,
             accessToken: access_token,
             refreshToken: refresh_token || access_token,
             isAuthenticated: true,
@@ -43,7 +46,7 @@ export default function GoogleCallbackPage() {
           });
 
           // Redirect based on role
-          const redirectUrl = user.is_admin || user.role === 'admin' 
+          const redirectUrl = user.role === 'admin' || user.is_admin 
             ? '/admin/dashboard' 
             : '/';
           
