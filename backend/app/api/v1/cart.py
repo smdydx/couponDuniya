@@ -361,6 +361,7 @@ def checkout(
         
         payment = Payment(
             order_id=order.id,
+            user_id=current_user.id,
             gateway="razorpay",
             gateway_order_id=razorpay_order_id,
             amount=Decimal(str(payment_required)),
