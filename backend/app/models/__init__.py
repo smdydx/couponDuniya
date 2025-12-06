@@ -25,6 +25,7 @@ from .merchant_commission import MerchantCommission
 from .offer_view import OfferView
 from .inventory import Inventory
 from .payment import Payment
+from .payment_response import PaymentResponse
 from .withdrawal import Withdrawal
 from .seo_redirect import SEORedirect
 from .cms_page import CMSPage

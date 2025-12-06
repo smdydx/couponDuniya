@@ -24,6 +24,7 @@ from .merchant_commission import MerchantCommissionRead, MerchantCommissionCreat
 from .offer_view import OfferViewRead, OfferViewCreate
 from .inventory import InventoryRead, InventoryUpdate
 from .payment import PaymentRead, PaymentCreate
+from .payment_response import PaymentResponseRead, PaymentResponseCreate
 from .withdrawal import WithdrawalRead, WithdrawalCreate
 from .seo_redirect import SEORedirectRead, SEORedirectCreate
 from .cms_page import CMSPageRead, CMSPageCreate

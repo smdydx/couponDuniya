@@ -436,6 +436,24 @@ def verify_payment(
     payment.status = "completed"
     payment.paid_at = datetime.utcnow()
     
+    # Store payment response
+    from ...models import PaymentResponse
+    payment_response = PaymentResponse(
+        payment_id=payment.id,
+        order_id=order.id,
+        razorpay_order_id=request.razorpay_order_id,
+        razorpay_payment_id=request.razorpay_payment_id,
+        razorpay_signature=request.razorpay_signature,
+        payment_status="success",
+        razorpay_response={
+            "razorpay_order_id": request.razorpay_order_id,
+            "razorpay_payment_id": request.razorpay_payment_id,
+            "razorpay_signature": request.razorpay_signature,
+            "verified_at": datetime.utcnow().isoformat()
+        }
+    )
+    db.add(payment_response)
+    
     # Update order
     order.payment_status = "completed"
     order.status = "paid"
