@@ -110,12 +110,17 @@ async def login_with_google(
 
     if not user:
         # Auto-register new user with Google account
+        email_verified = user_info.get("email_verified", False)
+        # Convert string 'true'/'false' to boolean if needed
+        if isinstance(email_verified, str):
+            email_verified = email_verified.lower() == 'true'
+        
         user = User(
             email=user_info["email"],
             full_name=user_info.get("name", ""),
             password_hash=None,  # No password for social login - prevents password auth
-            is_verified=user_info.get("email_verified", False),
-            email_verified_at=datetime.utcnow() if user_info.get("email_verified") else None,
+            is_verified=bool(email_verified),
+            email_verified_at=datetime.utcnow() if email_verified else None,
             role="customer",
             is_admin=False,
             auth_provider="google",
@@ -371,12 +376,17 @@ async def google_callback(
 
             if not user:
                 # Auto-register new user with Google account
+                email_verified = user_info.get("email_verified", False)
+                # Convert string 'true'/'false' to boolean if needed
+                if isinstance(email_verified, str):
+                    email_verified = email_verified.lower() == 'true'
+                
                 user = User(
                     email=user_info["email"],
                     full_name=user_info.get("name", ""),
                     password_hash=None,  # No password for social login - prevents password auth
-                    is_verified=user_info.get("email_verified", False),
-                    email_verified_at=datetime.utcnow() if user_info.get("email_verified") else None,
+                    is_verified=bool(email_verified),
+                    email_verified_at=datetime.utcnow() if email_verified else None,
                     role="customer",
                     is_admin=False,
                     auth_provider="google",
