@@ -45,6 +45,9 @@ export default function GoogleCallbackPage() {
             error: null,
           });
 
+          // Small delay to ensure state is updated
+          await new Promise(resolve => setTimeout(resolve, 100));
+
           // Redirect based on role
           const redirectUrl = user.role === 'admin' || user.is_admin 
             ? '/admin/dashboard' 
