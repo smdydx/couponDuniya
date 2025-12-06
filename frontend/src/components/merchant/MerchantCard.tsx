@@ -1,4 +1,3 @@
-
 "use client";
 
 import Image from "next/image";
@@ -24,7 +23,7 @@ export function MerchantCard({ merchant }: MerchantCardProps) {
             </Badge>
           </div>
         )}
-        
+
         <CardContent className="p-3">
           <div className="flex flex-col items-center text-center gap-2.5">
             {/* Logo Section - Larger Image */}
@@ -33,11 +32,10 @@ export function MerchantCard({ merchant }: MerchantCardProps) {
                 <img
                   src={merchant.logo_url}
                   alt={merchant.name}
-                  className="w-full h-full object-cover object-center"
-                  loading="lazy"
+                  className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105"
                 />
               ) : (
-                <div className="flex h-full w-full items-center justify-center text-2xl font-bold text-primary bg-gradient-to-br from-primary/10 to-primary/5">
+                <div className="flex h-full w-full items-center justify-center bg-muted text-2xl font-bold text-muted-foreground">
                   {merchant.name.charAt(0)}
                 </div>
               )}
