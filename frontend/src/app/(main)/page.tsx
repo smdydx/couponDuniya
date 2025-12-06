@@ -107,9 +107,10 @@ function PromoSlider({ promoOffers }: { promoOffers: any[] }) {
           >
             {promoOffers.map((offer, index) => {
               const metadata = offer.metadata ? JSON.parse(offer.metadata) : {};
-              const gradient = metadata.gradient || "from-purple-500 to-blue-600";
+              const gradient =
+                metadata.gradient || "from-purple-500 to-blue-600";
               const emoji = metadata.emoji || "🎁";
-              
+
               return (
                 <div
                   key={offer.id}
@@ -142,7 +143,7 @@ function PromoSlider({ promoOffers }: { promoOffers: any[] }) {
                             {offer.headline || offer.title}
                           </h3>
                           <p className="text-white/90 text-sm mb-3">
-                            {offer.description || ''}
+                            {offer.description || ""}
                           </p>
                           {offer.code && (
                             <div className="flex items-center gap-2 bg-white/95 rounded-lg px-3 py-2">
@@ -184,7 +185,7 @@ function PromoSlider({ promoOffers }: { promoOffers: any[] }) {
         >
           <ChevronLeft className="h-4 w-4 text-gray-800 dark:text-white" />
         </button>
-        
+
         <div className="flex gap-2">
           {promoOffers.map((_, index) => (
             <button
@@ -194,7 +195,9 @@ function PromoSlider({ promoOffers }: { promoOffers: any[] }) {
                 scrollToIndex(index);
               }}
               className={`h-2 rounded-full transition-all ${
-                index === promoIndex ? "w-6 bg-purple-600 dark:bg-purple-400" : "w-2 bg-gray-300 dark:bg-gray-600"
+                index === promoIndex
+                  ? "w-6 bg-purple-600 dark:bg-purple-400"
+                  : "w-2 bg-gray-300 dark:bg-gray-600"
               }`}
               aria-label={`Go to slide ${index + 1}`}
             />
@@ -351,7 +354,10 @@ export default function HomePage() {
           <div className="container mx-auto px-4 py-4 sm:py-6">
             <div className="relative overflow-hidden rounded-xl shadow-lg">
               {/* Slider Container - Fixed aspect ratio for 2800x458 */}
-              <div className="relative w-full" style={{ aspectRatio: '2800/458' }}>
+              <div
+                className="relative w-full"
+                style={{ aspectRatio: "2800/458" }}
+              >
                 {banners.map((banner: any, index: number) => (
                   <div
                     key={banner.id}
@@ -436,8 +442,12 @@ export default function HomePage() {
         <section className="bg-white dark:bg-gray-900 py-8 sm:py-12">
           <div className="container">
             <div className="mb-6">
-              <h2 className="text-2xl sm:text-3xl font-bold mb-2">Special Offers</h2>
-              <p className="text-muted-foreground">Exclusive deals just for you</p>
+              <h2 className="text-2xl sm:text-3xl font-bold mb-2">
+                Special Offers
+              </h2>
+              <p className="text-muted-foreground">
+                Exclusive deals just for you
+              </p>
             </div>
             <PromoSlider promoOffers={promo_banners} />
           </div>
