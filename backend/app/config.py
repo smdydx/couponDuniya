@@ -23,7 +23,7 @@ class Settings(BaseSettings):
     # Google OAuth
     GOOGLE_CLIENT_ID: str = ""
     GOOGLE_CLIENT_SECRET: str = ""
-    GOOGLE_REDIRECT_URI: str = "http://localhost:3000/google/callback"
+    GOOGLE_REDIRECT_URI: str = "http://localhost:5000/auth/google/callback"
     
     # Razorpay Payment Gateway
     RAZORPAY_KEY_ID: str = ""
