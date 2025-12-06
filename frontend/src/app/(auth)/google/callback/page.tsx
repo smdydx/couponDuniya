@@ -23,7 +23,7 @@ export default function GoogleCallbackPage() {
         }
 
         // Send token to backend
-        const response = await apiClient.post('/api/v1/auth/social/google', {
+        const response = await apiClient.post('/auth/social/google', {
           token: idToken
         });
 
