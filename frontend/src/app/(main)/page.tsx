@@ -18,6 +18,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { MerchantGrid } from "@/components/merchant/MerchantGrid";
 import { MerchantCard } from "@/components/merchant/MerchantCard";
+import { FeaturedMerchantSection } from "@/components/merchant/FeaturedMerchantSection";
 import { OfferGrid } from "@/components/offer/OfferGrid";
 import { OfferCard } from "@/components/offer/OfferCard";
 import { ProductCard } from "@/components/product/ProductCard";
@@ -454,19 +455,14 @@ export default function HomePage() {
         </section>
       )}
 
-      {/* Featured Stores */}
+      {/* Featured Stores - CouponDunia Style */}
       <section className="container py-8 sm:py-12">
         <SectionHeader
           title="Featured Stores"
           subtitle="Shop with cashback at top partner stores"
-          viewAllLink={ROUTES.merchants}
         />
         {featured_merchants.length > 0 ? (
-          <div className="flex flex-wrap gap-4 justify-center">
-            {featured_merchants.slice(0, 12).map((merchant: any) => (
-              <MerchantCard key={merchant.id} merchant={merchant} />
-            ))}
-          </div>
+          <FeaturedMerchantSection merchants={featured_merchants} />
         ) : (
           <div className="text-center py-12 bg-muted/30 rounded-lg">
             <Store className="h-12 w-12 mx-auto text-muted-foreground mb-3" />
