@@ -27,7 +27,7 @@ export default function MerchantsPage() {
 
   const { data, isLoading, error } = useMerchants({
     page,
-    limit: 20,
+    limit: 24,
     search: search || undefined,
     is_featured: sortBy === "featured" ? true : undefined,
   });
@@ -98,22 +98,22 @@ export default function MerchantsPage() {
         ) : (
           <>
             <div className="mb-4 text-xs sm:text-sm text-muted-foreground">
-              Showing {merchants.length} stores
+              Showing {merchants.length} of {pagination?.total_items || 0} stores
             </div>
 
             <MerchantGrid merchants={merchants} />
-          </>
-        )}
 
-        {/* Pagination at bottom */}
-        {!isLoading && !error && merchants.length > 0 && pagination && pagination.total_pages > 1 && (
-          <div className="mt-8 pb-6">
-            <Pagination
-              currentPage={pagination.current_page}
-              totalPages={pagination.total_pages}
-              onPageChange={setPage}
-            />
-          </div>
+            {/* Pagination */}
+            {pagination && pagination.total_pages > 1 && (
+              <div className="mt-8 pb-6">
+                <Pagination
+                  currentPage={pagination.current_page}
+                  totalPages={pagination.total_pages}
+                  onPageChange={setPage}
+                />
+              </div>
+            )}
+          </>
         )}
       </div>
     </div>

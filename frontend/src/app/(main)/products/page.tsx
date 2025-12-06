@@ -1,3 +1,4 @@
+
 "use client";
 
 import { useState } from "react";
@@ -13,11 +14,12 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Search } from "lucide-react";
+import { Search, Gift } from "lucide-react";
 import { ROUTES } from "@/lib/constants";
 import { useQuery } from "@tanstack/react-query";
 import api from "@/lib/api/client";
 import { LoadingSpinner } from "@/components/common/LoadingSpinner";
+import { EmptyState } from "@/components/common/EmptyState";
 import type { Product } from "@/types";
 
 interface ProductsResponse {
@@ -40,7 +42,7 @@ export default function ProductsPage() {
     queryFn: async () => {
       const params = new URLSearchParams();
       params.append("page", currentPage.toString());
-      params.append("limit", "20");
+      params.append("limit", "24");
       if (searchQuery) params.append("search", searchQuery);
       if (sortBy) params.append("sort_by", sortBy);
 
@@ -50,7 +52,7 @@ export default function ProductsPage() {
   });
 
   const products = data?.data || [];
-  const totalPages = data?.pagination?.total_pages || 1;
+  const pagination = data?.pagination;
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-background to-muted/20">
@@ -103,31 +105,39 @@ export default function ProductsPage() {
             <LoadingSpinner />
           </div>
         ) : error ? (
-          <div className="text-center py-12">
-            <p className="text-muted-foreground">Failed to load gift cards. Please try again.</p>
-          </div>
+          <EmptyState
+            icon={Gift}
+            title="Error loading gift cards"
+            description="Please try again later"
+          />
         ) : (
           <>
             <div className="mb-3 text-xs text-muted-foreground">
-                  Showing {products.length} gift cards
-                </div>
-                {products.length > 0 ? (
-                  <ProductGrid products={products} compact={false} />
-                ) : (
-                  <p className="text-center text-muted-foreground py-12">No gift cards found</p>
+              Showing {products.length} of {pagination?.total_items || 0} gift cards
+            </div>
+            {products.length > 0 ? (
+              <>
+                <ProductGrid products={products} compact={false} />
+                
+                {/* Pagination */}
+                {pagination && pagination.total_pages > 1 && (
+                  <div className="mt-8 pb-6">
+                    <Pagination
+                      currentPage={pagination.current_page}
+                      totalPages={pagination.total_pages}
+                      onPageChange={setCurrentPage}
+                    />
+                  </div>
                 )}
+              </>
+            ) : (
+              <EmptyState
+                icon={Gift}
+                title="No gift cards found"
+                description="Try adjusting your search or filters"
+              />
+            )}
           </>
-        )}
-
-        {/* Pagination at bottom */}
-        {!isLoading && !error && products.length > 0 && totalPages > 1 && (
-          <div className="mt-8 pb-6">
-            <Pagination
-              currentPage={currentPage}
-              totalPages={totalPages}
-              onPageChange={setCurrentPage}
-            />
-          </div>
         )}
       </div>
     </div>

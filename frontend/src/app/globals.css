@@ -207,3 +207,35 @@ img {
   outline-offset: 2px;
   border-radius: 4px;
 }
+
+/* Merchant Card Flip Effect */
+.merchant-card-flip {
+  perspective: 1000px;
+}
+
+.merchant-card-inner {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  transition: transform 0.6s;
+  transform-style: preserve-3d;
+}
+
+.merchant-card-flip:hover .merchant-card-inner {
+  transform: rotateY(180deg);
+}
+
+.merchant-card-front,
+.merchant-card-back {
+  position: absolute;
+  width: 100%;
+  height: 100%;
+  backface-visibility: hidden;
+  -webkit-backface-visibility: hidden;
+}
+
+.merchant-card-back {
+  transform: rotateY(180deg);
+}
+
+/* End of Merchant Card styles */

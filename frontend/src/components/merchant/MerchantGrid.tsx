@@ -1,10 +1,9 @@
-"use client";
 
-import { MerchantCard } from "./MerchantCard";
-import { EmptyState } from "@/components/common/EmptyState";
 import { Skeleton } from "@/components/ui/skeleton";
-import type { Merchant } from "@/types";
+import { EmptyState } from "../common/EmptyState";
 import { Store } from "lucide-react";
+import { MerchantCard } from "./MerchantCard";
+import type { Merchant } from "@/types";
 
 interface MerchantGridProps {
   merchants: Merchant[];
@@ -16,17 +15,10 @@ export function MerchantGrid({ merchants, isLoading }: MerchantGridProps) {
 
   if (isLoading) {
     return (
-      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-        {Array.from({ length: 9 }).map((_, i) => (
-          <div key={i} className="rounded-lg border p-4">
-            <div className="flex items-center gap-4">
-              <Skeleton className="h-16 w-16 rounded-lg" />
-              <div className="flex-1 space-y-2">
-                <Skeleton className="h-5 w-32" />
-                <Skeleton className="h-6 w-24 rounded-full" />
-                <Skeleton className="h-4 w-28" />
-              </div>
-            </div>
+      <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-4 justify-items-center">
+        {Array.from({ length: 12 }).map((_, i) => (
+          <div key={i} className="w-full max-w-[200px]">
+            <Skeleton className="w-full aspect-square rounded-lg" />
           </div>
         ))}
       </div>
@@ -44,7 +36,7 @@ export function MerchantGrid({ merchants, isLoading }: MerchantGridProps) {
   }
 
   return (
-    <div className="flex flex-wrap gap-4 justify-center">
+    <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-4 justify-items-center">
       {merchantList.map((merchant) => (
         <MerchantCard key={merchant.id} merchant={merchant} />
       ))}
