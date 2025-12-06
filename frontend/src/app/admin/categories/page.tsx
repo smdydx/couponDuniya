@@ -99,9 +99,9 @@ export default function AdminCategoriesPage() {
     setSaving(true);
     try {
       if (editingCategory) {
-        await apiClient.put(`/admin/categories/${editingCategory.id}`, formData);
+        await apiClient.put(`/categories/${editingCategory.id}`, formData);
       } else {
-        await apiClient.post('/admin/categories', formData);
+        await apiClient.post('/categories/', formData);
       }
       setDialogOpen(false);
       fetchCategories();
@@ -115,7 +115,7 @@ export default function AdminCategoriesPage() {
   const handleDelete = async () => {
     if (!deletingCategory) return;
     try {
-      await apiClient.delete(`/admin/categories/${deletingCategory.id}`);
+      await apiClient.delete(`/categories/${deletingCategory.id}`);
       setDeleteDialogOpen(false);
       setDeletingCategory(null);
       fetchCategories();

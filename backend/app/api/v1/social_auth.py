@@ -101,7 +101,7 @@ async def login_with_google(
     payload: GoogleLoginRequest,
     db: Session = Depends(get_db)
 ):
-    """Login with Google - Only for existing registered users"""
+    """Login or register with Google - Auto-registers new users"""
     # Verify token and get user info
     user_info = await verify_google_token(payload.token)
 
@@ -109,10 +109,18 @@ async def login_with_google(
     user = db.scalar(select(User).where(User.email == user_info["email"]))
 
     if not user:
-        raise HTTPException(
-            status_code=400,
-            detail="No account found with this email. Please register first."
+        # Auto-register new user with Google account
+        user = User(
+            email=user_info["email"],
+            full_name=user_info.get("name", ""),
+            password_hash=get_password_hash(""),  # No password for social login
+            is_verified=user_info.get("email_verified", False),
+            email_verified_at=datetime.utcnow() if user_info.get("email_verified") else None,
+            role="customer",
+            is_admin=False
         )
+        db.add(user)
+        db.flush()
 
     # Check if Google account is already linked
     social_account = db.scalar(
@@ -128,7 +136,7 @@ async def login_with_google(
         social_account.updated_at = datetime.utcnow()
         db.commit()
     else:
-        # Link Google account to existing user
+        # Link Google account to user
         social_account = SocialAccount(
             user_id=user.id,
             provider="google",
@@ -137,6 +145,8 @@ async def login_with_google(
         )
         db.add(social_account)
         db.commit()
+
+    db.refresh(user)
 
     # Generate access token
     access_token = create_access_token(str(user.id))
@@ -355,10 +365,18 @@ async def google_callback(
             user = db.scalar(select(User).where(User.email == user_info["email"]))
 
             if not user:
-                frontend_url = getattr(settings, 'FRONTEND_URL', 'http://localhost:5000')
-                return RedirectResponse(
-                    url=f"{frontend_url}/login?error=no_account&email={user_info['email']}"
+                # Auto-register new user with Google account
+                user = User(
+                    email=user_info["email"],
+                    full_name=user_info.get("name", ""),
+                    password_hash=get_password_hash(""),
+                    is_verified=user_info.get("email_verified", False),
+                    email_verified_at=datetime.utcnow() if user_info.get("email_verified") else None,
+                    role="customer",
+                    is_admin=False
                 )
+                db.add(user)
+                db.flush()
 
             social_account = db.scalar(
                 select(SocialAccount).where(
@@ -381,6 +399,7 @@ async def google_callback(
                 db.add(social_account)
                 db.commit()
 
+            db.refresh(user)
             access_token = create_access_token(str(user.id))
 
             frontend_url = getattr(settings, 'FRONTEND_URL', 'http://localhost:5000')

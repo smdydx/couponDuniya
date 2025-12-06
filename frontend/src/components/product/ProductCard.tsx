@@ -111,7 +111,7 @@ export function ProductCard({ product, compact = false }: ProductCardProps) {
   }
 
   return (
-    <Card className="group relative overflow-hidden transition-all hover:shadow-md hover:border-primary/50 border h-full flex flex-col bg-white">
+    <Card className="group relative overflow-hidden transition-all hover:shadow-md hover:border-primary/50 border h-[280px] flex flex-col bg-white">
       {/* Bestseller Badge */}
       {product.is_bestseller && (
         <Badge className="absolute right-1 top-1 z-10 gap-0.5 text-[8px] px-1.5 py-0.5" variant="warning">
@@ -122,12 +122,12 @@ export function ProductCard({ product, compact = false }: ProductCardProps) {
 
       <CardHeader className="p-0">
         <Link href={ROUTES.productDetail(product.slug)}>
-          <div className="relative aspect-[4/3] overflow-hidden bg-gradient-to-br from-gray-50 to-white">
+          <div className="relative h-[120px] overflow-hidden bg-gradient-to-br from-gray-50 to-white">
             {product.image_url ? (
               <img
                 src={product.image_url}
                 alt={product.name}
-                className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105"
+                className="w-full h-full object-contain transition-transform duration-300 group-hover:scale-105 p-2"
               />
             ) : (
               <div className="flex h-full w-full items-center justify-center bg-muted text-lg font-bold text-muted-foreground">
@@ -140,18 +140,17 @@ export function ProductCard({ product, compact = false }: ProductCardProps) {
 
       <CardContent className="p-2 flex-1 flex flex-col">
         <Link href={ROUTES.productDetail(product.slug)}>
-          <h3 className="font-semibold text-[11px] line-clamp-2 transition-colors group-hover:text-primary leading-tight mb-1">{product.name}</h3>
+          <h3 className="font-semibold text-xs line-clamp-2 transition-colors group-hover:text-primary leading-tight mb-1">{product.name}</h3>
         </Link>
         {product.merchant && (
-          <p className="text-[9px] text-muted-foreground mb-1">{product.merchant.name}</p>
+          <p className="text-[10px] text-muted-foreground mb-1">{product.merchant.name}</p>
         )}
 
         {/* Variant Selection */}
         {product.variants.length > 1 && (
-          <div className="mt-1.5">
-            <p className="mb-0.5 text-[9px] font-medium text-muted-foreground">Select Amount</p>
+          <div className="mt-1">
             <div className="flex flex-wrap gap-0.5">
-              {product.variants.slice(0, 3).map((variant) => (
+              {product.variants.slice(0, 2).map((variant) => (
                 <Button
                   key={variant.id}
                   variant={selectedVariant?.id === variant.id ? "default" : "outline"}
@@ -163,12 +162,12 @@ export function ProductCard({ product, compact = false }: ProductCardProps) {
                   {formatCurrency(variant.denomination)}
                 </Button>
               ))}
-              {product.variants.length > 3 && (
+              {product.variants.length > 2 && (
                 <Link
                   href={ROUTES.productDetail(product.slug)}
                   className="flex h-5 items-center px-1 text-[9px] text-primary hover:underline"
                 >
-                  +{product.variants.length - 3}
+                  +{product.variants.length - 2}
                 </Link>
               )}
             </div>
@@ -176,17 +175,17 @@ export function ProductCard({ product, compact = false }: ProductCardProps) {
         )}
 
         {/* Pricing */}
-        <div className="mt-auto flex items-baseline gap-1 mb-1.5">
-          <span className="text-xs font-bold text-primary">{formatCurrency(minPrice)}</span>
+        <div className="mt-auto flex items-baseline gap-1">
+          <span className="text-sm font-bold text-primary">{formatCurrency(minPrice)}</span>
           {minPrice !== maxPrice && (
-            <span className="text-[9px] text-muted-foreground">- {formatCurrency(maxPrice)}</span>
+            <span className="text-[10px] text-muted-foreground">- {formatCurrency(maxPrice)}</span>
           )}
         </div>
       </CardContent>
 
       <CardFooter className="p-2 pt-0 border-t">
         <Button
-          className="w-full h-8 text-[10px] font-semibold"
+          className="w-full h-7 text-[10px] font-semibold"
           onClick={handleAddToCart}
           disabled={!selectedVariant?.is_available}
         >
