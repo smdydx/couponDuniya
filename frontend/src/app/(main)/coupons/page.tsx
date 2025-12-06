@@ -135,9 +135,9 @@ export default function CouponsPage() {
           </div>
         </div>
 
-        {/* Pagination at bottom */}
+        {/* Pagination */}
         {!isLoading && !error && totalPages > 1 && (
-          <div className="mt-8 pb-6">
+          <div className="mt-8 pb-6 flex justify-center">
             <Pagination
               currentPage={currentPage}
               totalPages={totalPages}

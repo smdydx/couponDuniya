@@ -1,4 +1,3 @@
-
 "use client";
 
 import Image from "next/image";
@@ -16,69 +15,42 @@ interface MerchantCardProps {
 export function MerchantCard({ merchant }: MerchantCardProps) {
   return (
     <Link
-      href={ROUTES.merchantDetail(merchant.slug)}
-      className="block focus:outline-none w-full max-w-[200px]"
+      href={`${ROUTES.merchants}/${merchant.slug}`}
+      className="group block"
     >
-      <Card className="group relative overflow-hidden transition-all hover:shadow-xl hover:border-primary/60 border bg-white aspect-square">
-        {merchant.is_featured && (
-          <div className="absolute top-2 right-2 z-10">
-            <Badge
-              variant="warning"
-              className="text-[10px] font-semibold shadow-md px-2 py-0.5"
-            >
-              ⭐ Featured
-            </Badge>
-          </div>
-        )}
-
-        <CardContent className="p-4 h-full flex flex-col">
-          <div className="flex-1 flex flex-col items-center justify-center gap-3">
-            {/* Logo Section */}
-            <div className="relative w-20 h-20 overflow-hidden rounded-xl border border-gray-100 bg-gradient-to-br from-gray-50 to-white shadow-sm transition-all duration-300 group-hover:scale-110 group-hover:shadow-lg flex-shrink-0">
-              {merchant.logo_url ? (
-                <img
-                  src={merchant.logo_url}
-                  alt={merchant.name}
-                  className="w-full h-full object-contain transition-transform duration-300 p-2"
-                />
-              ) : (
-                <div className="flex h-full w-full items-center justify-center bg-muted text-2xl font-bold text-muted-foreground">
-                  {merchant.name.charAt(0)}
-                </div>
-              )}
-            </div>
-
-            {/* Info Section */}
-            <div className="w-full space-y-2 text-center">
-              {/* Title */}
-              <h3 className="font-semibold text-sm line-clamp-2 group-hover:text-primary transition-colors leading-tight min-h-[2.5rem]">
-                {merchant.name}
-              </h3>
-
-              {/* Cashback Info */}
-              {merchant.default_cashback_value > 0 && (
-                <Badge
-                  variant="default"
-                  className="bg-gradient-to-r from-green-500 to-green-600 text-white hover:from-green-600 hover:to-green-700 font-semibold text-xs px-3 py-1 shadow-sm"
-                >
-                  {merchant.default_cashback_type === "percentage"
-                    ? `${merchant.default_cashback_value}% OFF`
-                    : `₹${merchant.default_cashback_value} OFF`}
-                </Badge>
-              )}
+      <Card className="h-full overflow-hidden transition-all hover:shadow-lg border-0 bg-white dark:bg-gray-800">
+        <CardContent className="p-2 sm:p-3">
+          <div className="aspect-square w-full mb-2 rounded-lg bg-gradient-to-br from-gray-50 to-gray-100 dark:from-gray-800 dark:to-gray-900 flex items-center justify-center overflow-hidden">
+            <div className="w-full h-full p-2 sm:p-3 flex items-center justify-center">
+              <img
+                src={merchant.logo_url}
+                alt={merchant.name}
+                className="max-w-full max-h-full object-contain transition-transform group-hover:scale-105"
+                loading="lazy"
+                onError={(e) => {
+                  const target = e.currentTarget;
+                  target.style.display = 'none';
+                  if (target.parentElement) {
+                    target.parentElement.innerHTML = `
+                      <div class="w-10 h-10 sm:w-12 sm:h-12 rounded-full bg-gradient-to-br from-purple-100 to-pink-100 dark:from-purple-900 dark:to-pink-900 flex items-center justify-center">
+                        <span class="text-base sm:text-xl font-bold text-purple-600 dark:text-purple-300">${merchant.name.charAt(0)}</span>
+                      </div>
+                    `;
+                  }
+                }}
+              />
             </div>
           </div>
-
-          {/* Offers Count at Bottom */}
-          {merchant.total_offers !== undefined &&
-            merchant.total_offers > 0 && (
-              <div className="flex items-center justify-center gap-1 text-xs text-muted-foreground font-medium pt-2 border-t border-gray-100">
-                <Tag className="h-3 w-3" />
-                <span>
-                  {merchant.total_offers} offer{merchant.total_offers > 1 ? "s" : ""}
-                </span>
-              </div>
+          <div className="text-center space-y-0.5">
+            <h3 className="font-semibold text-[11px] sm:text-xs text-gray-900 dark:text-white line-clamp-1 group-hover:text-purple-600 dark:group-hover:text-purple-400 transition-colors">
+              {merchant.name}
+            </h3>
+            {merchant.offers_count !== undefined && merchant.offers_count > 0 && (
+              <p className="text-[9px] sm:text-[10px] text-purple-600 dark:text-purple-400 font-medium">
+                {merchant.offers_count} {merchant.offers_count === 1 ? 'Offer' : 'Offers'}
+              </p>
             )}
+          </div>
         </CardContent>
       </Card>
     </Link>

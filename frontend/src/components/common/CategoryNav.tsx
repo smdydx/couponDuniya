@@ -32,10 +32,11 @@ function CategoryNavContent({ basePath = ROUTES.coupons, showAll = true }: Categ
   useEffect(() => {
     const fetchCategories = async () => {
       try {
-        const response = await apiClient.get('/categories?is_active=true&limit=20');
+        const response = await apiClient.get('/api/v1/categories?is_active=true&limit=20');
         setCategories(response.data?.data?.categories || []);
       } catch (error) {
         console.error('Failed to fetch categories:', error);
+        setCategories([]);
       } finally {
         setLoading(false);
       }
@@ -86,6 +87,7 @@ function CategoryNavContent({ basePath = ROUTES.coupons, showAll = true }: Categ
                 src={category.icon_url}
                 alt={category.name}
                 className="max-w-full max-h-full object-contain"
+                loading="lazy"
                 onError={(e) => {
                   e.currentTarget.style.display = 'none';
                   e.currentTarget.parentElement!.innerHTML = '<div class="w-8 h-8 flex items-center justify-center"><svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-6l-2-2H5a2 2 0 00-2 2z"></path></svg></div>';
