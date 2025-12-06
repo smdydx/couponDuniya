@@ -57,7 +57,7 @@ export default function GoogleCallbackPage() {
     };
 
     handleGoogleCallback();
-  }, [router, setUser, setIsAuthenticated]);
+  }, [router, setTokens, updateUser]);
 
   return (
     <div className="flex min-h-screen items-center justify-center">
