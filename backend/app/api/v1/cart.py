@@ -95,7 +95,7 @@ def validate_cart(
                 errors.append(f"Variant {item.variant_id} not found for {product.name}")
                 continue
             
-            if not variant.is_active:
+            if not variant.is_available:
                 errors.append(f"{product.name} - {variant.name} is unavailable")
                 continue
             

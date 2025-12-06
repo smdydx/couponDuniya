@@ -1,6 +1,5 @@
 import api from './client';
 
-// Types
 export interface CartItem {
   product_id: number;
   variant_id?: number;
@@ -54,7 +53,7 @@ export interface PaymentDetails {
   order_id: string;
   amount: number;
   currency: string;
-  key: string; // Razorpay Key ID
+  key: string;
 }
 
 export interface CheckoutResponse {
@@ -81,28 +80,6 @@ export interface PaymentVerificationResponse {
   message: string;
   order_status: string;
 }
-
-// API Functions
-export const checkout = async (data: CheckoutRequest): Promise<CheckoutResponse> => {
-  const response = await api.post('/cart/checkout', data);
-  return response.data;
-};
-
-export const verifyPayment = async (
-  data: PaymentVerificationRequest
-): Promise<PaymentVerificationResponse> => {
-  const response = await api.post('/cart/verify-payment', data);
-  return response.data;
-};
-
-export interface PaymentVerificationResponse {
-  success: boolean;
-  order_number: string;
-  message: string;
-  order_status: string;
-}
-
-// API Functions
 
 export async function validateCart(
   items: CartItem[],
