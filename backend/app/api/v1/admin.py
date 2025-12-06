@@ -684,6 +684,7 @@ def list_orders(
     page: int = 1,
     limit: int = 20,
     status: str | None = None,
+    _: bool = Depends(require_admin),
     db: Session = Depends(get_db)
 ):
     """List all orders with pagination (admin)"""

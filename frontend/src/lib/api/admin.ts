@@ -268,8 +268,15 @@ const adminApi = {
     if (params.limit) queryParams.append('limit', String(params.limit));
     if (params.status) queryParams.append('status', params.status);
 
-    const response = await apiClient.get(`/orders?${queryParams.toString()}`);
-    return response.data?.data || { orders: response.data?.data?.items || [], pagination: { current_page: 1, total_pages: 1, total_items: 0, per_page: 20 } };
+    const response = await apiClient.get(`/admin/orders?${queryParams.toString()}`);
+    const data = response.data;
+    if (data?.data?.orders && data?.data?.pagination) {
+      return { orders: data.data.orders, pagination: data.data.pagination };
+    }
+    if (data?.orders && data?.pagination) {
+      return { orders: data.orders, pagination: data.pagination };
+    }
+    return { orders: [], pagination: { current_page: 1, total_pages: 1, total_items: 0, per_page: 20 } };
   },
 
   updateOrderStatus: async (id: number, status: string): Promise<void> => {

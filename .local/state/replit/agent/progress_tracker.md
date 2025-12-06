@@ -86,6 +86,13 @@
 [x] 58. Confirmed all database tables created successfully
 [x] 59. ✅ **IMPORT MIGRATION COMPLETED - Project fully operational and ready for development**
 
+## Bug Fixes (Dec 06, 2025):
+[x] 60. Fixed Admin Orders Page 401 Unauthorized error
+    - **Root Cause:** Frontend API was calling `/orders` instead of `/admin/orders`
+    - **Fix Applied:** Updated `getOrders()` in `frontend/src/lib/api/admin.ts` to call `/admin/orders`
+    - **Additional Fix:** Added `require_admin` dependency to backend `/admin/orders` endpoint for proper authentication
+[x] 61. Fixed API response parsing for orders endpoint to handle nested data structure
+
 ## Notes:
 - Backend running on port 8000
 - Frontend running on port 5000
