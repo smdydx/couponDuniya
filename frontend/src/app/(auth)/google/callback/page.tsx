@@ -9,8 +9,6 @@ import apiClient from "@/lib/api-client";
 
 export default function GoogleCallbackPage() {
   const router = useRouter();
-  const setTokens = useAuthStore((state) => state.setTokens);
-  const updateUser = useAuthStore((state) => state.updateUser);
 
   useEffect(() => {
     const handleGoogleCallback = async () => {
@@ -30,6 +28,9 @@ export default function GoogleCallbackPage() {
 
         if (response.data.success) {
           const { access_token, refresh_token, user } = response.data.data;
+          
+          // Get the auth store functions
+          const { setTokens, updateUser } = useAuthStore.getState();
           
           // Store auth data using authStore methods
           setTokens(access_token, refresh_token || access_token);
@@ -57,7 +58,7 @@ export default function GoogleCallbackPage() {
     };
 
     handleGoogleCallback();
-  }, [router, setTokens, updateUser]);
+  }, [router]);
 
   return (
     <div className="flex min-h-screen items-center justify-center">
