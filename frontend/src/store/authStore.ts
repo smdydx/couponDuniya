@@ -16,7 +16,9 @@ interface AuthState {
   register: (data: RegisterData) => Promise<void>;
   logout: () => void;
   updateUser: (data: Partial<User>) => void;
+  setUser: (user: User) => void;
   setTokens: (access: string, refresh: string) => void;
+  setAuthFromGoogle: (user: User, accessToken: string, refreshToken: string) => void;
   setError: (error: string) => void;
   clearError: () => void;
   refreshAccessToken: () => Promise<void>;
@@ -99,8 +101,27 @@ export const useAuthStore = createWithEqualityFn<AuthState>()(
         }));
       },
 
+      setUser: (user: User) => {
+        set({ user, isAuthenticated: true, isLoading: false, error: null });
+      },
+
       setTokens: (access: string, refresh: string) => {
         set({ accessToken: access, refreshToken: refresh });
+      },
+
+      setAuthFromGoogle: (user: User, accessToken: string, refreshToken: string) => {
+        localStorage.setItem('access_token', accessToken);
+        if (refreshToken) {
+          localStorage.setItem('refresh_token', refreshToken);
+        }
+        set({
+          user,
+          accessToken,
+          refreshToken: refreshToken || accessToken,
+          isAuthenticated: true,
+          isLoading: false,
+          error: null,
+        });
       },
 
       setError: (error: string) => {

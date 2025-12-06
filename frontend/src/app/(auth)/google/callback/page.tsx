@@ -9,6 +9,7 @@ import apiClient from "@/lib/api-client";
 
 export default function GoogleCallbackPage() {
   const router = useRouter();
+  const setAuthFromGoogle = useAuthStore((state) => state.setAuthFromGoogle);
 
   useEffect(() => {
     const handleGoogleCallback = async () => {
@@ -29,21 +30,8 @@ export default function GoogleCallbackPage() {
         if (response.data.success) {
           const { access_token, refresh_token, user } = response.data.data;
           
-          // Store tokens in localStorage
-          localStorage.setItem('access_token', access_token);
-          if (refresh_token) {
-            localStorage.setItem('refresh_token', refresh_token);
-          }
-          
-          // Update auth store state
-          useAuthStore.setState({
-            user: user,
-            accessToken: access_token,
-            refreshToken: refresh_token || access_token,
-            isAuthenticated: true,
-            isLoading: false,
-            error: null,
-          });
+          // Use the dedicated store method to set auth state
+          setAuthFromGoogle(user, access_token, refresh_token || '');
 
           // Small delay to ensure state is updated
           await new Promise(resolve => setTimeout(resolve, 100));
@@ -54,12 +42,14 @@ export default function GoogleCallbackPage() {
             : '/';
           
           router.replace(redirectUrl);
+        } else {
+          throw new Error('Google authentication failed');
         }
       } catch (error: any) {
         console.error('Google auth error:', error);
         
         // Check if error is about account not found
-        const errorMessage = error?.response?.data?.detail || 'google_auth_failed';
+        const errorMessage = error?.response?.data?.detail || error?.message || 'google_auth_failed';
         
         if (errorMessage.includes('No account found') || errorMessage.includes('register first')) {
           router.replace('/login?error=not_registered');
@@ -70,7 +60,7 @@ export default function GoogleCallbackPage() {
     };
 
     handleGoogleCallback();
-  }, [router]);
+  }, [router, setAuthFromGoogle]);
 
   return (
     <div className="flex min-h-screen items-center justify-center">
