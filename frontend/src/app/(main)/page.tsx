@@ -56,86 +56,15 @@ function SectionHeader({
   );
 }
 
-const promoOffers = [
-  {
-    id: 1,
-    brand: "cleartrip",
-    brandColor: "text-blue-600",
-    badge: "Exclusive",
-    badgeColor: "bg-orange-500 text-white",
-    title: "Upto 25% Off",
-    subtitle: "On Domestic Flights",
-    code: "Flat ₹160 Cashback",
-    gradient: "from-blue-500 to-blue-600",
-    emoji: "✈️",
-  },
-  {
-    id: 2,
-    brand: "McDelivery",
-    brandColor: "text-red-600",
-    badge: "Hot Deal",
-    badgeColor: "bg-yellow-400 text-red-600",
-    title: "Get A Free Burger",
-    subtitle: "McVeggie Or A McChicken Burger On Orders Above ₹499",
-    code: "Use Code : CDXMCDFREE",
-    gradient: "from-red-500 to-red-600",
-    emoji: "🍔",
-  },
-  {
-    id: 3,
-    brand: "Swiggy",
-    brandColor: "text-orange-600",
-    badge: "New User",
-    badgeColor: "bg-green-500 text-white",
-    title: "Flat 50% Off",
-    subtitle: "On Your First Food Order",
-    code: "Up to ₹100 Off",
-    gradient: "from-orange-500 to-orange-600",
-    emoji: "🍕",
-  },
-  {
-    id: 4,
-    brand: "Amazon",
-    brandColor: "text-yellow-700",
-    badge: "Limited Time",
-    badgeColor: "bg-purple-500 text-white",
-    title: "Upto 60% Off",
-    subtitle: "On Electronics & Gadgets",
-    code: "Extra 10% Bank Offer",
-    gradient: "from-yellow-500 to-orange-500",
-    emoji: "📱",
-  },
-  {
-    id: 5,
-    brand: "Flipkart",
-    brandColor: "text-blue-700",
-    badge: "Big Savings",
-    badgeColor: "bg-red-500 text-white",
-    title: "Min 40% Off",
-    subtitle: "On Fashion & Lifestyle",
-    code: "Flat ₹200 Cashback",
-    gradient: "from-indigo-500 to-blue-600",
-    emoji: "👕",
-  },
-  {
-    id: 6,
-    brand: "Zomato",
-    brandColor: "text-red-600",
-    badge: "Weekend Special",
-    badgeColor: "bg-green-600 text-white",
-    title: "Buy 1 Get 1 Free",
-    subtitle: "On All Restaurant Orders",
-    code: "Use Code : BOGO50",
-    gradient: "from-red-600 to-pink-600",
-    emoji: "🍜",
-  },
-];
-
-function PromoSlider() {
+function PromoSlider({ promoOffers }: { promoOffers: any[] }) {
   const [promoIndex, setPromoIndex] = useState(0);
   const containerRef = useRef<HTMLDivElement>(null);
   const visibleCards = 3;
   const maxIndex = Math.max(0, promoOffers.length - visibleCards);
+
+  if (!promoOffers || promoOffers.length === 0) {
+    return null; // Don't show slider if no promo offers
+  }
 
   const scrollToIndex = (index: number) => {
     if (containerRef.current) {
@@ -178,49 +107,65 @@ function PromoSlider() {
             className="flex gap-3 sm:gap-4 overflow-x-auto scrollbar-hide snap-x snap-mandatory pb-2"
             style={{ scrollbarWidth: "none", msOverflowStyle: "none" }}
           >
-            {promoOffers.map((offer) => (
-              <div
-                key={offer.id}
-                className="min-w-[280px] sm:min-w-[320px] md:min-w-[380px] flex-shrink-0 snap-start"
-              >
+            {promoOffers.map((offer, index) => {
+              // Parse banner metadata or use defaults
+              const metadata = offer.metadata ? JSON.parse(offer.metadata) : {};
+              const gradient = metadata.gradient || "from-purple-500 to-blue-600";
+              const emoji = metadata.emoji || "🎁";
+              
+              return (
                 <div
-                  className={`bg-gradient-to-r ${offer.gradient} rounded-xl p-4 sm:p-5 shadow-lg hover:shadow-xl transition-all cursor-pointer hover:scale-[1.02]`}
+                  key={offer.id}
+                  className="min-w-[280px] sm:min-w-[320px] md:min-w-[380px] flex-shrink-0 snap-start"
                 >
-                  <div className="flex items-center justify-between">
-                    <div className="flex-1">
-                      <div className="flex items-center gap-2 mb-2">
-                        <div className="bg-white px-3 py-1 rounded-md">
-                          <span
-                            className={`text-xs font-semibold ${offer.brandColor}`}
-                          >
-                            {offer.brand}
-                          </span>
+                  <a
+                    href={offer.link_url || "#"}
+                    target={offer.link_url ? "_blank" : "_self"}
+                    rel="noopener noreferrer"
+                    className="block"
+                  >
+                    <div
+                      className={`bg-gradient-to-r ${gradient} rounded-xl p-4 sm:p-5 shadow-lg hover:shadow-xl transition-all cursor-pointer hover:scale-[1.02]`}
+                    >
+                      <div className="flex items-center justify-between">
+                        <div className="flex-1">
+                          <div className="flex items-center gap-2 mb-2">
+                            <div className="bg-white px-3 py-1 rounded-md">
+                              <span className="text-xs font-semibold text-gray-800">
+                                {offer.brand_name || offer.title}
+                              </span>
+                            </div>
+                            {offer.badge_text && (
+                              <Badge className={`${offer.badge_color || 'bg-orange-500 text-white'} text-xs`}>
+                                {offer.badge_text}
+                              </Badge>
+                            )}
+                          </div>
+                          <h3 className="text-white font-bold text-lg sm:text-xl mb-1">
+                            {offer.headline || offer.title}
+                          </h3>
+                          <p className="text-white/80 text-sm line-clamp-1">
+                            {offer.description || offer.subtitle || ''}
+                          </p>
+                          {offer.code && (
+                            <div className="mt-3 flex items-center gap-2 bg-white rounded-lg px-3 py-2">
+                              <Tag className="h-4 w-4 text-red-500 flex-shrink-0" />
+                              <span className="text-sm font-semibold text-gray-800 truncate">
+                                {offer.code}
+                              </span>
+                              <ArrowRight className="h-4 w-4 ml-auto text-gray-600 flex-shrink-0" />
+                            </div>
+                          )}
                         </div>
-                        <Badge className={`${offer.badgeColor} text-xs`}>
-                          {offer.badge}
-                        </Badge>
-                      </div>
-                      <h3 className="text-white font-bold text-lg sm:text-xl mb-1">
-                        {offer.title}
-                      </h3>
-                      <p className="text-white/80 text-sm line-clamp-1">
-                        {offer.subtitle}
-                      </p>
-                      <div className="mt-3 flex items-center gap-2 bg-white rounded-lg px-3 py-2">
-                        <Tag className="h-4 w-4 text-red-500 flex-shrink-0" />
-                        <span className="text-sm font-semibold text-gray-800 truncate">
-                          {offer.code}
-                        </span>
-                        <ArrowRight className="h-4 w-4 ml-auto text-gray-600 flex-shrink-0" />
+                        <div className="hidden sm:block ml-4">
+                          <div className="text-5xl">{emoji}</div>
+                        </div>
                       </div>
                     </div>
-                    <div className="hidden sm:block ml-4">
-                      <div className="text-5xl">{offer.emoji}</div>
-                    </div>
-                  </div>
+                  </a>
                 </div>
-              </div>
-            ))}
+              );
+            })}
           </div>
         </div>
 
@@ -321,6 +266,7 @@ export default function HomePage() {
   }, [data?.banners]);
 
   const banners = data?.banners || [];
+  const promo_banners = data?.promo_banners || [];
   const featured_merchants = data?.featured_merchants || [];
   const featured_offers = data?.featured_offers || [];
   const exclusive_offers = data?.exclusive_offers || [];
@@ -490,11 +436,13 @@ export default function HomePage() {
         </section>
       )}
       {/* Promotional Offers Slider - After Stats Section */}
-      <section className="bg-gradient-to-r from-blue-50 to-purple-50 dark:from-gray-900 dark:to-gray-800 py-8 sm:py-12">
-        <div className="container">
-          <PromoSlider />
-        </div>
-      </section>
+      {promo_banners.length > 0 && (
+        <section className="bg-gradient-to-r from-blue-50 to-purple-50 dark:from-gray-900 dark:to-gray-800 py-8 sm:py-12">
+          <div className="container">
+            <PromoSlider promoOffers={promo_banners} />
+          </div>
+        </section>
+      )}
 
       {/* Featured Stores */}
       <section className="container py-8 sm:py-12">

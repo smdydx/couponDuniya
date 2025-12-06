@@ -47,7 +47,15 @@ export default function AdminBannersPage() {
   const [saving, setSaving] = useState(false);
   const [formData, setFormData] = useState({
     title: "",
+    banner_type: "hero",
     image_url: "",
+    brand_name: "",
+    badge_text: "",
+    badge_color: "bg-orange-500 text-white",
+    headline: "",
+    description: "",
+    code: "",
+    metadata: "",
     link_url: "",
     order_index: 0,
     is_active: true,
@@ -74,7 +82,15 @@ export default function AdminBannersPage() {
     setEditingBanner(null);
     setFormData({
       title: "",
+      banner_type: "hero",
       image_url: "",
+      brand_name: "",
+      badge_text: "",
+      badge_color: "bg-orange-500 text-white",
+      headline: "",
+      description: "",
+      code: "",
+      metadata: '{"gradient": "from-purple-500 to-blue-600", "emoji": "🎁"}',
       link_url: "",
       order_index: banners.length,
       is_active: true,
@@ -86,7 +102,15 @@ export default function AdminBannersPage() {
     setEditingBanner(banner);
     setFormData({
       title: banner.title,
-      image_url: banner.image_url,
+      banner_type: (banner as any).banner_type || "hero",
+      image_url: banner.image_url || "",
+      brand_name: (banner as any).brand_name || "",
+      badge_text: (banner as any).badge_text || "",
+      badge_color: (banner as any).badge_color || "bg-orange-500 text-white",
+      headline: (banner as any).headline || "",
+      description: (banner as any).description || "",
+      code: (banner as any).code || "",
+      metadata: (banner as any).metadata || '{"gradient": "from-purple-500 to-blue-600", "emoji": "🎁"}',
       link_url: banner.link_url || "",
       order_index: banner.order_index,
       is_active: banner.is_active,
@@ -303,6 +327,21 @@ export default function AdminBannersPage() {
           </DialogHeader>
           <div className="grid gap-5 py-4 max-h-[60vh] overflow-y-auto pr-1">
             <div className="grid gap-2">
+              <Label htmlFor="banner_type" className="text-sm font-medium">Banner Type *</Label>
+              <select
+                id="banner_type"
+                value={formData.banner_type}
+                onChange={(e) =>
+                  setFormData((prev) => ({ ...prev, banner_type: e.target.value }))
+                }
+                className="h-11 px-3 rounded-md border border-gray-200"
+              >
+                <option value="hero">Hero Banner (Main Slider)</option>
+                <option value="promo">Promotional Card</option>
+              </select>
+            </div>
+
+            <div className="grid gap-2">
               <Label htmlFor="title" className="text-sm font-medium">Title *</Label>
               <Input
                 id="title"
@@ -314,13 +353,114 @@ export default function AdminBannersPage() {
                 className="h-11"
               />
             </div>
-            <ImageUploader
-              label="Banner Image *"
-              value={formData.image_url}
-              onChange={(url) => setFormData((prev) => ({ ...prev, image_url: url }))}
-              category="banners"
-              aspectRatio="banner"
-            />
+
+            {formData.banner_type === "hero" ? (
+              <ImageUploader
+                label="Banner Image *"
+                value={formData.image_url}
+                onChange={(url) => setFormData((prev) => ({ ...prev, image_url: url }))}
+                category="banners"
+                aspectRatio="banner"
+              />
+            ) : (
+              <>
+                <div className="grid gap-2">
+                  <Label htmlFor="brand_name" className="text-sm font-medium">Brand Name *</Label>
+                  <Input
+                    id="brand_name"
+                    value={formData.brand_name}
+                    onChange={(e) =>
+                      setFormData((prev) => ({ ...prev, brand_name: e.target.value }))
+                    }
+                    placeholder="e.g., Swiggy, Zomato"
+                    className="h-11"
+                  />
+                </div>
+
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="grid gap-2">
+                    <Label htmlFor="badge_text" className="text-sm font-medium">Badge Text</Label>
+                    <Input
+                      id="badge_text"
+                      value={formData.badge_text}
+                      onChange={(e) =>
+                        setFormData((prev) => ({ ...prev, badge_text: e.target.value }))
+                      }
+                      placeholder="Exclusive"
+                      className="h-11"
+                    />
+                  </div>
+                  <div className="grid gap-2">
+                    <Label htmlFor="badge_color" className="text-sm font-medium">Badge Color</Label>
+                    <Input
+                      id="badge_color"
+                      value={formData.badge_color}
+                      onChange={(e) =>
+                        setFormData((prev) => ({ ...prev, badge_color: e.target.value }))
+                      }
+                      placeholder="bg-orange-500 text-white"
+                      className="h-11"
+                    />
+                  </div>
+                </div>
+
+                <div className="grid gap-2">
+                  <Label htmlFor="headline" className="text-sm font-medium">Headline *</Label>
+                  <Input
+                    id="headline"
+                    value={formData.headline}
+                    onChange={(e) =>
+                      setFormData((prev) => ({ ...prev, headline: e.target.value }))
+                    }
+                    placeholder="Flat 50% Off"
+                    className="h-11"
+                  />
+                </div>
+
+                <div className="grid gap-2">
+                  <Label htmlFor="description" className="text-sm font-medium">Description</Label>
+                  <Input
+                    id="description"
+                    value={formData.description}
+                    onChange={(e) =>
+                      setFormData((prev) => ({ ...prev, description: e.target.value }))
+                    }
+                    placeholder="On Your First Food Order"
+                    className="h-11"
+                  />
+                </div>
+
+                <div className="grid gap-2">
+                  <Label htmlFor="code" className="text-sm font-medium">Coupon Code</Label>
+                  <Input
+                    id="code"
+                    value={formData.code}
+                    onChange={(e) =>
+                      setFormData((prev) => ({ ...prev, code: e.target.value }))
+                    }
+                    placeholder="Use Code: SAVE50"
+                    className="h-11"
+                  />
+                </div>
+
+                <div className="grid gap-2">
+                  <Label htmlFor="metadata" className="text-sm font-medium">Styling (JSON)</Label>
+                  <textarea
+                    id="metadata"
+                    value={formData.metadata}
+                    onChange={(e) =>
+                      setFormData((prev) => ({ ...prev, metadata: e.target.value }))
+                    }
+                    placeholder='{"gradient": "from-purple-500 to-blue-600", "emoji": "🎁"}'
+                    className="h-20 px-3 py-2 rounded-md border border-gray-200 font-mono text-xs"
+                  />
+                  <p className="text-xs text-gray-500">
+                    Example gradients: from-blue-500 to-blue-600, from-red-500 to-red-600
+                  </p>
+                </div>
+              </>
+            )}
+
             <div className="grid gap-2">
               <Label htmlFor="link_url" className="text-sm font-medium">Link URL (optional)</Label>
               <Input
@@ -355,7 +495,12 @@ export default function AdminBannersPage() {
             </Button>
             <Button 
               onClick={handleSave} 
-              disabled={saving || !formData.title || !formData.image_url}
+              disabled={
+                saving || 
+                !formData.title || 
+                (formData.banner_type === "hero" && !formData.image_url) ||
+                (formData.banner_type === "promo" && (!formData.brand_name || !formData.headline))
+              }
               className="w-full sm:w-auto bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700"
             >
               {saving ? "Saving..." : editingBanner ? "Update" : "Create"}

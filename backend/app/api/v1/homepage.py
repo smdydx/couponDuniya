@@ -17,11 +17,13 @@ def get_homepage_data(
     limit_exclusive_offers: int = 6,
     limit_products: int = 12,
     limit_banners: int = 5,
+    limit_promo_banners: int = 10,
     db: Session = Depends(get_db)
 ):
     """
     Get data for the homepage:
     - Hero banners/slider
+    - Promo banners (promotional offers slider)
     - Featured merchants
     - Featured offers
     - Exclusive offers
@@ -35,15 +37,24 @@ def get_homepage_data(
         if cached:
             return {"success": True, "data": cached, "cached": True}
 
-        # Fetch active banners
+        # Fetch active banners (hero slider)
         from ...models import Banner
         banners_stmt = (
             select(Banner)
-            .where(Banner.is_active == True)
+            .where(and_(Banner.is_active == True, Banner.banner_type == "hero"))
             .order_by(Banner.order_index.asc())
             .limit(limit_banners)
         )
         banners = db.scalars(banners_stmt).all()
+
+        # Fetch promotional banners (promo slider)
+        promo_banners_stmt = (
+            select(Banner)
+            .where(and_(Banner.is_active == True, Banner.banner_type == "promo"))
+            .order_by(Banner.order_index.asc())
+            .limit(limit_promo_banners)
+        )
+        promo_banners = db.scalars(promo_banners_stmt).all()
 
         # Fetch featured merchants
         merchants_stmt = (
@@ -98,6 +109,22 @@ def get_homepage_data(
 
         result = {
             "banners": [{"id": b.id, "title": b.title, "image_url": b.image_url, "link_url": b.link_url, "order_index": b.order_index} for b in banners],
+            "promo_banners": [
+                {
+                    "id": b.id,
+                    "title": b.title,
+                    "brand_name": b.brand_name,
+                    "badge_text": b.badge_text,
+                    "badge_color": b.badge_color,
+                    "headline": b.headline,
+                    "description": b.description,
+                    "code": b.code,
+                    "link_url": b.link_url,
+                    "metadata": b.metadata,
+                    "order_index": b.order_index
+                }
+                for b in promo_banners
+            ],
             "featured_merchants": [MerchantRead.model_validate(m) for m in featured_merchants],
             "featured_offers": [OfferRead.model_validate(o) for o in featured_offers],
             "exclusive_offers": [OfferRead.model_validate(o) for o in exclusive_offers],
