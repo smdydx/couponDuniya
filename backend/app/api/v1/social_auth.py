@@ -113,7 +113,7 @@ async def login_with_google(
         user = User(
             email=user_info["email"],
             full_name=user_info.get("name", ""),
-            password_hash=get_password_hash(""),  # No password for social login
+            password_hash=None,  # No password for social login - prevents password auth
             is_verified=user_info.get("email_verified", False),
             email_verified_at=datetime.utcnow() if user_info.get("email_verified") else None,
             role="customer",
@@ -219,7 +219,7 @@ async def login_with_facebook(
             user = User(
                 email=user_info["email"],
                 full_name=user_info["name"],
-                password_hash=get_password_hash(""),  # No password for social login
+                password_hash=None,  # No password for social login - prevents password auth
                 is_verified=user_info["email_verified"],
                 email_verified_at=datetime.utcnow() if user_info["email_verified"] else None,
                 auth_provider="facebook",
@@ -374,7 +374,7 @@ async def google_callback(
                 user = User(
                     email=user_info["email"],
                     full_name=user_info.get("name", ""),
-                    password_hash=get_password_hash(""),
+                    password_hash=None,  # No password for social login - prevents password auth
                     is_verified=user_info.get("email_verified", False),
                     email_verified_at=datetime.utcnow() if user_info.get("email_verified") else None,
                     role="customer",
