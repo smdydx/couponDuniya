@@ -59,16 +59,14 @@ function SectionHeader({
 function PromoSlider({ promoOffers }: { promoOffers: any[] }) {
   const [promoIndex, setPromoIndex] = useState(0);
   const containerRef = useRef<HTMLDivElement>(null);
-  const visibleCards = 3;
-  const maxIndex = Math.max(0, promoOffers.length - visibleCards);
 
   if (!promoOffers || promoOffers.length === 0) {
-    return null; // Don't show slider if no promo offers
+    return null;
   }
 
   const scrollToIndex = (index: number) => {
     if (containerRef.current) {
-      const cardWidth = containerRef.current.scrollWidth / promoOffers.length;
+      const cardWidth = 350; // approximate card width
       containerRef.current.scrollTo({
         left: cardWidth * index,
         behavior: "smooth",
@@ -77,38 +75,37 @@ function PromoSlider({ promoOffers }: { promoOffers: any[] }) {
   };
 
   const nextSlide = () => {
-    const newIndex = promoIndex < maxIndex ? promoIndex + 1 : 0;
+    const newIndex = promoIndex < promoOffers.length - 1 ? promoIndex + 1 : 0;
     setPromoIndex(newIndex);
     scrollToIndex(newIndex);
   };
 
   const prevSlide = () => {
-    const newIndex = promoIndex > 0 ? promoIndex - 1 : maxIndex;
+    const newIndex = promoIndex > 0 ? promoIndex - 1 : promoOffers.length - 1;
     setPromoIndex(newIndex);
     scrollToIndex(newIndex);
   };
 
   return (
     <div className="relative">
-      <div className="flex items-center gap-4">
-        {/* Left Navigation Button */}
+      {/* Navigation Buttons */}
+      <div className="flex items-center gap-3">
         <button
           onClick={prevSlide}
-          className="hidden md:flex flex-shrink-0 items-center justify-center w-10 h-10 rounded-full bg-white dark:bg-gray-800 shadow-lg hover:shadow-xl transition-all hover:scale-110 z-10"
+          className="flex-shrink-0 items-center justify-center w-10 h-10 rounded-full bg-white dark:bg-gray-800 shadow-md hover:shadow-lg transition-all hover:scale-105 hidden sm:flex"
           aria-label="Previous offers"
         >
-          <ChevronLeft className="h-6 w-6 text-gray-800 dark:text-white" />
+          <ChevronLeft className="h-5 w-5 text-gray-800 dark:text-white" />
         </button>
 
         {/* Slider Container */}
         <div className="flex-1 overflow-hidden">
           <div
             ref={containerRef}
-            className="flex gap-3 sm:gap-4 overflow-x-auto scrollbar-hide snap-x snap-mandatory pb-2"
+            className="flex gap-4 overflow-x-auto scrollbar-hide snap-x snap-mandatory"
             style={{ scrollbarWidth: "none", msOverflowStyle: "none" }}
           >
             {promoOffers.map((offer, index) => {
-              // Parse banner metadata or use defaults
               const metadata = offer.metadata ? JSON.parse(offer.metadata) : {};
               const gradient = metadata.gradient || "from-purple-500 to-blue-600";
               const emoji = metadata.emoji || "🎁";
@@ -116,49 +113,49 @@ function PromoSlider({ promoOffers }: { promoOffers: any[] }) {
               return (
                 <div
                   key={offer.id}
-                  className="min-w-[280px] sm:min-w-[320px] md:min-w-[380px] flex-shrink-0 snap-start"
+                  className="min-w-[280px] sm:min-w-[320px] lg:min-w-[350px] flex-shrink-0 snap-start"
                 >
                   <a
                     href={offer.link_url || "#"}
                     target={offer.link_url ? "_blank" : "_self"}
                     rel="noopener noreferrer"
-                    className="block"
+                    className="block h-full"
                   >
                     <div
-                      className={`bg-gradient-to-r ${gradient} rounded-xl p-4 sm:p-5 shadow-lg hover:shadow-xl transition-all cursor-pointer hover:scale-[1.02]`}
+                      className={`bg-gradient-to-r ${gradient} rounded-xl p-5 shadow-md hover:shadow-lg transition-all cursor-pointer hover:scale-[1.02] h-full`}
                     >
-                      <div className="flex items-center justify-between">
-                        <div className="flex-1">
-                          <div className="flex items-center gap-2 mb-2">
-                            <div className="bg-white px-3 py-1 rounded-md">
-                              <span className="text-xs font-semibold text-gray-800">
+                      <div className="flex items-start justify-between gap-3">
+                        <div className="flex-1 min-w-0">
+                          <div className="flex items-center gap-2 mb-3 flex-wrap">
+                            <div className="bg-white px-3 py-1 rounded-lg">
+                              <span className="text-xs font-bold text-gray-800">
                                 {offer.brand_name || offer.title}
                               </span>
                             </div>
                             {offer.badge_text && (
-                              <Badge className={`${offer.badge_color || 'bg-orange-500 text-white'} text-xs`}>
+                              <span className="bg-white/20 backdrop-blur-sm text-white px-2 py-1 rounded-md text-xs font-bold">
                                 {offer.badge_text}
-                              </Badge>
+                              </span>
                             )}
                           </div>
-                          <h3 className="text-white font-bold text-lg sm:text-xl mb-1">
+                          <h3 className="text-white font-bold text-lg mb-2">
                             {offer.headline || offer.title}
                           </h3>
-                          <p className="text-white/80 text-sm line-clamp-1">
-                            {offer.description || offer.subtitle || ''}
+                          <p className="text-white/90 text-sm mb-3">
+                            {offer.description || ''}
                           </p>
                           {offer.code && (
-                            <div className="mt-3 flex items-center gap-2 bg-white rounded-lg px-3 py-2">
+                            <div className="flex items-center gap-2 bg-white/95 rounded-lg px-3 py-2">
                               <Tag className="h-4 w-4 text-red-500 flex-shrink-0" />
-                              <span className="text-sm font-semibold text-gray-800 truncate">
+                              <span className="text-sm font-bold text-gray-800 flex-1 truncate">
                                 {offer.code}
                               </span>
-                              <ArrowRight className="h-4 w-4 ml-auto text-gray-600 flex-shrink-0" />
+                              <ArrowRight className="h-4 w-4 text-gray-600 flex-shrink-0" />
                             </div>
                           )}
                         </div>
-                        <div className="hidden sm:block ml-4">
-                          <div className="text-5xl">{emoji}</div>
+                        <div className="text-4xl sm:text-5xl flex-shrink-0">
+                          {emoji}
                         </div>
                       </div>
                     </div>
@@ -169,49 +166,48 @@ function PromoSlider({ promoOffers }: { promoOffers: any[] }) {
           </div>
         </div>
 
-        {/* Right Navigation Button */}
         <button
           onClick={nextSlide}
-          className="hidden md:flex flex-shrink-0 items-center justify-center w-10 h-10 rounded-full bg-white dark:bg-gray-800 shadow-lg hover:shadow-xl transition-all hover:scale-110 z-10"
-          aria-label="Next offers"
-        >
-          <ChevronRight className="h-6 w-6 text-gray-800 dark:text-white" />
-        </button>
-      </div>
-
-      {/* Mobile Navigation Buttons */}
-      <div className="flex md:hidden justify-center gap-4 mt-4">
-        <button
-          onClick={prevSlide}
-          className="flex items-center justify-center w-10 h-10 rounded-full bg-white dark:bg-gray-800 shadow-lg hover:shadow-xl transition-all"
-          aria-label="Previous offers"
-        >
-          <ChevronLeft className="h-5 w-5 text-gray-800 dark:text-white" />
-        </button>
-        <button
-          onClick={nextSlide}
-          className="flex items-center justify-center w-10 h-10 rounded-full bg-white dark:bg-gray-800 shadow-lg hover:shadow-xl transition-all"
+          className="flex-shrink-0 items-center justify-center w-10 h-10 rounded-full bg-white dark:bg-gray-800 shadow-md hover:shadow-lg transition-all hover:scale-105 hidden sm:flex"
           aria-label="Next offers"
         >
           <ChevronRight className="h-5 w-5 text-gray-800 dark:text-white" />
         </button>
       </div>
 
-      {/* Dots Indicator */}
-      <div className="flex justify-center gap-2 mt-4">
-        {Array.from({ length: maxIndex + 1 }).map((_, index) => (
-          <button
-            key={index}
-            onClick={() => {
-              setPromoIndex(index);
-              scrollToIndex(index);
-            }}
-            className={`h-2 rounded-full transition-all ${
-              index === promoIndex ? "w-6 bg-purple-600" : "w-2 bg-gray-300"
-            }`}
-            aria-label={`Go to slide ${index + 1}`}
-          />
-        ))}
+      {/* Mobile Navigation + Dots */}
+      <div className="flex items-center justify-center gap-3 mt-4">
+        <button
+          onClick={prevSlide}
+          className="flex sm:hidden items-center justify-center w-9 h-9 rounded-full bg-white dark:bg-gray-800 shadow-md"
+          aria-label="Previous"
+        >
+          <ChevronLeft className="h-4 w-4 text-gray-800 dark:text-white" />
+        </button>
+        
+        <div className="flex gap-2">
+          {promoOffers.map((_, index) => (
+            <button
+              key={index}
+              onClick={() => {
+                setPromoIndex(index);
+                scrollToIndex(index);
+              }}
+              className={`h-2 rounded-full transition-all ${
+                index === promoIndex ? "w-6 bg-purple-600 dark:bg-purple-400" : "w-2 bg-gray-300 dark:bg-gray-600"
+              }`}
+              aria-label={`Go to slide ${index + 1}`}
+            />
+          ))}
+        </div>
+
+        <button
+          onClick={nextSlide}
+          className="flex sm:hidden items-center justify-center w-9 h-9 rounded-full bg-white dark:bg-gray-800 shadow-md"
+          aria-label="Next"
+        >
+          <ChevronRight className="h-4 w-4 text-gray-800 dark:text-white" />
+        </button>
       </div>
     </div>
   );
@@ -351,11 +347,11 @@ export default function HomePage() {
 
       {/* Hero Slider Section - At the Very Top */}
       {banners.length > 0 && (
-        <section className="relative w-full bg-gradient-to-b from-primary/5 to-transparent">
+        <section className="relative w-full bg-white dark:bg-gray-900">
           <div className="container mx-auto px-4 py-4 sm:py-6">
-            <div className="relative overflow-hidden rounded-2xl shadow-2xl">
-              {/* Slider Container */}
-              <div className="relative aspect-[16/6] sm:aspect-[21/6] md:aspect-[24/6] lg:aspect-[32/9]">
+            <div className="relative overflow-hidden rounded-xl shadow-lg">
+              {/* Slider Container - Fixed aspect ratio for 2800x458 */}
+              <div className="relative w-full" style={{ aspectRatio: '2800/458' }}>
                 {banners.map((banner: any, index: number) => (
                   <div
                     key={banner.id}
@@ -378,7 +374,7 @@ export default function HomePage() {
                             "/images/banners/placeholder.jpg"
                           }
                           alt={banner.title || "Banner"}
-                          className="absolute inset-0 h-full w-full object-cover object-center"
+                          className="w-full h-full object-cover"
                         />
                       </a>
                     ) : (
@@ -387,7 +383,7 @@ export default function HomePage() {
                           banner.image_url || "/images/banners/placeholder.jpg"
                         }
                         alt={banner.title || "Banner"}
-                        className="absolute inset-0 h-full w-full object-cover object-center"
+                        className="w-full h-full object-cover"
                       />
                     )}
                   </div>
@@ -399,32 +395,32 @@ export default function HomePage() {
                 <>
                   <button
                     onClick={prevSlide}
-                    className="absolute left-4 top-1/2 -translate-y-1/2 z-20 bg-white/90 hover:bg-white rounded-full p-2 sm:p-3 shadow-lg transition-all"
+                    className="absolute left-2 sm:left-4 top-1/2 -translate-y-1/2 z-20 bg-white/95 hover:bg-white rounded-full p-2 sm:p-3 shadow-lg transition-all hover:scale-110"
                     aria-label="Previous slide"
                   >
-                    <ChevronLeft className="h-5 w-5 sm:h-6 sm:w-6 text-gray-800" />
+                    <ChevronLeft className="h-4 w-4 sm:h-5 sm:w-5 text-gray-800" />
                   </button>
                   <button
                     onClick={nextSlide}
-                    className="absolute right-4 top-1/2 -translate-y-1/2 z-20 bg-white/90 hover:bg-white rounded-full p-2 sm:p-3 shadow-lg transition-all"
+                    className="absolute right-2 sm:right-4 top-1/2 -translate-y-1/2 z-20 bg-white/95 hover:bg-white rounded-full p-2 sm:p-3 shadow-lg transition-all hover:scale-110"
                     aria-label="Next slide"
                   >
-                    <ChevronRight className="h-5 w-5 sm:h-6 sm:w-6 text-gray-800" />
+                    <ChevronRight className="h-4 w-4 sm:h-5 sm:w-5 text-gray-800" />
                   </button>
                 </>
               )}
 
               {/* Dots Indicator */}
               {banners.length > 1 && (
-                <div className="absolute bottom-4 left-1/2 -translate-x-1/2 z-20 flex gap-2">
+                <div className="absolute bottom-3 sm:bottom-4 left-1/2 -translate-x-1/2 z-20 flex gap-1.5 sm:gap-2">
                   {banners.map((_: any, index: number) => (
                     <button
                       key={index}
                       onClick={() => setCurrentSlide(index)}
-                      className={`h-2 rounded-full transition-all ${
+                      className={`h-1.5 sm:h-2 rounded-full transition-all ${
                         index === currentSlide
-                          ? "w-8 bg-white"
-                          : "w-2 bg-white/50"
+                          ? "w-6 sm:w-8 bg-white"
+                          : "w-1.5 sm:w-2 bg-white/50"
                       }`}
                       aria-label={`Go to slide ${index + 1}`}
                     />
@@ -437,8 +433,12 @@ export default function HomePage() {
       )}
       {/* Promotional Offers Slider - After Stats Section */}
       {promo_banners.length > 0 && (
-        <section className="bg-gradient-to-r from-blue-50 to-purple-50 dark:from-gray-900 dark:to-gray-800 py-8 sm:py-12">
+        <section className="bg-white dark:bg-gray-900 py-8 sm:py-12">
           <div className="container">
+            <div className="mb-6">
+              <h2 className="text-2xl sm:text-3xl font-bold mb-2">Special Offers</h2>
+              <p className="text-muted-foreground">Exclusive deals just for you</p>
+            </div>
             <PromoSlider promoOffers={promo_banners} />
           </div>
         </section>
