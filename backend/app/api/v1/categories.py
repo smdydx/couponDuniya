@@ -61,21 +61,31 @@ def list_categories(
     
     categories = db.scalars(query).all()
     
+    # Count products for each category
+    from ..models import Product
+    category_data = []
+    for c in categories:
+        product_count = db.scalar(
+            select(func.count()).select_from(Product).where(
+                Product.category_id == c.id,
+                Product.is_active == True
+            )
+        )
+        category_data.append({
+            "id": c.id,
+            "name": c.name,
+            "slug": c.slug,
+            "description": c.description,
+            "icon_url": c.icon_url,
+            "is_active": c.is_active,
+            "products_count": product_count or 0,
+            "created_at": c.created_at.isoformat() if c.created_at else None
+        })
+    
     return {
         "success": True,
         "data": {
-            "categories": [
-                {
-                    "id": c.id,
-                    "name": c.name,
-                    "slug": c.slug,
-                    "description": c.description,
-                    "icon_url": c.icon_url,
-                    "is_active": c.is_active,
-                    "created_at": c.created_at.isoformat() if c.created_at else None
-                }
-                for c in categories
-            ],
+            "categories": category_data,
             "pagination": {
                 "current_page": page,
                 "total_pages": (total_count + limit - 1) // limit if total_count else 1,

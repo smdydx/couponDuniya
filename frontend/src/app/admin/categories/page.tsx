@@ -267,11 +267,21 @@ export default function AdminCategoriesPage() {
                       <TableCell>
                         <div className="flex items-center gap-3">
                           {category.icon_url ? (
-                            <img
-                              src={category.icon_url}
-                              alt={category.name}
-                              className="h-12 w-12 rounded-lg object-cover object-center border shadow-sm bg-white"
-                            />
+                            <div className="h-12 w-12 rounded-lg border shadow-sm bg-white flex items-center justify-center p-1">
+                              <img
+                                src={category.icon_url}
+                                alt={category.name}
+                                className="max-w-full max-h-full object-contain"
+                                onError={(e) => {
+                                  const target = e.currentTarget;
+                                  target.style.display = 'none';
+                                  if (target.parentElement) {
+                                    target.parentElement.className = "flex h-12 w-12 items-center justify-center rounded-lg bg-gradient-to-br from-purple-100 to-pink-100";
+                                    target.parentElement.innerHTML = '<svg class="h-6 w-6 text-purple-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-6l-2-2H5a2 2 0 00-2 2z"></path></svg>';
+                                  }
+                                }}
+                              />
+                            </div>
                           ) : (
                             <div className="flex h-12 w-12 items-center justify-center rounded-lg bg-gradient-to-br from-purple-100 to-pink-100">
                               <FolderOpen className="h-6 w-6 text-purple-500" />
