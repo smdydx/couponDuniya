@@ -119,7 +119,11 @@ export default function OrdersPage() {
                                 <Badge className={status.color}>{status.label}</Badge>
                               </div>
                               <p className="text-sm text-muted-foreground">
-                                Placed on {formatDate(order.created_at)}
+                                Placed on {new Date(order.created_at).toLocaleDateString('en-US', { 
+                                  year: 'numeric', 
+                                  month: 'short', 
+                                  day: 'numeric' 
+                                })}
                               </p>
                             </div>
                           </div>

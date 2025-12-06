@@ -280,7 +280,7 @@ def checkout(
     
     # Generate order number
     import uuid
-    order_uuid = uuid.uuid4()
+    order_uuid = str(uuid.uuid4())  # Convert to string for SQLite
     order_number = f"ORD-{datetime.utcnow().strftime('%Y%m%d')}-{str(uuid.uuid4())[:8].upper()}"
     
     # Create order
@@ -386,7 +386,7 @@ def checkout(
         success=True,
         order_id=order.id,
         order_number=order.order_number,
-        uuid=str(order.uuid),
+        uuid=order.uuid,  # Already a string
         total_amount=float(validation.total_amount),
         payment_required=payment_required,
         payment_details=payment_details,
