@@ -1,16 +1,19 @@
 from fastapi import APIRouter, HTTPException, Depends, Request
+from fastapi.responses import RedirectResponse
 from sqlalchemy.orm import Session
 from sqlalchemy import select
 from pydantic import BaseModel
 from datetime import datetime, timedelta
 import httpx
 import json
+import urllib.parse
 
 from ...database import get_db
 from ...models import User
 from ...models.social_account import SocialAccount
-from ...security import create_access_token, hash_password
+from ...security import create_access_token, get_password_hash
 from ...config import get_settings
+from ...dependencies import get_current_user
 
 router = APIRouter(prefix="/auth/social", tags=["Social Authentication"])
 settings = get_settings()
@@ -99,8 +102,6 @@ async def login_with_google(
     db: Session = Depends(get_db)
 ):
     """Login with Google - Only for existing registered users"""
-    from ...security import create_access_token
-
     # Verify token and get user info
     user_info = await verify_google_token(payload.token)
 
@@ -138,7 +139,7 @@ async def login_with_google(
         db.commit()
 
     # Generate access token
-    access_token = create_access_token({"sub": str(user.id)})
+    access_token = create_access_token(str(user.id))
 
     return {
         "success": True,
@@ -207,7 +208,7 @@ async def login_with_facebook(
             user = User(
                 email=user_info["email"],
                 name=user_info["name"],
-                password_hash=hash_password(""),  # No password for social login
+                password_hash=get_password_hash(""),  # No password for social login
                 is_verified=user_info["email_verified"],
                 email_verified_at=datetime.utcnow() if user_info["email_verified"] else None
             )
@@ -228,7 +229,7 @@ async def login_with_facebook(
         db.refresh(user)
 
     # Generate access token
-    access_token = create_access_token({"sub": str(user.id)})
+    access_token = create_access_token(str(user.id))
 
     return {
         "success": True,
@@ -251,8 +252,6 @@ def get_linked_accounts(
     db: Session = Depends(get_db)
 ):
     """Get all linked social accounts"""
-    from ...security import get_current_user
-
     accounts = db.scalars(
         select(SocialAccount).where(SocialAccount.user_id == current_user.id)
     ).all()
@@ -280,8 +279,6 @@ def unlink_social_account(
     db: Session = Depends(get_db)
 ):
     """Unlink a social account"""
-    from ...security import get_current_user
-
     account = db.scalar(
         select(SocialAccount).where(
             SocialAccount.user_id == current_user.id,
@@ -299,3 +296,100 @@ def unlink_social_account(
         "success": True,
         "message": f"{provider.capitalize()} account unlinked successfully"
     }
+
+
+@router.get("/google/login")
+async def google_login_redirect():
+    """Redirect to Google OAuth consent screen"""
+    google_auth_url = "https://accounts.google.com/o/oauth2/v2/auth"
+    params = {
+        "client_id": settings.GOOGLE_CLIENT_ID,
+        "redirect_uri": settings.GOOGLE_REDIRECT_URI,
+        "response_type": "code",
+        "scope": "openid email profile",
+        "access_type": "offline",
+        "prompt": "consent"
+    }
+    url = f"{google_auth_url}?{urllib.parse.urlencode(params)}"
+    return RedirectResponse(url=url)
+
+
+@router.get("/google/callback")
+async def google_callback(
+    code: str = None,
+    error: str = None,
+    db: Session = Depends(get_db)
+):
+    """Handle Google OAuth callback"""
+    if error:
+        frontend_url = getattr(settings, 'FRONTEND_URL', 'http://localhost:5000')
+        return RedirectResponse(url=f"{frontend_url}/login?error={error}")
+
+    if not code:
+        raise HTTPException(status_code=400, detail="No authorization code provided")
+
+    try:
+        async with httpx.AsyncClient() as client:
+            token_response = await client.post(
+                "https://oauth2.googleapis.com/token",
+                data={
+                    "code": code,
+                    "client_id": settings.GOOGLE_CLIENT_ID,
+                    "client_secret": settings.GOOGLE_CLIENT_SECRET,
+                    "redirect_uri": settings.GOOGLE_REDIRECT_URI,
+                    "grant_type": "authorization_code"
+                }
+            )
+
+            if token_response.status_code != 200:
+                raise HTTPException(status_code=400, detail="Failed to exchange code for token")
+
+            tokens = token_response.json()
+            id_token = tokens.get("id_token")
+
+            if not id_token:
+                raise HTTPException(status_code=400, detail="No ID token in response")
+
+            user_info = await verify_google_token(id_token)
+
+            user = db.scalar(select(User).where(User.email == user_info["email"]))
+
+            if not user:
+                frontend_url = getattr(settings, 'FRONTEND_URL', 'http://localhost:5000')
+                return RedirectResponse(
+                    url=f"{frontend_url}/login?error=no_account&email={user_info['email']}"
+                )
+
+            social_account = db.scalar(
+                select(SocialAccount).where(
+                    SocialAccount.provider == "google",
+                    SocialAccount.provider_user_id == user_info["provider_user_id"]
+                )
+            )
+
+            if social_account:
+                social_account.profile_data = json.dumps(user_info)
+                social_account.updated_at = datetime.utcnow()
+                db.commit()
+            else:
+                social_account = SocialAccount(
+                    user_id=user.id,
+                    provider="google",
+                    provider_user_id=user_info["provider_user_id"],
+                    profile_data=json.dumps(user_info)
+                )
+                db.add(social_account)
+                db.commit()
+
+            access_token = create_access_token(str(user.id))
+
+            frontend_url = getattr(settings, 'FRONTEND_URL', 'http://localhost:5000')
+            return RedirectResponse(
+                url=f"{frontend_url}/auth/callback?token={access_token}&user_id={user.id}"
+            )
+
+    except HTTPException:
+        raise
+    except Exception as e:
+        frontend_url = getattr(settings, 'FRONTEND_URL', 'http://localhost:5000')
+        return RedirectResponse(url=f"{frontend_url}/login?error=auth_failed")
