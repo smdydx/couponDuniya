@@ -16,6 +16,7 @@ class CategoryCreate(BaseModel):
     name: str = Field(..., min_length=1, max_length=255)
     slug: str = Field(..., min_length=1, max_length=255)
     description: str | None = None
+    icon_url: str | None = None
     is_active: bool = True
 
 
@@ -23,6 +24,7 @@ class CategoryUpdate(BaseModel):
     name: str | None = None
     slug: str | None = None
     description: str | None = None
+    icon_url: str | None = None
     is_active: bool | None = None
 
 
@@ -31,6 +33,7 @@ class CategoryRead(BaseModel):
     name: str
     slug: str
     description: str | None
+    icon_url: str | None
     is_active: bool
     created_at: str | None
 
@@ -67,6 +70,7 @@ def list_categories(
                     "name": c.name,
                     "slug": c.slug,
                     "description": c.description,
+                    "icon_url": c.icon_url,
                     "is_active": c.is_active,
                     "created_at": c.created_at.isoformat() if c.created_at else None
                 }
@@ -96,6 +100,7 @@ def create_category(
         name=payload.name,
         slug=payload.slug,
         description=payload.description,
+        icon_url=payload.icon_url,
         is_active=payload.is_active
     )
     db.add(category)
@@ -139,6 +144,8 @@ def update_category(
         category.slug = payload.slug
     if payload.description is not None:
         category.description = payload.description
+    if payload.icon_url is not None:
+        category.icon_url = payload.icon_url
     if payload.is_active is not None:
         category.is_active = payload.is_active
     
@@ -196,6 +203,7 @@ def get_category(
             "name": category.name,
             "slug": category.slug,
             "description": category.description,
+            "icon_url": category.icon_url,
             "is_active": category.is_active,
             "created_at": category.created_at.isoformat() if category.created_at else None
         }

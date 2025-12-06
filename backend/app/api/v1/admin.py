@@ -1228,6 +1228,7 @@ def create_category(payload: CategoryPayload, db: Session = Depends(get_db)):
     category = Category(
         name=payload.name,
         slug=payload.slug,
+        icon_url=payload.icon_url,
         is_active=payload.is_active
     )
     db.add(category)
@@ -1263,6 +1264,7 @@ def update_category(id: int, payload: CategoryPayload, db: Session = Depends(get
 
     category.name = payload.name
     category.slug = payload.slug
+    category.icon_url = payload.icon_url
     category.is_active = payload.is_active
 
     db.commit()
