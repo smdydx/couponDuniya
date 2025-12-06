@@ -21,7 +21,6 @@ import {
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { ROUTES } from "@/lib/constants";
-import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { LogOut } from "lucide-react";
 
@@ -106,12 +105,6 @@ interface AdminSidebarProps {
 export function AdminSidebar({ isOpen, onToggle }: AdminSidebarProps) {
   const pathname = usePathname();
   const router = useRouter();
-  const [isSidebarOpen, setIsSidebarOpen] = useState(isOpen);
-
-  const handleToggleSidebar = () => {
-    setIsSidebarOpen(!isSidebarOpen);
-    onToggle();
-  };
 
   const handleLogout = () => {
     localStorage.removeItem('admin_token');
@@ -123,28 +116,28 @@ export function AdminSidebar({ isOpen, onToggle }: AdminSidebarProps) {
     <aside
       className={cn(
         "fixed left-0 top-0 z-40 h-screen border-r bg-background transition-all duration-300",
-        isSidebarOpen ? "w-64" : "w-16",
-        isSidebarOpen ? "translate-x-0" : "-translate-x-full lg:translate-x-0"
+        "w-64 lg:w-64",
+        isOpen ? "translate-x-0" : "-translate-x-full",
+        "lg:translate-x-0",
+        !isOpen && "lg:w-16"
       )}
     >
       <div className="flex h-16 items-center justify-between border-b px-4">
-        {isSidebarOpen && (
-          <Link href={ROUTES.admin.dashboard} className="flex items-center gap-2">
-            <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary text-primary-foreground text-sm font-bold">
-              BC
-            </div>
-            <span className="font-bold">Admin</span>
-          </Link>
-        )}
+        <Link href={ROUTES.admin.dashboard} className="flex items-center gap-2">
+          <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary text-primary-foreground text-sm font-bold">
+            BC
+          </div>
+          <span className={cn("font-bold transition-opacity", !isOpen && "lg:hidden")}>Admin</span>
+        </Link>
         <div className="flex items-center gap-2">
           <Button
             variant="ghost"
             size="icon"
             className="h-8 w-8 hidden lg:flex"
-            onClick={handleToggleSidebar}
+            onClick={onToggle}
             aria-label="Toggle sidebar"
           >
-            {isSidebarOpen ? (
+            {isOpen ? (
               <ChevronLeft className="h-4 w-4" />
             ) : (
               <ChevronRight className="h-4 w-4" />
@@ -153,7 +146,7 @@ export function AdminSidebar({ isOpen, onToggle }: AdminSidebarProps) {
         </div>
       </div>
 
-      <nav className="flex flex-col gap-1 p-2">
+      <nav className="flex flex-col gap-1 p-2 overflow-y-auto max-h-[calc(100vh-200px)]">
         {adminNavItems.map((item) => {
           const isActive = pathname === item.href || pathname.startsWith(item.href + "/");
           const Icon = item.icon;
@@ -167,27 +160,30 @@ export function AdminSidebar({ isOpen, onToggle }: AdminSidebarProps) {
                 isActive
                   ? "bg-primary text-primary-foreground"
                   : "text-muted-foreground hover:bg-accent hover:text-foreground",
-                !isSidebarOpen && "justify-center px-2"
+                !isOpen && "lg:justify-center lg:px-2"
               )}
-              title={!isSidebarOpen ? item.title : undefined}
+              title={!isOpen ? item.title : undefined}
             >
               <Icon className="h-5 w-5 shrink-0" />
-              {isSidebarOpen && <span>{item.title}</span>}
+              <span className={cn("transition-opacity", !isOpen && "lg:hidden")}>{item.title}</span>
             </Link>
           );
         })}
       </nav>
 
-      <div className="absolute bottom-4 left-0 right-0 px-4 space-y-2">
+      <div className={cn("absolute bottom-4 left-0 right-0 px-4 space-y-2", !isOpen && "lg:px-2")}>
         <Button
           variant="ghost"
-          className="w-full justify-start text-red-600 hover:text-red-700 hover:bg-red-50 dark:hover:bg-red-950"
+          className={cn(
+            "w-full justify-start text-red-600 hover:text-red-700 hover:bg-red-50 dark:hover:bg-red-950",
+            !isOpen && "lg:justify-center lg:px-2"
+          )}
           onClick={handleLogout}
         >
-          <LogOut className="mr-3 h-5 w-5" />
-          {isSidebarOpen && <span>Logout</span>}
+          <LogOut className={cn("h-5 w-5", isOpen ? "mr-3" : "lg:mr-0 mr-3")} />
+          <span className={cn("transition-opacity", !isOpen && "lg:hidden")}>Logout</span>
         </Button>
-        <div className="rounded-lg border bg-muted/50 p-4">
+        <div className={cn("rounded-lg border bg-muted/50 p-4", !isOpen && "lg:hidden")}>
           <p className="text-xs text-muted-foreground">
             Need help? Check the{" "}
             <Link href="/admin/docs" className="text-primary hover:underline">
