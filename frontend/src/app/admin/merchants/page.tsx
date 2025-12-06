@@ -261,7 +261,7 @@ export default function AdminMerchantsPage() {
                               <img
                                 src={merchant.logo_url}
                                 alt={merchant.name}
-                                className="h-10 w-10 rounded-lg object-contain bg-muted"
+                                className="h-10 w-10 rounded-lg object-cover object-center bg-muted"
                               />
                             ) : (
                               <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-primary/10 text-lg font-bold text-primary">

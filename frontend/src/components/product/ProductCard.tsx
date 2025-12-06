@@ -80,7 +80,7 @@ export function ProductCard({ product, compact = false }: ProductCardProps) {
                 <img
                   src={product.merchant.logo_url}
                   alt={product.merchant.name}
-                  className="w-3 h-3 object-contain"
+                  className="w-3 h-3 object-cover object-center"
                 />
               </div>
             )}

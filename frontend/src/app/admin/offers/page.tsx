@@ -247,7 +247,7 @@ export default function AdminOffersPage() {
                               <img
                                 src={offer.image_url}
                                 alt={offer.title}
-                                className="h-10 w-10 rounded-lg object-cover bg-muted"
+                                className="h-10 w-10 rounded-lg object-cover object-center bg-muted"
                               />
                             ) : (
                               <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-primary/10">

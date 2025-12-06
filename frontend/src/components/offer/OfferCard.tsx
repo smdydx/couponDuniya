@@ -58,11 +58,11 @@ export function OfferCard({ offer, onClickTrack }: OfferCardProps) {
         {/* Offer/Merchant Image - Featured */}
         <div className="relative w-full aspect-[16/9] overflow-hidden bg-gradient-to-br from-gray-50 to-gray-100">
           {offer.merchant?.logo_url ? (
-            <div className="w-full h-full flex items-center justify-center p-4">
+            <div className="w-full h-full">
               <img
                 src={offer.merchant.logo_url}
                 alt={offer.merchant.name}
-                className="max-w-full max-h-full object-contain transition-transform duration-300 group-hover:scale-105"
+                className="w-full h-full object-cover object-center transition-transform duration-300 group-hover:scale-105"
               />
             </div>
           ) : (

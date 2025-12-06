@@ -117,7 +117,7 @@ export default function ProductDetailPage({
                 <img
                   src={product.image_url}
                   alt={product.name}
-                  className="w-full h-full object-contain p-4"
+                  className="w-full h-full object-cover object-center"
                 />
               ) : (
                 <div className="flex h-full w-full items-center justify-center text-4xl sm:text-6xl font-bold text-primary/20">

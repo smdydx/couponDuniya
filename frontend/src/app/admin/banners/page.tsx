@@ -206,7 +206,7 @@ export default function AdminBannersPage() {
                           <img
                             src={banner.image_url}
                             alt={banner.title}
-                            className="h-16 w-24 rounded-lg object-cover bg-muted"
+                            className="h-16 w-24 rounded-lg object-cover object-center bg-muted"
                           />
                           <div>
                             <p className="font-medium">{banner.title}</p>

@@ -270,7 +270,7 @@ export default function AdminCategoriesPage() {
                             <img
                               src={category.icon_url}
                               alt={category.name}
-                              className="h-12 w-12 rounded-lg object-contain border shadow-sm bg-white"
+                              className="h-12 w-12 rounded-lg object-cover object-center border shadow-sm bg-white"
                             />
                           ) : (
                             <div className="flex h-12 w-12 items-center justify-center rounded-lg bg-gradient-to-br from-purple-100 to-pink-100">

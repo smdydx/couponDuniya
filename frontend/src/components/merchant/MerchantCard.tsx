@@ -33,7 +33,7 @@ export function MerchantCard({ merchant }: MerchantCardProps) {
                 <img
                   src={merchant.logo_url}
                   alt={merchant.name}
-                  className="w-full h-full object-contain p-2"
+                  className="w-full h-full object-cover object-center"
                   loading="lazy"
                 />
               ) : (

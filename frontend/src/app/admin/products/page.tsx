@@ -355,7 +355,7 @@ export default function AdminProductsPage() {
                               <img
                                 src={product.image_url}
                                 alt={product.name}
-                                className="h-12 w-12 rounded-lg object-cover border shadow-sm"
+                                className="h-12 w-12 rounded-lg object-cover object-center border shadow-sm"
                               />
                             ) : (
                               <div className="flex h-12 w-12 items-center justify-center rounded-lg bg-gradient-to-br from-blue-100 to-purple-100">
