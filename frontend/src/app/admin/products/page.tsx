@@ -79,12 +79,19 @@ export default function AdminProductsPage() {
       const [productsData, merchantsData, categoriesResponse] = await Promise.all([
         adminApi.getProducts({ page, limit: 20, search: search || undefined }),
         adminApi.getMerchants({ limit: 100 }),
-        apiClient.get('/api/v1/categories/'),
+        apiClient.get('/categories/'),
       ]);
       setProducts(productsData.products || []);
       setPagination(productsData.pagination);
       setMerchants(merchantsData.merchants || []);
-      const catData = categoriesResponse.data?.data?.categories || categoriesResponse.data?.categories || [];
+      
+      // Handle categories response safely
+      let catData = [];
+      if (categoriesResponse?.data) {
+        catData = categoriesResponse.data.data?.categories || 
+                  categoriesResponse.data.categories || 
+                  (Array.isArray(categoriesResponse.data) ? categoriesResponse.data : []);
+      }
       setCategories(catData);
     } catch (error: any) {
       console.error("Failed to fetch products:", error);

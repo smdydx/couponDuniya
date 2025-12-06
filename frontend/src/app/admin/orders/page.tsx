@@ -44,11 +44,18 @@ export default function AdminOrdersPage() {
         limit: 20,
         status: statusFilter,
       });
-      setOrders(data.orders || []);
-      setPagination(data.pagination);
-    } catch (error) {
+      
+      // Safely handle the response structure
+      const ordersData = data?.data?.orders || data?.orders || [];
+      const paginationData = data?.data?.pagination || data?.pagination || null;
+      
+      setOrders(ordersData);
+      setPagination(paginationData);
+    } catch (error: any) {
       console.error("Failed to fetch orders:", error);
+      console.error("Error details:", error.response?.data || error.message);
       setOrders([]);
+      setPagination(null);
     } finally {
       setLoading(false);
     }
@@ -89,11 +96,12 @@ export default function AdminOrdersPage() {
     return <Badge variant="secondary">{status}</Badge>;
   };
 
-  const filteredOrders = orders.filter((order) => {
+  const filteredOrders = (orders || []).filter((order) => {
     if (!search) return true;
+    const searchLower = search.toLowerCase();
     return (
-      order.order_number?.toLowerCase().includes(search.toLowerCase()) ||
-      order.user_email?.toLowerCase().includes(search.toLowerCase())
+      order?.order_number?.toLowerCase()?.includes(searchLower) ||
+      order?.user_email?.toLowerCase()?.includes(searchLower)
     );
   });
 
@@ -130,7 +138,9 @@ export default function AdminOrdersPage() {
               <Clock className="h-6 w-6 text-yellow-500" />
             </div>
             <div>
-              <p className="text-2xl font-bold">{orders.filter(o => o.status === 'pending' || o.status === 'processing').length}</p>
+              <p className="text-2xl font-bold">
+                {orders?.filter(o => o?.status === 'pending' || o?.status === 'processing')?.length || 0}
+              </p>
               <p className="text-sm text-muted-foreground">Pending</p>
             </div>
           </CardContent>
@@ -141,7 +151,9 @@ export default function AdminOrdersPage() {
               <CheckCircle className="h-6 w-6 text-green-500" />
             </div>
             <div>
-              <p className="text-2xl font-bold">{orders.filter(o => o.status === 'fulfilled').length}</p>
+              <p className="text-2xl font-bold">
+                {orders?.filter(o => o?.status === 'fulfilled')?.length || 0}
+              </p>
               <p className="text-sm text-muted-foreground">Fulfilled</p>
             </div>
           </CardContent>
@@ -152,7 +164,9 @@ export default function AdminOrdersPage() {
               <XCircle className="h-6 w-6 text-red-500" />
             </div>
             <div>
-              <p className="text-2xl font-bold">{orders.filter(o => o.status === 'cancelled').length}</p>
+              <p className="text-2xl font-bold">
+                {orders?.filter(o => o?.status === 'cancelled')?.length || 0}
+              </p>
               <p className="text-sm text-muted-foreground">Cancelled</p>
             </div>
           </CardContent>

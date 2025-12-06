@@ -230,20 +230,22 @@ def get_categories(
             select(Category).where(Category.is_active == True).order_by(Category.name)
         ).scalars().all()
 
+        categories_data = [
+            {
+                "id": cat.id,
+                "name": cat.name,
+                "slug": cat.slug,
+                "icon_url": cat.icon_url,
+                "description": cat.description,
+                "is_active": cat.is_active
+            }
+            for cat in categories
+        ]
+
         return {
             "success": True,
             "data": {
-                "categories": [
-                    {
-                        "id": cat.id,
-                        "name": cat.name,
-                        "slug": cat.slug,
-                        "icon_url": cat.icon_url,
-                        "description": cat.description,
-                        "is_active": cat.is_active
-                    }
-                    for cat in categories
-                ]
+                "categories": categories_data
             }
         }
     except Exception as e:
