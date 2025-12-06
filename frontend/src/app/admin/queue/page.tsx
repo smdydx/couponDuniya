@@ -29,7 +29,7 @@ interface DeadLetterJob {
   error?: string;
 }
 
-const API_BASE = "/api/v1/queue"; // relative; assumes frontend proxy to backend
+const API_BASE = "/backend-api/queue"; // relative; uses frontend proxy to backend
 
 export default function AdminQueuePage() {
   const [stats, setStats] = useState<QueueStatsResponse | null>(null);

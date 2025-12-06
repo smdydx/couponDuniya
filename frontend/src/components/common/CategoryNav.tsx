@@ -32,7 +32,7 @@ function CategoryNavContent({ basePath = ROUTES.coupons, showAll = true }: Categ
   useEffect(() => {
     const fetchCategories = async () => {
       try {
-        const response = await apiClient.get('/api/v1/categories?is_active=true&limit=20');
+        const response = await apiClient.get('/categories?is_active=true&limit=20');
         setCategories(response.data?.data?.categories || []);
       } catch (error) {
         console.error('Failed to fetch categories:', error);

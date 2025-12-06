@@ -62,7 +62,7 @@ def list_categories(
     categories = db.scalars(query).all()
 
     # Count products for each category
-    from ..models import Product
+    from ...models import Product
     category_data = []
     for c in categories:
         product_count = db.scalar(
