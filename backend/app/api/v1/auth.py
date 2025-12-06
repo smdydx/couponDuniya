@@ -64,6 +64,10 @@ class RefreshRequest(BaseModel):
 @router.post("/register", status_code=status.HTTP_201_CREATED, response_model=RegisterResponse)
 def register(payload: RegisterRequest, db: Session = Depends(get_db)):
     """Register new user with email/mobile and password."""
+    from ...verification import generate_verification_token
+    from ...email import email_service
+    from ...models.referral import Referral
+    
     # Validate that at least email or mobile is provided
     if not payload.email and not payload.mobile:
         raise HTTPException(status_code=400, detail="Email or mobile is required")
@@ -76,7 +80,7 @@ def register(payload: RegisterRequest, db: Session = Depends(get_db)):
         existing_user = db.query(User).filter(User.mobile == payload.mobile).first()
 
     if existing_user:
-        raise HTTPException(status_code=400, detail="User already exists")
+        raise HTTPException(status_code=400, detail="User already exists with this email or mobile")
 
     # Create new user
     user = User(
@@ -84,50 +88,58 @@ def register(payload: RegisterRequest, db: Session = Depends(get_db)):
         mobile=payload.mobile,
         password_hash=get_password_hash(payload.password),
         full_name=payload.full_name or "User",
-        referral_code=f"USER{str(uuid.uuid4())[:8].upper()}",
         is_active=True,
-        is_verified=False,  # Needs email/mobile verification
-        role="customer", # Default role
+        is_verified=False,
+        role="customer",
+        auth_provider="email",
     )
+
+    db.add(user)
+    db.flush()
 
     # Handle referral
     if payload.referral_code:
         referrer = db.query(User).filter(User.referral_code == payload.referral_code).first()
         if referrer:
-            # TODO: Create referral record
-            pass
+            referral = Referral(
+                referrer_id=referrer.id,
+                referred_id=user.id,
+                referral_code_used=payload.referral_code,
+                status="pending",
+            )
+            db.add(referral)
 
-    db.add(user)
     db.commit()
     db.refresh(user)
 
-    # Queue welcome email
-    if settings.EMAIL_ENABLED and user.email:
-        push_email_job(
-            "welcome",
-            user.email,
-            {
-                "user_name": user.full_name or user.email.split('@')[0],
-                "referral_code": user.referral_code,
-                "app_url": "https://app.example.com"  # TODO: Get from settings
-            }
-        )
+    # Send verification email
+    verification_token = None
+    if user.email:
+        verification_token = generate_verification_token(user.email)
+        frontend_url = settings.FRONTEND_BASE_URL or "http://localhost:5000"
+        verification_url = f"{frontend_url}/auth/verify-email?token={verification_token}"
+        
+        email_service.send_welcome_email(user.email, verification_url)
 
     return RegisterResponse(
-        message="User registered successfully. Please verify your email/mobile.",
+        message="Registration successful! Please check your email to verify your account before logging in.",
         data={
             "user_id": user.id,
             "uuid": str(user.uuid),
             "email": user.email,
             "mobile": user.mobile,
             "referral_code": user.referral_code,
+            "requires_verification": True,
+            "dev_verification_token": verification_token if settings.DEBUG else None,
         },
     )
 
 
 @router.post("/login", response_model=dict)
 def login(payload: LoginRequest, db: Session = Depends(get_db)):
-    """Login with email/mobile and password."""
+    """Login with email/mobile and password. Email must be verified first."""
+    from datetime import datetime
+    
     if not payload.identifier or not payload.password:
         raise HTTPException(status_code=400, detail="Missing credentials")
 
@@ -141,17 +153,28 @@ def login(payload: LoginRequest, db: Session = Depends(get_db)):
     ).first()
 
     if not user:
-        raise HTTPException(status_code=401, detail="Invalid credentials")
+        raise HTTPException(status_code=401, detail="Invalid email/mobile or password")
 
     # Verify password
     if not user.password_hash:
-        raise HTTPException(status_code=401, detail="Password not set. Please use OTP login.")
+        raise HTTPException(status_code=401, detail="Password not set. Please use OTP or social login.")
 
     if not verify_password(payload.password, user.password_hash):
-        raise HTTPException(status_code=401, detail="Invalid credentials")
+        raise HTTPException(status_code=401, detail="Invalid email/mobile or password")
 
     if not user.is_active:
-        raise HTTPException(status_code=403, detail="Account is disabled")
+        raise HTTPException(status_code=403, detail="Your account has been disabled. Please contact support.")
+
+    # Check email verification for email-based login
+    if user.email == payload.identifier and not user.is_verified:
+        raise HTTPException(
+            status_code=403, 
+            detail="Please verify your email before logging in. Check your inbox for the verification link."
+        )
+
+    # Update last login timestamp
+    user.last_login_at = datetime.utcnow()
+    db.commit()
 
     # Create session
     access_token = create_access_token(str(user.id))
@@ -176,6 +199,7 @@ def login(payload: LoginRequest, db: Session = Depends(get_db)):
 
     return {
         "success": True,
+        "message": "Login successful",
         "data": {
             "access_token": access_token,
             "refresh_token": f"refresh_{uuid.uuid4()}",
@@ -402,6 +426,7 @@ def verify_email(
     """Verify email using token"""
     from ...verification import verify_email_token
     from sqlalchemy import select
+    from datetime import datetime
 
     # Verify token
     is_valid, email = verify_email_token(request.token)
@@ -409,18 +434,21 @@ def verify_email(
     if not is_valid:
         raise HTTPException(
             status_code=400,
-            detail="Invalid or expired verification token"
+            detail="Invalid or expired verification token. Please request a new verification email."
         )
 
     # Update user's verification status
     user = db.scalar(select(User).where(User.email == email))
-    if user:
-        user.is_verified = True
-        db.commit()
+    if not user:
+        raise HTTPException(status_code=404, detail="User not found")
+    
+    user.is_verified = True
+    user.email_verified_at = datetime.utcnow()
+    db.commit()
 
     return {
         "success": True,
-        "message": "Email verified successfully",
+        "message": "Email verified successfully! You can now log in.",
         "data": {
             "email": email,
             "is_verified": True

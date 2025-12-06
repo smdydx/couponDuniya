@@ -23,7 +23,14 @@ class Settings(BaseSettings):
     # Google OAuth
     GOOGLE_CLIENT_ID: str = ""
     GOOGLE_CLIENT_SECRET: str = ""
-    GOOGLE_REDIRECT_URI: str = "http://localhost:5000/auth/google/callback"
+    GOOGLE_REDIRECT_URI: str = "http://localhost:5000/api/v1/auth/social/google/callback"
+    
+    # Facebook OAuth
+    FACEBOOK_APP_ID: str = ""
+    FACEBOOK_APP_SECRET: str = ""
+    
+    # Frontend URL for redirects
+    FRONTEND_URL: str = "http://localhost:5000"
     
     # Razorpay Payment Gateway
     RAZORPAY_KEY_ID: str = ""

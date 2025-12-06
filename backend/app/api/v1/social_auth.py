@@ -117,7 +117,8 @@ async def login_with_google(
             is_verified=user_info.get("email_verified", False),
             email_verified_at=datetime.utcnow() if user_info.get("email_verified") else None,
             role="customer",
-            is_admin=False
+            is_admin=False,
+            auth_provider="google",
         )
         db.add(user)
         db.flush()
@@ -217,10 +218,12 @@ async def login_with_facebook(
             # Create new user
             user = User(
                 email=user_info["email"],
-                name=user_info["name"],
+                full_name=user_info["name"],
                 password_hash=get_password_hash(""),  # No password for social login
                 is_verified=user_info["email_verified"],
-                email_verified_at=datetime.utcnow() if user_info["email_verified"] else None
+                email_verified_at=datetime.utcnow() if user_info["email_verified"] else None,
+                auth_provider="facebook",
+                role="customer",
             )
             db.add(user)
             db.flush()
@@ -250,7 +253,9 @@ async def login_with_facebook(
             "user": {
                 "id": user.id,
                 "email": user.email,
-                "name": user.name
+                "full_name": user.full_name,
+                "is_admin": user.is_admin,
+                "role": user.role
             }
         }
     }
@@ -373,7 +378,8 @@ async def google_callback(
                     is_verified=user_info.get("email_verified", False),
                     email_verified_at=datetime.utcnow() if user_info.get("email_verified") else None,
                     role="customer",
-                    is_admin=False
+                    is_admin=False,
+                    auth_provider="google",
                 )
                 db.add(user)
                 db.flush()
