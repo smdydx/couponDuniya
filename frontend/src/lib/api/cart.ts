@@ -83,6 +83,26 @@ export interface PaymentVerificationResponse {
 }
 
 // API Functions
+export const checkout = async (data: CheckoutRequest): Promise<CheckoutResponse> => {
+  const response = await api.post('/cart/checkout', data);
+  return response.data;
+};
+
+export const verifyPayment = async (
+  data: PaymentVerificationRequest
+): Promise<PaymentVerificationResponse> => {
+  const response = await api.post('/cart/verify-payment', data);
+  return response.data;
+};
+
+export interface PaymentVerificationResponse {
+  success: boolean;
+  order_number: string;
+  message: string;
+  order_status: string;
+}
+
+// API Functions
 
 export async function validateCart(
   items: CartItem[],

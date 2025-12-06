@@ -342,9 +342,22 @@ def checkout(
     payment_required = validation.total_amount
     
     if payment_required > 0:
-        # TODO: Integrate actual Razorpay API
-        # For now, create mock payment details
-        razorpay_order_id = f"order_{uuid.uuid4().hex[:14]}"
+        # Create Razorpay order using SDK
+        import razorpay
+        
+        client = razorpay.Client(auth=(settings.RAZORPAY_KEY_ID, settings.RAZORPAY_KEY_SECRET))
+        
+        razorpay_order = client.order.create({
+            "amount": int(payment_required * 100),  # Convert to paisa
+            "currency": "INR",
+            "receipt": order.order_number,
+            "notes": {
+                "order_id": str(order.id),
+                "user_id": str(current_user.id)
+            }
+        })
+        
+        razorpay_order_id = razorpay_order["id"]
         
         payment = Payment(
             order_id=order.id,

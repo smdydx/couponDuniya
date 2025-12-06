@@ -1,6 +1,7 @@
+
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { useForm } from "react-hook-form";
 import { Loader2, CreditCard, Wallet, Shield } from "lucide-react";
@@ -15,6 +16,15 @@ import { useCartStore } from "@/store/cartStore";
 import { useAuthStore } from "@/store/authStore";
 import { formatCurrency } from "@/lib/utils";
 import { ROUTES } from "@/lib/constants";
+import { checkout, verifyPayment } from "@/lib/api/cart";
+import { toast } from "sonner";
+
+// Declare Razorpay type
+declare global {
+  interface Window {
+    Razorpay: any;
+  }
+}
 
 interface CheckoutForm {
   delivery_email: string;
@@ -23,9 +33,10 @@ interface CheckoutForm {
 
 export default function CheckoutPage() {
   const router = useRouter();
-  const { items, promoDiscount, walletAmountToUse, clearCart } = useCartStore();
+  const { items, promoCode, promoDiscount, walletAmountToUse, clearCart } = useCartStore();
   const { user, isAuthenticated } = useAuthStore();
   const [isProcessing, setIsProcessing] = useState(false);
+  const [scriptLoaded, setScriptLoaded] = useState(false);
 
   const subtotal = items.reduce((sum, item) => sum + item.sellingPrice * item.quantity, 0);
   const total = Math.max(0, subtotal - promoDiscount - walletAmountToUse);
@@ -41,31 +52,123 @@ export default function CheckoutPage() {
     },
   });
 
-  // Redirect if cart is empty or not authenticated
-  if (items.length === 0) {
-    router.push(ROUTES.cart);
-    return null;
-  }
+  // Load Razorpay script
+  useEffect(() => {
+    const script = document.createElement("script");
+    script.src = "https://checkout.razorpay.com/v1/checkout.js";
+    script.async = true;
+    script.onload = () => setScriptLoaded(true);
+    document.body.appendChild(script);
 
-  if (!isAuthenticated) {
-    router.push(`${ROUTES.login}?redirect=${ROUTES.checkout}`);
+    return () => {
+      document.body.removeChild(script);
+    };
+  }, []);
+
+  // Redirect if cart is empty or not authenticated
+  useEffect(() => {
+    if (items.length === 0) {
+      router.push(ROUTES.cart);
+    }
+    if (!isAuthenticated) {
+      router.push(`${ROUTES.login}?redirect=${ROUTES.checkout}`);
+    }
+  }, [items.length, isAuthenticated, router]);
+
+  if (items.length === 0 || !isAuthenticated) {
     return null;
   }
 
   const handlePayment = async (data: CheckoutForm) => {
+    if (!scriptLoaded) {
+      toast.error("Payment gateway is loading. Please try again.");
+      return;
+    }
+
     setIsProcessing(true);
 
     try {
-      // Mock order creation and payment
-      await new Promise((resolve) => setTimeout(resolve, 2000));
+      // Create order
+      const checkoutData = await checkout({
+        items: items.map(item => ({
+          product_id: item.productId,
+          variant_id: item.variantId,
+          quantity: item.quantity
+        })),
+        promo_code: promoCode || undefined,
+        wallet_amount: walletAmountToUse,
+        email: data.delivery_email,
+        mobile: data.delivery_mobile,
+      });
 
-      // Clear cart and redirect to success page
-      const orderNumber = `ORD-${Date.now().toString(36).toUpperCase()}`;
-      clearCart();
-      router.push(ROUTES.orderSuccess(orderNumber));
+      if (!checkoutData.success) {
+        toast.error("Failed to create order");
+        return;
+      }
+
+      const { order_id, payment_details, payment_required } = checkoutData;
+
+      // If no payment required (fully paid by wallet)
+      if (payment_required === 0 || !payment_details) {
+        toast.success("Order placed successfully!");
+        clearCart();
+        router.push(ROUTES.orderSuccess(checkoutData.order_number));
+        return;
+      }
+
+      // Open Razorpay payment modal
+      const options = {
+        key: payment_details.key,
+        amount: payment_details.amount,
+        currency: payment_details.currency,
+        order_id: payment_details.order_id,
+        name: "CouponAli",
+        description: "Gift Card Purchase",
+        image: "/images/logos/icon.png",
+        prefill: {
+          email: data.delivery_email,
+          contact: data.delivery_mobile,
+        },
+        theme: {
+          color: "#3b82f6",
+        },
+        handler: async function (response: any) {
+          try {
+            // Verify payment
+            const verifyData = await verifyPayment({
+              order_id: order_id,
+              razorpay_order_id: response.razorpay_order_id,
+              razorpay_payment_id: response.razorpay_payment_id,
+              razorpay_signature: response.razorpay_signature,
+            });
+
+            if (verifyData.success) {
+              toast.success("Payment successful!");
+              clearCart();
+              router.push(ROUTES.orderSuccess(verifyData.order_number));
+            } else {
+              toast.error("Payment verification failed");
+            }
+          } catch (error) {
+            console.error("Payment verification error:", error);
+            toast.error("Payment verification failed");
+          } finally {
+            setIsProcessing(false);
+          }
+        },
+        modal: {
+          ondismiss: function () {
+            setIsProcessing(false);
+            toast.info("Payment cancelled");
+          },
+        },
+      };
+
+      const razorpay = new window.Razorpay(options);
+      razorpay.open();
     } catch (error) {
       console.error("Payment failed:", error);
-    } finally {
+      toast.error("Failed to initiate payment");
       setIsProcessing(false);
     }
   };
@@ -215,7 +318,7 @@ export default function CheckoutPage() {
                   type="submit"
                   className="w-full"
                   size="lg"
-                  disabled={isProcessing}
+                  disabled={isProcessing || !scriptLoaded}
                 >
                   {isProcessing ? (
                     <>
