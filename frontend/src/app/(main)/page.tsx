@@ -462,7 +462,7 @@ export default function HomePage() {
           viewAllLink={ROUTES.merchants}
         />
         {featured_merchants.length > 0 ? (
-          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-4">
+          <div className="flex flex-wrap gap-4 justify-center">
             {featured_merchants.slice(0, 12).map((merchant: any) => (
               <MerchantCard key={merchant.id} merchant={merchant} />
             ))}
