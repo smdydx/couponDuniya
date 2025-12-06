@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Header, HTTPException, Request, Depends, Query
+from fastapi import APIRouter, Header, HTTPException, Request, Depends, Query, Form
 from sqlalchemy.orm import Session
 from sqlalchemy import select, func, desc, and_, or_
 from datetime import datetime, timedelta
@@ -324,31 +324,34 @@ def delete_offer(
     return {"success": True, "message": "Offer deleted successfully"}
 
 
-@router.post("/products", response_model=dict)
-def create_product(
-    payload: ProductPayload,
-    _: bool = Depends(require_admin),
+@router.post("/products", dependencies=[Depends(require_admin)])
+def create_admin_product(
+    merchant_id: int = Form(...),
+    category_id: int = Form(None),
+    name: str = Form(...),
+    slug: str = Form(...),
+    description: str = Form(None),
+    image_url: str = Form(None),
+    price: float = Form(...),
+    stock: int = Form(0),
+    is_active: bool = Form(True),
     db: Session = Depends(get_db)
 ):
     """Create a new product"""
-    # Verify merchant exists
-    merchant = db.scalar(select(Merchant).where(Merchant.id == payload.merchant_id))
-    if not merchant:
-        raise HTTPException(status_code=404, detail="Merchant not found")
-
-    # Check slug uniqueness
-    existing = db.scalar(select(Product).where(Product.slug == payload.slug))
+    existing = db.scalar(select(Product).where(Product.slug == slug))
     if existing:
-        raise HTTPException(status_code=400, detail=f"Product with slug '{payload.slug}' already exists")
+        raise HTTPException(status_code=400, detail=f"Product with slug '{slug}' already exists")
 
     product = Product(
-        merchant_id=payload.merchant_id,
-        name=payload.name,
-        slug=payload.slug,
-        image_url=payload.image_url,
-        price=payload.price,
-        stock=payload.stock,
-        is_active=payload.is_active
+        merchant_id=merchant_id,
+        category_id=category_id,
+        name=name,
+        slug=slug,
+        description=description,
+        image_url=image_url,
+        price=price,
+        stock=stock,
+        is_active=is_active
     )
     db.add(product)
     db.commit()
@@ -358,20 +361,23 @@ def create_product(
 
     return {
         "success": True,
-        "message": "Product created successfully",
-        "data": {
-            "id": product.id,
-            "name": product.name,
-            "slug": product.slug
-        }
+        "message": f"Product '{product.name}' created successfully",
+        "data": {"id": product.id, "name": product.name, "slug": product.slug}
     }
 
 
-@router.put("/products/{id}", response_model=dict)
-def update_product(
+@router.put("/products/{id}", dependencies=[Depends(require_admin)])
+def update_admin_product(
     id: int,
-    payload: ProductPayload,
-    _: bool = Depends(require_admin),
+    merchant_id: int = Form(None),
+    category_id: int = Form(None),
+    name: str = Form(None),
+    slug: str = Form(None),
+    description: str = Form(None),
+    image_url: str = Form(None),
+    price: float = Form(None),
+    stock: int = Form(None),
+    is_active: bool = Form(None),
     db: Session = Depends(get_db)
 ):
     """Update a product"""
@@ -379,34 +385,39 @@ def update_product(
     if not product:
         raise HTTPException(status_code=404, detail="Product not found")
 
-    # Check slug uniqueness if changed
-    if payload.slug != product.slug:
-        existing = db.scalar(select(Product).where(
-            and_(
-                Product.slug == payload.slug,
-                Product.id != id
-            )
-        ))
+    if slug and slug != product.slug:
+        existing = db.scalar(select(Product).where((Product.slug == slug) & (Product.id != id)))
         if existing:
-            raise HTTPException(status_code=400, detail=f"Product with slug '{payload.slug}' already exists")
+            raise HTTPException(status_code=400, detail=f"Product with slug '{slug}' already exists")
 
-    product.merchant_id = payload.merchant_id
-    product.name = payload.name
-    product.slug = payload.slug
-    product.image_url = payload.image_url
-    product.price = payload.price
-    product.stock = payload.stock
-    product.is_active = payload.is_active
+    if merchant_id is not None:
+        product.merchant_id = merchant_id
+    if category_id is not None:
+        product.category_id = category_id
+    if name is not None:
+        product.name = name
+    if slug is not None:
+        product.slug = slug
+    if description is not None:
+        product.description = description
+    if image_url is not None:
+        product.image_url = image_url
+    if price is not None:
+        product.price = price
+    if stock is not None:
+        product.stock = stock
+    if is_active is not None:
+        product.is_active = is_active
 
     db.commit()
+    db.refresh(product)
 
     cache_invalidate_prefix(rk("cache", "products"))
-    cache_invalidate_prefix(rk("cache", "product"))
 
     return {
         "success": True,
         "message": "Product updated successfully",
-        "data": {"id": product.id, "name": product.name}
+        "data": {"id": product.id, "name": product.name, "slug": product.slug}
     }
 
 
@@ -608,7 +619,7 @@ def list_admin_offers(
     }
 
 
-@router.get("/products", response_model=dict)
+@router.get("/products", dependencies=[Depends(require_admin)])
 def list_admin_products(
     page: int = 1,
     limit: int = 20,
@@ -643,37 +654,41 @@ def list_admin_products(
     if is_active is not None:
         count_query = count_query.where(Product.is_active == is_active)
 
-    total_count = db.scalar(count_query)
+    total_count = db.scalar(count_query) or 0
 
     query = query.order_by(desc(Product.created_at))
     query = query.offset((page - 1) * limit).limit(limit)
 
     results = db.execute(query).all()
 
+    products = []
+    for product, merchant in results:
+        product_data = {
+            "id": product.id,
+            "merchant_id": product.merchant_id,
+            "category_id": product.category_id,
+            "name": product.name,
+            "slug": product.slug,
+            "description": product.description,
+            "image_url": product.image_url,
+            "price": float(product.price),
+            "stock": product.stock,
+            "is_active": product.is_active,
+            "is_featured": product.is_featured if hasattr(product, 'is_featured') else False,
+            "is_bestseller": product.is_bestseller if hasattr(product, 'is_bestseller') else False,
+            "created_at": product.created_at.isoformat() if product.created_at else None,
+        }
+        products.append(product_data)
+
     return {
         "success": True,
         "data": {
-            "products": [
-                {
-                    "id": product.id,
-                    "merchant_id": product.merchant_id,
-                    "merchant_name": merchant.name if merchant else None,
-                    "name": product.name,
-                    "slug": product.slug,
-                    "description": getattr(product, 'description', None),
-                    "image_url": product.image_url,
-                    "price": float(product.price) if product.price else 0,
-                    "stock": product.stock or 0,
-                    "is_active": product.is_active,
-                    "created_at": product.created_at.isoformat() if product.created_at else None
-                }
-                for product, merchant in results
-            ],
+            "products": products,
             "pagination": {
                 "current_page": page,
-                "total_pages": (total_count + limit - 1) // limit if total_count else 1,
-                "total_items": total_count or 0,
-                "per_page": limit
+                "total_pages": max(1, (total_count + limit - 1) // limit),
+                "total_items": total_count,
+                "per_page": limit,
             }
         }
     }
@@ -1296,7 +1311,7 @@ class BannerPayload(BaseModel):
 def list_banners(db: Session = Depends(get_db)):
     """List all banners"""
     banners = db.scalars(select(Banner).order_by(Banner.order_index.asc())).all()
-    
+
     return {
         "success": True,
         "data": {
@@ -1337,10 +1352,10 @@ def create_banner(payload: BannerPayload, db: Session = Depends(get_db)):
     db.add(banner)
     db.commit()
     db.refresh(banner)
-    
+
     # Invalidate homepage cache
     cache_invalidate_prefix(rk("cache", "homepage"))
-    
+
     return {
         "success": True,
         "message": "Banner created successfully",
@@ -1357,7 +1372,7 @@ def update_banner(id: int, payload: BannerPayload, db: Session = Depends(get_db)
     banner = db.scalar(select(Banner).where(Banner.id == id))
     if not banner:
         raise HTTPException(status_code=404, detail="Banner not found")
-    
+
     banner.title = payload.title
     banner.banner_type = payload.banner_type
     banner.image_url = payload.image_url
@@ -1371,13 +1386,13 @@ def update_banner(id: int, payload: BannerPayload, db: Session = Depends(get_db)
     banner.link_url = payload.link_url
     banner.order_index = payload.order_index
     banner.is_active = payload.is_active
-    
+
     db.commit()
     db.refresh(banner)
-    
+
     # Invalidate homepage cache
     cache_invalidate_prefix(rk("cache", "homepage"))
-    
+
     return {
         "success": True,
         "message": "Banner updated successfully",
@@ -1394,13 +1409,13 @@ def delete_banner(id: int, db: Session = Depends(get_db)):
     banner = db.scalar(select(Banner).where(Banner.id == id))
     if not banner:
         raise HTTPException(status_code=404, detail="Banner not found")
-    
+
     db.delete(banner)
     db.commit()
-    
+
     # Invalidate homepage cache
     cache_invalidate_prefix(rk("cache", "homepage"))
-    
+
     return {
         "success": True,
         "message": "Banner deleted successfully"
@@ -1413,10 +1428,10 @@ def reorder_banner(id: int, direction: dict, db: Session = Depends(get_db)):
     banner = db.scalar(select(Banner).where(Banner.id == id))
     if not banner:
         raise HTTPException(status_code=404, detail="Banner not found")
-    
+
     dir_value = direction.get("direction", "")
     current_order = banner.order_index
-    
+
     if dir_value == "up" and current_order > 0:
         # Find banner with order_index = current_order - 1
         swap_banner = db.scalar(
@@ -1433,12 +1448,12 @@ def reorder_banner(id: int, direction: dict, db: Session = Depends(get_db)):
         if swap_banner:
             swap_banner.order_index = current_order
             banner.order_index = current_order + 1
-    
+
     db.commit()
-    
+
     # Invalidate homepage cache
     cache_invalidate_prefix(rk("cache", "homepage"))
-    
+
     return {
         "success": True,
         "message": "Banner reordered successfully"
