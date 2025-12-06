@@ -120,7 +120,7 @@ def get_homepage_data(
                     "description": b.description,
                     "code": b.code,
                     "link_url": b.link_url,
-                    "metadata": b.metadata,
+                    "metadata": b.style_metadata,
                     "order_index": b.order_index
                 }
                 for b in promo_banners

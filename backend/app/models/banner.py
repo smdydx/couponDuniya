@@ -19,7 +19,7 @@ class Banner(Base):
     headline = Column(String(255), nullable=True)
     description = Column(Text, nullable=True)
     code = Column(String(100), nullable=True)
-    metadata = Column(Text, nullable=True)  # JSON: {"gradient": "...", "emoji": "..."}
+    style_metadata = Column(Text, nullable=True)  # JSON: {"gradient": "...", "emoji": "..."}
     
     # Common fields
     link_url = Column(String(500), nullable=True)

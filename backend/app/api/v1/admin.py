@@ -1276,7 +1276,15 @@ def update_category(id: int, payload: CategoryPayload, db: Session = Depends(get
 
 class BannerPayload(BaseModel):
     title: str = Field(..., min_length=1)
-    image_url: str = Field(..., min_length=1)
+    banner_type: str = Field(default="hero")
+    image_url: str | None = None
+    brand_name: str | None = None
+    badge_text: str | None = None
+    badge_color: str | None = None
+    headline: str | None = None
+    description: str | None = None
+    code: str | None = None
+    style_metadata: str | None = None
     link_url: str | None = None
     order_index: int = Field(default=0, ge=0)
     is_active: bool = True
@@ -1311,7 +1319,15 @@ def create_banner(payload: BannerPayload, db: Session = Depends(get_db)):
     """Create a new banner"""
     banner = Banner(
         title=payload.title,
+        banner_type=payload.banner_type,
         image_url=payload.image_url,
+        brand_name=payload.brand_name,
+        badge_text=payload.badge_text,
+        badge_color=payload.badge_color,
+        headline=payload.headline,
+        description=payload.description,
+        code=payload.code,
+        style_metadata=payload.style_metadata,
         link_url=payload.link_url,
         order_index=payload.order_index,
         is_active=payload.is_active
@@ -1328,11 +1344,7 @@ def create_banner(payload: BannerPayload, db: Session = Depends(get_db)):
         "message": "Banner created successfully",
         "data": {
             "id": banner.id,
-            "title": banner.title,
-            "image_url": banner.image_url,
-            "link_url": banner.link_url,
-            "order_index": banner.order_index,
-            "is_active": banner.is_active
+            "title": banner.title
         }
     }
 
@@ -1345,7 +1357,15 @@ def update_banner(id: int, payload: BannerPayload, db: Session = Depends(get_db)
         raise HTTPException(status_code=404, detail="Banner not found")
     
     banner.title = payload.title
+    banner.banner_type = payload.banner_type
     banner.image_url = payload.image_url
+    banner.brand_name = payload.brand_name
+    banner.badge_text = payload.badge_text
+    banner.badge_color = payload.badge_color
+    banner.headline = payload.headline
+    banner.description = payload.description
+    banner.code = payload.code
+    banner.style_metadata = payload.style_metadata
     banner.link_url = payload.link_url
     banner.order_index = payload.order_index
     banner.is_active = payload.is_active
