@@ -133,7 +133,7 @@ def list_admin_merchants(
 
     # Get merchant IDs for batch query
     merchant_ids = [m.id for m in merchants]
-    
+
     # Batch query for offers count
     offers_count_query = (
         select(Offer.merchant_id, func.count(Offer.id).label('count'))
@@ -731,12 +731,12 @@ def list_orders(
     for order in orders:
         # Get user separately
         user = db.scalar(select(User).where(User.id == order.user_id))
-        
+
         # Count items for this order
         items_count = db.scalar(
             select(func.count(OrderItem.id)).where(OrderItem.order_id == order.id)
         ) or 0
-        
+
         orders_data.append({
             "id": order.id,
             "order_number": order.order_number if order.order_number else f"ORD-{order.id:06d}",
