@@ -60,6 +60,7 @@
     -ms-overflow-style: none;
     scrollbar-width: none;
   }
+
   .scrollbar-hide::-webkit-scrollbar {
     display: none;
   }
@@ -142,6 +143,7 @@
   from {
     height: 0;
   }
+
   to {
     height: var(--radix-accordion-content-height);
   }
@@ -151,6 +153,7 @@
   from {
     height: var(--radix-accordion-content-height);
   }
+
   to {
     height: 0;
   }
@@ -161,6 +164,7 @@
     opacity: 0;
     transform: translateY(16px) scale(.98);
   }
+
   to {
     opacity: 1;
     transform: translateY(0) scale(1);
@@ -168,7 +172,7 @@
 }
 
 .animate-more-menu {
-  animation: more-menu-fade .28s cubic-bezier(.22,.61,.36,1);
+  animation: more-menu-fade .28s cubic-bezier(.22, .61, .36, 1);
 }
 
 /* Hide Next.js development floating indicator */
@@ -202,22 +206,4 @@ img {
   outline: 2px solid var(--color-primary);
   outline-offset: 2px;
   border-radius: 4px;
-}
-
-/* 3D Flip Card Effects */
-.perspective-1000 {
-  perspective: 1000px;
-}
-
-.transform-style-3d {
-  transform-style: preserve-3d;
-}
-
-.backface-hidden {
-  backface-visibility: hidden;
-  -webkit-backface-visibility: hidden;
-}
-
-.rotate-y-180 {
-  transform: rotateY(180deg);
 }
