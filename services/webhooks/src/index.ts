@@ -89,7 +89,13 @@ const server = Bun.serve({
 
       const body = await request.text();
 
-      const isValid = verifyRazorpaySignature(body, signature, process.env.RAZORPAY_WEBHOOK_SECRET!);
+      const webhookSecret = process.env.RAZORPAY_WEBHOOK_SECRET || "";
+      if (!webhookSecret) {
+        console.error("RAZORPAY_WEBHOOK_SECRET not configured");
+        return new Response("Webhook not configured", { status: 500 });
+      }
+      
+      const isValid = verifyRazorpaySignature(body, signature, webhookSecret);
       if (!isValid) {
         console.error("Invalid Razorpay signature");
         return new Response("Invalid signature", { status: 401 });

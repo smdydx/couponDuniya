@@ -361,7 +361,7 @@ def checkout(
             order_id=razorpay_order_id,
             amount=int(payment_required * 100),  # Convert to paisa
             currency="INR",
-            key=settings.RAZORPAY_KEY_ID if hasattr(settings, 'RAZORPAY_KEY_ID') else "rzp_test_key"
+            key=settings.RAZORPAY_KEY_ID
         )
     else:
         # Order paid via wallet completely
@@ -407,19 +407,15 @@ def verify_payment(
         raise HTTPException(status_code=404, detail="Payment record not found")
     
     # Verify signature
-    # TODO: Integrate actual Razorpay signature verification
-    razorpay_key_secret = settings.RAZORPAY_KEY_SECRET if hasattr(settings, 'RAZORPAY_KEY_SECRET') else "test_secret"
-    
     message = f"{request.razorpay_order_id}|{request.razorpay_payment_id}"
     expected_signature = hmac.new(
-        razorpay_key_secret.encode(),
+        settings.RAZORPAY_KEY_SECRET.encode(),
         message.encode(),
         hashlib.sha256
     ).hexdigest()
     
-    # For development, skip actual verification
-    # if expected_signature != request.razorpay_signature:
-    #     raise HTTPException(status_code=400, detail="Invalid payment signature")
+    if expected_signature != request.razorpay_signature:
+        raise HTTPException(status_code=400, detail="Invalid payment signature")
     
     # Update payment
     payment.gateway_payment_id = request.razorpay_payment_id

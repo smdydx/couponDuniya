@@ -33,8 +33,8 @@ class Settings(BaseSettings):
     FRONTEND_URL: str = "https://b6b33502-8c62-45e5-943d-077e6a9f450f-00-303gb31z6lpus.pike.replit.dev"
     
     # Razorpay Payment Gateway
-    RAZORPAY_KEY_ID: str = ""
-    RAZORPAY_KEY_SECRET: str = ""
+    RAZORPAY_KEY_ID: str = "rzp_test_RcsDiWWWebnqQU"
+    RAZORPAY_KEY_SECRET: str = "d1nEKpJ4q16QF2a7J7IydP9J"
     RAZORPAY_WEBHOOK_SECRET: str = ""
     
     # Email Configuration

@@ -54,7 +54,7 @@ export interface PaymentDetails {
   order_id: string;
   amount: number;
   currency: string;
-  key: string;
+  key: string; // Razorpay Key ID
 }
 
 export interface CheckoutResponse {
