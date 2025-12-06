@@ -220,8 +220,8 @@ function RegisterForm() {
             className="w-full flex items-center justify-center gap-2" 
             onClick={() => {
               const clientId = "433927974317-omujf5cn8ndhtdrofprnv9sb0uo3irl1.apps.googleusercontent.com";
-              // Use localhost for local development
-              const redirectUri = "http://localhost:5000/google/callback";
+              // Use current host for redirect
+              const redirectUri = `${window.location.origin}/google/callback`;
               const scope = "openid email profile";
               const responseType = "id_token token";
               const nonce = Math.random().toString(36).substring(7);
