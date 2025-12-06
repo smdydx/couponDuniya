@@ -68,40 +68,53 @@ export function ProductCard({ product, compact = false }: ProductCardProps) {
   if (compact) {
     return (
       <Link href={`/products/${product.slug}`}>
-        <Card className="group overflow-hidden hover:shadow-md transition-all h-full flex flex-col border">
-          <div className="relative w-full aspect-square bg-gradient-to-br from-gray-50 to-gray-100 dark:from-gray-900 dark:to-gray-800 overflow-hidden">
-            <img
-              src={product.image_url || '/images/gift-cards/placeholder.png'}
-              alt={product.name}
-              className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
-            />
+        <Card className="group overflow-hidden hover:shadow-xl hover:shadow-purple-100 transition-all duration-300 h-full flex flex-col border border-gray-100 hover:border-purple-300 rounded-xl bg-white">
+          <div className="relative w-full aspect-square bg-gradient-to-br from-gray-50 via-white to-gray-50 overflow-hidden rounded-t-xl">
+            <div className="w-full h-full p-2 sm:p-3 flex items-center justify-center">
+              <img
+                src={product.image_url || '/images/gift-cards/placeholder.png'}
+                alt={product.name}
+                className="max-w-full max-h-full object-contain group-hover:scale-110 transition-transform duration-300"
+                onError={(e) => {
+                  const target = e.currentTarget;
+                  target.style.display = 'none';
+                  if (target.parentElement) {
+                    target.parentElement.innerHTML = `
+                      <div class="w-14 h-14 sm:w-16 sm:h-16 rounded-full bg-gradient-to-br from-purple-100 to-indigo-100 flex items-center justify-center shadow-inner">
+                        <span class="text-xl sm:text-2xl font-bold bg-gradient-to-r from-purple-600 to-indigo-600 bg-clip-text text-transparent">${product.name.charAt(0)}</span>
+                      </div>
+                    `;
+                  }
+                }}
+              />
+            </div>
             {product.merchant?.logo_url && (
-              <div className="absolute top-1 left-1 bg-white dark:bg-gray-800 rounded-full p-0.5 shadow-sm">
+              <div className="absolute top-1.5 left-1.5 bg-white rounded-full p-0.5 shadow-md border border-gray-100">
                 <img
                   src={product.merchant.logo_url}
                   alt={product.merchant.name}
-                  className="w-3 h-3 object-cover object-center"
+                  className="w-4 h-4 sm:w-5 sm:h-5 object-contain rounded-full"
                 />
               </div>
             )}
           </div>
-          <CardContent className="p-1.5 flex-1 flex flex-col justify-between">
-            <h3 className="font-semibold text-[10px] mb-1 line-clamp-2 group-hover:text-primary transition-colors min-h-[26px]">
+          <CardContent className="p-2 sm:p-3 flex-1 flex flex-col justify-between border-t border-gray-100">
+            <h3 className="font-semibold text-[10px] sm:text-[11px] mb-1 line-clamp-2 group-hover:text-purple-600 transition-colors min-h-[26px] sm:min-h-[30px] text-gray-800">
               {product.name}
             </h3>
             <div className="flex items-center justify-between mt-auto">
               <div>
-                <p className="text-xs font-bold text-primary">
+                <p className="text-[11px] sm:text-xs font-bold bg-gradient-to-r from-purple-600 to-indigo-600 bg-clip-text text-transparent">
                   {formatCurrency(minPrice)}
                 </p>
                 {minPrice !== maxPrice && (
-                  <p className="text-[8px] text-muted-foreground">
+                  <p className="text-[8px] sm:text-[9px] text-gray-500">
                     - {formatCurrency(maxPrice)}
                   </p>
                 )}
               </div>
-              <Button size="sm" variant="ghost" className="h-5 w-5 p-0 group-hover:bg-primary group-hover:text-primary-foreground transition-colors" disabled={!selectedVariant?.is_available}>
-                <ShoppingCart className="h-2.5 w-2.5" />
+              <Button size="sm" variant="ghost" className="h-6 w-6 sm:h-7 sm:w-7 p-0 rounded-full group-hover:bg-gradient-to-r group-hover:from-purple-600 group-hover:to-indigo-600 group-hover:text-white transition-all shadow-sm" disabled={!selectedVariant?.is_available}>
+                <ShoppingCart className="h-3 w-3 sm:h-3.5 sm:w-3.5" />
               </Button>
             </div>
           </CardContent>
