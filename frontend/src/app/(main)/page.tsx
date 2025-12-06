@@ -432,7 +432,7 @@ export default function HomePage() {
                             "/images/banners/placeholder.jpg"
                           }
                           alt={banner.title || "Banner"}
-                          className="w-full h-full object-cover"
+                          className="absolute inset-0 h-full w-full object-cover object-center"
                         />
                       </a>
                     ) : (
@@ -441,7 +441,7 @@ export default function HomePage() {
                           banner.image_url || "/images/banners/placeholder.jpg"
                         }
                         alt={banner.title || "Banner"}
-                        className="w-full h-full object-cover"
+                        className="absolute inset-0 h-full w-full object-cover object-center"
                       />
                     )}
                   </div>

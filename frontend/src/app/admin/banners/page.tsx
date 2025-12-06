@@ -122,6 +122,17 @@ export default function AdminBannersPage() {
     }
   };
 
+  const handleDelete = async (bannerId: number) => {
+    if (!confirm("Are you sure you want to delete this banner?")) return;
+    
+    try {
+      await apiClient.delete(`/admin/banners/${bannerId}`);
+      fetchBanners();
+    } catch (error) {
+      console.error("Failed to delete banner:", error);
+    }
+  };
+
   const filteredBanners = banners.filter((banner) =>
     search ? banner.title.toLowerCase().includes(search.toLowerCase()) : true
   );
@@ -263,6 +274,14 @@ export default function AdminBannersPage() {
                             onClick={() => handleOpenEdit(banner)}
                           >
                             <Edit className="h-4 w-4" />
+                          </Button>
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            onClick={() => handleDelete(banner.id)}
+                            className="text-red-600 hover:text-red-700 hover:bg-red-50"
+                          >
+                            <Trash2 className="h-4 w-4" />
                           </Button>
                         </div>
                       </TableCell>

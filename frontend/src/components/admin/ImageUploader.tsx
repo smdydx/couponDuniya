@@ -170,14 +170,16 @@ export function ImageUploader({
   return (
     <div className={cn("space-y-2", className)}>
       {label && <Label>{label}</Label>}
-      
+
       {value ? (
         <div className="relative group">
           <div className={cn("relative overflow-hidden rounded-lg border bg-muted", aspectClasses[aspectRatio])}>
             <img
               src={value}
               alt="Uploaded image"
-              className="h-full w-full object-cover object-center"
+              className={`h-full w-full rounded-lg ${
+                aspectRatio === "banner" ? "object-cover" : "object-contain"
+              }`}
               onError={(e) => {
                 (e.target as HTMLImageElement).src = "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='100' height='100'%3E%3Crect fill='%23f0f0f0' width='100' height='100'/%3E%3Ctext x='50%25' y='50%25' dominant-baseline='middle' text-anchor='middle' fill='%23999'%3EError%3C/text%3E%3C/svg%3E";
               }}
@@ -220,13 +222,14 @@ export function ImageUploader({
               URL
             </TabsTrigger>
           </TabsList>
-          
+
           <TabsContent value="upload" className="mt-4">
             <div
               className={cn(
                 "border-2 border-dashed rounded-lg p-6 text-center transition-colors cursor-pointer",
                 isDragging ? "border-primary bg-primary/5" : "border-muted-foreground/25 hover:border-primary/50",
-                isUploading && "pointer-events-none opacity-50"
+                isUploading && "pointer-events-none opacity-50",
+                aspectRatio === "banner" && "aspect-[21/9] h-32"
               )}
               onDragOver={handleDragOver}
               onDragLeave={handleDragLeave}
@@ -240,7 +243,7 @@ export function ImageUploader({
                 onChange={handleFileSelect}
                 className="hidden"
               />
-              
+
               {isUploading ? (
                 <div className="flex flex-col items-center gap-2">
                   <Loader2 className="h-8 w-8 animate-spin text-primary" />
@@ -263,7 +266,7 @@ export function ImageUploader({
               )}
             </div>
           </TabsContent>
-          
+
           <TabsContent value="url" className="mt-4">
             <div className="space-y-3">
               <div className="flex gap-2">
@@ -293,7 +296,7 @@ export function ImageUploader({
           </TabsContent>
         </Tabs>
       )}
-      
+
       {error && (
         <p className="text-sm text-destructive">{error}</p>
       )}

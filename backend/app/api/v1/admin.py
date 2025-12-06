@@ -1285,85 +1285,138 @@ class BannerPayload(BaseModel):
 @router.get("/banners", response_model=dict)
 def list_banners(db: Session = Depends(get_db)):
     """List all banners"""
-    # from ...models import Offer as Banner # This import is redundant if Banner is imported from models
-
-    banners = []
-    # Fetch banners from the database if available
-    # Example: banners = db.scalars(select(Banner).order_by(Banner.order_index)).all()
-    # For now, returning an empty list as per original code structure.
-    # If Banner model is intended to be used, uncomment and adapt the query above.
-
+    banners = db.scalars(select(Banner).order_by(Banner.order_index.asc())).all()
+    
     return {
         "success": True,
-        "data": {"banners": banners}
+        "data": {
+            "banners": [
+                {
+                    "id": b.id,
+                    "title": b.title,
+                    "image_url": b.image_url,
+                    "link_url": b.link_url,
+                    "order_index": b.order_index,
+                    "is_active": b.is_active,
+                    "created_at": b.created_at.isoformat() if b.created_at else None
+                }
+                for b in banners
+            ]
+        }
     }
 
 
 @router.post("/banners", response_model=dict)
 def create_banner(payload: BannerPayload, db: Session = Depends(get_db)):
     """Create a new banner"""
-    # Check if Banner model exists and is imported correctly
-    # Example implementation:
-    # banner = Banner(
-    #     title=payload.title,
-    #     image_url=payload.image_url,
-    #     link_url=payload.link_url,
-    #     order_index=payload.order_index,
-    #     is_active=payload.is_active
-    # )
-    # db.add(banner)
-    # db.commit()
-    # db.refresh(banner)
-    # cache_invalidate_prefix(rk("cache", "banners"))
-    # return {
-    #     "success": True,
-    #     "message": "Banner created successfully",
-    #     "data": {
-    #         "id": banner.id,
-    #         "title": banner.title
-    #     }
-    # }
-
-    # Returning placeholder response as per original code
+    banner = Banner(
+        title=payload.title,
+        image_url=payload.image_url,
+        link_url=payload.link_url,
+        order_index=payload.order_index,
+        is_active=payload.is_active
+    )
+    db.add(banner)
+    db.commit()
+    db.refresh(banner)
+    
+    # Invalidate homepage cache
+    cache_invalidate_prefix(rk("cache", "homepage"))
+    
     return {
         "success": True,
-        "message": "Banner created successfully"
+        "message": "Banner created successfully",
+        "data": {
+            "id": banner.id,
+            "title": banner.title,
+            "image_url": banner.image_url,
+            "link_url": banner.link_url,
+            "order_index": banner.order_index,
+            "is_active": banner.is_active
+        }
     }
 
 
 @router.put("/banners/{id}", response_model=dict)
 def update_banner(id: int, payload: BannerPayload, db: Session = Depends(get_db)):
     """Update a banner"""
-    # Example implementation:
-    # banner = db.scalar(select(Banner).where(Banner.id == id))
-    # if not banner:
-    #     raise HTTPException(status_code=404, detail="Banner not found")
-    #
-    # banner.title = payload.title
-    # banner.image_url = payload.image_url
-    # banner.link_url = payload.link_url
-    # banner.order_index = payload.order_index
-    # banner.is_active = payload.is_active
-    # db.commit()
-    # cache_invalidate_prefix(rk("cache", "banners"))
-    # return {
-    #     "success": True,
-    #     "message": "Banner updated successfully",
-    #     "data": {"id": banner.id, "title": banner.title}
-    # }
-
-    # Returning placeholder response as per original code
+    banner = db.scalar(select(Banner).where(Banner.id == id))
+    if not banner:
+        raise HTTPException(status_code=404, detail="Banner not found")
+    
+    banner.title = payload.title
+    banner.image_url = payload.image_url
+    banner.link_url = payload.link_url
+    banner.order_index = payload.order_index
+    banner.is_active = payload.is_active
+    
+    db.commit()
+    db.refresh(banner)
+    
+    # Invalidate homepage cache
+    cache_invalidate_prefix(rk("cache", "homepage"))
+    
     return {
         "success": True,
-        "message": "Banner updated successfully"
+        "message": "Banner updated successfully",
+        "data": {
+            "id": banner.id,
+            "title": banner.title
+        }
+    }
+
+
+@router.delete("/banners/{id}", response_model=dict)
+def delete_banner(id: int, db: Session = Depends(get_db)):
+    """Delete a banner"""
+    banner = db.scalar(select(Banner).where(Banner.id == id))
+    if not banner:
+        raise HTTPException(status_code=404, detail="Banner not found")
+    
+    db.delete(banner)
+    db.commit()
+    
+    # Invalidate homepage cache
+    cache_invalidate_prefix(rk("cache", "homepage"))
+    
+    return {
+        "success": True,
+        "message": "Banner deleted successfully"
     }
 
 
 @router.patch("/banners/{id}/reorder", response_model=dict)
 def reorder_banner(id: int, direction: dict, db: Session = Depends(get_db)):
     """Reorder banner position"""
-    # Example implementation: Handle reordering logic here
-    # For now, returning a success message
+    banner = db.scalar(select(Banner).where(Banner.id == id))
+    if not banner:
+        raise HTTPException(status_code=404, detail="Banner not found")
+    
+    dir_value = direction.get("direction", "")
+    current_order = banner.order_index
+    
+    if dir_value == "up" and current_order > 0:
+        # Find banner with order_index = current_order - 1
+        swap_banner = db.scalar(
+            select(Banner).where(Banner.order_index == current_order - 1)
+        )
+        if swap_banner:
+            swap_banner.order_index = current_order
+            banner.order_index = current_order - 1
+    elif dir_value == "down":
+        # Find banner with order_index = current_order + 1
+        swap_banner = db.scalar(
+            select(Banner).where(Banner.order_index == current_order + 1)
+        )
+        if swap_banner:
+            swap_banner.order_index = current_order
+            banner.order_index = current_order + 1
+    
+    db.commit()
+    
+    # Invalidate homepage cache
+    cache_invalidate_prefix(rk("cache", "homepage"))
+    
     return {
         "success": True,
         "message": "Banner reordered successfully"
