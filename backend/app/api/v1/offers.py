@@ -51,8 +51,6 @@ def list_offers(
     
     if merchant_id:
         query = query.where(Offer.merchant_id == merchant_id)
-    if category_id:
-        query = query.where(Offer.category_id == category_id)
     if is_exclusive:
         query = query.where(Offer.is_exclusive == True)
     if search:
