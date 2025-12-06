@@ -21,16 +21,16 @@ class Settings(BaseSettings):
     SMS_ENABLED: bool = False  # Enable in production
     
     # Google OAuth
-    GOOGLE_CLIENT_ID: str = ""
-    GOOGLE_CLIENT_SECRET: str = ""
-    GOOGLE_REDIRECT_URI: str = "http://localhost:5000/api/v1/auth/social/google/callback"
+    GOOGLE_CLIENT_ID: str = "433927974317-omujf5cn8ndhtdrofprnv9sb0uo3irl1.apps.googleusercontent.com"
+    GOOGLE_CLIENT_SECRET: str = ""  # Add your secret here
+    GOOGLE_REDIRECT_URI: str = "https://workspace.alamsamad36.replit.dev/api/v1/auth/social/google/callback"
     
     # Facebook OAuth
     FACEBOOK_APP_ID: str = ""
     FACEBOOK_APP_SECRET: str = ""
     
     # Frontend URL for redirects
-    FRONTEND_URL: str = "http://localhost:5000"
+    FRONTEND_URL: str = "https://workspace.alamsamad36.replit.dev"
     
     # Razorpay Payment Gateway
     RAZORPAY_KEY_ID: str = ""

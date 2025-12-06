@@ -75,6 +75,8 @@ export const ROUTES = {
   home: '/',
   login: '/login',
   register: '/register',
+  forgotPassword: '/forgot-password',
+  resetPassword: '/reset-password',
   verifyOtp: '/verify-otp',
   merchants: '/merchants',
   merchantDetail: (slug: string) => `/merchants/${slug}`,
