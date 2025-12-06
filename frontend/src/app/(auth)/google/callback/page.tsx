@@ -9,7 +9,8 @@ import apiClient from "@/lib/api-client";
 
 export default function GoogleCallbackPage() {
   const router = useRouter();
-  const { setUser, setIsAuthenticated } = useAuthStore();
+  const setTokens = useAuthStore((state) => state.setTokens);
+  const updateUser = useAuthStore((state) => state.updateUser);
 
   useEffect(() => {
     const handleGoogleCallback = async () => {
@@ -28,12 +29,11 @@ export default function GoogleCallbackPage() {
         });
 
         if (response.data.success) {
-          const { access_token, user } = response.data.data;
+          const { access_token, refresh_token, user } = response.data.data;
           
-          // Store auth data
-          localStorage.setItem('access_token', access_token);
-          setUser(user);
-          setIsAuthenticated(true);
+          // Store auth data using authStore methods
+          setTokens(access_token, refresh_token || access_token);
+          updateUser(user);
 
           // Redirect based on role
           const redirectUrl = user.is_admin || user.role === 'admin' 
