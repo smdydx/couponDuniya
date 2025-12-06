@@ -608,11 +608,12 @@ def list_admin_offers(
                     "merchant_id": offer.merchant_id,
                     "merchant_name": merchants.get(offer.merchant_id).name if offer.merchant_id and offer.merchant_id in merchants else None,
                     "title": offer.title,
-                    "description": offer.description,
                     "code": offer.code,
                     "image_url": offer.image_url,
                     "priority": offer.priority,
                     "is_active": offer.is_active,
+                    "is_featured": offer.is_featured if hasattr(offer, 'is_featured') else False,
+                    "is_exclusive": offer.is_exclusive if hasattr(offer, 'is_exclusive') else False,
                     "created_at": offer.created_at.isoformat() if offer.created_at else None
                 }
                 for offer in offers
