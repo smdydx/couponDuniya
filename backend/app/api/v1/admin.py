@@ -7,7 +7,7 @@ from math import ceil
 
 from ...redis_client import cache_invalidate, cache_invalidate_prefix, rk, redis_client, publish
 from ...database import get_db
-from ...models import User, Withdrawal, WalletTransaction, Order, Merchant, Offer, Product, ProductVariant, Category, GiftCard, Banner
+from ...models import User, Withdrawal, WalletTransaction, Order, OrderItem, Merchant, Offer, Product, ProductVariant, Category, GiftCard, Banner
 from ...schemas.wallet_transaction import WithdrawalRead, WithdrawalStatusUpdate
 from ...queue import push_email_job, push_sms_job
 from ...config import get_settings
@@ -131,16 +131,19 @@ def list_admin_merchants(
 
     merchants = db.scalars(query).all()
 
+    # Get merchant IDs for batch query
+    merchant_ids = [m.id for m in merchants]
+    
+    # Batch query for offers count
+    offers_count_query = (
+        select(Offer.merchant_id, func.count(Offer.id).label('count'))
+        .where(Offer.merchant_id.in_(merchant_ids), Offer.is_active == True)
+        .group_by(Offer.merchant_id)
+    )
+    offers_counts = {merchant_id: count for merchant_id, count in db.execute(offers_count_query).all()}
+
     merchants_data = []
     for m in merchants:
-        # Count offers for this merchant
-        offers_count = db.scalar(
-            select(func.count(Offer.id)).where(
-                Offer.merchant_id == m.id,
-                Offer.is_active == True
-            )
-        ) or 0
-
         merchants_data.append({
             "id": m.id,
             "name": m.name,
@@ -149,7 +152,7 @@ def list_admin_merchants(
             "description": m.description,
             "is_active": m.is_active,
             "is_featured": m.is_featured,
-            "offers_count": offers_count,
+            "offers_count": offers_counts.get(m.id, 0),
             "created_at": m.created_at.isoformat() if m.created_at else None,
         })
 
@@ -565,7 +568,7 @@ def list_admin_offers(
     db: Session = Depends(get_db)
 ):
     """List all offers with pagination (admin - includes inactive)"""
-    query = select(Offer, Merchant).outerjoin(Merchant, Offer.merchant_id == Merchant.id)
+    query = select(Offer)
 
     if search:
         query = query.where(Offer.title.ilike(f"%{search}%"))
@@ -589,7 +592,12 @@ def list_admin_offers(
     query = query.order_by(desc(Offer.created_at))
     query = query.offset((page - 1) * limit).limit(limit)
 
-    results = db.execute(query).all()
+    offers = db.scalars(query).all()
+
+    # Batch fetch merchants
+    merchant_ids = list(set(o.merchant_id for o in offers if o.merchant_id))
+    merchants_query = select(Merchant).where(Merchant.id.in_(merchant_ids))
+    merchants = {m.id: m for m in db.scalars(merchants_query).all()}
 
     return {
         "success": True,
@@ -598,16 +606,16 @@ def list_admin_offers(
                 {
                     "id": offer.id,
                     "merchant_id": offer.merchant_id,
-                    "merchant_name": merchant.name if merchant else None,
+                    "merchant_name": merchants.get(offer.merchant_id).name if offer.merchant_id and offer.merchant_id in merchants else None,
                     "title": offer.title,
-                    "description": getattr(offer, 'description', None),
+                    "description": offer.description,
                     "code": offer.code,
                     "image_url": offer.image_url,
                     "priority": offer.priority,
                     "is_active": offer.is_active,
                     "created_at": offer.created_at.isoformat() if offer.created_at else None
                 }
-                for offer, merchant in results
+                for offer in offers
             ],
             "pagination": {
                 "current_page": page,
