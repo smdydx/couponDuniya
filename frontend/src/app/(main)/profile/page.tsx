@@ -103,9 +103,24 @@ export default function ProfilePage() {
     <div className="container py-6">
       <Breadcrumbs items={[{ label: "Profile" }]} />
 
-      <div className="mb-6">
-        <h1 className="text-2xl font-bold">Profile Settings</h1>
-        <p className="text-muted-foreground">Manage your account information</p>
+      <div className="mb-6 flex items-center gap-4">
+        <div className="relative h-20 w-20 rounded-full overflow-hidden bg-muted">
+          {user?.avatar_url ? (
+            <img 
+              src={user.avatar_url} 
+              alt={user.full_name || "Profile"} 
+              className="h-full w-full object-cover"
+            />
+          ) : (
+            <div className="flex h-full w-full items-center justify-center bg-primary text-primary-foreground text-2xl font-semibold">
+              {user?.full_name?.charAt(0)?.toUpperCase() || user?.email?.charAt(0)?.toUpperCase() || "U"}
+            </div>
+          )}
+        </div>
+        <div>
+          <h1 className="text-2xl font-bold">Profile Settings</h1>
+          <p className="text-muted-foreground">Manage your account information</p>
+        </div>
       </div>
 
       <Tabs value={activeTab} onValueChange={setActiveTab}>

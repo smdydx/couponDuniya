@@ -130,6 +130,7 @@ async def login_with_google(
             role="customer",
             is_admin=False,
             auth_provider="google",
+            avatar_url=user_info.get("picture"),  # Store Google profile picture
         )
         db.add(user)
         db.flush()
@@ -146,6 +147,11 @@ async def login_with_google(
         # Update existing social account
         social_account.profile_data = json.dumps(user_info)
         social_account.updated_at = datetime.utcnow()
+        
+        # Update user's profile picture if changed
+        if user_info.get("picture") and user.avatar_url != user_info.get("picture"):
+            user.avatar_url = user_info.get("picture")
+        
         db.commit()
     else:
         # Link Google account to user
@@ -182,6 +188,7 @@ async def login_with_google(
                 "full_name": user.full_name,
                 "first_name": first_name,
                 "last_name": last_name,
+                "avatar_url": user.avatar_url,
                 "wallet_balance": float(user.wallet_balance or 0),
                 "pending_cashback": float(user.pending_cashback or 0),
                 "referral_code": user.referral_code,
@@ -411,6 +418,7 @@ async def google_callback(
                     role="customer",
                     is_admin=False,
                     auth_provider="google",
+                    avatar_url=user_info.get("picture"),  # Store Google profile picture
                 )
                 db.add(user)
                 db.flush()

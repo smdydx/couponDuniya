@@ -16,6 +16,7 @@ class User(Base):
     mobile: Mapped[str | None] = mapped_column(String(20), unique=True, index=True)
     password_hash: Mapped[str | None] = mapped_column(String(255))
     full_name: Mapped[str] = mapped_column(String(255))
+    avatar_url: Mapped[str | None] = mapped_column(String(500), nullable=True)
     referral_code: Mapped[str] = mapped_column(String(20), unique=True, index=True, default=generate_referral_code)
     
     # Wallet
