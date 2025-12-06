@@ -29,12 +29,18 @@ export default function GoogleCallbackPage() {
         if (response.data.success) {
           const { access_token, refresh_token, user } = response.data.data;
           
-          // Get the auth store functions
-          const { setTokens, updateUser } = useAuthStore.getState();
-          
-          // Store auth data using authStore methods
-          setTokens(access_token, refresh_token || access_token);
-          updateUser(user);
+          // Store auth data directly using the store's setState
+          useAuthStore.setState({
+            user: {
+              ...user,
+              is_admin: user.role === 'admin' || user.is_admin,
+            },
+            accessToken: access_token,
+            refreshToken: refresh_token || access_token,
+            isAuthenticated: true,
+            isLoading: false,
+            error: null,
+          });
 
           // Redirect based on role
           const redirectUrl = user.is_admin || user.role === 'admin' 
