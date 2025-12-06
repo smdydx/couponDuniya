@@ -1,4 +1,3 @@
-
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
 from sqlalchemy import select, func, desc
@@ -8,6 +7,7 @@ from pydantic import BaseModel, Field
 from ...database import get_db
 from ...models import Category
 from ...redis_client import cache_invalidate_prefix, rk
+from ...dependencies import rate_limit_dependency
 
 router = APIRouter(prefix="/categories", tags=["Categories"])
 
@@ -50,17 +50,17 @@ def list_categories(
 ):
     """List all categories"""
     query = select(Category)
-    
+
     if is_active is not None:
         query = query.where(Category.is_active == is_active)
-    
+
     total_count = db.scalar(select(func.count()).select_from(query.subquery()))
-    
+
     query = query.order_by(desc(Category.created_at))
     query = query.offset((page - 1) * limit).limit(limit)
-    
+
     categories = db.scalars(query).all()
-    
+
     # Count products for each category
     from ..models import Product
     category_data = []
@@ -81,7 +81,7 @@ def list_categories(
             "products_count": product_count or 0,
             "created_at": c.created_at.isoformat() if c.created_at else None
         })
-    
+
     return {
         "success": True,
         "data": {
@@ -105,7 +105,7 @@ def create_category(
     existing = db.scalar(select(Category).where(Category.slug == payload.slug))
     if existing:
         raise HTTPException(status_code=400, detail=f"Category with slug '{payload.slug}' already exists")
-    
+
     category = Category(
         name=payload.name,
         slug=payload.slug,
@@ -116,9 +116,9 @@ def create_category(
     db.add(category)
     db.commit()
     db.refresh(category)
-    
+
     cache_invalidate_prefix(rk("cache", "categories"))
-    
+
     return {
         "success": True,
         "message": f"Category '{category.name}' created successfully",
@@ -140,14 +140,14 @@ def update_category(
     category = db.scalar(select(Category).where(Category.id == id))
     if not category:
         raise HTTPException(status_code=404, detail="Category not found")
-    
+
     if payload.slug and payload.slug != category.slug:
         existing = db.scalar(select(Category).where(
             (Category.slug == payload.slug) & (Category.id != id)
         ))
         if existing:
             raise HTTPException(status_code=400, detail=f"Category with slug '{payload.slug}' already exists")
-    
+
     if payload.name is not None:
         category.name = payload.name
     if payload.slug is not None:
@@ -158,12 +158,12 @@ def update_category(
         category.icon_url = payload.icon_url
     if payload.is_active is not None:
         category.is_active = payload.is_active
-    
+
     db.commit()
     db.refresh(category)
-    
+
     cache_invalidate_prefix(rk("cache", "categories"))
-    
+
     return {
         "success": True,
         "message": "Category updated successfully",
@@ -184,12 +184,12 @@ def delete_category(
     category = db.scalar(select(Category).where(Category.id == id))
     if not category:
         raise HTTPException(status_code=404, detail="Category not found")
-    
+
     category.is_active = False
     db.commit()
-    
+
     cache_invalidate_prefix(rk("cache", "categories"))
-    
+
     return {
         "success": True,
         "message": f"Category '{category.name}' deactivated successfully"
@@ -205,7 +205,7 @@ def get_category(
     category = db.scalar(select(Category).where(Category.id == id))
     if not category:
         raise HTTPException(status_code=404, detail="Category not found")
-    
+
     return {
         "success": True,
         "data": {
@@ -218,3 +218,37 @@ def get_category(
             "created_at": category.created_at.isoformat() if category.created_at else None
         }
     }
+
+@router.get("/", response_model=dict)
+def get_categories(
+    db: Session = Depends(get_db),
+    _: dict = Depends(rate_limit_dependency("categories:list", limit=100, window_seconds=60))
+):
+    """Get all active categories"""
+    try:
+        categories = db.execute(
+            select(Category).where(Category.is_active == True).order_by(Category.name)
+        ).scalars().all()
+
+        return {
+            "success": True,
+            "data": {
+                "categories": [
+                    {
+                        "id": cat.id,
+                        "name": cat.name,
+                        "slug": cat.slug,
+                        "icon_url": cat.icon_url,
+                        "description": cat.description,
+                        "is_active": cat.is_active
+                    }
+                    for cat in categories
+                ]
+            }
+        }
+    except Exception as e:
+        return {
+            "success": False,
+            "data": {"categories": []},
+            "error": str(e)
+        }

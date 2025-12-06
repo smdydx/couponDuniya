@@ -79,7 +79,7 @@ export default function AdminProductsPage() {
       const [productsData, merchantsData, categoriesResponse] = await Promise.all([
         adminApi.getProducts({ page, limit: 20, search: search || undefined }),
         adminApi.getMerchants({ limit: 100 }),
-        apiClient.get('/categories/'),
+        apiClient.get('/api/v1/categories/'),
       ]);
       setProducts(productsData.products || []);
       setPagination(productsData.pagination);
@@ -190,10 +190,14 @@ export default function AdminProductsPage() {
     return category?.name || "-";
   };
 
-  const totalStock = products.reduce((sum, p) => sum + p.stock, 0);
-  const totalValue = products.reduce((sum, p) => sum + (p.price * p.stock), 0);
-  const activeProducts = products.filter(p => p.is_active).length;
-  const outOfStock = products.filter(p => p.stock === 0).length;
+  const filteredProducts = categoryFilter === "all" 
+    ? products 
+    : products.filter(p => String((p as any).category_id) === categoryFilter);
+
+  const totalStock = filteredProducts.reduce((sum, p) => sum + p.stock, 0);
+  const totalValue = filteredProducts.reduce((sum, p) => sum + (p.price * p.stock), 0);
+  const activeProducts = filteredProducts.filter(p => p.is_active).length;
+  const outOfStock = filteredProducts.filter(p => p.stock === 0).length;
 
   return (
     <div className="space-y-6">
@@ -315,7 +319,7 @@ export default function AdminProductsPage() {
                 </div>
               ))}
             </div>
-          ) : products.length === 0 ? (
+          ) : filteredProducts.length === 0 ? (
             <div className="flex flex-col items-center justify-center py-16">
               <div className="w-20 h-20 rounded-full bg-gradient-to-br from-blue-100 to-purple-100 flex items-center justify-center mb-4">
                 <Package className="h-10 w-10 text-blue-500" />
@@ -347,7 +351,7 @@ export default function AdminProductsPage() {
                     </TableRow>
                   </TableHeader>
                   <TableBody>
-                    {products.map((product) => (
+                    {filteredProducts.map((product) => (
                       <TableRow key={product.id} className="hover:bg-blue-50/30">
                         <TableCell>
                           <div className="flex items-center gap-3">
@@ -422,9 +426,8 @@ export default function AdminProductsPage() {
               {pagination && pagination.total_pages > 1 && (
                 <div className="mt-4 flex items-center justify-between">
                   <p className="text-sm text-gray-500">
-                    Showing {(page - 1) * pagination.per_page + 1} to{" "}
-                    {Math.min(page * pagination.per_page, pagination.total_items)} of{" "}
-                    {pagination.total_items} products
+                    Showing {filteredProducts.length} of {pagination.total_items} products
+                    {categoryFilter !== "all" && " (filtered by category)"}
                   </p>
                   <div className="flex items-center gap-2">
                     <Button
