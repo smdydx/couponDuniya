@@ -244,11 +244,13 @@ export default function AdminOffersPage() {
                         <TableCell>
                           <div className="flex items-center gap-3">
                             {offer.image_url ? (
-                              <img
-                                src={offer.image_url}
-                                alt={offer.title}
-                                className="h-10 w-10 rounded-lg object-cover object-center bg-muted"
-                              />
+                              <div className="h-10 w-10 rounded-lg overflow-hidden bg-white border flex items-center justify-center">
+                                <img
+                                  src={offer.image_url}
+                                  alt={offer.title}
+                                  className="h-full w-full object-contain p-1"
+                                />
+                              </div>
                             ) : (
                               <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-primary/10">
                                 <Tag className="h-5 w-5 text-primary" />

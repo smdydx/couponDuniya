@@ -173,12 +173,12 @@ export function ImageUploader({
 
       {value ? (
         <div className="relative group">
-          <div className={cn("relative overflow-hidden rounded-lg border bg-muted", aspectClasses[aspectRatio])}>
+          <div className={cn("relative overflow-hidden rounded-lg border bg-white flex items-center justify-center", aspectClasses[aspectRatio])}>
             <img
               src={value}
               alt="Uploaded image"
-              className={`h-full w-full rounded-lg ${
-                aspectRatio === "banner" ? "object-cover" : "object-contain"
+              className={`rounded-lg ${
+                aspectRatio === "banner" ? "h-full w-full object-cover" : "max-h-full max-w-full object-contain p-2"
               }`}
               onError={(e) => {
                 (e.target as HTMLImageElement).src = "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='100' height='100'%3E%3Crect fill='%23f0f0f0' width='100' height='100'/%3E%3Ctext x='50%25' y='50%25' dominant-baseline='middle' text-anchor='middle' fill='%23999'%3EError%3C/text%3E%3C/svg%3E";

@@ -302,22 +302,27 @@ export default function AdminGiftCardsPage() {
                     {giftCards.map((card) => (
                       <TableRow key={card.id}>
                         <TableCell>
-                          <div className="flex items-center gap-2">
-                            <code className="rounded bg-muted px-2 py-1 text-sm font-mono">
-                              {card.code}
-                            </code>
-                            <Button
-                              variant="ghost"
-                              size="icon"
-                              className="h-6 w-6"
-                              onClick={() => handleCopyCode(card.code)}
-                            >
-                              {copiedCode === card.code ? (
-                                <Check className="h-3 w-3 text-green-500" />
-                              ) : (
-                                <Copy className="h-3 w-3" />
-                              )}
-                            </Button>
+                          <div className="flex items-center gap-3">
+                            <div className="h-10 w-10 rounded-lg overflow-hidden bg-white border flex items-center justify-center flex-shrink-0">
+                              <Gift className="h-5 w-5 text-purple-500" />
+                            </div>
+                            <div className="flex items-center gap-2">
+                              <code className="rounded bg-muted px-2 py-1 text-sm font-mono">
+                                {card.code}
+                              </code>
+                              <Button
+                                variant="ghost"
+                                size="icon"
+                                className="h-6 w-6"
+                                onClick={() => handleCopyCode(card.code)}
+                              >
+                                {copiedCode === card.code ? (
+                                  <Check className="h-3 w-3 text-green-500" />
+                                ) : (
+                                  <Copy className="h-3 w-3" />
+                                )}
+                              </Button>
+                            </div>
                           </div>
                         </TableCell>
                         <TableCell className="font-medium">

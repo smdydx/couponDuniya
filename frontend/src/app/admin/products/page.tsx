@@ -363,11 +363,13 @@ export default function AdminProductsPage() {
                         <TableCell>
                           <div className="flex items-center gap-3">
                             {product.image_url ? (
-                              <img
-                                src={product.image_url}
-                                alt={product.name}
-                                className="h-12 w-12 rounded-lg object-cover object-center border shadow-sm"
-                              />
+                              <div className="h-12 w-12 rounded-lg overflow-hidden border shadow-sm bg-white flex items-center justify-center">
+                                <img
+                                  src={product.image_url}
+                                  alt={product.name}
+                                  className="h-full w-full object-contain p-1"
+                                />
+                              </div>
                             ) : (
                               <div className="flex h-12 w-12 items-center justify-center rounded-lg bg-gradient-to-br from-blue-100 to-purple-100">
                                 <Package className="h-6 w-6 text-blue-500" />

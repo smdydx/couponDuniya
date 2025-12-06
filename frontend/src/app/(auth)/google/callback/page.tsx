@@ -22,8 +22,8 @@ export default function GoogleCallbackPage() {
           throw new Error('No ID token received from Google');
         }
 
-        // Send token to backend
-        const response = await apiClient.post('/auth/social/google', {
+        // Send token to backend - using correct endpoint
+        const response = await apiClient.post('/api/v1/auth/social/google', {
           token: idToken
         });
 
