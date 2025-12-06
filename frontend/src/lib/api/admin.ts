@@ -149,6 +149,16 @@ const adminApi = {
     return response.data?.data || response.data;
   },
 
+  getOffers: async (params?: { page?: number; limit?: number; search?: string; merchant_id?: number; is_active?: boolean }) => {
+    try {
+      const response = await apiClient.get('/admin/offers', { params });
+      return response.data?.data || response.data;
+    } catch (error: any) {
+      console.error("Get offers error:", error.message, error.response?.data);
+      return { offers: [], pagination: { page: 1, per_page: 20, total_items: 0, total_pages: 0 } };
+    }
+  },
+
   getMerchants: async (params: { page?: number; limit?: number; search?: string; is_active?: boolean } = {}): Promise<{ merchants: Merchant[]; pagination: Pagination }> => {
     const queryParams = new URLSearchParams();
     if (params.page) queryParams.append('page', String(params.page));

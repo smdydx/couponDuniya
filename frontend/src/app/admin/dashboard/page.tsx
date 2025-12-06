@@ -122,16 +122,21 @@ export default function AdminDashboard() {
       }
 
       if (offersResponse.status === "fulfilled") {
-        const offersData = offersResponse.value.data;
-        console.log("🏷️ Offers data:", offersData);
-        const offersList = offersData?.data?.offers || offersData?.offers || offersData?.data || [];
-        const offersArray = Array.isArray(offersList) ? offersList : [];
-        setRecentOffers(offersArray.slice(0, 5).map((o: any) => ({
-          id: o.id,
-          title: o.title,
-          image_url: o.image_url,
-          merchant_name: o.merchant_name || o.merchant?.name || "Unknown",
-        })));
+        try {
+          const offersData = offersResponse.value.data;
+          console.log("🏷️ Offers data:", offersData);
+          const offersList = offersData?.offers || offersData?.data?.offers || offersData?.data || [];
+          const offersArray = Array.isArray(offersList) ? offersList : [];
+          setRecentOffers(offersArray.slice(0, 5).map((o: any) => ({
+            id: o.id,
+            title: o.title,
+            image_url: o.image_url,
+            merchant_name: o.merchant_name || o.merchant?.name || "Unknown",
+          })));
+        } catch (error) {
+          console.error("Error processing offers:", error);
+          setRecentOffers([]);
+        }
       }
     } catch (error) {
       console.error("❌ Failed to fetch dashboard data:", error);
