@@ -703,7 +703,7 @@ def list_orders(
     db: Session = Depends(get_db)
 ):
     """List all orders with pagination (admin)"""
-    query = select(Order, User).outerjoin(User, Order.user_id == User.id)
+    query = select(Order).outerjoin(User, Order.user_id == User.id)
 
     if status:
         query = query.where(Order.status == status)
@@ -712,34 +712,44 @@ def list_orders(
     if status:
         count_query = count_query.where(Order.status == status)
 
-    total_count = db.scalar(count_query)
+    total_count = db.scalar(count_query) or 0
 
     query = query.order_by(desc(Order.created_at))
     query = query.offset((page - 1) * limit).limit(limit)
 
-    results = db.execute(query).all()
+    orders = db.scalars(query).all()
+
+    orders_data = []
+    for order in orders:
+        # Get user separately
+        user = db.scalar(select(User).where(User.id == order.user_id))
+        
+        # Count items for this order
+        items_count = db.scalar(
+            select(func.count(OrderItem.id)).where(OrderItem.order_id == order.id)
+        ) or 0
+        
+        orders_data.append({
+            "id": order.id,
+            "order_number": order.order_number if order.order_number else f"ORD-{order.id:06d}",
+            "user_id": order.user_id,
+            "user_email": user.email if user else None,
+            "total_amount": float(order.total_amount) if order.total_amount else 0.0,
+            "status": order.status,
+            "payment_status": order.payment_status if hasattr(order, 'payment_status') else 'unknown',
+            "fulfillment_status": order.fulfillment_status if hasattr(order, 'fulfillment_status') else 'pending',
+            "items_count": items_count,
+            "created_at": order.created_at.isoformat() if order.created_at else None
+        })
 
     return {
         "success": True,
         "data": {
-            "orders": [
-                {
-                    "id": order.id,
-                    "order_number": getattr(order, 'order_number', f"ORD-{order.id:06d}"),
-                    "user_id": order.user_id,
-                    "user_email": user.email if user else None,
-                    "total_amount": float(order.total_amount) if order.total_amount else 0,
-                    "status": order.status,
-                    "payment_status": getattr(order, 'payment_status', 'unknown'),
-                    "items_count": getattr(order, 'items_count', 0),
-                    "created_at": order.created_at.isoformat() if order.created_at else None
-                }
-                for order, user in results
-            ],
+            "orders": orders_data,
             "pagination": {
                 "current_page": page,
-                "total_pages": (total_count + limit - 1) // limit if total_count else 1,
-                "total_items": total_count or 0,
+                "total_pages": max(1, (total_count + limit - 1) // limit),
+                "total_items": total_count,
                 "per_page": limit
             }
         }
