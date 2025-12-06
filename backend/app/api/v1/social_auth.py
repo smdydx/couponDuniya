@@ -115,9 +115,15 @@ async def login_with_google(
         if isinstance(email_verified, str):
             email_verified = email_verified.lower() == 'true'
         
+        # Split name into first and last name
+        full_name = user_info.get("name", "")
+        name_parts = full_name.split(' ', 1) if full_name else ['', '']
+        first_name = name_parts[0] if len(name_parts) > 0 else ''
+        last_name = name_parts[1] if len(name_parts) > 1 else ''
+        
         user = User(
             email=user_info["email"],
-            full_name=user_info.get("name", ""),
+            full_name=full_name or f"{first_name} {last_name}".strip(),
             password_hash=None,  # No password for social login - prevents password auth
             is_verified=bool(email_verified),
             email_verified_at=datetime.utcnow() if email_verified else None,
@@ -157,6 +163,11 @@ async def login_with_google(
     # Generate access token
     access_token = create_access_token(str(user.id))
 
+    # Split full_name for response
+    name_parts = (user.full_name or "").split(' ', 1)
+    first_name = name_parts[0] if len(name_parts) > 0 else ''
+    last_name = name_parts[1] if len(name_parts) > 1 else ''
+
     return {
         "success": True,
         "message": "Logged in successfully with Google",
@@ -165,10 +176,20 @@ async def login_with_google(
             "token_type": "bearer",
             "user": {
                 "id": user.id,
+                "uuid": str(user.uuid),
                 "email": user.email,
+                "mobile": user.mobile,
                 "full_name": user.full_name,
+                "first_name": first_name,
+                "last_name": last_name,
+                "wallet_balance": float(user.wallet_balance or 0),
+                "pending_cashback": float(user.pending_cashback or 0),
+                "referral_code": user.referral_code,
+                "role": user.role,
                 "is_admin": user.is_admin,
-                "role": user.role
+                "is_verified": user.is_verified,
+                "auth_provider": user.auth_provider,
+                "password_hash": user.password_hash is not None
             }
         }
     }
@@ -420,7 +441,7 @@ async def google_callback(
 
             frontend_url = getattr(settings, 'FRONTEND_URL', 'http://localhost:5000')
             return RedirectResponse(
-                url=f"{frontend_url}/auth/callback?token={access_token}&user_id={user.id}"
+                url=f"{frontend_url}/google/callback#id_token={access_token}"
             )
 
     except HTTPException:

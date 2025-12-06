@@ -15,11 +15,15 @@ import { Breadcrumbs } from "@/components/common/Breadcrumbs";
 import { useAuthStore } from "@/store/authStore";
 import { toast } from "@/store/uiStore";
 import { KYC_STATUSES } from "@/lib/constants";
+import apiClient from "@/lib/api-client";
 
 export default function ProfilePage() {
   const { user, updateUser } = useAuthStore();
   const [activeTab, setActiveTab] = useState("personal");
   const [isSaving, setIsSaving] = useState(false);
+  const [passwordError, setPasswordError] = useState("");
+  const [newPassword, setNewPassword] = useState("");
+  const [confirmPassword, setConfirmPassword] = useState("");
 
   const {
     register,
@@ -55,6 +59,39 @@ export default function ProfilePage() {
       toast.success("Profile updated successfully");
     } catch (error) {
       toast.error("Failed to update profile");
+    } finally {
+      setIsSaving(false);
+    }
+  };
+
+  const handleSetPassword = async () => {
+    setPasswordError("");
+    
+    if (newPassword.length < 8) {
+      setPasswordError("Password must be at least 8 characters");
+      return;
+    }
+    
+    if (newPassword !== confirmPassword) {
+      setPasswordError("Passwords do not match");
+      return;
+    }
+    
+    setIsSaving(true);
+    try {
+      const response = await apiClient.post('/auth/set-password', {
+        new_password: newPassword
+      });
+      
+      if (response.data.success) {
+        toast.success("Password set successfully! You can now login with email and password.");
+        setNewPassword("");
+        setConfirmPassword("");
+        // Update user state to reflect password is set
+        updateUser({ ...user, password_hash: true });
+      }
+    } catch (error: any) {
+      setPasswordError(error.response?.data?.detail || "Failed to set password");
     } finally {
       setIsSaving(false);
     }
@@ -229,28 +266,83 @@ export default function ProfilePage() {
         <TabsContent value="security">
           <Card>
             <CardHeader>
-              <CardTitle>Change Password</CardTitle>
+              <CardTitle>
+                {user?.auth_provider === 'google' && !user?.password_hash 
+                  ? 'Set Password' 
+                  : 'Change Password'}
+              </CardTitle>
               <CardDescription>
-                Update your password to keep your account secure
+                {user?.auth_provider === 'google' && !user?.password_hash
+                  ? 'Set a password to enable email/password login in addition to Google'
+                  : 'Update your password to keep your account secure'}
               </CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
-              <div className="space-y-2">
-                <Label htmlFor="current_password">Current Password</Label>
-                <Input id="current_password" type="password" />
-              </div>
+              {user?.auth_provider === 'google' && !user?.password_hash ? (
+                <>
+                  <div className="rounded-lg bg-blue-50 p-4 text-sm text-blue-800 mb-4">
+                    You signed up with Google. Setting a password will allow you to log in using your email and password as well.
+                  </div>
+                  
+                  {passwordError && (
+                    <div className="rounded-lg bg-destructive/10 p-3 text-sm text-destructive">
+                      {passwordError}
+                    </div>
+                  )}
+                  
+                  <div className="space-y-2">
+                    <Label htmlFor="new_password">New Password</Label>
+                    <Input 
+                      id="new_password" 
+                      type="password" 
+                      placeholder="Enter new password (min 8 characters)"
+                      value={newPassword}
+                      onChange={(e) => setNewPassword(e.target.value)}
+                    />
+                  </div>
 
-              <div className="space-y-2">
-                <Label htmlFor="new_password">New Password</Label>
-                <Input id="new_password" type="password" />
-              </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="confirm_new_password">Confirm New Password</Label>
+                    <Input 
+                      id="confirm_new_password" 
+                      type="password" 
+                      placeholder="Confirm your password"
+                      value={confirmPassword}
+                      onChange={(e) => setConfirmPassword(e.target.value)}
+                    />
+                  </div>
 
-              <div className="space-y-2">
-                <Label htmlFor="confirm_new_password">Confirm New Password</Label>
-                <Input id="confirm_new_password" type="password" />
-              </div>
+                  <Button onClick={handleSetPassword} disabled={isSaving}>
+                    {isSaving ? (
+                      <>
+                        <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                        Setting Password...
+                      </>
+                    ) : (
+                      "Set Password"
+                    )}
+                  </Button>
+                </>
+              ) : (
+                <>
+                  <div className="space-y-2">
+                    <Label htmlFor="current_password">Current Password</Label>
+                    <Input id="current_password" type="password" />
+                  </div>
 
-              <Button>Update Password</Button>
+                  <div className="space-y-2">
+                    <Label htmlFor="new_password">New Password</Label>
+                    <Input id="new_password" type="password" />
+                  </div>
+
+                  <div className="space-y-2">
+                    <Label htmlFor="confirm_new_password">Confirm New Password</Label>
+                    <Input id="confirm_new_password" type="password" />
+                  </div>
+
+                  <Button>Update Password</Button>
+                </>
+              )}
             </CardContent>
           </Card>
         </TabsContent>

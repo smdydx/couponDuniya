@@ -15,6 +15,8 @@ export interface User {
   is_admin?: boolean;
   is_verified?: boolean;
   created_at?: string;
+  auth_provider?: string; // Added to track Google sign-up
+  password_hash?: boolean; // Added to indicate if a password is set
 }
 
 export interface UserProfile extends User {

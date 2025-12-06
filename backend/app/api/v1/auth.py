@@ -516,11 +516,52 @@ def me(authorization: str | None = Header(None), db: Session = Depends(get_db)):
         "data": {
             "id": user.id,
             "email": user.email,
+            "mobile": user.mobile,
             "full_name": user.full_name,
             "first_name": first_name,
             "last_name": last_name,
             "role": user.role,
             "is_admin": user.is_admin,
             "is_verified": user.is_verified,
+            "auth_provider": user.auth_provider,
+            "password_hash": user.password_hash is not None,
+        }
+    }
+
+
+class SetPasswordRequest(BaseModel):
+    new_password: str = Field(..., min_length=8)
+
+@router.post("/set-password", response_model=dict)
+def set_password(
+    payload: SetPasswordRequest,
+    authorization: str | None = Header(None),
+    db: Session = Depends(get_db)
+):
+    """Set password for users who signed up with Google"""
+    if not authorization:
+        raise HTTPException(status_code=401, detail="Missing token")
+    
+    token = authorization.split()[1]
+    decoded = decode_token(token)
+    user_id = decoded.get("sub")
+    
+    user = db.query(User).filter(User.id == int(user_id)).first() if user_id else None
+    if not user:
+        raise HTTPException(status_code=404, detail="User not found")
+    
+    # Check if user already has a password
+    if user.password_hash:
+        raise HTTPException(status_code=400, detail="Password already set. Use change-password endpoint.")
+    
+    # Set the password
+    user.password_hash = get_password_hash(payload.new_password)
+    db.commit()
+    
+    return {
+        "success": True,
+        "message": "Password set successfully! You can now login with email and password.",
+        "data": {
+            "has_password": True
         }
     }
