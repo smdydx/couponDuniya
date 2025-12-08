@@ -344,9 +344,9 @@ def checkout(
         import razorpay
         
         try:
-            client = razorpay.Client(auth=(settings.RAZORPAY_KEY_ID, settings.RAZORPAY_KEY_SECRET))
+            razorpay_client = razorpay.Client(auth=(settings.RAZORPAY_KEY_ID, settings.RAZORPAY_KEY_SECRET))
             
-            razorpay_order = client.order.create({
+            razorpay_order = razorpay_client.order.create({
                 "amount": int(payment_required * 100),  # Convert to paisa
                 "currency": "INR",
                 "receipt": order.order_number,
@@ -376,15 +376,15 @@ def checkout(
                 currency="INR",
                 key=settings.RAZORPAY_KEY_ID
             )
-        except razorpay.errors.BadRequestError as e:
-            db.rollback()
-            raise HTTPException(status_code=400, detail=f"Razorpay error: {str(e)}")
-        except razorpay.errors.ServerError as e:
-            db.rollback()
-            raise HTTPException(status_code=503, detail=f"Payment gateway unavailable: {str(e)}")
         except Exception as e:
             db.rollback()
-            raise HTTPException(status_code=500, detail=f"Payment initialization failed: {str(e)}")
+            error_str = str(e)
+            if "BadRequest" in error_str or "400" in error_str:
+                raise HTTPException(status_code=400, detail=f"Razorpay error: {error_str}")
+            elif "Server" in error_str or "50" in error_str:
+                raise HTTPException(status_code=503, detail=f"Payment gateway unavailable: {error_str}")
+            else:
+                raise HTTPException(status_code=500, detail=f"Payment initialization failed: {error_str}")
     else:
         # Order paid via wallet completely
         order.payment_status = "completed"
