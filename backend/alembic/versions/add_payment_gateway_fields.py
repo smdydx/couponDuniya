@@ -2,7 +2,7 @@
 """add payment gateway fields
 
 Revision ID: add_payment_gateway_fields
-Revises: add_avatar_url_to_users
+Revises: add_avatar_url
 Create Date: 2025-01-06 12:00:00.000000
 
 """
@@ -12,7 +12,7 @@ import sqlalchemy as sa
 
 # revision identifiers, used by Alembic.
 revision = 'add_payment_gateway_fields'
-down_revision = 'add_avatar_url_to_users'
+down_revision = 'add_avatar_url'
 branch_labels = None
 depends_on = None
 
