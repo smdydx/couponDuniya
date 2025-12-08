@@ -273,10 +273,8 @@ def checkout(
     )
     
     if not validation.is_valid:
-        raise HTTPException(status_code=400, detail={
-            "message": "Cart validation failed",
-            "errors": validation.errors
-        })
+        error_msg = "Cart validation failed: " + "; ".join(validation.errors) if validation.errors else "Cart validation failed"
+        raise HTTPException(status_code=400, detail=error_msg)
     
     # Generate order number
     import uuid
