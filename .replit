@@ -21,6 +21,8 @@ DEBUG = "True"
 APP_NAME = "CouponAli API"
 DATABASE_URL = "sqlite:///./couponali.db"
 NEXT_PUBLIC_API_URL = "/backend-api"
+GOOGLE_REDIRECT_URI = "https://b9783ea6-b2c7-4447-9b9b-72c7de8af1ea-00-2kvvw7zoy5j1u.riker.replit.dev/backend-api/social/google/callback"
+FRONTEND_URL = "https://b9783ea6-b2c7-4447-9b9b-72c7de8af1ea-00-2kvvw7zoy5j1u.riker.replit.dev"
 
 [workflows]
 runButton = "Project"
@@ -69,10 +71,6 @@ externalPort = 80
 [[ports]]
 localPort = 8000
 externalPort = 8000
-
-[[ports]]
-localPort = 36529
-externalPort = 3002
 
 [[ports]]
 localPort = 38079
