@@ -14,15 +14,15 @@ export function FeaturedMerchantSection({ merchants }: FeaturedMerchantSectionPr
     return null;
   }
 
-  // Take first merchant as featured
+  // Take first merchant as featured (large card)
   const featured = merchants[0];
-  // Rest as grid items
-  const gridMerchants = merchants.slice(1);
+  // Next 10 merchants for grid (2 rows of 5 each)
+  const gridMerchants = merchants.slice(1, 11);
 
   return (
     <div className="bg-gradient-to-r from-blue-50/80 to-indigo-50/60 dark:from-gray-800 dark:to-gray-900 rounded-2xl p-3 sm:p-6">
       <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-3 sm:gap-4">
-        {/* Featured Large Card - First Position */}
+        {/* Featured Large Card - First Position (takes 2x2 grid space) */}
         <Link
           href={ROUTES.merchantDetail(featured.slug)}
           className="col-span-2 row-span-2 relative rounded-xl overflow-hidden shadow-sm hover:shadow-md transition-all border border-gray-100 dark:border-gray-700 group bg-white dark:bg-gray-800 flex flex-col"
@@ -36,7 +36,7 @@ export function FeaturedMerchantSection({ merchants }: FeaturedMerchantSectionPr
           )}
 
           {/* Image container with proper aspect ratio */}
-          <div className="flex-1 relative w-full bg-gradient-to-br from-gray-50 to-gray-100 dark:from-gray-800 dark:to-gray-900 p-4 sm:p-6 flex items-center justify-center">
+          <div className="flex-1 relative w-full bg-white dark:bg-gray-900 flex items-center justify-center p-6">
             {featured.logo_url ? (
               <img
                 src={featured.logo_url}
@@ -66,21 +66,20 @@ export function FeaturedMerchantSection({ merchants }: FeaturedMerchantSectionPr
           </div>
         </Link>
 
-        {/* Grid Merchant Cards */}
+        {/* Grid Merchant Cards - 2 rows of 5 cards each */}
         {gridMerchants.map((merchant) => (
           <Link
             key={merchant.id}
             href={ROUTES.merchantDetail(merchant.slug)}
             className="relative rounded-xl overflow-hidden shadow-sm hover:shadow-md transition-all border border-gray-100 dark:border-gray-700 group bg-white dark:bg-gray-800 flex flex-col"
-            style={{ height: 'auto' }}
           >
-            {/* Image container with fixed aspect ratio */}
-            <div className="relative w-full aspect-[4/3] bg-gradient-to-br from-gray-50 to-gray-100 dark:from-gray-800 dark:to-gray-900 p-3 sm:p-4 flex items-center justify-center">
+            {/* Image container with fixed aspect ratio and no gaps */}
+            <div className="relative w-full aspect-[4/3] bg-white dark:bg-gray-900 flex items-center justify-center overflow-hidden">
               {merchant.logo_url ? (
                 <img
                   src={merchant.logo_url}
                   alt={merchant.name}
-                  className="w-full h-full object-contain group-hover:scale-105 transition-transform duration-300"
+                  className="w-full h-full object-contain p-3 sm:p-4 group-hover:scale-105 transition-transform duration-300"
                   loading="lazy"
                   onError={(e) => {
                     const target = e.currentTarget;
@@ -115,8 +114,7 @@ export function FeaturedMerchantSection({ merchants }: FeaturedMerchantSectionPr
         {/* View All Card - Always Last Position */}
         <Link
           href={ROUTES.merchants}
-          className="relative rounded-xl overflow-hidden shadow-sm hover:shadow-lg transition-all border-2 border-dashed border-purple-300 dark:border-purple-700 group bg-gradient-to-br from-purple-50 to-indigo-50 dark:from-purple-900/20 dark:to-indigo-900/20 order-last flex flex-col"
-          style={{ height: 'auto' }}
+          className="relative rounded-xl overflow-hidden shadow-sm hover:shadow-lg transition-all border-2 border-dashed border-purple-300 dark:border-purple-700 group bg-gradient-to-br from-purple-50 to-indigo-50 dark:from-purple-900/20 dark:to-indigo-900/20 flex flex-col"
         >
           {/* Content container matching card aspect ratio */}
           <div className="relative w-full aspect-[4/3] p-2 sm:p-3 flex flex-col items-center justify-center">
