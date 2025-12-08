@@ -634,6 +634,7 @@ def list_admin_products(
     limit: int = 20,
     search: str | None = None,
     merchant_id: int | None = None,
+    category_id: int | None = None,
     is_active: bool | None = None,
     db: Session = Depends(get_db)
 ):
@@ -649,6 +650,9 @@ def list_admin_products(
     if merchant_id:
         query = query.where(Product.merchant_id == merchant_id)
 
+    if category_id is not None:
+        query = query.where(Product.category_id == category_id)
+
     if is_active is not None:
         query = query.where(Product.is_active == is_active)
 
@@ -660,6 +664,8 @@ def list_admin_products(
         ))
     if merchant_id:
         count_query = count_query.where(Product.merchant_id == merchant_id)
+    if category_id is not None:
+        count_query = count_query.where(Product.category_id == category_id)
     if is_active is not None:
         count_query = count_query.where(Product.is_active == is_active)
 
