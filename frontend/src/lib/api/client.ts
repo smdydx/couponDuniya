@@ -82,11 +82,22 @@ apiClient.interceptors.response.use(
       }
     }
 
-    // Format error message
-    const errorMessage =
-      (error.response?.data as { detail?: string })?.detail ||
-      error.message ||
-      'An unexpected error occurred';
+    // Format error message - handle both string and object detail
+    const responseData = error.response?.data as { detail?: string | { message?: string; errors?: string[] } };
+    let errorMessage = 'An unexpected error occurred';
+    
+    if (responseData?.detail) {
+      if (typeof responseData.detail === 'string') {
+        errorMessage = responseData.detail;
+      } else if (typeof responseData.detail === 'object') {
+        // Handle object detail like {"message": "...", "errors": [...]}
+        errorMessage = responseData.detail.message || 
+                       responseData.detail.errors?.join(', ') || 
+                       JSON.stringify(responseData.detail);
+      }
+    } else if (error.message) {
+      errorMessage = error.message;
+    }
 
     return Promise.reject(new Error(errorMessage));
   }
