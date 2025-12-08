@@ -71,7 +71,8 @@ export function FeaturedMerchantSection({ merchants }: FeaturedMerchantSectionPr
           <Link
             key={merchant.id}
             href={ROUTES.merchantDetail(merchant.slug)}
-            className="relative rounded-xl overflow-hidden shadow-sm hover:shadow-md transition-all border border-gray-100 dark:border-gray-700 group bg-white dark:bg-gray-800 flex flex-col h-full"
+            className="relative rounded-xl overflow-hidden shadow-sm hover:shadow-md transition-all border border-gray-100 dark:border-gray-700 group bg-white dark:bg-gray-800 flex flex-col"
+            style={{ height: 'auto' }}
           >
             {/* Image container with fixed aspect ratio */}
             <div className="relative w-full aspect-[4/3] bg-gradient-to-br from-gray-50 to-gray-100 dark:from-gray-800 dark:to-gray-900 p-3 sm:p-4 flex items-center justify-center">
@@ -103,7 +104,7 @@ export function FeaturedMerchantSection({ merchants }: FeaturedMerchantSectionPr
             </div>
             
             {/* Merchant name at bottom */}
-            <div className="bg-white/95 dark:bg-gray-800/95 backdrop-blur-sm p-2 border-t border-gray-100 dark:border-gray-700 mt-auto">
+            <div className="bg-white/95 dark:bg-gray-800/95 backdrop-blur-sm p-2 border-t border-gray-100 dark:border-gray-700">
               <h3 className="text-center font-semibold text-[10px] sm:text-xs text-gray-900 dark:text-white line-clamp-1 group-hover:text-purple-600 dark:group-hover:text-purple-400 transition-colors">
                 {merchant.name}
               </h3>
@@ -114,7 +115,8 @@ export function FeaturedMerchantSection({ merchants }: FeaturedMerchantSectionPr
         {/* View All Card - Always Last Position */}
         <Link
           href={ROUTES.merchants}
-          className="relative rounded-xl overflow-hidden shadow-sm hover:shadow-lg transition-all border-2 border-dashed border-purple-300 dark:border-purple-700 group bg-gradient-to-br from-purple-50 to-indigo-50 dark:from-purple-900/20 dark:to-indigo-900/20 order-last flex flex-col h-full"
+          className="relative rounded-xl overflow-hidden shadow-sm hover:shadow-lg transition-all border-2 border-dashed border-purple-300 dark:border-purple-700 group bg-gradient-to-br from-purple-50 to-indigo-50 dark:from-purple-900/20 dark:to-indigo-900/20 order-last flex flex-col"
+          style={{ height: 'auto' }}
         >
           {/* Content container matching card aspect ratio */}
           <div className="relative w-full aspect-[4/3] p-2 sm:p-3 flex flex-col items-center justify-center">
