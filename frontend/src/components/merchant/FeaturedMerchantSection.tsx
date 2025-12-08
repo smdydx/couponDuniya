@@ -72,7 +72,7 @@ export function FeaturedMerchantSection({ merchants }: FeaturedMerchantSectionPr
             </div>
 
             {/* Merchant Name - Fixed Height */}
-            <div className="bg-white dark:bg-gray-800 px-3 py-2.5 border-t border-gray-100 dark:border-gray-700">
+            <div className="bg-white dark:bg-gray-800 px-3 py-3 sm:py-3.5 border-t border-gray-100 dark:border-gray-700">
               <h3 className="text-center font-medium text-xs sm:text-sm text-gray-900 dark:text-white line-clamp-1 group-hover:text-purple-600 dark:group-hover:text-purple-400 transition-colors">
                 {merchant.name}
               </h3>
