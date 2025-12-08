@@ -36,13 +36,13 @@ export function FeaturedMerchantSection({ merchants }: FeaturedMerchantSectionPr
           )}
 
           {/* Properly contained image */}
-          <div className="w-full h-full p-4 sm:p-6 flex items-center justify-center bg-gradient-to-br from-gray-50 to-gray-100 dark:from-gray-800 dark:to-gray-900">
+          <div className="w-full h-full p-2 sm:p-3 flex items-center justify-center bg-gradient-to-br from-gray-50 to-gray-100 dark:from-gray-800 dark:to-gray-900">
             {featured.logo_url ? (
               <div className="w-full h-full flex items-center justify-center">
                 <img
                   src={featured.logo_url}
                   alt={featured.name}
-                  className="max-w-[85%] max-h-[85%] w-auto h-auto object-contain group-hover:scale-105 transition-transform duration-300"
+                  className="max-w-[95%] max-h-[95%] w-auto h-auto object-contain group-hover:scale-105 transition-transform duration-300"
                   loading="eager"
                 />
               </div>
@@ -75,13 +75,13 @@ export function FeaturedMerchantSection({ merchants }: FeaturedMerchantSectionPr
             href={ROUTES.merchantDetail(merchant.slug)}
             className="relative rounded-xl overflow-hidden shadow-sm hover:shadow-md transition-all border border-gray-100 dark:border-gray-700 group bg-white dark:bg-gray-800"
           >
-            <div className="aspect-square w-full p-3 sm:p-4 flex items-center justify-center bg-gradient-to-br from-gray-50 to-gray-100 dark:from-gray-800 dark:to-gray-900">
+            <div className="aspect-square w-full p-2 sm:p-2.5 flex items-center justify-center bg-gradient-to-br from-gray-50 to-gray-100 dark:from-gray-800 dark:to-gray-900">
               {merchant.logo_url ? (
                 <div className="w-full h-full flex items-center justify-center">
                   <img
                     src={merchant.logo_url}
                     alt={merchant.name}
-                    className="max-w-[80%] max-h-[80%] w-auto h-auto object-contain group-hover:scale-105 transition-transform duration-300"
+                    className="max-w-[92%] max-h-[92%] w-auto h-auto object-contain group-hover:scale-105 transition-transform duration-300"
                     loading="lazy"
                     onError={(e) => {
                       const target = e.currentTarget;
@@ -117,7 +117,7 @@ export function FeaturedMerchantSection({ merchants }: FeaturedMerchantSectionPr
           href={ROUTES.merchants}
           className="relative rounded-xl overflow-hidden shadow-sm hover:shadow-lg transition-all border-2 border-dashed border-purple-300 dark:border-purple-700 group bg-gradient-to-br from-purple-50 to-indigo-50 dark:from-purple-900/20 dark:to-indigo-900/20 order-last"
         >
-          <div className="aspect-square w-full p-3 sm:p-4 flex flex-col items-center justify-center">
+          <div className="aspect-square w-full p-2 sm:p-2.5 flex flex-col items-center justify-center">
             <div className="w-12 h-12 sm:w-14 sm:h-14 rounded-full bg-gradient-to-br from-purple-500 to-indigo-500 flex items-center justify-center mb-2 group-hover:scale-110 transition-transform">
               <svg
                 className="w-6 h-6 sm:w-7 sm:h-7 text-white"
