@@ -23,7 +23,7 @@ class Settings(BaseSettings):
     # Google OAuth
     GOOGLE_CLIENT_ID: str = "433927974317-omujf5cn8ndhtdrofprnv9sb0uo3irl1.apps.googleusercontent.com"
     GOOGLE_CLIENT_SECRET: str = ""  # Add your secret here
-    GOOGLE_REDIRECT_URI: str = "https://dafc9188-a0bd-4022-aeb0-e4fcf20f899a-00-33uno060mq1q6.picard.replit.dev/google/callback"
+    GOOGLE_REDIRECT_URI: str = "http://localhost:5000"
     
     # Facebook OAuth
     FACEBOOK_APP_ID: str = ""
@@ -33,8 +33,8 @@ class Settings(BaseSettings):
     FRONTEND_URL: str = "https://dafc9188-a0bd-4022-aeb0-e4fcf20f899a-00-33uno060mq1q6.picard.replit.dev"
     
     # Razorpay Payment Gateway
-    RAZORPAY_KEY_ID: str = "rzp_test_RcsDiWWWebnqQU"
-    RAZORPAY_KEY_SECRET: str = "d1nEKpJ4q16QF2a7J7IydP9J"
+    RAZORPAY_KEY_ID: str = "rzp_test_Rp3sBYQKRm8xxB"
+    RAZORPAY_KEY_SECRET: str = "Tk3t8eGwgoc5E65a6DB0L60U"
     RAZORPAY_WEBHOOK_SECRET: str = ""
     
     # Email Configuration
