@@ -166,9 +166,13 @@ export default function CheckoutPage() {
 
       const razorpay = new window.Razorpay(options);
       razorpay.open();
-    } catch (error) {
+    } catch (error: any) {
       console.error("Payment failed:", error);
-      toast.error("Failed to initiate payment");
+      // Extract error message from API response
+      const errorMessage = error?.response?.data?.detail || 
+                          error?.message || 
+                          "Failed to initiate payment";
+      toast.error(typeof errorMessage === 'string' ? errorMessage : JSON.stringify(errorMessage));
       setIsProcessing(false);
     }
   };

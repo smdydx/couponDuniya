@@ -345,38 +345,48 @@ def checkout(
         # Create Razorpay order using SDK
         import razorpay
         
-        client = razorpay.Client(auth=(settings.RAZORPAY_KEY_ID, settings.RAZORPAY_KEY_SECRET))
-        
-        razorpay_order = client.order.create({
-            "amount": int(payment_required * 100),  # Convert to paisa
-            "currency": "INR",
-            "receipt": order.order_number,
-            "notes": {
-                "order_id": str(order.id),
-                "user_id": str(current_user.id)
-            }
-        })
-        
-        razorpay_order_id = razorpay_order["id"]
-        
-        payment = Payment(
-            order_id=order.id,
-            user_id=current_user.id,
-            gateway="razorpay",
-            gateway_order_id=razorpay_order_id,
-            amount=Decimal(str(payment_required)),
-            currency="INR",
-            status="initiated"
-        )
-        db.add(payment)
-        db.commit()
-        
-        payment_details = PaymentDetails(
-            order_id=razorpay_order_id,
-            amount=int(payment_required * 100),  # Convert to paisa
-            currency="INR",
-            key=settings.RAZORPAY_KEY_ID
-        )
+        try:
+            client = razorpay.Client(auth=(settings.RAZORPAY_KEY_ID, settings.RAZORPAY_KEY_SECRET))
+            
+            razorpay_order = client.order.create({
+                "amount": int(payment_required * 100),  # Convert to paisa
+                "currency": "INR",
+                "receipt": order.order_number,
+                "notes": {
+                    "order_id": str(order.id),
+                    "user_id": str(current_user.id)
+                }
+            })
+            
+            razorpay_order_id = razorpay_order["id"]
+            
+            payment = Payment(
+                order_id=order.id,
+                user_id=current_user.id,
+                gateway="razorpay",
+                gateway_order_id=razorpay_order_id,
+                amount=Decimal(str(payment_required)),
+                currency="INR",
+                status="initiated"
+            )
+            db.add(payment)
+            db.commit()
+            
+            payment_details = PaymentDetails(
+                order_id=razorpay_order_id,
+                amount=int(payment_required * 100),  # Convert to paisa
+                currency="INR",
+                key=settings.RAZORPAY_KEY_ID
+            )
+        except razorpay.errors.BadRequestError as e:
+            db.rollback()
+            raise HTTPException(status_code=400, detail=f"Razorpay error: {str(e)}")
+        except razorpay.errors.ServerError as e:
+            db.rollback()
+            raise HTTPException(status_code=503, detail=f"Payment gateway unavailable: {str(e)}")
+        except Exception as e:
+            db.rollback()
+            raise HTTPException(status_code=500, detail=f"Payment initialization failed: {str(e)}")
     else:
         # Order paid via wallet completely
         order.payment_status = "completed"
