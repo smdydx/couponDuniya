@@ -10,24 +10,33 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Checkbox } from "@/components/ui/checkbox";
-import { useAuthStore } from "@/store/authStore";
+import { authAPI } from "@/lib/api/auth";
 import { ROUTES } from "@/lib/constants";
-import type { RegisterData } from "@/types";
+
+interface RegisterFormData {
+  email: string;
+  mobile?: string;
+  password: string;
+  confirm_password: string;
+  full_name: string;
+  referral_code?: string;
+}
 
 function RegisterForm() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const referralCode = searchParams.get("ref");
-  const { register: registerUser, isLoading, error, clearError } = useAuthStore();
   const [showPassword, setShowPassword] = useState(false);
   const [acceptTerms, setAcceptTerms] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
   const {
     register,
     handleSubmit,
     watch,
     formState: { errors },
-  } = useForm<RegisterData & { confirm_password: string }>({
+  } = useForm<RegisterFormData>({
     defaultValues: {
       referral_code: referralCode || "",
     },
@@ -35,15 +44,24 @@ function RegisterForm() {
 
   const password = watch("password");
 
-  const onSubmit = async (data: RegisterData & { confirm_password: string }) => {
+  const onSubmit = async (data: RegisterFormData) => {
     if (!acceptTerms) return;
+
+    setIsLoading(true);
+    setError(null);
 
     try {
       const { confirm_password, ...registerData } = data;
-      await registerUser(registerData);
-      router.push(ROUTES.home);
-    } catch (err) {
-      // Error is handled by store
+      
+      // Call the API directly
+      await authAPI.register(registerData);
+      
+      // Redirect to verify email page
+      router.push(ROUTES.verifyEmail);
+    } catch (err: any) {
+      setError(err?.response?.data?.detail || err?.message || "Registration failed");
+    } finally {
+      setIsLoading(false);
     }
   };
 
@@ -61,31 +79,17 @@ function RegisterForm() {
             </div>
           )}
 
-          <div className="grid gap-4 sm:grid-cols-2">
-            <div className="space-y-2">
-              <Label htmlFor="first_name">First Name</Label>
-              <Input
-                id="first_name"
-                placeholder="John"
-                {...register("first_name", { required: "First name is required" })}
-                error={!!errors.first_name}
-              />
-              {errors.first_name && (
-                <p className="text-xs text-destructive">{errors.first_name.message}</p>
-              )}
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="last_name">Last Name</Label>
-              <Input
-                id="last_name"
-                placeholder="Doe"
-                {...register("last_name", { required: "Last name is required" })}
-                error={!!errors.last_name}
-              />
-              {errors.last_name && (
-                <p className="text-xs text-destructive">{errors.last_name.message}</p>
-              )}
-            </div>
+          <div className="space-y-2">
+            <Label htmlFor="full_name">Full Name</Label>
+            <Input
+              id="full_name"
+              placeholder="John Doe"
+              {...register("full_name", { required: "Full name is required" })}
+              error={!!errors.full_name}
+            />
+            {errors.full_name && (
+              <p className="text-xs text-destructive">{errors.full_name.message}</p>
+            )}
           </div>
 
           <div className="space-y-2">
@@ -102,7 +106,7 @@ function RegisterForm() {
                 },
               })}
               error={!!errors.email}
-              onChange={() => clearError()}
+              onChange={() => setError(null)}
             />
             {errors.email && (
               <p className="text-xs text-destructive">{errors.email.message}</p>

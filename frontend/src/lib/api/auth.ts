@@ -1,5 +1,5 @@
 import apiClient from './client';
-import type { LoginCredentials, RegisterData, AuthResponse, User } from '@/types';
+import type { LoginCredentials, RegisterData, AuthResponse, User, RegisterResponse } from '@/types';
 
 function normalizeUser(u: any): User {
   const fullName: string | undefined = u?.full_name;
@@ -38,15 +38,9 @@ export const authAPI = {
     };
   },
 
-  register: async (data: RegisterData): Promise<AuthResponse> => {
+  register: async (data: RegisterData): Promise<RegisterResponse> => {
     const response = await apiClient.post('/auth/register', data);
-    const payload = response.data?.data ?? response.data;
-    return {
-      user: normalizeUser(payload.user),
-      access_token: payload.access_token,
-      refresh_token: payload.refresh_token,
-      token_type: payload.token_type ?? 'bearer',
-    };
+    return response.data;
   },
 
   logout: async (): Promise<void> => {
