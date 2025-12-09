@@ -1,12 +1,13 @@
 from fastapi import APIRouter, Depends, Query, HTTPException
 from sqlalchemy.orm import Session
-from sqlalchemy import select, func, or_, and_
+from sqlalchemy import select, func, or_, and_, desc
 from typing import Optional
 
 from ...database import get_db
 from ...models.product import Product
 from ...models.product_variant import ProductVariant
 from ...models.merchant import Merchant
+from ...models.user import User
 from ...dependencies import rate_limit_dependency, get_current_user, require_admin
 
 router = APIRouter(prefix="/products", tags=["Products"])
