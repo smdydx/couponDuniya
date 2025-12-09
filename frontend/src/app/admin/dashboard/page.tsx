@@ -194,7 +194,7 @@ export default function AdminDashboard() {
     };
 
     checkAuth();
-  }, [mounted, router]);
+  }, [mounted, router, accessToken, isAuthenticated, user]);
 
   useEffect(() => {
     if (authChecked) {

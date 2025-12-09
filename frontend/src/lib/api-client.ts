@@ -39,25 +39,19 @@ const getAuthToken = () => {
 // Request interceptor to add auth token
 apiClient.interceptors.request.use(
   (config) => {
-    if (typeof window !== "undefined") {
-      const authStorage = localStorage.getItem("auth-storage");
-      if (authStorage) {
-        try {
-          const authData = JSON.parse(authStorage);
-          const token = authData?.state?.accessToken;
-          if (token) {
-            config.headers.Authorization = `Bearer ${token}`;
-          }
-        } catch (error) {
-          console.error("Failed to parse auth storage:", error);
-        }
-      }
+    const state = useAuthStore.getState();
+    const token = state.accessToken;
+
+    // Always check both store and localStorage
+    const storedToken = token || localStorage.getItem('access_token');
+
+    if (storedToken) {
+      config.headers.Authorization = `Bearer ${storedToken}`;
     }
+
     return config;
   },
-  (error) => {
-    return Promise.reject(error);
-  }
+  (error) => Promise.reject(error)
 );
 
 // Response interceptor - handle errors gracefully

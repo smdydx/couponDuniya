@@ -1,7 +1,8 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { Package, ChevronRight } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -11,6 +12,7 @@ import { EmptyState } from "@/components/common/EmptyState";
 import { formatCurrency, formatDate } from "@/lib/utils";
 import { ORDER_STATUSES, ROUTES } from "@/lib/constants";
 import type { Order } from "@/types";
+import { useAuthStore } from "@/store/authStore";
 
 // Mock data
 const mockOrders: Order[] = [
@@ -65,7 +67,16 @@ const mockOrders: Order[] = [
 ];
 
 export default function OrdersPage() {
+  const router = useRouter();
+  const { isAuthenticated, accessToken } = useAuthStore();
   const [activeTab, setActiveTab] = useState("all");
+
+  // Check authentication
+  useEffect(() => {
+    if (!isAuthenticated || !accessToken) {
+      router.replace(`${ROUTES.login}?redirect=${encodeURIComponent(ROUTES.orders)}`);
+    }
+  }, [isAuthenticated, accessToken, router]);
 
   const filteredOrders =
     activeTab === "all"

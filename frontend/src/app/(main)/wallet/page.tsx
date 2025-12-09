@@ -1,6 +1,7 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import { useRouter } from "next/navigation";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Button } from "@/components/ui/button";
 import { Breadcrumbs } from "@/components/common/Breadcrumbs";
@@ -8,6 +9,8 @@ import { WalletBalance } from "@/components/wallet/WalletBalance";
 import { TransactionList } from "@/components/wallet/TransactionList";
 import { CashbackTracker } from "@/components/wallet/CashbackTracker";
 import { WithdrawForm } from "@/components/wallet/WithdrawForm";
+import { useAuthStore } from "@/store/authStore";
+import { ROUTES } from "@/lib/constants";
 import { AlertCircle, HelpCircle } from "lucide-react";
 import type { WalletTransaction, CashbackEvent, WithdrawalRequest } from "@/types";
 
@@ -114,8 +117,17 @@ const mockWithdrawals: WithdrawalRequest[] = [
 ];
 
 export default function WalletPage() {
+  const router = useRouter();
+  const { isAuthenticated, accessToken } = useAuthStore();
   const [isWithdrawOpen, setIsWithdrawOpen] = useState(false);
   const [activeTab, setActiveTab] = useState("balance");
+
+  // Check authentication
+  useEffect(() => {
+    if (!isAuthenticated || !accessToken) {
+      router.replace(`${ROUTES.login}?redirect=${encodeURIComponent(ROUTES.wallet)}`);
+    }
+  }, [isAuthenticated, accessToken, router]);
 
   // Mock wallet data
   const walletBalance = 500;

@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import { useRouter } from "next/navigation";
 import { useForm } from "react-hook-form";
 import { Loader2, User, Shield, Bell, Save, Link2, Unlink } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -27,7 +28,8 @@ interface SocialAccount {
 }
 
 function ProfileContent() {
-  const { user, updateUser } = useAuthStore();
+  const router = useRouter(); // Added useRouter
+  const { user, updateUser, isAuthenticated, accessToken } = useAuthStore(); // Added isAuthenticated and accessToken
   const [activeTab, setActiveTab] = useState("personal");
   const [isSaving, setIsSaving] = useState(false);
   const [passwordError, setPasswordError] = useState("");
@@ -39,6 +41,13 @@ function ProfileContent() {
   const [saveError, setSaveError] = useState<string | null>(null);
   const [saveSuccess, setSaveSuccess] = useState(false);
   const [passwordSuccess, setPasswordSuccess] = useState(false);
+
+  // Check authentication
+  useEffect(() => {
+    if (!isAuthenticated || !accessToken) {
+      router.replace("/login"); // Changed ROUTES.login to "/login"
+    }
+  }, [isAuthenticated, accessToken, router]);
 
   type ProfileForm = {
     first_name: string;
