@@ -96,9 +96,11 @@ function VerifyEmailForm() {
     onVerified: () => {
       setStatus("success");
       setMessage("Your email has been verified! Redirecting to login...");
+      // Clear the timer
+      setTimer(0);
       setTimeout(() => {
         router.push(ROUTES.login);
-      }, 2000);
+      }, 1500);
     },
   });
 

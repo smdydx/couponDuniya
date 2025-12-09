@@ -27,6 +27,7 @@ export function useVerificationSync({ email, onVerified, enabled = true }: Verif
   useEffect(() => {
     if (!enabled || !email) return;
 
+    // Setup BroadcastChannel for cross-tab communication
     try {
       broadcastChannel.current = new BroadcastChannel(VERIFICATION_CHANNEL);
       broadcastChannel.current.onmessage = (event) => {
@@ -38,6 +39,7 @@ export function useVerificationSync({ email, onVerified, enabled = true }: Verif
       console.log("BroadcastChannel not supported, using localStorage fallback");
     }
 
+    // Setup localStorage listener for cross-tab communication fallback
     const handleStorageChange = (event: StorageEvent) => {
       if (event.key === VERIFICATION_STORAGE_KEY) {
         try {
@@ -51,6 +53,7 @@ export function useVerificationSync({ email, onVerified, enabled = true }: Verif
 
     window.addEventListener("storage", handleStorageChange);
 
+    // Poll server to check verification status
     pollInterval.current = setInterval(async () => {
       if (hasNotified.current) {
         if (pollInterval.current) clearInterval(pollInterval.current);
@@ -62,8 +65,22 @@ export function useVerificationSync({ email, onVerified, enabled = true }: Verif
         if (response?.data?.is_verified) {
           handleVerified();
         }
-      } catch (e) {}
+      } catch (e) {
+        // Silently fail - this is just polling
+      }
     }, POLL_INTERVAL);
+
+    // Do an initial check immediately
+    (async () => {
+      try {
+        const response = await authAPI.checkVerificationStatus(email);
+        if (response?.data?.is_verified) {
+          handleVerified();
+        }
+      } catch (e) {
+        // Silently fail
+      }
+    })();
 
     return () => {
       if (broadcastChannel.current) {
@@ -78,18 +95,25 @@ export function useVerificationSync({ email, onVerified, enabled = true }: Verif
 }
 
 export function broadcastVerification(email: string) {
+  // Use BroadcastChannel for modern browsers
   try {
     const channel = new BroadcastChannel(VERIFICATION_CHANNEL);
     channel.postMessage({ email, verified: true, timestamp: Date.now() });
     channel.close();
   } catch (e) {
-    console.log("BroadcastChannel not supported");
+    console.log("BroadcastChannel not supported, using localStorage");
   }
 
+  // Use localStorage as fallback and for cross-tab sync
   try {
-    localStorage.setItem(
-      VERIFICATION_STORAGE_KEY,
-      JSON.stringify({ email, verified: true, timestamp: Date.now() })
-    );
-  } catch (e) {}
+    const data = { email, verified: true, timestamp: Date.now() };
+    localStorage.setItem(VERIFICATION_STORAGE_KEY, JSON.stringify(data));
+    
+    // Trigger storage event by setting a slightly different value
+    setTimeout(() => {
+      localStorage.setItem(VERIFICATION_STORAGE_KEY, JSON.stringify({ ...data, timestamp: Date.now() }));
+    }, 10);
+  } catch (e) {
+    console.error("Failed to set localStorage:", e);
+  }
 }
