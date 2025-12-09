@@ -38,7 +38,7 @@ class Settings(BaseSettings):
     RAZORPAY_WEBHOOK_SECRET: str = ""
     
     # Email Configuration
-    EMAIL_ENABLED: bool = False  # Enable in production
+    EMAIL_ENABLED: bool = True  # Enable email sending
     SMTP_HOST: str = "smtp.gmail.com"
     SMTP_PORT: int = 587
     SMTP_USER: str = ""

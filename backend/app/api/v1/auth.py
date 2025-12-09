@@ -238,8 +238,8 @@ def register(payload: RegisterRequest, db: Session = Depends(get_db)):
     verification_token = None
     if user.email:
         verification_token = generate_verification_token(user.email)
-        frontend_url = settings.FRONTEND_BASE_URL or "http://localhost:5000"
-        verification_url = f"{frontend_url}/auth/verify-email?token={verification_token}"
+        frontend_url = settings.FRONTEND_URL or settings.FRONTEND_BASE_URL or "http://localhost:5000"
+        verification_url = f"{frontend_url}/verify-email?token={verification_token}"
         
         email_service.send_welcome_email(user.email, verification_url)
 
