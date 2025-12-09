@@ -25,7 +25,7 @@ import { OfferCard } from "@/components/offer/OfferCard";
 import { ProductCard } from "@/components/product/ProductCard";
 import { ROUTES } from "@/lib/constants";
 import { useQuery } from '@tanstack/react-query';
-import apiClient from '@/lib/apiClient';
+import apiClient from '@/lib/api/client';
 
 interface SectionHeaderProps {
   title: string;
@@ -221,9 +221,8 @@ function PromoSlider({ promoOffers }: { promoOffers: any[] }) {
 }
 
 export default function HomePage() {
-  const router = useRouter(); // Initialize useRouter
+  const router = useRouter();
   const [currentSlide, setCurrentSlide] = useState(0);
-  // Removed useState for data, isLoading, and replaced with react-query hooks
 
   const { data: homepageData, isLoading, error, refetch } = useQuery({
     queryKey: ["homepage"],
@@ -239,17 +238,27 @@ export default function HomePage() {
       });
       console.log("Homepage data:", response.data);
 
-      // Check if data is empty
       if (response.data.empty) {
         console.warn("⚠️ Homepage is empty. Run: python backend/scripts/seed_homepage_data.py");
       }
 
       return response.data.data;
     },
-    staleTime: 2 * 60 * 1000, // 2 minutes
+    staleTime: 2 * 60 * 1000,
     retry: 2,
   });
 
+  // ALL HOOKS MUST BE CALLED BEFORE ANY CONDITIONAL RETURNS
+  // Auto-advance slider effect
+  useEffect(() => {
+    if (!homepageData?.banners || homepageData.banners.length === 0) return;
+    const timer = setInterval(() => {
+      setCurrentSlide((prev) => (prev + 1) % homepageData.banners.length);
+    }, 5000);
+    return () => clearInterval(timer);
+  }, [homepageData?.banners]);
+
+  // NOW we can do conditional returns
   if (error) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-purple-50 to-indigo-50">
@@ -313,15 +322,6 @@ export default function HomePage() {
     );
   }
 
-  // Auto-advance slider
-  useEffect(() => {
-    if (!homepageData?.banners || homepageData.banners.length === 0) return;
-    const timer = setInterval(() => {
-      setCurrentSlide((prev) => (prev + 1) % homepageData.banners.length);
-    }, 5000);
-    return () => clearInterval(timer);
-  }, [homepageData?.banners]);
-
   const banners = homepageData?.banners || [];
   const promo_banners = homepageData?.promo_banners || [];
   const featured_merchants = homepageData?.featured_merchants || [];
@@ -337,6 +337,7 @@ export default function HomePage() {
     setCurrentSlide((prev) => (prev - 1 + banners.length) % banners.length);
   };
 
+  // Early return for loading state
   if (isLoading) {
     return (
       <div className="flex items-center justify-center min-h-screen">
