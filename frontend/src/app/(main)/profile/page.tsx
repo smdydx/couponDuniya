@@ -1,8 +1,8 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useForm } from "react-hook-form";
-import { Loader2, User, Shield, Bell, Save } from "lucide-react";
+import { Loader2, User, Shield, Bell, Save, Link2, Unlink } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -16,6 +16,13 @@ import { useAuthStore } from "@/store/authStore";
 import { toast } from "@/store/uiStore";
 import { KYC_STATUSES } from "@/lib/constants";
 import apiClient from "@/lib/api-client";
+import { authAPI } from "@/lib/api/auth";
+
+interface SocialAccount {
+  provider: string;
+  email: string;
+  linked_at: string;
+}
 
 export default function ProfilePage() {
   const { user, updateUser } = useAuthStore();
@@ -24,6 +31,53 @@ export default function ProfilePage() {
   const [passwordError, setPasswordError] = useState("");
   const [newPassword, setNewPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
+  const [socialAccounts, setSocialAccounts] = useState<SocialAccount[]>([]);
+  const [loadingAccounts, setLoadingAccounts] = useState(false);
+  const [unlinkingProvider, setUnlinkingProvider] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (activeTab === "linked") {
+      fetchSocialAccounts();
+    }
+  }, [activeTab]);
+
+  const fetchSocialAccounts = async () => {
+    setLoadingAccounts(true);
+    try {
+      const accounts = await authAPI.getSocialAccounts();
+      setSocialAccounts(accounts);
+    } catch (error) {
+      console.error("Failed to fetch social accounts:", error);
+    } finally {
+      setLoadingAccounts(false);
+    }
+  };
+
+  const handleUnlinkAccount = async (provider: string) => {
+    setUnlinkingProvider(provider);
+    try {
+      await authAPI.unlinkSocialAccount(provider);
+      setSocialAccounts((prev) => prev.filter((acc) => acc.provider !== provider));
+      toast.success(`${provider} account unlinked successfully`);
+    } catch (error: any) {
+      const message = error?.response?.data?.detail || "Failed to unlink account";
+      toast.error(message);
+    } finally {
+      setUnlinkingProvider(null);
+    }
+  };
+
+  const handleLinkGoogle = () => {
+    const clientId = "433927974317-omujf5cn8ndhtdrofprnv9sb0uo3irl1.apps.googleusercontent.com";
+    const redirectUri = `${window.location.origin}/google/callback`;
+    const scope = "openid email profile";
+    const responseType = "id_token token";
+    const nonce = Math.random().toString(36).substring(7);
+    const state = "link_account";
+    
+    const authUrl = `https://accounts.google.com/o/oauth2/v2/auth?client_id=${clientId}&redirect_uri=${redirectUri}&response_type=${responseType}&scope=${scope}&nonce=${nonce}&state=${state}`;
+    window.location.href = authUrl;
+  };
 
   const {
     register,
@@ -140,6 +194,10 @@ export default function ProfilePage() {
           <TabsTrigger value="notifications" className="gap-2">
             <Bell className="h-4 w-4" />
             Notifications
+          </TabsTrigger>
+          <TabsTrigger value="linked" className="gap-2">
+            <Link2 className="h-4 w-4" />
+            Linked Accounts
           </TabsTrigger>
         </TabsList>
 
@@ -413,6 +471,85 @@ export default function ProfilePage() {
               </div>
 
               <Button>Save Preferences</Button>
+            </CardContent>
+          </Card>
+        </TabsContent>
+
+        {/* Linked Accounts */}
+        <TabsContent value="linked">
+          <Card>
+            <CardHeader>
+              <CardTitle>Linked Accounts</CardTitle>
+              <CardDescription>
+                Manage your connected social accounts for easier sign-in
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-6">
+              {loadingAccounts ? (
+                <div className="flex items-center justify-center py-8">
+                  <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
+                </div>
+              ) : (
+                <>
+                  {/* Google Account */}
+                  <div className="flex items-center justify-between p-4 border rounded-lg">
+                    <div className="flex items-center gap-4">
+                      <div className="h-10 w-10 rounded-full bg-white flex items-center justify-center border">
+                        <img src="/images/icons/google.png" alt="Google" className="h-6 w-6" />
+                      </div>
+                      <div>
+                        <p className="font-medium">Google</p>
+                        {socialAccounts.find((acc) => acc.provider === "google") ? (
+                          <p className="text-sm text-muted-foreground">
+                            {socialAccounts.find((acc) => acc.provider === "google")?.email}
+                          </p>
+                        ) : (
+                          <p className="text-sm text-muted-foreground">Not connected</p>
+                        )}
+                      </div>
+                    </div>
+                    {socialAccounts.find((acc) => acc.provider === "google") ? (
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => handleUnlinkAccount("google")}
+                        disabled={unlinkingProvider === "google"}
+                      >
+                        {unlinkingProvider === "google" ? (
+                          <Loader2 className="h-4 w-4 animate-spin" />
+                        ) : (
+                          <>
+                            <Unlink className="h-4 w-4 mr-2" />
+                            Unlink
+                          </>
+                        )}
+                      </Button>
+                    ) : (
+                      <Button variant="outline" size="sm" onClick={handleLinkGoogle}>
+                        <Link2 className="h-4 w-4 mr-2" />
+                        Link
+                      </Button>
+                    )}
+                  </div>
+
+                  {socialAccounts.length === 0 && (
+                    <div className="rounded-lg bg-muted p-4 text-sm text-muted-foreground">
+                      <p>No social accounts are currently linked to your profile.</p>
+                      <p className="mt-2">Link an account for faster and easier sign-in options.</p>
+                    </div>
+                  )}
+
+                  {user?.auth_provider === "google" && !user?.password_hash && (
+                    <div className="rounded-lg bg-amber-50 border border-amber-200 p-4 text-sm text-amber-800">
+                      <p className="font-medium">Set a password before unlinking</p>
+                      <p className="mt-1">
+                        You signed up with Google and haven&apos;t set a password yet. 
+                        Set a password in the Security tab before unlinking your Google account.
+                      </p>
+                    </div>
+                  )}
+                </>
+              )}
             </CardContent>
           </Card>
         </TabsContent>

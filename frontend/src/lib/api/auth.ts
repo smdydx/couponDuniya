@@ -98,4 +98,22 @@ export const authAPI = {
   verifyEmail: async (token: string): Promise<void> => {
     await apiClient.post('/auth/verify-email', { token });
   },
+
+  sendVerificationEmail: async (): Promise<void> => {
+    await apiClient.post('/auth/send-verification-email');
+  },
+
+  setPassword: async (password: string): Promise<void> => {
+    await apiClient.post('/auth/set-password', { new_password: password });
+  },
+
+  getSocialAccounts: async (): Promise<{ provider: string; email: string; linked_at: string }[]> => {
+    const response = await apiClient.get('/auth/social/accounts');
+    const data = response.data?.data ?? response.data;
+    return data.accounts || [];
+  },
+
+  unlinkSocialAccount: async (provider: string): Promise<void> => {
+    await apiClient.delete(`/auth/social/unlink/${provider}`);
+  },
 };

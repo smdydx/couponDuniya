@@ -78,6 +78,8 @@ export const ROUTES = {
   forgotPassword: '/forgot-password',
   resetPassword: '/reset-password',
   verifyOtp: '/verify-otp',
+  verifyEmail: '/verify-email',
+  setPassword: '/set-password',
   merchants: '/merchants',
   merchantDetail: (slug: string) => `/merchants/${slug}`,
   coupons: '/coupons',
