@@ -59,7 +59,7 @@ function VerifyEmailForm() {
     if (status === "success") {
       const timer = setTimeout(() => {
         router.replace(ROUTES.login);
-      }, 1500);
+      }, 5000);
       return () => clearTimeout(timer);
     }
   }, [status, router]);
@@ -84,10 +84,10 @@ function VerifyEmailForm() {
       setStatus("success");
       setMessage("Your email has been verified successfully!");
       
-      // Redirect to login after 2 seconds
+      // Redirect to login after 5 seconds
       setTimeout(() => {
         router.push(ROUTES.login);
-      }, 2000);
+      }, 5000);
     } catch (err: any) {
       setStatus("error");
       const errorMessage = err?.response?.data?.detail || err?.message || "Failed to verify email. The link may have expired.";
@@ -105,7 +105,7 @@ function VerifyEmailForm() {
       setTimer(0);
       setTimeout(() => {
         router.push(ROUTES.login);
-      }, 1500);
+      }, 5000);
     },
   });
 
@@ -317,7 +317,7 @@ function VerifyEmailForm() {
       <CardContent className="px-6 pb-6">
         {status === "success" && (
           <>
-            <p className="text-sm text-gray-600 mb-4">Redirecting to login in 1 second...</p>
+            <p className="text-sm text-gray-600 mb-4">Redirecting to login in 5 seconds...</p>
             <Button 
               onClick={() => router.replace(ROUTES.login)} 
               className="w-full h-12 bg-gradient-to-r from-green-500 to-emerald-500 hover:from-green-600 hover:to-emerald-600"

@@ -85,7 +85,7 @@ def get_homepage_data(
         )
         exclusive_offers = db.scalars(exclusive_offers_stmt).all()
 
-        # Fetch featured products (gift cards) - Get products with at least one available variant
+        # Fetch featured products (gift cards) - Get products with at least one available variant AND stock > 0
         from ...models import ProductVariant
 
         products_stmt = (
@@ -96,6 +96,7 @@ def get_homepage_data(
                 and_(
                     Product.is_active == True,
                     ProductVariant.is_available == True,
+                    ProductVariant.stock > 0,  # Filter out of stock products
                     or_(
                         Product.is_bestseller == True,
                         Product.is_featured == True

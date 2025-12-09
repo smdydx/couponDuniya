@@ -38,6 +38,7 @@ function ProfileContent() {
   const [unlinkingProvider, setUnlinkingProvider] = useState<string | null>(null);
   const [saveError, setSaveError] = useState<string | null>(null);
   const [saveSuccess, setSaveSuccess] = useState(false);
+  const [passwordSuccess, setPasswordSuccess] = useState(false);
 
   type ProfileForm = {
     first_name: string;
@@ -103,6 +104,7 @@ function ProfileContent() {
 
   const handleSetPassword = async () => {
     setPasswordError("");
+    setPasswordSuccess(false);
 
     if (newPassword.length < 8) {
       setPasswordError("Password must be at least 8 characters");
@@ -121,11 +123,13 @@ function ProfileContent() {
       });
 
       if (response.data.success) {
+        setPasswordSuccess(true);
         toast.success("Password set successfully! You can now login with email and password.");
         setNewPassword("");
         setConfirmPassword("");
         // Update user state to reflect password is set
         updateUser({ ...user, password_hash: true });
+        setTimeout(() => setPasswordSuccess(false), 5000);
       }
     } catch (error: any) {
       setPasswordError(error.response?.data?.detail || "Failed to set password");
@@ -315,7 +319,19 @@ function ProfileContent() {
                     </>
                   )}
                 </Button>
-                {saveError && <p className="text-sm text-destructive">{saveError}</p>}
+                {saveError && (
+                  <div className="rounded-lg bg-red-50 border border-red-200 p-3 text-sm text-red-700">
+                    {saveError}
+                  </div>
+                )}
+                {saveSuccess && (
+                  <div className="rounded-lg bg-green-50 border border-green-200 p-3 text-sm text-green-700 flex items-center gap-2">
+                    <svg className="h-5 w-5 text-green-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                    </svg>
+                    Profile updated successfully!
+                  </div>
+                )}
               </form>
             </CardContent>
           </Card>
@@ -386,8 +402,17 @@ function ProfileContent() {
                   </div>
 
                   {passwordError && (
-                    <div className="rounded-lg bg-destructive/10 p-3 text-sm text-destructive">
+                    <div className="rounded-lg bg-red-50 border border-red-200 p-3 text-sm text-red-700">
                       {passwordError}
+                    </div>
+                  )}
+
+                  {passwordSuccess && (
+                    <div className="rounded-lg bg-green-50 border border-green-200 p-3 text-sm text-green-700 flex items-center gap-2">
+                      <svg className="h-5 w-5 text-green-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                      </svg>
+                      Password set successfully! You can now login with email and password.
                     </div>
                   )}
 
