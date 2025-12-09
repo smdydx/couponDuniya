@@ -38,7 +38,7 @@ def search_all(
     offset: int = Query(0, ge=0),
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_user),
-    _: dict = Depends(rate_limit_dependency("search", limit=60, window_seconds=60))
+    _: dict = Depends(rate_limit_dependency("search", limit=50, window_seconds=60))
 ):
     """
     Universal search across merchants, offers, and products.

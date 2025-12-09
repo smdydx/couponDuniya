@@ -22,7 +22,7 @@ def list_products(
     search: str | None = None,
     sort_by: str | None = None,
     db: Session = Depends(get_db),
-    _: dict = Depends(rate_limit_dependency("products:list", limit=100, window=60)),
+    _: dict = Depends(rate_limit_dependency("products:list", limit=100, window_seconds=60)),
     current_user: User = Depends(get_current_user),
 ):
     """List all active products with variants"""

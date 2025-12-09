@@ -29,7 +29,7 @@ def list_merchants(
     search: str | None = None,
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_user),
-    _: dict = Depends(rate_limit_dependency("merchants:list", limit=60, window_seconds=60))
+    _: dict = Depends(rate_limit_dependency("merchants:list", limit=100, window_seconds=60))
 ):
     """List all merchants with filtering and pagination"""
     cache_key = rk("cache", "merchants", hashlib.md5(json.dumps({"page": page, "limit": limit, "is_featured": is_featured, "search": search}, sort_keys=True).encode()).hexdigest())
