@@ -58,6 +58,8 @@ class User(Base):
     first_name: Mapped[str | None] = mapped_column(String(100), nullable=True)
     last_name: Mapped[str | None] = mapped_column(String(100), nullable=True)
     avatar_url: Mapped[str | None] = mapped_column(String(500), nullable=True)
+    date_of_birth: Mapped[str | None] = mapped_column(String(20), nullable=True)
+    gender: Mapped[str | None] = mapped_column(String(20), nullable=True)
     
     referral_code: Mapped[str] = mapped_column(String(20), unique=True, index=True, default=generate_referral_code)
     referred_by_id: Mapped[int | None] = mapped_column(nullable=True, index=True)

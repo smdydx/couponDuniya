@@ -1,4 +1,5 @@
-from fastapi import Depends, HTTPException, Header, Request
+from fastapi import Depends, HTTPException, Header, Request, status
+from fastapi.security import HTTPBearer, HTTPAuthCredentials
 from sqlalchemy.orm import Session
 from sqlalchemy import select
 from jose import jwt, JWTError
@@ -6,13 +7,68 @@ from .config import get_settings
 from .database import get_db
 from .redis_client import rk, cache_get, rate_limit
 from .models import User
+from .security import decode_token
 import os
 
 settings = get_settings()
+security = HTTPBearer()
 
-# Placeholder for oauth2_scheme as it's not provided in the original code.
-# In a real scenario, this would be imported or defined elsewhere.
-oauth2_scheme = None
+
+def get_current_user(
+    credentials: HTTPAuthCredentials = Depends(security),
+    db: Session = Depends(get_db)
+) -> User:
+    """Get current authenticated user from token"""
+    token = credentials.credentials
+    
+    try:
+        # Decode and validate token
+        payload = decode_token(token)
+        user_id = payload.get("sub")
+        
+        if not user_id:
+            raise HTTPException(
+                status_code=status.HTTP_401_UNAUTHORIZED,
+                detail="Invalid authentication token"
+            )
+        
+        # Get user from database
+        user = db.query(User).filter(User.id == int(user_id)).first()
+        
+        if not user:
+            raise HTTPException(
+                status_code=status.HTTP_401_UNAUTHORIZED,
+                detail="User not found"
+            )
+        
+        if not user.is_active:
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail="User account is inactive"
+            )
+        
+        return user
+        
+    except JWTError:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Invalid or expired token"
+        )
+    except ValueError:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Invalid token format"
+        )
+
+
+def require_admin(current_user: User = Depends(get_current_user)) -> User:
+    """Require admin role"""
+    if not current_user.is_admin and current_user.role != "admin":
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Admin access required"
+        )
+    return current_user
 
 def get_current_user(db: Session = Depends(get_db), authorization: str | None = Header(None)):
     """Extract user from JWT token"""

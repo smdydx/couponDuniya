@@ -17,6 +17,7 @@ import { toast } from "@/store/uiStore";
 import { KYC_STATUSES } from "@/lib/constants";
 import apiClient from "@/lib/api-client";
 import { authAPI } from "@/lib/api/auth";
+import { userAPI } from "@/lib/api/user";
 
 interface SocialAccount {
   provider: string;
@@ -34,6 +35,104 @@ export default function ProfilePage() {
   const [socialAccounts, setSocialAccounts] = useState<SocialAccount[]>([]);
   const [loadingAccounts, setLoadingAccounts] = useState(false);
   const [unlinkingProvider, setUnlinkingProvider] = useState<string | null>(null);
+  const [saveError, setSaveError] = useState<string | null>(null);
+  const [saveSuccess, setSaveSuccess] = useState(false);
+
+  const {
+    register,
+    handleSubmit,
+    setValue,
+    formState: { errors, isDirty },
+  } = useForm({
+    defaultValues: {
+      first_name: user?.first_name || "",
+      last_name: user?.last_name || "",
+      email: user?.email || "",
+      mobile: user?.mobile || "",
+      date_of_birth: user?.date_of_birth || "",
+      gender: user?.gender || undefined,
+    },
+  });
+
+  useEffect(() => {
+    if (user) {
+      setValue("first_name", user.first_name || "");
+      setValue("last_name", user.last_name || "");
+      setValue("email", user.email || "");
+      setValue("mobile", user.mobile || "");
+      setValue("date_of_birth", user.date_of_birth || "");
+      setValue("gender", user.gender || "");
+    }
+  }, [user, setValue]);
+
+
+  type ProfileForm = {
+    first_name: string;
+    last_name: string;
+    email: string;
+    mobile: string;
+    date_of_birth?: string;
+    gender?: 'male' | 'female' | 'other';
+  };
+
+  const onSubmit = async (data: ProfileForm) => {
+    setIsSaving(true);
+    setSaveError(null);
+    setSaveSuccess(false);
+    try {
+      await userAPI.updateProfile({
+        first_name: data.first_name,
+        last_name: data.last_name,
+        mobile: data.mobile,
+        date_of_birth: data.date_of_birth,
+        gender: data.gender,
+      });
+      updateUser(data); // Update store with new data
+      setSaveSuccess(true);
+      toast.success("Profile updated successfully");
+      setTimeout(() => setSaveSuccess(false), 3000);
+    } catch (error: any) {
+      setSaveError(error?.response?.data?.detail || "Failed to update profile");
+      toast.error(error?.response?.data?.detail || "Failed to update profile");
+    } finally {
+      setIsSaving(false);
+    }
+  };
+
+  const handleSetPassword = async () => {
+    setPasswordError("");
+
+    if (newPassword.length < 8) {
+      setPasswordError("Password must be at least 8 characters");
+      return;
+    }
+
+    if (newPassword !== confirmPassword) {
+      setPasswordError("Passwords do not match");
+      return;
+    }
+
+    setIsSaving(true);
+    try {
+      const response = await apiClient.post('/auth/set-password', {
+        new_password: newPassword
+      });
+
+      if (response.data.success) {
+        toast.success("Password set successfully! You can now login with email and password.");
+        setNewPassword("");
+        setConfirmPassword("");
+        // Update user state to reflect password is set
+        updateUser({ ...user, password_hash: true });
+      }
+    } catch (error: any) {
+      setPasswordError(error.response?.data?.detail || "Failed to set password");
+    } finally {
+      setIsSaving(false);
+    }
+  };
+
+  const kycStatus = KYC_STATUSES[user?.kyc_status || "pending"];
 
   useEffect(() => {
     if (activeTab === "linked") {
@@ -74,84 +173,10 @@ export default function ProfilePage() {
     const responseType = "id_token token";
     const nonce = Math.random().toString(36).substring(7);
     const state = "link_account";
-    
+
     const authUrl = `https://accounts.google.com/o/oauth2/v2/auth?client_id=${clientId}&redirect_uri=${redirectUri}&response_type=${responseType}&scope=${scope}&nonce=${nonce}&state=${state}`;
     window.location.href = authUrl;
   };
-
-  const {
-    register,
-    handleSubmit,
-    setValue,
-    formState: { errors, isDirty },
-  } = useForm({
-    defaultValues: {
-      first_name: user?.first_name || "",
-      last_name: user?.last_name || "",
-      email: user?.email || "",
-      mobile: user?.mobile || "",
-      date_of_birth: user?.date_of_birth || "",
-      gender: user?.gender || undefined,
-    },
-  });
-
-  type ProfileForm = {
-    first_name: string;
-    last_name: string;
-    email: string;
-    mobile: string;
-    date_of_birth?: string;
-    gender?: 'male' | 'female' | 'other';
-  };
-
-  const onSubmit = async (data: ProfileForm) => {
-    setIsSaving(true);
-    try {
-      // Mock API call
-      await new Promise((resolve) => setTimeout(resolve, 1000));
-      updateUser(data);
-      toast.success("Profile updated successfully");
-    } catch (error) {
-      toast.error("Failed to update profile");
-    } finally {
-      setIsSaving(false);
-    }
-  };
-
-  const handleSetPassword = async () => {
-    setPasswordError("");
-    
-    if (newPassword.length < 8) {
-      setPasswordError("Password must be at least 8 characters");
-      return;
-    }
-    
-    if (newPassword !== confirmPassword) {
-      setPasswordError("Passwords do not match");
-      return;
-    }
-    
-    setIsSaving(true);
-    try {
-      const response = await apiClient.post('/auth/set-password', {
-        new_password: newPassword
-      });
-      
-      if (response.data.success) {
-        toast.success("Password set successfully! You can now login with email and password.");
-        setNewPassword("");
-        setConfirmPassword("");
-        // Update user state to reflect password is set
-        updateUser({ ...user, password_hash: true });
-      }
-    } catch (error: any) {
-      setPasswordError(error.response?.data?.detail || "Failed to set password");
-    } finally {
-      setIsSaving(false);
-    }
-  };
-
-  const kycStatus = KYC_STATUSES[user?.kyc_status || "pending"];
 
   return (
     <div className="container py-6">
@@ -160,9 +185,9 @@ export default function ProfilePage() {
       <div className="mb-6 flex items-center gap-4">
         <div className="relative h-20 w-20 rounded-full overflow-hidden bg-muted">
           {user?.avatar_url ? (
-            <img 
-              src={user.avatar_url} 
-              alt={user.full_name || "Profile"} 
+            <img
+              src={user.avatar_url}
+              alt={user.full_name || "Profile"}
               className="h-full w-full object-cover"
             />
           ) : (
@@ -288,6 +313,7 @@ export default function ProfilePage() {
                     </>
                   )}
                 </Button>
+                {saveError && <p className="text-sm text-destructive">{saveError}</p>}
               </form>
             </CardContent>
           </Card>
@@ -340,8 +366,8 @@ export default function ProfilePage() {
           <Card>
             <CardHeader>
               <CardTitle>
-                {user?.auth_provider === 'google' && !user?.password_hash 
-                  ? 'Set Password' 
+                {user?.auth_provider === 'google' && !user?.password_hash
+                  ? 'Set Password'
                   : 'Change Password'}
               </CardTitle>
               <CardDescription>
@@ -356,18 +382,18 @@ export default function ProfilePage() {
                   <div className="rounded-lg bg-blue-50 p-4 text-sm text-blue-800 mb-4">
                     You signed up with Google. Setting a password will allow you to log in using your email and password as well.
                   </div>
-                  
+
                   {passwordError && (
                     <div className="rounded-lg bg-destructive/10 p-3 text-sm text-destructive">
                       {passwordError}
                     </div>
                   )}
-                  
+
                   <div className="space-y-2">
                     <Label htmlFor="new_password">New Password</Label>
-                    <Input 
-                      id="new_password" 
-                      type="password" 
+                    <Input
+                      id="new_password"
+                      type="password"
                       placeholder="Enter new password (min 8 characters)"
                       value={newPassword}
                       onChange={(e) => setNewPassword(e.target.value)}
@@ -376,9 +402,9 @@ export default function ProfilePage() {
 
                   <div className="space-y-2">
                     <Label htmlFor="confirm_new_password">Confirm New Password</Label>
-                    <Input 
-                      id="confirm_new_password" 
-                      type="password" 
+                    <Input
+                      id="confirm_new_password"
+                      type="password"
                       placeholder="Confirm your password"
                       value={confirmPassword}
                       onChange={(e) => setConfirmPassword(e.target.value)}
@@ -543,7 +569,7 @@ export default function ProfilePage() {
                     <div className="rounded-lg bg-amber-50 border border-amber-200 p-4 text-sm text-amber-800">
                       <p className="font-medium">Set a password before unlinking</p>
                       <p className="mt-1">
-                        You signed up with Google and haven&apos;t set a password yet. 
+                        You signed up with Google and haven&apos;t set a password yet.
                         Set a password in the Security tab before unlinking your Google account.
                       </p>
                     </div>
