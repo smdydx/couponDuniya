@@ -45,14 +45,18 @@ if settings.APP_ENV == 'production':
             logging.error(f"Production configuration error: {error}")
         raise RuntimeError("Production configuration validation failed")
 
-# Create FastAPI app
+# Create FastAPI app with security scheme for Swagger UI lock icons
 app = FastAPI(
     title=settings.APP_NAME,
     version="1.0.0",
-    description="Production-grade API for coupon commerce platform. Most endpoints require authentication via Bearer token.",
+    description="Production-grade API for coupon commerce platform. All endpoints require Bearer token authentication unless explicitly marked as public.",
     docs_url="/api/docs" if settings.DEBUG else None,
     redoc_url="/api/redoc" if settings.DEBUG else None,
     openapi_url="/api/openapi.json" if settings.DEBUG else None,
+    swagger_ui_parameters={
+        "persistAuthorization": True,
+        "displayRequestDuration": True,
+    },
 )
 # Ensure tables exist in development (no-op if already migrated)
 try:
@@ -309,15 +313,32 @@ def custom_openapi():
         return app.openapi_schema
     openapi_schema = get_openapi(
         title=settings.APP_NAME,
-        version="0.1.0",
-        description="Hybrid coupon + commerce API",
+        version="1.0.0",
+        description="Secured API for coupon commerce platform. All endpoints require Bearer token authentication (lock icon indicates protected endpoints).",
         routes=app.routes,
     )
+    
+    # Add security scheme for Bearer token authentication (shows lock icon in Swagger)
+    openapi_schema["components"] = openapi_schema.get("components", {})
+    openapi_schema["components"]["securitySchemes"] = {
+        "BearerAuth": {
+            "type": "http",
+            "scheme": "bearer",
+            "bearerFormat": "JWT",
+            "description": "Enter your JWT access token to authenticate. Get token from /api/v1/auth/login endpoint."
+        }
+    }
+    
+    # Apply security globally to all endpoints (shows lock icon on all routes)
+    openapi_schema["security"] = [{"BearerAuth": []}]
+    
+    # Group tags for organized documentation
     grouped_tags = []
     for group_name, tag_list in GROUP_ORDER:
         for tag in tag_list:
             grouped_tags.append({"name": tag, "x-group": group_name})
     openapi_schema["tags"] = grouped_tags
+    
     app.openapi_schema = openapi_schema
     return app.openapi_schema
 
