@@ -132,14 +132,17 @@ async def security_headers_middleware(request: Request, call_next):
     response.headers.setdefault("X-XSS-Protection",
                                 "0")  # Modern browsers ignore; CSP recommended
 
-    # Relaxed CSP for /docs endpoint to allow Swagger UI CDN resources
-    if request.url.path == "/docs":
+    # Relaxed CSP for /docs and /api/openapi.json endpoints to allow Swagger UI
+    if request.url.path in ["/docs", "/api/docs", "/api/openapi.json", "/openapi.json"]:
         response.headers.setdefault(
-            "Content-Security-Policy", "default-src 'self'; "
-            "img-src 'self' data: https://fastapi.tiangolo.com; "
-            "script-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net; "
+            "Content-Security-Policy", 
+            "default-src 'self'; "
+            "img-src 'self' data: https://fastapi.tiangolo.com https://cdn.jsdelivr.net; "
+            "script-src 'self' 'unsafe-inline' 'unsafe-eval' https://cdn.jsdelivr.net; "
             "style-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net; "
-            "font-src 'self' https://cdn.jsdelivr.net")
+            "font-src 'self' https://cdn.jsdelivr.net; "
+            "connect-src 'self'"
+        )
     else:
         # Minimal CSP for other endpoints
         response.headers.setdefault(
