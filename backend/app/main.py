@@ -38,7 +38,8 @@ from .metrics import observe_request
 settings = get_settings()
 
 # Validate production settings
-if settings.APP_ENV == 'production':
+app_env = getattr(settings, 'APP_ENV', getattr(settings, 'ENVIRONMENT', 'development'))
+if app_env == 'production':
     validation_errors = validate_production_settings(settings)
     if validation_errors:
         for error in validation_errors:
@@ -72,22 +73,22 @@ except Exception:
 @app.on_event("startup")
 async def startup_health_check():
     """Verify critical services on startup"""
-    try:
+    app_env = getattr(settings, 'APP_ENV', getattr(settings, 'ENVIRONMENT', 'development'))
+    if app_env == 'production':
         # Test database connection
         if engine is not None:
             with engine.connect() as conn:
                 conn.execute("SELECT 1")
                 log.info("✅ Database connection verified")
-        
+
         # Test Redis connection
         redis_client.ping()
         log.info("✅ Redis connection verified")
-        
-        log.info(f"🚀 {settings.APP_NAME} started successfully in {settings.APP_ENV} mode")
-    except Exception as e:
-        log.error(f"❌ Startup health check failed: {e}")
-        if settings.APP_ENV == 'production':
-            raise RuntimeError("Critical services unavailable")
+
+        log.info(f"🚀 {settings.APP_NAME} started successfully in {app_env} mode")
+    else:
+        log.info(f"🚀 {settings.APP_NAME} started in {app_env} mode (development)")
+
 
 # CORS - Allow development and production origins
 app.add_middleware(
@@ -338,7 +339,7 @@ def custom_openapi():
         description="Secured API for coupon commerce platform. All endpoints require Bearer token authentication (lock icon indicates protected endpoints).",
         routes=app.routes,
     )
-    
+
     # Add security scheme for Bearer token authentication (shows lock icon in Swagger)
     openapi_schema["components"] = openapi_schema.get("components", {})
     openapi_schema["components"]["securitySchemes"] = {
@@ -349,17 +350,17 @@ def custom_openapi():
             "description": "Enter your JWT access token to authenticate. Get token from /api/v1/auth/login endpoint."
         }
     }
-    
+
     # Apply security globally to all endpoints (shows lock icon on all routes)
     openapi_schema["security"] = [{"BearerAuth": []}]
-    
+
     # Group tags for organized documentation
     grouped_tags = []
     for group_name, tag_list in GROUP_ORDER:
         for tag in tag_list:
             grouped_tags.append({"name": tag, "x-group": group_name})
     openapi_schema["tags"] = grouped_tags
-    
+
     app.openapi_schema = openapi_schema
     return app.openapi_schema
 

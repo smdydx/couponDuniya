@@ -228,7 +228,7 @@ export default function HomePage() {
   const { data: homepageData, isLoading, error, refetch } = useQuery({
     queryKey: ["homepage"],
     queryFn: async () => {
-      const response = await apiClient.get("/api/v1/homepage/", {
+      const response = await apiClient.get("/api/v1/homepage", {
         params: {
           limit_merchants: 12,
           limit_featured_offers: 8,
