@@ -35,16 +35,9 @@ interface CheckoutForm {
 function CheckoutContent() {
   const router = useRouter();
   const { items, promoCode, promoDiscount, walletAmountToUse, clearCart } = useCartStore();
-  const { user, isAuthenticated, accessToken } = useAuthStore();
+  const { user } = useAuthStore();
   const [isProcessing, setIsProcessing] = useState(false);
   const [scriptLoaded, setScriptLoaded] = useState(false);
-
-  // Check authentication
-  useEffect(() => {
-    if (!isAuthenticated || !accessToken) {
-      router.replace(`${ROUTES.login}?redirect=${encodeURIComponent(ROUTES.checkout)}`);
-    }
-  }, [isAuthenticated, accessToken, router]);
 
   const subtotal = items.reduce((sum, item) => sum + item.sellingPrice * item.quantity, 0);
   const total = Math.max(0, subtotal - promoDiscount - walletAmountToUse);

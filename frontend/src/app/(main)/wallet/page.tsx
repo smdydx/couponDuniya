@@ -117,17 +117,8 @@ const mockWithdrawals: WithdrawalRequest[] = [
 ];
 
 export default function WalletPage() {
-  const router = useRouter();
-  const { isAuthenticated, accessToken } = useAuthStore();
   const [isWithdrawOpen, setIsWithdrawOpen] = useState(false);
   const [activeTab, setActiveTab] = useState("balance");
-
-  // Check authentication
-  useEffect(() => {
-    if (!isAuthenticated || !accessToken) {
-      router.replace(`${ROUTES.login}?redirect=${encodeURIComponent(ROUTES.wallet)}`);
-    }
-  }, [isAuthenticated, accessToken, router]);
 
   // Mock wallet data
   const walletBalance = 500;

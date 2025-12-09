@@ -67,16 +67,7 @@ const mockOrders: Order[] = [
 ];
 
 export default function OrdersPage() {
-  const router = useRouter();
-  const { isAuthenticated, accessToken } = useAuthStore();
   const [activeTab, setActiveTab] = useState("all");
-
-  // Check authentication
-  useEffect(() => {
-    if (!isAuthenticated || !accessToken) {
-      router.replace(`${ROUTES.login}?redirect=${encodeURIComponent(ROUTES.orders)}`);
-    }
-  }, [isAuthenticated, accessToken, router]);
 
   const filteredOrders =
     activeTab === "all"

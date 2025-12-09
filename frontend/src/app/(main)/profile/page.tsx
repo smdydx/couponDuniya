@@ -28,8 +28,7 @@ interface SocialAccount {
 }
 
 function ProfileContent() {
-  const router = useRouter(); // Added useRouter
-  const { user, updateUser, isAuthenticated, accessToken } = useAuthStore(); // Added isAuthenticated and accessToken
+  const { user, updateUser } = useAuthStore();
   const [activeTab, setActiveTab] = useState("personal");
   const [isSaving, setIsSaving] = useState(false);
   const [passwordError, setPasswordError] = useState("");
@@ -41,13 +40,6 @@ function ProfileContent() {
   const [saveError, setSaveError] = useState<string | null>(null);
   const [saveSuccess, setSaveSuccess] = useState(false);
   const [passwordSuccess, setPasswordSuccess] = useState(false);
-
-  // Check authentication
-  useEffect(() => {
-    if (!isAuthenticated || !accessToken) {
-      router.replace("/login"); // Changed ROUTES.login to "/login"
-    }
-  }, [isAuthenticated, accessToken, router]);
 
   type ProfileForm = {
     first_name: string;
