@@ -1,13 +1,13 @@
-from fastapi import APIRouter, Depends, HTTPException, Query
+from fastapi import APIRouter, Depends, Query, HTTPException
 from sqlalchemy.orm import Session
-from sqlalchemy import select, or_, func, desc
+from sqlalchemy import select, func, or_, and_
 from typing import Optional
+
 from ...database import get_db
 from ...models.product import Product
 from ...models.product_variant import ProductVariant
 from ...models.merchant import Merchant
-from ...dependencies import rate_limit_dependency, get_current_user
-from ...models.user import User
+from ...dependencies import rate_limit_dependency, get_current_user, require_admin
 
 router = APIRouter(prefix="/products", tags=["Products"])
 
@@ -22,7 +22,7 @@ def list_products(
     search: str | None = None,
     sort_by: str | None = None,
     db: Session = Depends(get_db),
-    _: dict = Depends(rate_limit_dependency("products:list", limit=100, window_seconds=60)),
+    _: dict = Depends(rate_limit_dependency("products:list", limit=100, window=60)),
     current_user: User = Depends(get_current_user),
 ):
     """List all active products with variants"""

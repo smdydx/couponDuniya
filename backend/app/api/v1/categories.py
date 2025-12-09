@@ -7,7 +7,7 @@ from pydantic import BaseModel, Field
 from ...database import get_db
 from ...models import Category, User
 from ...redis_client import cache_invalidate_prefix, rk
-from ...dependencies import rate_limit_dependency, get_current_user
+from ...dependencies import rate_limit_dependency, get_current_user, require_admin
 
 
 router = APIRouter(prefix="/categories", tags=["Categories"])
@@ -102,7 +102,7 @@ def list_categories(
 def create_category(
     payload: CategoryCreate,
     db: Session = Depends(get_db),
-    current_user: User = Depends(get_current_user)
+    current_user: User = Depends(require_admin)
 ):
     """Create a new category"""
     existing = db.scalar(select(Category).where(Category.slug == payload.slug))
@@ -138,7 +138,7 @@ def update_category(
     id: int,
     payload: CategoryUpdate,
     db: Session = Depends(get_db),
-    current_user: User = Depends(get_current_user)
+    current_user: User = Depends(require_admin)
 ):
     """Update a category"""
     category = db.scalar(select(Category).where(Category.id == id))
@@ -183,7 +183,7 @@ def update_category(
 def delete_category(
     id: int,
     db: Session = Depends(get_db),
-    current_user: User = Depends(get_current_user)
+    current_user: User = Depends(require_admin)
 ):
     """Soft delete a category"""
     category = db.scalar(select(Category).where(Category.id == id))

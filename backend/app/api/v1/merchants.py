@@ -1,10 +1,12 @@
 from fastapi import APIRouter, Depends, HTTPException, Query
 from sqlalchemy.orm import Session
-from sqlalchemy import select, func
+from sqlalchemy import select, func, or_
+from typing import Optional
+
 from ...database import get_db
 from ...models import Merchant, Offer, User
 from ...redis_client import cache_get, cache_set, cache_invalidate, cache_invalidate_prefix, rk
-from ...dependencies import rate_limit_dependency, get_current_user
+from ...dependencies import rate_limit_dependency, get_current_user, require_admin
 from pydantic import BaseModel
 from math import ceil
 import json, hashlib
@@ -172,3 +174,85 @@ def get_merchant(slug: str, db: Session = Depends(get_db), current_user: User = 
     }
     cache_set(key, data, 3600)
     return {"success": True, "data": data, "cache": False}
+
+
+# Merchant modification endpoints - protected by require_admin
+@router.post("/")
+def create_merchant(
+    merchant_data: dict,
+    db: Session = Depends(get_db),
+    _: User = Depends(require_admin)
+):
+    """Create a new merchant"""
+    # Basic validation - you might want to use Pydantic models for more robust validation
+    if not all(k in merchant_data for k in ("name", "slug", "description", "logo_url")):
+        raise HTTPException(status_code=400, detail="Missing required fields")
+
+    if db.scalar(select(Merchant).where(Merchant.slug == merchant_data["slug"])):
+        raise HTTPException(status_code=400, detail="Merchant slug already exists")
+
+    new_merchant = Merchant(**merchant_data)
+    db.add(new_merchant)
+    db.commit()
+    db.refresh(new_merchant)
+
+    # Invalidate cache for merchant list and featured merchants
+    cache_invalidate_prefix(rk("cache", "merchants"))
+    cache_invalidate(rk("cache", "merchants", "featured"))
+
+
+    return {"success": True, "data": new_merchant}
+
+@router.put("/{merchant_id}")
+def update_merchant(
+    merchant_id: int,
+    merchant_data: dict,
+    db: Session = Depends(get_db),
+    _: User = Depends(require_admin)
+):
+    """Update an existing merchant"""
+    merchant = db.get(Merchant, merchant_id)
+    if not merchant:
+        raise HTTPException(status_code=404, detail="Merchant not found")
+
+    # Check if slug is being changed and if the new slug already exists
+    if "slug" in merchant_data and merchant_data["slug"] != merchant.slug:
+        if db.scalar(select(Merchant).where(Merchant.slug == merchant_data["slug"])):
+            raise HTTPException(status_code=400, detail="Merchant slug already exists")
+
+    for key, value in merchant_data.items():
+        setattr(merchant, key, value)
+
+    db.commit()
+    db.refresh(merchant)
+
+    # Invalidate cache
+    cache_invalidate(rk("cache", "merchant", merchant.slug))
+    cache_invalidate_prefix(rk("cache", "merchants"))
+    cache_invalidate(rk("cache", "merchants", "featured"))
+
+
+    return {"success": True, "data": merchant}
+
+@router.delete("/{merchant_id}")
+def delete_merchant(
+    merchant_id: int,
+    db: Session = Depends(get_db),
+    _: User = Depends(require_admin)
+):
+    """Delete a merchant (soft delete)"""
+    merchant = db.get(Merchant, merchant_id)
+    if not merchant:
+        raise HTTPException(status_code=404, detail="Merchant not found")
+
+    merchant.is_active = False
+    db.commit()
+    db.refresh(merchant)
+
+    # Invalidate cache
+    cache_invalidate(rk("cache", "merchant", merchant.slug))
+    cache_invalidate_prefix(rk("cache", "merchants"))
+    cache_invalidate(rk("cache", "merchants", "featured"))
+
+
+    return {"success": True, "message": "Merchant deleted successfully"}
