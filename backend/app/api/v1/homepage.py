@@ -23,7 +23,7 @@ def get_homepage_data(
     db: Session = Depends(get_db)
 ):
     """
-    Get data for the homepage:
+    Get data for the homepage with graceful empty state handling:
     - Hero banners/slider
     - Promo banners (promotional offers slider)
     - Featured merchants
@@ -33,11 +33,11 @@ def get_homepage_data(
     """
 
     try:
-        # Try cache first
+        # Try cache first (shorter TTL for dynamic content)
         cache_key = rk("cache", "homepage", f"b{limit_banners}_m{limit_merchants}_fo{limit_featured_offers}_eo{limit_exclusive_offers}_p{limit_products}_pb{limit_promo_banners}")
         cached = cache_get(cache_key)
         if cached:
-            return {"success": True, "data": cached, "cached": True}
+            return {"success": True, "data": cached, "cached": True, "empty": False}
 
         # Fetch active banners (hero slider)
         banners_stmt = (
@@ -109,34 +109,65 @@ def get_homepage_data(
         )
         featured_products = db.scalars(products_stmt).unique().all()
 
+        # Build response with proper validation
         result = {
-            "banners": [{"id": b.id, "title": b.title, "image_url": b.image_url, "link_url": b.link_url, "order_index": b.order_index} for b in banners],
+            "banners": [
+                {
+                    "id": b.id,
+                    "title": b.title or "",
+                    "image_url": b.image_url or "",
+                    "link_url": b.link_url or "",
+                    "order_index": b.order_index or 0
+                } for b in banners
+            ],
             "promo_banners": [
                 {
                     "id": b.id,
-                    "title": b.title,
-                    "brand_name": b.brand_name,
-                    "badge_text": b.badge_text,
-                    "badge_color": b.badge_color,
-                    "headline": b.headline,
-                    "description": b.description,
-                    "code": b.code,
-                    "link_url": b.link_url,
-                    "metadata": b.style_metadata,
-                    "order_index": b.order_index
+                    "title": b.title or "",
+                    "brand_name": b.brand_name or "",
+                    "badge_text": b.badge_text or "",
+                    "badge_color": b.badge_color or "#7c3aed",
+                    "headline": b.headline or "",
+                    "description": b.description or "",
+                    "code": b.code or "",
+                    "link_url": b.link_url or "",
+                    "metadata": b.style_metadata or {},
+                    "order_index": b.order_index or 0
                 }
                 for b in promo_banners
             ],
-            "featured_merchants": [MerchantRead.model_validate(m) for m in featured_merchants],
-            "featured_offers": [OfferRead.model_validate(o) for o in featured_offers],
-            "exclusive_offers": [OfferRead.model_validate(o) for o in exclusive_offers],
-            "featured_products": [ProductRead.model_validate(p) for p in featured_products],
+            "featured_merchants": [MerchantRead.model_validate(m).model_dump() for m in featured_merchants],
+            "featured_offers": [OfferRead.model_validate(o).model_dump() for o in featured_offers],
+            "exclusive_offers": [OfferRead.model_validate(o).model_dump() for o in exclusive_offers],
+            "featured_products": [ProductRead.model_validate(p).model_dump() for p in featured_products],
+            "stats": {
+                "total_merchants": len(featured_merchants),
+                "total_offers": len(featured_offers) + len(exclusive_offers),
+                "total_products": len(featured_products),
+                "total_banners": len(banners) + len(promo_banners)
+            }
         }
 
-        # Cache for 5 minutes
-        cache_set(cache_key, result, ttl=300)
+        # Detect if homepage is empty
+        is_empty = all([
+            len(result["banners"]) == 0,
+            len(result["promo_banners"]) == 0,
+            len(result["featured_merchants"]) == 0,
+            len(result["featured_offers"]) == 0,
+            len(result["exclusive_offers"]) == 0,
+            len(result["featured_products"]) == 0
+        ])
 
-        return {"success": True, "data": result, "cached": False}
+        # Cache for 2 minutes (shorter for fresh content)
+        cache_set(cache_key, result, ttl=120)
+
+        return {
+            "success": True,
+            "data": result,
+            "cached": False,
+            "empty": is_empty,
+            "message": "Run seed_homepage_data.py to populate data" if is_empty else "Homepage loaded successfully"
+        }
 
     except HTTPException as e:
         log.error(f"Homepage API HTTP error: {e.detail}")

@@ -2,6 +2,7 @@
 
 import React, { useEffect, useState, useRef } from "react";
 import Link from "next/link";
+import { useRouter } from 'next/navigation'; // Import useRouter
 import {
   ArrowRight,
   TrendingUp,
@@ -23,6 +24,8 @@ import { OfferGrid } from "@/components/offer/OfferGrid";
 import { OfferCard } from "@/components/offer/OfferCard";
 import { ProductCard } from "@/components/product/ProductCard";
 import { ROUTES } from "@/lib/constants";
+import { useQuery } from '@tanstack/react-query'; // Assuming you are using React Query
+import apiClient from '@/lib/apiClient'; // Assuming you have an API client setup
 
 interface SectionHeaderProps {
   title: string;
@@ -218,59 +221,113 @@ function PromoSlider({ promoOffers }: { promoOffers: any[] }) {
 }
 
 export default function HomePage() {
-  const [data, setData] = useState<any>(null);
+  const router = useRouter(); // Initialize useRouter
   const [currentSlide, setCurrentSlide] = useState(0);
-  const [isLoading, setIsLoading] = useState(true);
+  // Removed useState for data, isLoading, and replaced with react-query hooks
 
-  useEffect(() => {
-    async function fetchData() {
-      setIsLoading(true);
-      try {
-        const API_URL =
-          process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000/api/v1";
-        const res = await fetch(
-          `${API_URL}/homepage/?limit_merchants=12&limit_featured_offers=8&limit_exclusive_offers=6&limit_products=12&limit_banners=5`,
-          {
-            method: "GET",
-            headers: {
-              "Content-Type": "application/json",
-            },
-          },
-        );
+  const { data: homepageData, isLoading, error, refetch } = useQuery({
+    queryKey: ["homepage"],
+    queryFn: async () => {
+      const response = await apiClient.get("/homepage/", {
+        params: {
+          limit_merchants: 12,
+          limit_featured_offers: 8,
+          limit_exclusive_offers: 6,
+          limit_products: 12,
+          limit_banners: 5,
+        },
+      });
+      console.log("Homepage data:", response.data);
 
-        if (res.ok) {
-          const json = await res.json();
-          console.log("Homepage data:", json);
-          setData(json.data || json || null);
-        } else {
-          console.error("Homepage API error:", res.status, res.statusText);
-          const errorText = await res.text();
-          console.error("Error response:", errorText);
-        }
-      } catch (error) {
-        console.error("Failed to fetch homepage data:", error);
-      } finally {
-        setIsLoading(false);
+      // Check if data is empty
+      if (response.data.empty) {
+        console.warn("⚠️ Homepage is empty. Run: python backend/scripts/seed_homepage_data.py");
       }
-    }
-    fetchData();
-  }, []);
+
+      return response.data.data;
+    },
+    staleTime: 2 * 60 * 1000, // 2 minutes
+    retry: 2,
+  });
+
+  if (error) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-purple-50 to-indigo-50">
+        <div className="text-center max-w-md mx-auto p-8">
+          <div className="w-16 h-16 bg-red-100 rounded-full flex items-center justify-center mx-auto mb-4">
+            <svg className="w-8 h-8 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+            </svg>
+          </div>
+          <h2 className="text-2xl font-bold text-gray-900 mb-2">Failed to Load Homepage</h2>
+          <p className="text-gray-600 mb-6">We couldn't load the homepage data. Please try again.</p>
+          <div className="flex gap-3 justify-center">
+            <Button onClick={() => refetch()} variant="default">
+              Retry
+            </Button>
+            <Button onClick={() => router.push("/merchants")} variant="outline">
+              Browse Merchants
+            </Button>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  // Check if homepage is completely empty
+  const isEmpty = homepageData && (
+    (!homepageData.featured_merchants || homepageData.featured_merchants.length === 0) &&
+    (!homepageData.featured_offers || homepageData.featured_offers.length === 0) &&
+    (!homepageData.exclusive_offers || homepageData.exclusive_offers.length === 0) &&
+    (!homepageData.featured_products || homepageData.featured_products.length === 0) &&
+    (!homepageData.banners || homepageData.banners.length === 0)
+  );
+
+  if (!isLoading && isEmpty) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-purple-50 to-indigo-50">
+        <div className="text-center max-w-2xl mx-auto p-8">
+          <div className="w-24 h-24 bg-purple-100 rounded-full flex items-center justify-center mx-auto mb-6">
+            <svg className="w-12 h-12 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4" />
+            </svg>
+          </div>
+          <h2 className="text-3xl font-bold text-gray-900 mb-3">Welcome to BIDUA Coupons!</h2>
+          <p className="text-gray-600 mb-2">We're setting up amazing deals for you.</p>
+          <p className="text-sm text-gray-500 mb-8">Our team is adding merchants, offers, and gift cards. Check back soon!</p>
+          <div className="flex gap-3 justify-center">
+            <Button onClick={() => router.push("/merchants")} variant="default">
+              Explore Merchants
+            </Button>
+            <Button onClick={() => router.push("/products")} variant="outline">
+              Browse Gift Cards
+            </Button>
+          </div>
+          <div className="mt-8 p-4 bg-yellow-50 border border-yellow-200 rounded-lg">
+            <p className="text-xs text-yellow-800">
+              <strong>Developers:</strong> Run <code className="bg-yellow-100 px-2 py-1 rounded">python backend/scripts/seed_homepage_data.py</code> to populate sample data
+            </p>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   // Auto-advance slider
   useEffect(() => {
-    if (!data?.banners || data.banners.length === 0) return;
+    if (!homepageData?.banners || homepageData.banners.length === 0) return;
     const timer = setInterval(() => {
-      setCurrentSlide((prev) => (prev + 1) % data.banners.length);
+      setCurrentSlide((prev) => (prev + 1) % homepageData.banners.length);
     }, 5000);
     return () => clearInterval(timer);
-  }, [data?.banners]);
+  }, [homepageData?.banners]);
 
-  const banners = data?.banners || [];
-  const promo_banners = data?.promo_banners || [];
-  const featured_merchants = data?.featured_merchants || [];
-  const featured_offers = data?.featured_offers || [];
-  const exclusive_offers = data?.exclusive_offers || [];
-  const featured_products = data?.featured_products || [];
+  const banners = homepageData?.banners || [];
+  const promo_banners = homepageData?.promo_banners || [];
+  const featured_merchants = homepageData?.featured_merchants || [];
+  const featured_offers = homepageData?.featured_offers || [];
+  const exclusive_offers = homepageData?.exclusive_offers || [];
+  const featured_products = homepageData?.featured_products || [];
 
   const nextSlide = () => {
     setCurrentSlide((prev) => (prev + 1) % banners.length);
