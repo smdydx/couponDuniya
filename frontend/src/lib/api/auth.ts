@@ -97,6 +97,10 @@ export const authAPI = {
     await apiClient.post('/auth/send-verification-email');
   },
 
+  resendVerificationEmail: async (email: string): Promise<void> => {
+    await apiClient.post('/auth/send-verification-email', { email });
+  },
+
   setPassword: async (password: string): Promise<void> => {
     await apiClient.post('/auth/set-password', { new_password: password });
   },

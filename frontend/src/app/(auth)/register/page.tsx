@@ -56,8 +56,9 @@ function RegisterForm() {
       // Call the API directly
       await authAPI.register(registerData);
       
-      // Redirect to verify email page
-      router.push(ROUTES.verifyEmail);
+      // Redirect to verify email page with email parameter for animated waiting page
+      const emailParam = encodeURIComponent(registerData.email || "");
+      router.push(`${ROUTES.verifyEmail}?email=${emailParam}`);
     } catch (err: any) {
       setError(err?.response?.data?.detail || err?.message || "Registration failed");
     } finally {
