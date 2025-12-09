@@ -64,22 +64,25 @@ try:
 except Exception:
     pass
 
-# CORS - Allow all origins for Replit development
+# CORS - Allow development and production origins
 app.add_middleware(
     CORSMiddleware,
     allow_origins=[
-        "*",
-        "https://b9df0ce0-80cb-4d8d-83a2-e12bcc6f831c-00-7l6kkbk0zswa.kirk.replit.dev",
         "http://localhost:5000",
         "http://localhost:3000",
         "http://127.0.0.1:5000",
         "http://127.0.0.1:3000",
-        "http://0.0.0.0:5000"
+        "http://127.0.0.1:8000",
+        "http://localhost:8000",
+        "http://0.0.0.0:5000",
+        "http://0.0.0.0:3000",
+        "https://b9df0ce0-80cb-4d8d-83a2-e12bcc6f831c-00-7l6kkbk0zswa.kirk.replit.dev",
     ],
-    allow_credentials=False,
+    allow_credentials=True,
     allow_methods=["*"],
-    allow_headers=["*"],
+    allow_headers=["*", "Authorization", "Content-Type"],
     expose_headers=["*"],
+    max_age=3600,
 )
 
 # Rate limiting middleware using Redis
