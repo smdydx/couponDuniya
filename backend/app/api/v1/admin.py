@@ -2,6 +2,7 @@ from fastapi import APIRouter, Header, HTTPException, Request, Depends, Query, F
 from sqlalchemy.orm import Session
 from sqlalchemy import select, func, desc, and_, or_
 from datetime import datetime, timedelta
+from decimal import Decimal
 from typing import Optional
 from math import ceil
 
@@ -1703,11 +1704,15 @@ def gift_card_statistics(
     total_value = db.scalar(
         select(func.coalesce(func.sum(GiftCard.initial_value), 0))
         .where(GiftCard.is_active == True)
-    ) or 0.0
+    ) or Decimal('0')
 
     redeemed_value = db.scalar(
         select(func.coalesce(func.sum(GiftCard.initial_value - GiftCard.remaining_value), 0))
-    ) or 0.0
+    ) or Decimal('0')
+
+    # Coerce to Decimal safely (handles Decimal, int, float, None)
+    total_value = Decimal(str(total_value))
+    redeemed_value = Decimal(str(redeemed_value))
 
     assigned_cards = db.scalar(
         select(func.count())

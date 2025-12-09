@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, Depends, HTTPException, Header
 from sqlalchemy.orm import Session
 from sqlalchemy import select, func, desc
 from typing import List
@@ -48,7 +48,7 @@ def list_categories(
     limit: int = 50,
     is_active: bool | None = None,
     db: Session = Depends(get_db),
-    current_user: User = Depends(get_current_user)
+    authorization: str | None = Header(None)
 ):
     """List all categories"""
     query = select(Category)
@@ -224,40 +224,3 @@ def get_category(
             "created_at": category.created_at.isoformat() if category.created_at else None
         }
     }
-
-@router.get("/", response_model=dict)
-def get_categories(
-    db: Session = Depends(get_db),
-    current_user: User = Depends(get_current_user),
-    _: dict = Depends(rate_limit_dependency("categories:list", limit=100, window_seconds=60))
-):
-    """Get all active categories"""
-    try:
-        categories = db.execute(
-            select(Category).where(Category.is_active == True).order_by(Category.name)
-        ).scalars().all()
-
-        categories_data = [
-            {
-                "id": cat.id,
-                "name": cat.name,
-                "slug": cat.slug,
-                "icon_url": cat.icon_url,
-                "description": cat.description,
-                "is_active": cat.is_active
-            }
-            for cat in categories
-        ]
-
-        return {
-            "success": True,
-            "data": {
-                "categories": categories_data
-            }
-        }
-    except Exception as e:
-        return {
-            "success": False,
-            "data": {"categories": []},
-            "error": str(e)
-        }
