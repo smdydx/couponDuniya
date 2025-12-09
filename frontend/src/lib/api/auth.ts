@@ -120,4 +120,9 @@ export const authAPI = {
   unlinkSocialAccount: async (provider: string): Promise<void> => {
     await apiClient.delete(`/auth/social/unlink/${provider}`);
   },
+
+  checkVerificationStatus: async (email: string): Promise<{ data: { is_verified: boolean; exists?: boolean } }> => {
+    const response = await apiClient.post('/auth/verification-status', { email });
+    return response.data;
+  },
 };

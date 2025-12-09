@@ -593,6 +593,9 @@ def verify_email(
     user.is_verified = True
     user.email_verified_at = datetime.utcnow()
     db.commit()
+    
+    # Store verification status in cache for cross-tab sync
+    cache_set(rk("email_verified", email), {"verified": True, "timestamp": int(time.time())}, 3600)
 
     return {
         "success": True,
@@ -600,6 +603,52 @@ def verify_email(
         "data": {
             "email": email,
             "is_verified": True
+        }
+    }
+
+
+class EmailVerificationStatusRequest(BaseModel):
+    email: EmailStr
+
+
+@router.post("/verification-status", response_model=dict)
+def check_verification_status(
+    request: EmailVerificationStatusRequest,
+    db: Session = Depends(get_db)
+):
+    """Check if an email has been verified (for cross-tab sync)"""
+    from sqlalchemy import select
+    
+    # Check cache first for faster response
+    cached = cache_get(rk("email_verified", request.email))
+    if cached and cached.get("verified"):
+        return {
+            "success": True,
+            "data": {
+                "email": request.email,
+                "is_verified": True,
+                "source": "cache"
+            }
+        }
+    
+    # Check database
+    user = db.scalar(select(User).where(User.email == request.email))
+    if not user:
+        return {
+            "success": True,
+            "data": {
+                "email": request.email,
+                "is_verified": False,
+                "exists": False
+            }
+        }
+    
+    return {
+        "success": True,
+        "data": {
+            "email": request.email,
+            "is_verified": user.is_verified,
+            "exists": True
         }
     }
 

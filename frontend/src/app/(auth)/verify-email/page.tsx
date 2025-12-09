@@ -8,6 +8,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { authAPI } from "@/lib/api/auth";
 import { ROUTES } from "@/lib/constants";
+import { broadcastVerification, useVerificationSync } from "@/hooks/useVerificationSync";
 
 type VerificationStatus = "loading" | "success" | "error" | "waiting";
 
@@ -71,12 +72,24 @@ function VerifyEmailForm() {
       await authAPI.verifyEmail(verificationToken);
       setStatus("success");
       setMessage("Your email has been verified successfully!");
+      if (email) {
+        broadcastVerification(email);
+      }
     } catch (err: any) {
       setStatus("error");
       const errorMessage = err?.response?.data?.detail || err?.message || "Failed to verify email. The link may have expired.";
       setMessage(errorMessage);
     }
   };
+
+  useVerificationSync({
+    email: email || "",
+    enabled: status === "waiting" && !!email,
+    onVerified: () => {
+      setStatus("success");
+      setMessage("Your email has been verified! Redirecting to login...");
+    },
+  });
 
   const handleResendEmail = async () => {
     if (!email || isResending || resendCooldown > 0) return;

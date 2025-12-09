@@ -18,6 +18,7 @@ import { KYC_STATUSES } from "@/lib/constants";
 import apiClient from "@/lib/api-client";
 import { authAPI } from "@/lib/api/auth";
 import { userAPI } from "@/lib/api/user";
+import { ProtectedRoute } from "@/components/auth/ProtectedRoute";
 
 interface SocialAccount {
   provider: string;
@@ -25,7 +26,7 @@ interface SocialAccount {
   linked_at: string;
 }
 
-export default function ProfilePage() {
+function ProfileContent() {
   const { user, updateUser } = useAuthStore();
   const [activeTab, setActiveTab] = useState("personal");
   const [isSaving, setIsSaving] = useState(false);
@@ -582,5 +583,13 @@ export default function ProfilePage() {
         </TabsContent>
       </Tabs>
     </div>
+  );
+}
+
+export default function ProfilePage() {
+  return (
+    <ProtectedRoute>
+      <ProfileContent />
+    </ProtectedRoute>
   );
 }

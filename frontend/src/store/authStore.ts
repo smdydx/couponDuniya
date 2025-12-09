@@ -22,6 +22,7 @@ interface AuthState {
   setError: (error: string) => void;
   clearError: () => void;
   refreshAccessToken: () => Promise<void>;
+  checkAuth: () => Promise<boolean>;
 }
 
 export const useAuthStore = createWithEqualityFn<AuthState>()(
@@ -146,6 +147,30 @@ export const useAuthStore = createWithEqualityFn<AuthState>()(
           });
         } catch {
           get().logout();
+        }
+      },
+
+      checkAuth: async () => {
+        const { accessToken, isAuthenticated } = get();
+        if (!accessToken) {
+          return false;
+        }
+        if (isAuthenticated) {
+          return true;
+        }
+        set({ isLoading: true });
+        try {
+          const user = await authAPI.getProfile();
+          set({
+            user,
+            isAuthenticated: true,
+            isLoading: false,
+          });
+          return true;
+        } catch {
+          get().logout();
+          set({ isLoading: false });
+          return false;
         }
       },
     }),
