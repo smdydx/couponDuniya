@@ -1,5 +1,6 @@
-from .user import User
+from .user import User, UserStatus, AuthProvider, UserRole
 from .social_account import SocialAccount
+from .refresh_token import RefreshToken, OTPAttempt, PasswordResetToken
 from .merchant import Merchant
 from .offer import Offer
 from .product import Product
@@ -39,7 +40,13 @@ from .banner import Banner
 
 __all__ = [
     "User",
+    "UserStatus",
+    "AuthProvider",
+    "UserRole",
     "SocialAccount",
+    "RefreshToken",
+    "OTPAttempt",
+    "PasswordResetToken",
     "Merchant",
     "Offer",
     "Product",
