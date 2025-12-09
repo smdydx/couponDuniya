@@ -132,14 +132,17 @@ async def security_headers_middleware(request: Request, call_next):
     response.headers.setdefault("X-XSS-Protection",
                                 "0")  # Modern browsers ignore; CSP recommended
 
-    # Relaxed CSP for /docs endpoint to allow Swagger UI CDN resources
-    if request.url.path == "/docs":
+    # Relaxed CSP for /docs and /api/openapi.json endpoints to allow Swagger UI
+    if request.url.path in ["/docs", "/api/docs", "/api/openapi.json", "/openapi.json"]:
         response.headers.setdefault(
-            "Content-Security-Policy", "default-src 'self'; "
-            "img-src 'self' data: https://fastapi.tiangolo.com; "
-            "script-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net; "
+            "Content-Security-Policy", 
+            "default-src 'self'; "
+            "img-src 'self' data: https://fastapi.tiangolo.com https://cdn.jsdelivr.net; "
+            "script-src 'self' 'unsafe-inline' 'unsafe-eval' https://cdn.jsdelivr.net; "
             "style-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net; "
-            "font-src 'self' https://cdn.jsdelivr.net")
+            "font-src 'self' https://cdn.jsdelivr.net; "
+            "connect-src 'self'"
+        )
     else:
         # Minimal CSP for other endpoints
         response.headers.setdefault(
@@ -329,19 +332,17 @@ Path("uploads/blog").mkdir(parents=True, exist_ok=True)
 app.mount("/uploads", StaticFiles(directory="uploads"), name="uploads")
 
 
+@app.get("/openapi.json", include_in_schema=False)
+def get_openapi_json():
+    return app.openapi()
+
+
 @app.get("/docs", include_in_schema=False)
 def custom_docs():
-    openapi_url = app.openapi_url or "/openapi.json"
-    html = get_swagger_ui_html(openapi_url=openapi_url,
-                               title=f"{settings.APP_NAME} Docs",
-                               swagger_css_url="/static/swagger.css")
-    # Inject dark mode toggle
-    body_content = html.body.decode("utf-8") if isinstance(html.body, bytes) else str(html.body)
-    injected = body_content.replace(
-        "</body>",
-        "<button class='dark-mode-toggle' onclick=\"document.documentElement.classList.toggle('dark');\">Toggle Dark</button></body>"
+    return get_swagger_ui_html(
+        openapi_url="/openapi.json",
+        title=f"{settings.APP_NAME} Docs",
     )
-    return HTMLResponse(injected)
 
 
 @app.get("/health", tags=["System"])
