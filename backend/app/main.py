@@ -1,58 +1,59 @@
-from fastapi import FastAPI
+from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
-from .config import get_settings
-from .api.v1 import (
-    users,
-    merchants,
-    offers,
-    products,
-    orders,
-    wallet,
-    auth,
-    admin,
-    access,
-    gift_cards,
-    referrals,
-    cashback,
-    withdrawals,
-    payouts,
-    support_tickets,
-    notifications,
-    audit_logs,
-    payments,
-    cms_pages,
-    sessions,
-    kyc,
-    inventory,
-    commissions,
-    redirects,
-    offer_views,
-    categories,
-    search,
-    cms,
-    checkout,
-    cart,
-    health,
-    affiliate,
-    queue,
-    flags,
-    realtime,
-    blog,
-    blog_uploads,
-    homepage,
-    uploads,
-    admin_referrals,
-    social_auth,
-)
-from fastapi.openapi.utils import get_openapi
+from fastapi.middleware.trustedhost import TrustedHostMiddleware
+from starlette.middleware.gzip import GZipMiddleware
 from fastapi.staticfiles import StaticFiles
 from fastapi.responses import HTMLResponse
 from fastapi.openapi.docs import get_swagger_ui_html
-from .database import Base, engine
+from fastapi.openapi.utils import get_openapi
 
+import logging
+import time
+import uuid
+import os
+
+# Import config with validation
+try:
+    from .config_prod import get_settings, validate_production_settings
+except ImportError:
+    from .config import get_settings
+    validate_production_settings = lambda x: []
+
+from .api.v1 import (
+    users, merchants, offers, products, orders, wallet, auth, admin, access,
+    gift_cards, referrals, cashback, withdrawals, payouts, support_tickets,
+    notifications, audit_logs, payments, cms_pages, sessions, kyc, inventory,
+    commissions, redirects, offer_views, categories, search, cms, checkout,
+    cart, health, affiliate, queue, flags, realtime, blog, blog_uploads,
+    homepage, uploads, admin_referrals, social_auth,
+)
+
+from .database import Base, engine
+from .errors import APIException, api_exception_handler, generic_exception_handler
+from .redis_client import rate_limit, redis_client
+from .logging_config import log, with_request_id
+from .metrics import observe_request
+
+# Initialize settings
 settings = get_settings()
 
-app = FastAPI(title=settings.APP_NAME)
+# Validate production settings
+if settings.APP_ENV == 'production':
+    validation_errors = validate_production_settings(settings)
+    if validation_errors:
+        for error in validation_errors:
+            logging.error(f"Production configuration error: {error}")
+        raise RuntimeError("Production configuration validation failed")
+
+# Create FastAPI app
+app = FastAPI(
+    title=settings.APP_NAME,
+    version="1.0.0",
+    description="Production-grade API for coupon commerce platform",
+    docs_url="/api/docs" if settings.DEBUG else None,
+    redoc_url="/api/redoc" if settings.DEBUG else None,
+    openapi_url="/api/openapi.json" if settings.DEBUG else None,
+)
 # Ensure tables exist in development (no-op if already migrated)
 try:
 
@@ -266,7 +267,7 @@ app.include_router(blog_uploads.router, prefix="/api/v1")
 app.include_router(homepage.router, prefix="/api/v1")
 app.include_router(uploads.router, prefix="/api/v1")
 app.include_router(social_auth.router, prefix="/api/v1")
-
+app.add_middleware(GZipMiddleware, minimum_size=500)
 GROUP_ORDER = [
     ("Auth", ["Auth"]),
     ("Users", ["Users"]),
