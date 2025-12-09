@@ -153,7 +153,7 @@ export default function AdminDashboard() {
   useEffect(() => {
     if (!mounted) return;
 
-    const checkAuth = () => {
+    const checkAuth = async () => {
       console.log("🔐 Admin auth check:", { 
         hasToken: !!accessToken, 
         hasUser: !!user,
@@ -162,13 +162,25 @@ export default function AdminDashboard() {
         isAdmin: user?.is_admin
       });
 
-      if (!isAuthenticated || !accessToken || !user) {
-        console.log("❌ No auth found, redirecting to login");
+      // If no user data, wait a bit for store hydration
+      if (!user && !accessToken) {
+        console.log("⏳ Waiting for auth store hydration...");
+        await new Promise(resolve => setTimeout(resolve, 500));
+      }
+
+      // Check again after waiting
+      const currentState = useAuthStore.getState();
+      const currentUser = currentState.user;
+      const currentToken = currentState.accessToken;
+      const currentAuth = currentState.isAuthenticated;
+
+      if (!currentAuth || !currentToken || !currentUser) {
+        console.log("❌ No auth found after waiting, redirecting to login");
         router.push("/login");
         return;
       }
 
-      const isAdminUser = user.is_admin === true || user.role === 'admin';
+      const isAdminUser = currentUser.is_admin === true || currentUser.role === 'admin';
 
       if (!isAdminUser) {
         console.log("❌ Access denied - User is not admin");
@@ -181,9 +193,8 @@ export default function AdminDashboard() {
       setAuthChecked(true);
     };
 
-    const timer = setTimeout(checkAuth, 100);
-    return () => clearTimeout(timer);
-  }, [mounted, isAuthenticated, accessToken, user, router]);
+    checkAuth();
+  }, [mounted, router]);
 
   useEffect(() => {
     if (authChecked) {

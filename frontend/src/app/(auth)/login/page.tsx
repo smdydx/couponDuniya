@@ -21,15 +21,20 @@ export default function LoginPage() {
   const [showPassword, setShowPassword] = useState(false);
   const [googleError, setGoogleError] = useState<string | null>(null); // State for Google login errors
 
-  // Redirect if already logged in
+  // Redirect if already logged in - but wait for proper hydration
   useEffect(() => {
-    if (isAuthenticated && user) {
-      const isAdmin = user.is_admin === true || user.role === 'admin';
-      const redirectUrl = isAdmin ? '/admin/dashboard' : '/';
+    // Wait a bit for store to hydrate
+    const timer = setTimeout(() => {
+      if (isAuthenticated && user) {
+        const isAdmin = user.is_admin === true || user.role === 'admin';
+        const redirectUrl = isAdmin ? '/admin/dashboard' : '/';
 
-      console.log('✅ Already authenticated, redirecting to:', redirectUrl, { isAdmin });
-      router.replace(redirectUrl);
-    }
+        console.log('✅ Already authenticated, redirecting to:', redirectUrl, { isAdmin });
+        router.replace(redirectUrl);
+      }
+    }, 1000); // 1 second delay to ensure store is hydrated
+
+    return () => clearTimeout(timer);
   }, [isAuthenticated, user, router]);
 
   const {
@@ -53,10 +58,11 @@ export default function LoginPage() {
 
         console.log('Redirecting to:', redirectUrl);
 
-        // Force redirect with window.location if router.push fails
-        setTimeout(() => {
-          window.location.href = redirectUrl;
-        }, 100);
+        // Wait for state to update properly before redirecting
+        await new Promise(resolve => setTimeout(resolve, 500));
+        
+        // Use router.push instead of window.location for smooth navigation
+        router.push(redirectUrl);
       } else {
         console.error('Login returned null/undefined user');
       }
