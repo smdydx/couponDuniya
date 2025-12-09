@@ -74,9 +74,11 @@ function VerifyEmailForm() {
       // Broadcast to other tabs IMMEDIATELY before any state changes
       const verifiedEmail = response?.data?.email || email;
       if (verifiedEmail) {
+        console.log("[VerifyEmail] Broadcasting verification for:", verifiedEmail);
         broadcastVerification(verifiedEmail);
-        // Broadcast again after a small delay to ensure it's received
-        setTimeout(() => broadcastVerification(verifiedEmail), 100);
+        // Broadcast again after delays to ensure it's received by all tabs
+        setTimeout(() => broadcastVerification(verifiedEmail), 200);
+        setTimeout(() => broadcastVerification(verifiedEmail), 500);
       }
       
       setStatus("success");

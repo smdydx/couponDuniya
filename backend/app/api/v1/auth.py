@@ -595,7 +595,7 @@ def verify_email(
     db.commit()
 
     # Cache verification status for sync
-    cache_set(rk("email_verified", email), "1", ttl=300)
+    cache_set(rk("email_verified", email), {"verified": True, "email": email}, ttl=300)
 
     return {
         "message": "Email verified successfully. You can now log in.",
