@@ -44,6 +44,8 @@ class Settings(BaseSettings):
     SMTP_USER: str = ""
     SMTP_PASSWORD: str = ""
     EMAIL_FROM: str = "noreply@couponali.com"
+    # Optional SendGrid API key. If provided, SendGrid is preferred over SMTP.
+    SENDGRID_API_KEY: str = ""
     
     # Internal service auth
     INTERNAL_API_KEY: str = ""
