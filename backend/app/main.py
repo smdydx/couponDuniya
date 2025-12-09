@@ -49,7 +49,7 @@ if settings.APP_ENV == 'production':
 app = FastAPI(
     title=settings.APP_NAME,
     version="1.0.0",
-    description="Production-grade API for coupon commerce platform",
+    description="Production-grade API for coupon commerce platform. Most endpoints require authentication via Bearer token.",
     docs_url="/api/docs" if settings.DEBUG else None,
     redoc_url="/api/redoc" if settings.DEBUG else None,
     openapi_url="/api/openapi.json" if settings.DEBUG else None,

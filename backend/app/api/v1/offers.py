@@ -1,11 +1,11 @@
-from fastapi import APIRouter, Depends
+from fastapi import APIRouter, Depends, HTTPException, Query
 from sqlalchemy.orm import Session
 from sqlalchemy import select, func
 from ...database import get_db
-from ...models import Offer, Merchant
-from pydantic import BaseModel
+from ...models import Offer, Merchant, User
+from ...schemas import OfferRead, OfferCreate
 from ...redis_client import cache_get, cache_set, cache_invalidate_prefix, rk
-from ...dependencies import rate_limit_dependency
+from ...dependencies import rate_limit_dependency, get_current_user
 import json, hashlib
 
 router = APIRouter(prefix="/offers", tags=["Offers"])
@@ -29,6 +29,7 @@ def list_offers(
     is_verified: bool | None = None,
     has_cashback: bool | None = None,
     db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user),
     _: dict = Depends(rate_limit_dependency("offers:list", limit=100, window_seconds=60))
 ):
     """List all offers with filtering and pagination"""
@@ -48,14 +49,14 @@ def list_offers(
         return cached
 
     query = select(Offer, Merchant).join(Merchant).where(Offer.is_active == True)
-    
+
     if merchant_id:
         query = query.where(Offer.merchant_id == merchant_id)
     if is_exclusive:
         query = query.where(Offer.is_exclusive == True)
     if search:
         query = query.where(Offer.title.ilike(f"%{search}%"))
-    
+
     # Apply sorting
     if sort_by == "newest":
         query = query.order_by(Offer.created_at.desc())
@@ -65,20 +66,20 @@ def list_offers(
         query = query.where(Offer.end_date.isnot(None)).order_by(Offer.end_date.asc())
     else:
         query = query.order_by(Offer.priority.desc(), Offer.created_at.desc())
-    
+
     # Count total
     count_query = select(func.count()).select_from(Offer).where(Offer.is_active == True)
     if merchant_id:
         count_query = count_query.where(Offer.merchant_id == merchant_id)
     if search:
         count_query = count_query.where(Offer.title.ilike(f"%{search}%"))
-    
+
     total = db.scalar(count_query)
-    
+
     # Paginate
     offset = (page - 1) * limit
     results = db.execute(query.offset(offset).limit(limit)).all()
-    
+
     # Format response
     offers = []
     for offer, merchant in results:
@@ -100,7 +101,7 @@ def list_offers(
                 "logo_url": merchant.logo_url
             }
         })
-    
+
     total_count = total or 0
     response = {
         "success": True,
@@ -117,7 +118,7 @@ def list_offers(
 
 
 @router.get("/featured")
-def featured_offers(limit: int = 12, db: Session = Depends(get_db)):
+def featured_offers(limit: int = 12, db: Session = Depends(get_db), current_user: User = Depends(get_current_user)):
     """Return a list of 'featured' offers (highest priority first)."""
     query = (
         select(Offer, Merchant)
@@ -144,7 +145,7 @@ def featured_offers(limit: int = 12, db: Session = Depends(get_db)):
 
 
 @router.get("/exclusive")
-def exclusive_offers(limit: int = 12, db: Session = Depends(get_db)):
+def exclusive_offers(limit: int = 12, db: Session = Depends(get_db), current_user: User = Depends(get_current_user)):
     """Return a list of 'exclusive' offers approximated by priority > 0."""
     query = (
         select(Offer, Merchant)
@@ -171,17 +172,17 @@ def exclusive_offers(limit: int = 12, db: Session = Depends(get_db)):
 
 
 @router.get("/{offer_id}")
-def get_offer(offer_id: int, db: Session = Depends(get_db)):
+def get_offer(offer_id: int, db: Session = Depends(get_db), current_user: User = Depends(get_current_user)):
     """Get single offer by ID"""
     result = db.execute(
         select(Offer, Merchant)
         .join(Merchant)
         .where(Offer.id == offer_id)
     ).first()
-    
+
     if not result:
         return {"success": False, "error": "Offer not found"}
-    
+
     offer, merchant = result
     return {
         "success": True,

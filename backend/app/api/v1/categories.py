@@ -5,9 +5,10 @@ from typing import List
 from pydantic import BaseModel, Field
 
 from ...database import get_db
-from ...models import Category
+from ...models import Category, User
 from ...redis_client import cache_invalidate_prefix, rk
-from ...dependencies import rate_limit_dependency
+from ...dependencies import rate_limit_dependency, get_current_user
+
 
 router = APIRouter(prefix="/categories", tags=["Categories"])
 
@@ -46,7 +47,8 @@ def list_categories(
     page: int = 1,
     limit: int = 50,
     is_active: bool | None = None,
-    db: Session = Depends(get_db)
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user)
 ):
     """List all categories"""
     query = select(Category)
@@ -99,7 +101,8 @@ def list_categories(
 @router.post("/", response_model=dict)
 def create_category(
     payload: CategoryCreate,
-    db: Session = Depends(get_db)
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user)
 ):
     """Create a new category"""
     existing = db.scalar(select(Category).where(Category.slug == payload.slug))
@@ -134,7 +137,8 @@ def create_category(
 def update_category(
     id: int,
     payload: CategoryUpdate,
-    db: Session = Depends(get_db)
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user)
 ):
     """Update a category"""
     category = db.scalar(select(Category).where(Category.id == id))
@@ -178,7 +182,8 @@ def update_category(
 @router.delete("/{id}", response_model=dict)
 def delete_category(
     id: int,
-    db: Session = Depends(get_db)
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user)
 ):
     """Soft delete a category"""
     category = db.scalar(select(Category).where(Category.id == id))
@@ -199,7 +204,8 @@ def delete_category(
 @router.get("/{id}", response_model=dict)
 def get_category(
     id: int,
-    db: Session = Depends(get_db)
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user)
 ):
     """Get category by ID"""
     category = db.scalar(select(Category).where(Category.id == id))
@@ -222,6 +228,7 @@ def get_category(
 @router.get("/", response_model=dict)
 def get_categories(
     db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user),
     _: dict = Depends(rate_limit_dependency("categories:list", limit=100, window_seconds=60))
 ):
     """Get all active categories"""

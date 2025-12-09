@@ -1,10 +1,12 @@
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, Depends, HTTPException, Query
 from sqlalchemy.orm import Session, joinedload
 from sqlalchemy import select, and_, func, or_
 from ...database import get_db
-from ...models import Merchant, Offer, Product
+from ...models import Merchant, Offer, Product, User
+from ...models.banner import Banner
 from ...schemas import MerchantRead, OfferRead, ProductRead
 from ...redis_client import cache_get, cache_set, rk
+from ...dependencies import get_current_user
 import logging
 
 router = APIRouter(prefix="/homepage", tags=["Homepage"])
@@ -12,13 +14,14 @@ log = logging.getLogger(__name__)
 
 @router.get("/", response_model=dict)
 def get_homepage_data(
-    limit_merchants: int = 12,
-    limit_featured_offers: int = 8,
-    limit_exclusive_offers: int = 6,
-    limit_products: int = 12,
-    limit_banners: int = 5,
-    limit_promo_banners: int = 10,
-    db: Session = Depends(get_db)
+    limit_merchants: int = Query(12, ge=1, le=50),
+    limit_featured_offers: int = Query(8, ge=1, le=50),
+    limit_exclusive_offers: int = Query(6, ge=1, le=50),
+    limit_products: int = Query(12, ge=1, le=50),
+    limit_banners: int = Query(5, ge=1, le=20),
+    limit_promo_banners: int = Query(10, ge=1, le=20),
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user)
 ):
     """
     Get data for the homepage:
@@ -32,13 +35,12 @@ def get_homepage_data(
 
     try:
         # Try cache first
-        cache_key = rk("cache", "homepage", f"b{limit_banners}_m{limit_merchants}_fo{limit_featured_offers}_eo{limit_exclusive_offers}_p{limit_products}")
+        cache_key = rk("cache", "homepage", f"b{limit_banners}_m{limit_merchants}_fo{limit_featured_offers}_eo{limit_exclusive_offers}_p{limit_products}_pb{limit_promo_banners}")
         cached = cache_get(cache_key)
         if cached:
             return {"success": True, "data": cached, "cached": True}
 
         # Fetch active banners (hero slider)
-        from ...models import Banner
         banners_stmt = (
             select(Banner)
             .where(and_(Banner.is_active == True, Banner.banner_type == "hero"))
@@ -136,6 +138,9 @@ def get_homepage_data(
 
         return {"success": True, "data": result, "cached": False}
 
+    except HTTPException as e:
+        log.error(f"Homepage API HTTP error: {e.detail}")
+        raise e # Re-raise HTTPException to be handled by FastAPI
     except Exception as e:
         log.error(f"Homepage API error: {e}")
         # Return empty data with success: False on error
