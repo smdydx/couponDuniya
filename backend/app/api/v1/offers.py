@@ -1,9 +1,10 @@
 from fastapi import APIRouter, Depends, HTTPException, Query
 from sqlalchemy.orm import Session
 from sqlalchemy import select, func
+from pydantic import BaseModel
 from ...database import get_db
 from ...models import Offer, Merchant, User
-from ...schemas import OfferRead, OfferCreate
+from ...schemas import OfferRead
 from ...redis_client import cache_get, cache_set, cache_invalidate_prefix, rk
 from ...dependencies import rate_limit_dependency, get_current_user
 import json, hashlib
