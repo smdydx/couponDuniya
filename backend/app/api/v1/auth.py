@@ -598,12 +598,9 @@ def verify_email(
     cache_set(rk("email_verified", email), "1", ttl=300)
 
     return {
-        "success": True,
-        "message": "Email verified successfully! You can now log in.",
-        "data": {
-            "email": email,
-            "is_verified": True
-        }
+        "message": "Email verified successfully. You can now log in.",
+        "is_verified": True,
+        "email": user.email
     }
 
 

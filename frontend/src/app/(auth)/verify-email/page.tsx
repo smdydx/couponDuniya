@@ -70,14 +70,17 @@ function VerifyEmailForm() {
 
     try {
       const response = await authAPI.verifyEmail(verificationToken);
-      setStatus("success");
-      setMessage("Your email has been verified successfully!");
       
-      // Broadcast to other tabs
+      // Broadcast to other tabs IMMEDIATELY before any state changes
       const verifiedEmail = response?.data?.email || email;
       if (verifiedEmail) {
         broadcastVerification(verifiedEmail);
+        // Broadcast again after a small delay to ensure it's received
+        setTimeout(() => broadcastVerification(verifiedEmail), 100);
       }
+      
+      setStatus("success");
+      setMessage("Your email has been verified successfully!");
       
       // Redirect to login after 2 seconds
       setTimeout(() => {
