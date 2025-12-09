@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 import { useRouter, usePathname } from "next/navigation";
 import { Loader2 } from "lucide-react";
 import { useAuthStore } from "@/store/authStore";
@@ -21,11 +21,25 @@ export function ProtectedRoute({
   const pathname = usePathname();
   const { isAuthenticated, user, isLoading, checkAuth } = useAuthStore();
   const [isChecking, setIsChecking] = useState(true);
+  const hasCheckedRef = useRef(false);
+  const isCheckingRef = useRef(false);
 
   useEffect(() => {
     const verifyAuth = async () => {
+      if (hasCheckedRef.current || isCheckingRef.current) {
+        return;
+      }
+      
       if (!isAuthenticated) {
-        await checkAuth();
+        isCheckingRef.current = true;
+        try {
+          await checkAuth();
+        } finally {
+          isCheckingRef.current = false;
+          hasCheckedRef.current = true;
+        }
+      } else {
+        hasCheckedRef.current = true;
       }
       setIsChecking(false);
     };
