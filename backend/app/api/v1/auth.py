@@ -46,13 +46,13 @@ def create_refresh_token_for_user(
 ) -> str:
     """Create a new refresh token and store it in the database"""
     from datetime import timedelta
-    
+
     raw_token = secrets.token_urlsafe(64)
     token_hash = _hash_token(raw_token)
-    
+
     if not token_family:
         token_family = str(uuid.uuid4())
-    
+
     refresh_token = RefreshToken(
         user_id=user_id,
         token_hash=token_hash,
@@ -62,10 +62,10 @@ def create_refresh_token_for_user(
         device_info=device_info,
         expires_at=datetime.utcnow() + timedelta(days=REFRESH_TOKEN_EXPIRE_DAYS)
     )
-    
+
     db.add(refresh_token)
     db.commit()
-    
+
     return raw_token
 
 
@@ -80,33 +80,33 @@ def validate_and_rotate_refresh_token(
     Returns (user, new_refresh_token, error_message)
     """
     from datetime import timedelta
-    
+
     token_hash = _hash_token(raw_token)
-    
+
     stored_token = db.scalar(
         select(RefreshToken).where(RefreshToken.token_hash == token_hash)
     )
-    
+
     if not stored_token:
         return None, None, "Invalid refresh token"
-    
+
     if stored_token.is_revoked:
         db.query(RefreshToken).filter(
             RefreshToken.token_family == stored_token.token_family
         ).update({"is_revoked": True, "revoked_at": datetime.utcnow(), "revoked_reason": "family_revoked"})
         db.commit()
         return None, None, "Token was already used (possible theft detected)"
-    
+
     if stored_token.is_expired():
         return None, None, "Refresh token has expired"
-    
+
     stored_token.revoke(reason="rotated")
     stored_token.last_used_at = datetime.utcnow()
-    
+
     user = db.query(User).filter(User.id == stored_token.user_id).first()
     if not user or not user.is_active:
         return None, None, "User not found or inactive"
-    
+
     new_token = create_refresh_token_for_user(
         db=db,
         user_id=user.id,
@@ -114,7 +114,7 @@ def validate_and_rotate_refresh_token(
         user_agent=user_agent,
         token_family=stored_token.token_family
     )
-    
+
     return user, new_token, None
 
 
@@ -183,7 +183,7 @@ def register(payload: RegisterRequest, db: Session = Depends(get_db)):
     from ...verification import generate_verification_token
     from ...email import email_service
     from ...models.referral import Referral
-    
+
     # Validate that at least email or mobile is provided
     if not payload.email and not payload.mobile:
         raise HTTPException(status_code=400, detail="Email or mobile is required")
@@ -219,9 +219,9 @@ def register(payload: RegisterRequest, db: Session = Depends(get_db)):
         referrer = db.query(User).filter(User.referral_code == payload.referral_code).first()
         if referrer and referrer.id != user.id:
             user.referred_by_id = referrer.id
-            
+
             referral_bonus = getattr(settings, 'REFERRAL_BONUS_AMOUNT', 50.0)
-            
+
             referral = Referral(
                 referrer_id=referrer.id,
                 referred_id=user.id,
@@ -240,7 +240,7 @@ def register(payload: RegisterRequest, db: Session = Depends(get_db)):
         verification_token = generate_verification_token(user.email)
         frontend_url = settings.FRONTEND_URL or settings.FRONTEND_BASE_URL or "http://localhost:5000"
         verification_url = f"{frontend_url}/verify-email?token={verification_token}"
-        
+
         email_service.send_welcome_email(user.email, verification_url)
 
     return RegisterResponse(
@@ -261,7 +261,7 @@ def register(payload: RegisterRequest, db: Session = Depends(get_db)):
 def login(payload: LoginRequest, db: Session = Depends(get_db)):
     """Login with email/mobile and password. Email must be verified first."""
     from datetime import datetime
-    
+
     if not payload.identifier or not payload.password:
         raise HTTPException(status_code=400, detail="Missing credentials")
 
@@ -292,17 +292,17 @@ def login(payload: LoginRequest, db: Session = Depends(get_db)):
         # Generate new verification token if needed
         from ...verification import generate_verification_token
         from ...email import email_service
-        
+
         token = generate_verification_token(user.email)
         frontend_url = settings.FRONTEND_URL or settings.FRONTEND_BASE_URL or "http://localhost:5000"
         verification_url = f"{frontend_url}/verify-email?token={token}&email={user.email}"
-        
+
         # Try to send email again
         if settings.EMAIL_ENABLED:
             email_service.send_welcome_email(user.email, verification_url)
-        
+
         raise HTTPException(
-            status_code=403, 
+            status_code=403,
             detail=f"Please verify your email before logging in. We've sent a new verification link to {user.email}. Check your inbox."
         )
 
@@ -453,13 +453,13 @@ def refresh_token_endpoint(payload: RefreshRequest, db: Session = Depends(get_db
         db=db,
         raw_token=payload.refresh_token
     )
-    
+
     if error:
         raise HTTPException(status_code=401, detail=error)
-    
+
     access_token = create_access_token(str(user.id))
     session_key = rk("session", access_token)
-    
+
     user_data = {
         "id": user.id,
         "uuid": str(user.uuid),
@@ -473,10 +473,10 @@ def refresh_token_endpoint(payload: RefreshRequest, db: Session = Depends(get_db
         "is_admin": user.is_admin,
         "is_verified": user.is_verified,
     }
-    
+
     session_payload = {"user": user_data, "login_at": int(time.time())}
     cache_set(session_key, session_payload, ACCESS_TOKEN_EXPIRE_SECONDS)
-    
+
     return {
         "success": True,
         "message": "Token refreshed successfully",
@@ -495,13 +495,13 @@ def logout(authorization: str | None = Header(None), db: Session = Depends(get_d
     if not authorization:
         raise HTTPException(status_code=401, detail="Missing token")
     token = authorization.split()[1]
-    
+
     # Invalidate session cache
     cache_invalidate(rk("session", token))
-    
+
     # Revoke access token
     revoke_token(token)
-    
+
     # Revoke all refresh tokens for this user
     try:
         payload = decode_token(token)
@@ -510,7 +510,7 @@ def logout(authorization: str | None = Header(None), db: Session = Depends(get_d
             revoke_user_refresh_tokens(db, int(user_id), reason="logout")
     except Exception:
         pass
-    
+
     return
 
 
@@ -589,13 +589,13 @@ def verify_email(
     user = db.scalar(select(User).where(User.email == email))
     if not user:
         raise HTTPException(status_code=404, detail="User not found")
-    
+
     user.is_verified = True
     user.email_verified_at = datetime.utcnow()
     db.commit()
-    
-    # Store verification status in cache for cross-tab sync
-    cache_set(rk("email_verified", email), {"verified": True, "timestamp": int(time.time())}, 3600)
+
+    # Cache verification status for sync
+    cache_set(rk("email_verified", email), "1", ttl=300)
 
     return {
         "success": True,
@@ -618,7 +618,7 @@ def check_verification_status(
 ):
     """Check if an email has been verified (for cross-tab sync)"""
     from sqlalchemy import select
-    
+
     # Check cache first for faster response
     cached = cache_get(rk("email_verified", request.email))
     if cached and cached.get("verified"):
@@ -630,7 +630,7 @@ def check_verification_status(
                 "source": "cache"
             }
         }
-    
+
     # Check database
     user = db.scalar(select(User).where(User.email == request.email))
     if not user:
@@ -642,7 +642,7 @@ def check_verification_status(
                 "exists": False
             }
         }
-    
+
     return {
         "success": True,
         "data": {
@@ -738,23 +738,23 @@ def set_password(
     """Set password for users who signed up with Google"""
     if not authorization:
         raise HTTPException(status_code=401, detail="Missing token")
-    
+
     token = authorization.split()[1]
     decoded = decode_token(token)
     user_id = decoded.get("sub")
-    
+
     user = db.query(User).filter(User.id == int(user_id)).first() if user_id else None
     if not user:
         raise HTTPException(status_code=404, detail="User not found")
-    
+
     # Check if user already has a password
     if user.password_hash:
         raise HTTPException(status_code=400, detail="Password already set. Use change-password endpoint.")
-    
+
     # Set the password
     user.password_hash = get_password_hash(payload.new_password)
     db.commit()
-    
+
     return {
         "success": True,
         "message": "Password set successfully! You can now login with email and password.",
@@ -855,12 +855,12 @@ async def login_with_google(
         email_verified = user_info.get("email_verified", False)
         if isinstance(email_verified, str):
             email_verified = email_verified.lower() == 'true'
-        
+
         full_name = user_info.get("name", "")
         name_parts = full_name.split(' ', 1) if full_name else ['', '']
         first_name = name_parts[0] if len(name_parts) > 0 else ''
         last_name = name_parts[1] if len(name_parts) > 1 else ''
-        
+
         user = User(
             email=user_info["email"],
             full_name=full_name or f"{first_name} {last_name}".strip(),
@@ -885,10 +885,10 @@ async def login_with_google(
     if social_account:
         social_account.profile_data = json.dumps(user_info)
         social_account.updated_at = datetime.utcnow()
-        
+
         if user_info.get("picture") and user.avatar_url != user_info.get("picture"):
             user.avatar_url = user_info.get("picture")
-        
+
         db.commit()
     else:
         social_account = SocialAccount(
@@ -1129,7 +1129,7 @@ async def google_callback(
                 email_verified = user_info.get("email_verified", False)
                 if isinstance(email_verified, str):
                     email_verified = email_verified.lower() == 'true'
-                
+
                 user = User(
                     email=user_info["email"],
                     full_name=user_info.get("name", ""),

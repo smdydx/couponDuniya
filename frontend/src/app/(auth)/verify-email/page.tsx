@@ -69,12 +69,20 @@ function VerifyEmailForm() {
     setMessage("");
 
     try {
-      await authAPI.verifyEmail(verificationToken);
+      const response = await authAPI.verifyEmail(verificationToken);
       setStatus("success");
       setMessage("Your email has been verified successfully!");
-      if (email) {
-        broadcastVerification(email);
+      
+      // Broadcast to other tabs
+      const verifiedEmail = response?.data?.email || email;
+      if (verifiedEmail) {
+        broadcastVerification(verifiedEmail);
       }
+      
+      // Redirect to login after 2 seconds
+      setTimeout(() => {
+        router.push(ROUTES.login);
+      }, 2000);
     } catch (err: any) {
       setStatus("error");
       const errorMessage = err?.response?.data?.detail || err?.message || "Failed to verify email. The link may have expired.";
@@ -88,6 +96,9 @@ function VerifyEmailForm() {
     onVerified: () => {
       setStatus("success");
       setMessage("Your email has been verified! Redirecting to login...");
+      setTimeout(() => {
+        router.push(ROUTES.login);
+      }, 2000);
     },
   });
 
