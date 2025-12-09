@@ -116,34 +116,3 @@ export const ROUTES = {
     referralTree: '/admin/referrals/tree',
   },
 } as const;
-export const ROUTES = {
-  HOME: '/',
-  LOGIN: '/login',
-  REGISTER: '/register',
-  PROFILE: '/profile',
-  WALLET: '/wallet',
-  ORDERS: '/orders',
-  MERCHANTS: '/merchants',
-  COUPONS: '/coupons',
-  PRODUCTS: '/products',
-  CART: '/cart',
-  CHECKOUT: '/checkout',
-  ADMIN: '/admin',
-};
-
-export const API_ENDPOINTS = {
-  AUTH: {
-    LOGIN: '/api/v1/auth/login',
-    REGISTER: '/api/v1/auth/register',
-    LOGOUT: '/api/v1/auth/logout',
-    REFRESH: '/api/v1/auth/refresh',
-  },
-  HOMEPAGE: '/api/v1/homepage',
-  MERCHANTS: '/api/v1/merchants',
-  OFFERS: '/api/v1/offers',
-  PRODUCTS: '/api/v1/products',
-  CATEGORIES: '/api/v1/categories',
-  CART: '/api/v1/cart',
-  ORDERS: '/api/v1/orders',
-  WALLET: '/api/v1/wallet',
-};

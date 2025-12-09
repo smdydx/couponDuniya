@@ -24,8 +24,8 @@ import { OfferGrid } from "@/components/offer/OfferGrid";
 import { OfferCard } from "@/components/offer/OfferCard";
 import { ProductCard } from "@/components/product/ProductCard";
 import { ROUTES } from "@/lib/constants";
-import { useQuery } from '@tanstack/react-query'; // Assuming you are using React Query
-import apiClient from '@/lib/apiClient'; // Assuming you have an API client setup
+import { useQuery } from '@tanstack/react-query';
+import apiClient from '@/lib/apiClient';
 
 interface SectionHeaderProps {
   title: string;
@@ -228,7 +228,7 @@ export default function HomePage() {
   const { data: homepageData, isLoading, error, refetch } = useQuery({
     queryKey: ["homepage"],
     queryFn: async () => {
-      const response = await apiClient.get("/homepage/", {
+      const response = await apiClient.get("/api/v1/homepage/", {
         params: {
           limit_merchants: 12,
           limit_featured_offers: 8,

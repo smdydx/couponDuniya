@@ -60,13 +60,34 @@ app = FastAPI(
 )
 # Ensure tables exist in development (no-op if already migrated)
 try:
-
-    @app.on_event("startup")
-    async def ensure_database_schema():
-        if engine is not None:
-            Base.metadata.create_all(bind=engine)
+    if settings.APP_ENV != 'production':
+        @app.on_event("startup")
+        async def ensure_database_schema():
+            if engine is not None:
+                Base.metadata.create_all(bind=engine)
 except Exception:
     pass
+
+# Production health check
+@app.on_event("startup")
+async def startup_health_check():
+    """Verify critical services on startup"""
+    try:
+        # Test database connection
+        if engine is not None:
+            with engine.connect() as conn:
+                conn.execute("SELECT 1")
+                log.info("✅ Database connection verified")
+        
+        # Test Redis connection
+        redis_client.ping()
+        log.info("✅ Redis connection verified")
+        
+        log.info(f"🚀 {settings.APP_NAME} started successfully in {settings.APP_ENV} mode")
+    except Exception as e:
+        log.error(f"❌ Startup health check failed: {e}")
+        if settings.APP_ENV == 'production':
+            raise RuntimeError("Critical services unavailable")
 
 # CORS - Allow development and production origins
 app.add_middleware(

@@ -18,7 +18,23 @@ if database_url.startswith("sqlite"):
         connect_args={"check_same_thread": False}
     )
 else:
-    engine = create_engine(database_url, echo=settings.DEBUG, pool_pre_ping=True)
+    # Production-optimized PostgreSQL connection pool
+    pool_size = 20 if settings.APP_ENV == 'production' else 5
+    max_overflow = 40 if settings.APP_ENV == 'production' else 10
+    
+    engine = create_engine(
+        database_url, 
+        echo=settings.DEBUG, 
+        pool_pre_ping=True,
+        pool_size=pool_size,
+        max_overflow=max_overflow,
+        pool_recycle=3600,  # Recycle connections after 1 hour
+        pool_timeout=30,
+        connect_args={
+            "connect_timeout": 10,
+            "application_name": settings.APP_NAME
+        }
+    )
 
 SessionLocal = sessionmaker(bind=engine, autoflush=False, autocommit=False, expire_on_commit=False)
 
