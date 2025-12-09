@@ -16,8 +16,7 @@ router = APIRouter(prefix="/cms", tags=["CMS"])
 def get_banners(
     banner_type: str | None = None,
     limit: int = 10,
-    db: Session = Depends(get_db),
-    current_user: User = Depends(get_current_user)
+    db: Session = Depends(get_db)
 ):
     query = db.query(Banner)
     if banner_type:
