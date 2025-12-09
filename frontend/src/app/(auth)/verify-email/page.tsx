@@ -53,6 +53,16 @@ function VerifyEmailForm() {
     }
   }, [resendCooldown]);
 
+  // Auto-redirect to login after successful verification
+  useEffect(() => {
+    if (status === "success") {
+      const timer = setTimeout(() => {
+        router.replace(ROUTES.login);
+      }, 1500);
+      return () => clearTimeout(timer);
+    }
+  }, [status, router]);
+
   const verifyEmail = async (verificationToken: string) => {
     setStatus("loading");
     setMessage("");
@@ -275,12 +285,15 @@ function VerifyEmailForm() {
       </CardHeader>
       <CardContent className="px-6 pb-6">
         {status === "success" && (
-          <Button 
-            onClick={() => router.push(ROUTES.login)} 
-            className="w-full h-12 bg-gradient-to-r from-green-500 to-emerald-500 hover:from-green-600 hover:to-emerald-600"
-          >
-            Continue to Login
-          </Button>
+          <>
+            <p className="text-sm text-gray-600 mb-4">Redirecting to login in 1 second...</p>
+            <Button 
+              onClick={() => router.replace(ROUTES.login)} 
+              className="w-full h-12 bg-gradient-to-r from-green-500 to-emerald-500 hover:from-green-600 hover:to-emerald-600"
+            >
+              Go to Login
+            </Button>
+          </>
         )}
 
         {status === "error" && (

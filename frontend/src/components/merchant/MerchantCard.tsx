@@ -45,9 +45,9 @@ export function MerchantCard({ merchant }: MerchantCardProps) {
             <h3 className="font-semibold text-[11px] sm:text-xs text-gray-900 dark:text-white line-clamp-1 group-hover:text-purple-600 dark:group-hover:text-purple-400 transition-colors">
               {merchant.name}
             </h3>
-            {merchant.offers_count !== undefined && merchant.offers_count > 0 && (
+            {(merchant.total_offers ?? merchant.offers_count ?? 0) > 0 && (
               <p className="text-[9px] sm:text-[10px] text-purple-600 dark:text-purple-400 font-medium">
-                {merchant.offers_count} {merchant.offers_count === 1 ? 'Offer' : 'Offers'}
+                {merchant.total_offers ?? merchant.offers_count ?? 0} {(merchant.total_offers ?? merchant.offers_count ?? 0) === 1 ? 'Offer' : 'Offers'}
               </p>
             )}
           </div>

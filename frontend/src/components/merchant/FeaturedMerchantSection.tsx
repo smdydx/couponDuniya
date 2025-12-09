@@ -76,9 +76,9 @@ export function FeaturedMerchantSection({ merchants }: FeaturedMerchantSectionPr
               <h3 className="text-center font-medium text-xs sm:text-sm text-gray-900 dark:text-white line-clamp-1 group-hover:text-purple-600 dark:group-hover:text-purple-400 transition-colors">
                 {merchant.name}
               </h3>
-              {merchant.offers_count !== undefined && merchant.offers_count > 0 && (
+              {(merchant.total_offers ?? merchant.offers_count ?? 0) > 0 && (
                 <p className="text-center text-[10px] sm:text-xs text-purple-600 dark:text-purple-400 font-medium mt-0.5">
-                  {merchant.offers_count} {merchant.offers_count === 1 ? 'Offer' : 'Offers'}
+                  {merchant.total_offers ?? merchant.offers_count ?? 0} {(merchant.total_offers ?? merchant.offers_count ?? 0) === 1 ? 'Offer' : 'Offers'}
                 </p>
               )}
             </div>

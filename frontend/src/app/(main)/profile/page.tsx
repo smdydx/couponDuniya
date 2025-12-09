@@ -38,12 +38,21 @@ export default function ProfilePage() {
   const [saveError, setSaveError] = useState<string | null>(null);
   const [saveSuccess, setSaveSuccess] = useState(false);
 
+  type ProfileForm = {
+    first_name: string;
+    last_name: string;
+    email: string;
+    mobile: string;
+    date_of_birth?: string;
+    gender?: 'male' | 'female' | 'other';
+  };
+
   const {
     register,
     handleSubmit,
     setValue,
     formState: { errors, isDirty },
-  } = useForm({
+  } = useForm<ProfileForm>({
     defaultValues: {
       first_name: user?.first_name || "",
       last_name: user?.last_name || "",
@@ -61,19 +70,11 @@ export default function ProfilePage() {
       setValue("email", user.email || "");
       setValue("mobile", user.mobile || "");
       setValue("date_of_birth", user.date_of_birth || "");
-      setValue("gender", user.gender || "");
+      if (user.gender) {
+        setValue("gender", user.gender as 'male' | 'female' | 'other');
+      }
     }
   }, [user, setValue]);
-
-
-  type ProfileForm = {
-    first_name: string;
-    last_name: string;
-    email: string;
-    mobile: string;
-    date_of_birth?: string;
-    gender?: 'male' | 'female' | 'other';
-  };
 
   const onSubmit = async (data: ProfileForm) => {
     setIsSaving(true);
@@ -132,7 +133,7 @@ export default function ProfilePage() {
     }
   };
 
-  const kycStatus = KYC_STATUSES[user?.kyc_status || "pending"];
+  const kycStatus = KYC_STATUSES[(user?.kyc_status || "pending") as keyof typeof KYC_STATUSES];
 
   useEffect(() => {
     if (activeTab === "linked") {

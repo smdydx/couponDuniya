@@ -8,7 +8,7 @@ export interface User {
   first_name?: string;
   last_name?: string;
   avatar_url?: string;
-  wallet_balance: number;
+  wallet_balance?: number;
   pending_cashback?: number;
   referral_code?: string;
   role: string;
@@ -17,6 +17,9 @@ export interface User {
   created_at?: string;
   auth_provider?: string; // Added to track Google sign-up
   password_hash?: boolean; // Added to indicate if a password is set
+  date_of_birth?: string;
+  gender?: 'male' | 'female' | 'other';
+  kyc_status?: string;
 }
 
 export interface UserProfile extends User {
@@ -36,8 +39,9 @@ export interface LoginCredentials {
 export interface RegisterData {
   email: string;
   password: string;
-  first_name: string;
-  last_name: string;
+  first_name?: string;
+  last_name?: string;
+  full_name?: string;
   mobile?: string;
   referral_code?: string;
 }
@@ -68,6 +72,7 @@ export interface Merchant {
   seo_title?: string;
   seo_description?: string;
   total_offers?: number;
+  offers_count?: number;
   created_at: string;
   updated_at: string;
 }

@@ -29,6 +29,16 @@ export function VariantSelector({
   onAddToCart,
   maxQuantity = 10,
 }: VariantSelectorProps) {
+  if (!selectedVariant) {
+    return (
+      <div className="space-y-5">
+        <div className="rounded-lg bg-muted/50 p-4">
+          <p className="text-sm text-muted-foreground">Select a denomination above to see pricing</p>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="space-y-5">
       {/* Price Display */}
