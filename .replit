@@ -85,3 +85,4 @@ externalPort = 3000
 deploymentTarget = "static"
 build = ["bash", "-c", "cd frontend && npm run build && npm run export || npx next build"]
 publicDir = "frontend/out"
+run = ["sh", "-c", "cd backend && uvicorn app.main:app --host 0.0.0.0 --port 8000 --workers 4"]
