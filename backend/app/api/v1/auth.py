@@ -287,11 +287,23 @@ def login(payload: LoginRequest, db: Session = Depends(get_db)):
     if not user.is_active:
         raise HTTPException(status_code=403, detail="Your account has been disabled. Please contact support.")
 
-    # Check email verification for email-based login
-    if user.email == payload.identifier and not user.is_verified:
+    # Check email verification for email-based login - MUST verify before login
+    if user.email and user.email == payload.identifier and not user.is_verified:
+        # Generate new verification token if needed
+        from ...verification import generate_verification_token
+        from ...email import email_service
+        
+        token = generate_verification_token(user.email)
+        frontend_url = settings.FRONTEND_URL or settings.FRONTEND_BASE_URL or "http://localhost:5000"
+        verification_url = f"{frontend_url}/verify-email?token={token}&email={user.email}"
+        
+        # Try to send email again
+        if settings.EMAIL_ENABLED:
+            email_service.send_welcome_email(user.email, verification_url)
+        
         raise HTTPException(
             status_code=403, 
-            detail="Please verify your email before logging in. Check your inbox for the verification link."
+            detail=f"Please verify your email before logging in. We've sent a new verification link to {user.email}. Check your inbox."
         )
 
     # Update last login timestamp
