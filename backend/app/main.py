@@ -332,19 +332,17 @@ Path("uploads/blog").mkdir(parents=True, exist_ok=True)
 app.mount("/uploads", StaticFiles(directory="uploads"), name="uploads")
 
 
+@app.get("/openapi.json", include_in_schema=False)
+def get_openapi_json():
+    return app.openapi()
+
+
 @app.get("/docs", include_in_schema=False)
 def custom_docs():
-    openapi_url = app.openapi_url or "/openapi.json"
-    html = get_swagger_ui_html(openapi_url=openapi_url,
-                               title=f"{settings.APP_NAME} Docs",
-                               swagger_css_url="/static/swagger.css")
-    # Inject dark mode toggle
-    body_content = html.body.decode("utf-8") if isinstance(html.body, bytes) else str(html.body)
-    injected = body_content.replace(
-        "</body>",
-        "<button class='dark-mode-toggle' onclick=\"document.documentElement.classList.toggle('dark');\">Toggle Dark</button></body>"
+    return get_swagger_ui_html(
+        openapi_url="/openapi.json",
+        title=f"{settings.APP_NAME} Docs",
     )
-    return HTMLResponse(injected)
 
 
 @app.get("/health", tags=["System"])
