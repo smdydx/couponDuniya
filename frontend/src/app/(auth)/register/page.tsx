@@ -66,21 +66,21 @@ function RegisterForm() {
   };
 
   return (
-    <Card>
-      <CardHeader className="text-center">
-        <CardTitle className="text-2xl">Create an Account</CardTitle>
-        <CardDescription>Start earning cashback and saving money today</CardDescription>
+    <Card className="border-0 shadow-2xl">
+      <CardHeader className="text-center pb-3 sm:pb-6">
+        <CardTitle className="text-xl sm:text-2xl">Create an Account</CardTitle>
+        <CardDescription className="text-xs sm:text-sm">Start earning cashback and saving money today</CardDescription>
       </CardHeader>
-      <CardContent>
-        <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
+      <CardContent className="px-4 sm:px-6">
+        <form onSubmit={handleSubmit(onSubmit)} className="space-y-3 sm:space-y-4">
           {error && (
-            <div className="rounded-lg bg-destructive/10 p-3 text-sm text-destructive">
+            <div className="rounded-lg bg-destructive/10 p-2 text-xs sm:text-sm text-destructive">
               {error}
             </div>
           )}
 
-          <div className="space-y-2">
-            <Label htmlFor="full_name">Full Name</Label>
+          <div className="space-y-1.5 sm:space-y-2">
+            <Label htmlFor="full_name" className="text-sm">Full Name</Label>
             <Input
               id="full_name"
               placeholder="John Doe"
@@ -92,8 +92,8 @@ function RegisterForm() {
             )}
           </div>
 
-          <div className="space-y-2">
-            <Label htmlFor="email">Email</Label>
+          <div className="space-y-1.5 sm:space-y-2">
+            <Label htmlFor="email" className="text-sm">Email</Label>
             <Input
               id="email"
               type="email"
@@ -113,8 +113,8 @@ function RegisterForm() {
             )}
           </div>
 
-          <div className="space-y-2">
-            <Label htmlFor="mobile">Mobile (Optional)</Label>
+          <div className="space-y-1.5 sm:space-y-2">
+            <Label htmlFor="mobile" className="text-sm">Mobile (Optional)</Label>
             <Input
               id="mobile"
               type="tel"
@@ -123,8 +123,8 @@ function RegisterForm() {
             />
           </div>
 
-          <div className="space-y-2">
-            <Label htmlFor="password">Password</Label>
+          <div className="space-y-1.5 sm:space-y-2">
+            <Label htmlFor="password" className="text-sm">Password</Label>
             <div className="relative">
               <Input
                 id="password"
@@ -154,8 +154,8 @@ function RegisterForm() {
             )}
           </div>
 
-          <div className="space-y-2">
-            <Label htmlFor="confirm_password">Confirm Password</Label>
+          <div className="space-y-1.5 sm:space-y-2">
+            <Label htmlFor="confirm_password" className="text-sm">Confirm Password</Label>
             <Input
               id="confirm_password"
               type="password"
@@ -171,8 +171,8 @@ function RegisterForm() {
             )}
           </div>
 
-          <div className="space-y-2">
-            <Label htmlFor="referral_code">Referral Code (Optional)</Label>
+          <div className="space-y-1.5 sm:space-y-2">
+            <Label htmlFor="referral_code" className="text-sm">Referral Code (Optional)</Label>
             <Input
               id="referral_code"
               placeholder="Enter referral code"
@@ -180,13 +180,14 @@ function RegisterForm() {
             />
           </div>
 
-          <div className="flex items-start gap-2">
+          <div className="flex items-start gap-2 pt-1">
             <Checkbox
               id="terms"
               checked={acceptTerms}
               onCheckedChange={(checked) => setAcceptTerms(checked === true)}
+              className="mt-0.5"
             />
-            <Label htmlFor="terms" className="text-sm font-normal leading-tight">
+            <Label htmlFor="terms" className="text-xs sm:text-sm font-normal leading-tight">
               I agree to the{" "}
               <Link href={ROUTES.terms} className="text-primary hover:underline">
                 Terms of Service
@@ -198,10 +199,10 @@ function RegisterForm() {
             </Label>
           </div>
 
-          <Button type="submit" className="w-full" disabled={isLoading || !acceptTerms}>
+          <Button type="submit" className="w-full h-9 sm:h-10 text-sm sm:text-base" disabled={isLoading || !acceptTerms}>
             {isLoading ? (
               <>
-                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                <Loader2 className="mr-2 h-3 w-3 sm:h-4 sm:w-4 animate-spin" />
                 Creating account...
               </>
             ) : (
@@ -209,7 +210,7 @@ function RegisterForm() {
             )}
           </Button>
 
-          <div className="relative my-6">
+          <div className="relative my-3 sm:my-4">
             <div className="absolute inset-0 flex items-center">
               <span className="w-full border-t" />
             </div>
@@ -221,7 +222,7 @@ function RegisterForm() {
           <Button 
             type="button"
             variant="outline" 
-            className="w-full flex items-center justify-center gap-2" 
+            className="w-full h-9 sm:h-10 flex items-center justify-center gap-2 text-sm sm:text-base" 
             onClick={() => {
               const clientId = "433927974317-omujf5cn8ndhtdrofprnv9sb0uo3irl1.apps.googleusercontent.com";
               // Use current host for redirect
@@ -240,8 +241,8 @@ function RegisterForm() {
           </Button>
         </form>
       </CardContent>
-      <CardFooter className="justify-center">
-        <p className="text-sm text-muted-foreground">
+      <CardFooter className="justify-center pt-3 pb-4 sm:pt-4 sm:pb-6">
+        <p className="text-xs sm:text-sm text-muted-foreground">
           Already have an account?{" "}
           <Link href={ROUTES.login} className="text-primary hover:underline">
             Sign in

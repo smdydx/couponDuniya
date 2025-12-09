@@ -83,14 +83,18 @@ export default function AuthLayout({
         </div>
 
         {/* Content */}
-        <div className="relative z-10 container flex min-h-screen flex-col items-center justify-center py-8">
-          <Link href={ROUTES.home} className="mb-8 flex items-center gap-3 group">
-            <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-white text-2xl font-bold text-purple-600 shadow-2xl group-hover:scale-110 transition-all duration-300 border-2 border-purple-200">
+        <div className="relative z-10 container flex min-h-screen flex-col items-center justify-center py-4 px-4">
+          <Link href={ROUTES.home} className="mb-4 sm:mb-6 flex items-center gap-2 sm:gap-3 group flex-shrink-0">
+            <div className="flex h-10 w-10 sm:h-12 sm:w-12 items-center justify-center rounded-xl sm:rounded-2xl bg-white text-lg sm:text-xl font-bold text-purple-600 shadow-2xl group-hover:scale-110 transition-all duration-300 border-2 border-purple-200">
               BC
             </div>
-            <span className="text-3xl font-bold text-white drop-shadow-2xl tracking-tight">{SITE_NAME}</span>
+            <span className="text-xl sm:text-2xl font-bold text-white drop-shadow-2xl tracking-tight">{SITE_NAME}</span>
           </Link>
-          <div className="w-full max-w-md">{children}</div>
+          <div className="w-full max-w-md overflow-y-auto max-h-[calc(100vh-140px)] sm:max-h-[calc(100vh-160px)]">
+            <div className="pb-4">
+              {children}
+            </div>
+          </div>
         </div>
       </div>
     </Providers>
