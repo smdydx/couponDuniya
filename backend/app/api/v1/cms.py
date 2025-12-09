@@ -2,12 +2,12 @@ from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
 from sqlalchemy import select
 from pydantic import BaseModel
-from typing import Optional
+from typing import Optional, List
 
 from ...database import get_db
-from ...models import CMSPage
+from ...models import CMSPage, User, Banner
 from ...redis_client import cache_get, cache_set, cache_invalidate_prefix, rk
-from ...dependencies import require_admin
+from ...dependencies import require_admin, get_current_user
 
 router = APIRouter(prefix="/cms", tags=["CMS"])
 
