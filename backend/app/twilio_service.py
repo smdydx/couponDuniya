@@ -153,31 +153,38 @@ async def send_verification_sms(
 ) -> Tuple[bool, str]:
     """Send verification OTP via Twilio SMS."""
     try:
-        client = await get_twilio_client()
-        if not client:
-            return False, "Twilio client not initialized"
-
-        credentials = await get_twilio_credentials() # Fetch credentials again to get phone number
+        credentials = await get_twilio_credentials()
         if not credentials:
-            return False, "Twilio credentials not available"
+            logger.warning("Twilio credentials not available - dev mode")
+            return True, f"[DEV MODE] OTP: {otp_code}"
 
         from_phone = credentials.get("phone_number")
         if not from_phone:
             logger.error("Twilio phone number not configured")
             return False, "Twilio phone number not configured"
 
+        # Ensure to_phone is in E.164 format
+        if not to_phone.startswith("+"):
+            to_phone = f"+{to_phone}"
+
+        # Create Twilio client
+        client = Client(
+            credentials["account_sid"],
+            credentials["auth_token"]
+        )
+
         message = client.messages.create(
-            body=f"Your CouponAli verification code is: {otp_code}. Valid for 10 minutes. Do not share this code.",
+            body=f"Your CouponAli verification code is: {otp_code}. Valid for 5 minutes. Do not share this code.",
             from_=from_phone,
             to=to_phone
         )
 
         logger.info(f"SMS sent to {to_phone}, SID: {message.sid}")
-        return True, f"SMS sent: {message.sid}"
+        return True, "OTP sent successfully"
 
     except Exception as e:
-        logger.exception(f"Failed to send SMS: {e}")
-        return False, str(e)
+        logger.exception(f"Failed to send SMS via Twilio: {e}")
+        return False, f"SMS delivery failed: {str(e)}"
 
 
 async def check_email_verification_status(email: str) -> dict:

@@ -346,8 +346,10 @@ def login(payload: LoginRequest, db: Session = Depends(get_db)):
 
 
 @router.post("/request-otp", response_model=dict)
-def request_otp_endpoint(payload: OTPRequest, db: Session = Depends(get_db)):
+async def request_otp_endpoint(payload: OTPRequest, db: Session = Depends(get_db)):
     """Request OTP for mobile login/registration."""
+    from ...twilio_service import send_verification_sms
+    
     # Validate mobile format
     mobile = payload.mobile.strip()
     if not mobile.startswith("+"):
@@ -363,16 +365,15 @@ def request_otp_endpoint(payload: OTPRequest, db: Session = Depends(get_db)):
     if not otp_code:
         raise HTTPException(status_code=429, detail=message)
 
-    # Send SMS
-    sms_success, sms_message = send_otp_sms(mobile, otp_code)
+    # Send SMS via Twilio
+    sms_success, sms_message = await send_verification_sms(mobile, otp_code)
 
-    if not sms_success:
-        # Still return success in dev mode
-        pass
+    if not sms_success and not settings.DEBUG:
+        raise HTTPException(status_code=500, detail=f"Failed to send OTP: {sms_message}")
 
     return {
         "success": True,
-        "message": sms_message if not sms_success else message,
+        "message": "OTP sent successfully" if sms_success else f"[DEV MODE] {sms_message}",
         "data": {
             "otp_id": str(uuid.uuid4()),
             "expires_in": 300,
