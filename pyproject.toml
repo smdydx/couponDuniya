@@ -4,6 +4,7 @@ version = "0.1.0"
 description = "Add your description here"
 requires-python = ">=3.11"
 dependencies = [
+    "aiohttp>=3.13.2",
     "alembic>=1.17.2",
     "bcrypt>=5.0.0",
     "black>=25.11.0",
@@ -31,5 +32,6 @@ dependencies = [
     "schedule>=1.2.2",
     "sendgrid>=6.12.5",
     "sqlalchemy>=2.0.44",
+    "twilio>=9.8.8",
     "uvicorn[standard]>=0.38.0",
 ]
