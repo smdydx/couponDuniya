@@ -2,16 +2,13 @@ import axios from 'axios';
 
 const getApiBaseUrl = () => {
   if (typeof window !== 'undefined') {
-    const hostname = window.location.hostname;
-    if (hostname.includes('replit.dev') || hostname.includes('repl.co')) {
-      return `https://${hostname.replace('-00-', '-00-').replace('5000', '8000')}/api/v1`.replace(':5000', '').replace(/\/+$/, '');
-    }
+    return '/backend-api/api/v1';
   }
   return process.env.NEXT_PUBLIC_API_URL || "http://127.0.0.1:8000/api/v1";
 };
 
 const API_BASE_URL = typeof window !== 'undefined'
-  ? `${window.location.protocol}//${window.location.hostname}:8000/api/v1`
+  ? '/backend-api/api/v1'
   : process.env.NEXT_PUBLIC_API_URL || "http://127.0.0.1:8000/api/v1";
 
 export const apiClient = axios.create({
