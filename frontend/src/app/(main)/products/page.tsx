@@ -48,10 +48,20 @@ export default function ProductsPage() {
 
       try {
         const response = await api.get(`/products/?${params.toString()}`);
-        return response.data?.data || { data: [], pagination: { current_page: 1, total_pages: 1, total_items: 0, items_per_page: 24 } };
+        const products = response.data?.data || response.data || [];
+        
+        return {
+          data: Array.isArray(products) ? products : [],
+          pagination: { 
+            current_page: currentPage, 
+            total_pages: Math.ceil((products?.length || 0) / 24), 
+            total_items: products?.length || 0, 
+            items_per_page: 24 
+          }
+        };
       } catch (err) {
-        console.warn("Products fetch error - using fallback:", err);
-        return { data: [], pagination: { current_page: 1, total_pages: 1, total_items: 0, items_per_page: 24 } };
+        console.error("Products fetch error:", err);
+        return { data: [], pagination: { current_page: 1, total_pages: 0, total_items: 0, items_per_page: 24 } };
       }
     },
     retry: 1,
