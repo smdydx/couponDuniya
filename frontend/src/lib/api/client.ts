@@ -2,12 +2,14 @@ import axios, { AxiosError, InternalAxiosRequestConfig } from 'axios';
 
 const getApiUrl = () => {
   if (typeof window !== 'undefined') {
-    return 'http://127.0.0.1:8000/api/v1';
+    return '/backend-api/api/v1';
   }
   return process.env.NEXT_PUBLIC_API_URL || 'http://127.0.0.1:8000/api/v1';
 };
 
-const API_URL = 'http://127.0.0.1:8000/api/v1';
+const API_URL = typeof window !== 'undefined' 
+  ? '/backend-api/api/v1'
+  : 'http://127.0.0.1:8000/api/v1';
 
 const apiClient = axios.create({
   baseURL: API_URL,
@@ -44,6 +46,13 @@ apiClient.interceptors.request.use(
 apiClient.interceptors.response.use(
   (response) => response,
   async (error: AxiosError) => {
+    console.error('API Error:', error.message, error.response?.status);
+    
+    if (!error.response) {
+      console.error('Network error:', error.message);
+      return Promise.reject(error);
+    }
+
     const originalRequest = error.config as InternalAxiosRequestConfig & { _retry?: boolean };
 
     // Handle 401 Unauthorized - try to refresh token
@@ -75,29 +84,12 @@ apiClient.interceptors.response.use(
           }
         }
       } catch {
-        // Refresh failed, clear auth but don't redirect - let components handle auth errors gracefully
+        // Refresh failed, clear auth
         localStorage.removeItem('auth-storage');
       }
     }
 
-    // Format error message - handle both string and object detail
-    const responseData = error.response?.data as { detail?: string | { message?: string; errors?: string[] } };
-    let errorMessage = 'An unexpected error occurred';
-    
-    if (responseData?.detail) {
-      if (typeof responseData.detail === 'string') {
-        errorMessage = responseData.detail;
-      } else if (typeof responseData.detail === 'object') {
-        // Handle object detail like {"message": "...", "errors": [...]}
-        errorMessage = responseData.detail.message || 
-                       responseData.detail.errors?.join(', ') || 
-                       JSON.stringify(responseData.detail);
-      }
-    } else if (error.message) {
-      errorMessage = error.message;
-    }
-
-    return Promise.reject(new Error(errorMessage));
+    return Promise.reject(error);
   }
 );
 
