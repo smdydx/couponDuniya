@@ -354,6 +354,8 @@ def login(payload: LoginRequest, db: Session = Depends(get_db)):
 @router.post("/request-otp", response_model=dict)
 async def request_otp_endpoint(payload: OTPRequest, db: Session = Depends(get_db)):
     """Request OTP for mobile login/registration."""
+    from ...twilio_service import send_verification_sms
+
     # Validate mobile format
     mobile = payload.mobile.strip()
     if not mobile.startswith("+"):
@@ -364,43 +366,20 @@ async def request_otp_endpoint(payload: OTPRequest, db: Session = Depends(get_db
         raise HTTPException(status_code=429, detail=f"OTP limit reached. Try again in {ttl}s")
 
     # Generate OTP
-    otp_code, message = create_otp(mobile, max_attempts=5) # Assuming create_otp is updated to take max_attempts
+    otp_code, message = create_otp(mobile)
+
     if not otp_code:
         raise HTTPException(status_code=429, detail=message)
 
-    # Send OTP via Email (using mobile as identifier but sending to email)
-    # For phone-based auth, we'll use email service to deliver OTP
-    from ...email import email_service
+    # Send SMS via Twilio
+    sms_success, sms_message = await send_verification_sms(mobile, otp_code)
 
-    # Create email content for OTP
-    subject = "Your CouponAli Verification Code"
-    html_content = f"""
-    <html>
-        <body style="font-family: Arial, sans-serif; line-height: 1.6; color: #333;">
-            <div style="max-width: 600px; margin: 0 auto; padding: 20px;">
-                <h1 style="color: #8b5cf6;">CouponAli</h1>
-                <h2>Your Verification Code</h2>
-                <div style="background-color: #f0f8ff; padding: 20px; margin: 20px 0; border-radius: 5px; text-align: center;">
-                    <p style="font-size: 14px; margin-bottom: 10px;">Your OTP code is:</p>
-                    <h1 style="color: #8b5cf6; font-size: 36px; letter-spacing: 5px; margin: 10px 0;">{otp_code}</h1>
-                    <p style="color: #666; font-size: 12px; margin-top: 10px;">Valid for 5 minutes</p>
-                </div>
-                <p><strong>Important:</strong> Do not share this code with anyone.</p>
-                <p style="color: #999; font-size: 12px; margin-top: 30px;">
-                    If you did not request this code, please ignore this email.
-                </p>
-            </div>
-        </body>
-    </html>
-    """
-
-    # Send email (mobile number will be used as email if contains @, otherwise append @temp.local)
-    email_to = mobile if "@" in mobile else f"{mobile}@couponali.local"
-    email_success, email_message = email_service.send_email(email_to, subject, html_content)
+    if not sms_success and not settings.DEBUG:
+        raise HTTPException(status_code=500, detail=f"Failed to send OTP: {sms_message}")
 
     return {
         "success": True,
-        "message": f"OTP sent to email. {message}" if email_success else f"[DEV MODE] OTP: {otp_code}",
+        "message": "OTP sent successfully" if sms_success else f"[DEV MODE] {sms_message}",
         "data": {
             "otp_id": str(uuid.uuid4()),
             "expires_in": 300,

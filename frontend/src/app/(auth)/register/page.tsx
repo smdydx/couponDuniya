@@ -1,1 +1,272 @@
-\n\"use client\";\n\nimport { Suspense, useState } from \"react\";\nimport Link from \"next/link\";\nimport { useRouter, useSearchParams } from \"next/navigation\";\nimport { useForm } from \"react-hook-form\";\nimport { Eye, EyeOff, Loader2 } from \"lucide-react\";\nimport { Button } from \"@/components/ui/button\";\nimport { Input } from \"@/components/ui/input\";\nimport { Label } from \"@/components/ui/label\";\nimport { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from \"@/components/ui/card\";\nimport { Checkbox } from \"@/components/ui/checkbox\";\nimport { authAPI } from \"@/lib/api/auth\";\nimport { ROUTES } from \"@/lib/constants\";\n\ninterface RegisterFormData {\n  email: string;\n  mobile?: string;\n  password: string;\n  confirm_password: string;\n  full_name: string;\n  referral_code?: string;\n}\n\nfunction RegisterForm() {\n  const router = useRouter();\n  const searchParams = useSearchParams();\n  const referralCode = searchParams.get(\"ref\");\n  const [showPassword, setShowPassword] = useState(false);\n  const [acceptTerms, setAcceptTerms] = useState(false);\n  const [isLoading, setIsLoading] = useState(false);\n  const [error, setError] = useState<string | null>(null);\n\n  const {\n    register,\n    handleSubmit,\n    watch,\n    formState: { errors },\n  } = useForm<RegisterFormData>({\n    defaultValues: {\n      referral_code: referralCode || \"\",\n    },\n  });\n\n  const password = watch(\"password\");\n\n  const onSubmit = async (data: RegisterFormData) => {\n    if (!acceptTerms) return;\n\n    setIsLoading(true);\n    setError(null);\n\n    try {\n      const { confirm_password, ...registerData } = data;\n\n      // Call the API directly - send full_name as is\n      await authAPI.register({\n        ...registerData,\n        full_name: registerData.full_name,\n      });\n\n      // Redirect to verify email page with email parameter for animated waiting page\n      const emailParam = encodeURIComponent(registerData.email || \"\");\n      router.replace(`${ROUTES.verifyEmail}?email=${emailParam}`);\n    } catch (err: any) {\n      setError(err?.response?.data?.detail || err?.message || \"Registration failed\");\n    } finally {\n      setIsLoading(false);\n    }\n  };\n\n  return (\n    <Card className=\"border-0 shadow-2xl\">\n      <CardHeader className=\"text-center pb-6\">\n        <CardTitle className=\"text-2xl\">Create an Account</CardTitle>\n        <CardDescription className=\"text-sm\">Start earning cashback and saving money today</CardDescription>\n      </CardHeader>\n      <CardContent className=\"px-6\">\n        <form onSubmit={handleSubmit(onSubmit)} className=\"space-y-4\">\n          {error && (\n            <div className=\"rounded-lg bg-destructive/10 p-2 text-sm text-destructive\">\n              {error}\n            </div>\n          )}\n\n          <div className=\"space-y-2\">\n            <Label htmlFor=\"full_name\">Full Name</Label>\n            <Input\n              id=\"full_name\"\n              placeholder=\"John Doe\"\n              {...register(\"full_name\", { required: \"Full name is required\" })}\n              error={!!errors.full_name}\n            />\n            {errors.full_name && (\n              <p className=\"text-xs text-destructive\">{errors.full_name.message}</p>\n            )}\n          </div>\n\n          <div className=\"space-y-2\">\n            <Label htmlFor=\"email\">Email</Label>\n            <Input\n              id=\"email\"\n              type=\"email\"\n              placeholder=\"you@example.com\"\n              {...register(\"email\", {\n                required: \"Email is required\",\n                pattern: {\n                  value: /^[^\s@]+@[^\s@]+\\.[^\s@]+$/,\n                  message: \"Invalid email address\",\n                },\n              })}\n              error={!!errors.email}\n              onChange={() => setError(null)}\n            />\n            {errors.email && (\n              <p className=\"text-xs text-destructive\">{errors.email.message}</p>\n            )}\n          </div>\n\n          <div className=\"space-y-2\">\n            <Label htmlFor=\"mobile\">Mobile (Optional)</Label>\n            <Input\n              id=\"mobile\"\n              type=\"tel\"\n              placeholder=\"+91 98765 43210\"\n              {...register(\"mobile\")}\n            />\n          </div>\n\n          <div className=\"space-y-2\">\n            <Label htmlFor=\"password\">Password</Label>\n            <div className=\"relative\">\n              <Input\n                id=\"password\"\n                type={showPassword ? \"text\" : \"password\"}\n                placeholder=\"Create a strong password\"\n                {...register(\"password\", {\n                  required: \"Password is required\",\n                  minLength: {\n                    value: 8,\n                    message: \"Password must be at least 8 characters\",\n                  },\n                })}\n                error={!!errors.password}\n              />\n              <Button\n                type=\"button\"\n                variant=\"ghost\"\n                size=\"icon\"\n                className=\"absolute right-1 top-1 h-8 w-8\"\n                onClick={() => setShowPassword(!showPassword)}\n              >\n                {showPassword ? <EyeOff className=\"h-4 w-4\" /> : <Eye className=\"h-4 w-4\" />}\n              </Button>\n            </div>\n            {errors.password && (\n              <p className=\"text-xs text-destructive\">{errors.password.message}</p>\n            )}\n          </div>\n\n          <div className=\"space-y-2\">\n            <Label htmlFor=\"confirm_password\">Confirm Password</Label>\n            <Input\n              id=\"confirm_password\"\n              type=\"password\"\n              placeholder=\"Confirm your password\"\n              {...register(\"confirm_password\", {\n                required: \"Please confirm your password\",\n                validate: (value) => value === password || \"Passwords don't match\",\n              })}\n              error={!!errors.confirm_password}\n            />\n            {errors.confirm_password && (\n              <p className=\"text-xs text-destructive\">{errors.confirm_password.message}</p>\n            )}\n          </div>\n\n          <div className=\"space-y-2\">\n            <Label htmlFor=\"referral_code\">Referral Code (Optional)</Label>\n            <Input\n              id=\"referral_code\"\n              placeholder=\"Enter referral code\"\n              {...register(\"referral_code\")}\n            />\n          </div>\n\n          <div className=\"flex items-start gap-2\">\n            <Checkbox\n              id=\"terms\"\n              checked={acceptTerms}\n              onCheckedChange={(checked) => setAcceptTerms(checked === true)}\n              className=\"mt-0.5\"\n            />\n            <Label htmlFor=\"terms\" className=\"text-sm font-normal leading-tight\">\n              I agree to the{\" \"}\n              <Link href={ROUTES.terms} className=\"text-primary hover:underline\">\n                Terms of Service\n              </Link>{\" \"}\n              and{\" \"}\n              <Link href={ROUTES.privacy} className=\"text-primary hover:underline\">\n                Privacy Policy\n              </Link>\n            </Label>\n          </div>\n\n          <Button type=\"submit\" className=\"w-full h-10 text-base\" disabled={isLoading || !acceptTerms}>\n            {isLoading ? (\n              <>\n                <Loader2 className=\"mr-2 h-4 w-4 animate-spin\" />\n                Creating account...\n              </>\n            ) : (\n              \"Create Account\"\n            )}\n          </Button>\n\n          <div className=\"relative my-6\">\n            <div className=\"absolute inset-0 flex items-center\">\n              <span className=\"w-full border-t\" />\n            </div>\n            <div className=\"relative flex justify-center text-xs uppercase\">\n              <span className=\"bg-card px-2 text-muted-foreground\">Or</span>\n            </div>\n          </div>\n\n          <Button \n            type=\"button\"\n            variant=\"outline\" \n            className=\"w-full h-10 flex items-center justify-center gap-2 text-base\" \n            onClick={() => {\n              const clientId = \"433927974317-omujf5cn8ndhtdrofprnv9sb0uo3irl1.apps.googleusercontent.com\";\n              // Use current host for redirect\n              const redirectUri = `${window.location.origin}/google/callback`;\n              const scope = \"openid email profile\";\n              const responseType = \"id_token token\";\n              const nonce = Math.random().toString(36).substring(7);\n\n              const authUrl = `https://accounts.google.com/o/oauth2/v2/auth?client_id=${clientId}&redirect_uri=${redirectUri}&response_type=${responseType}&scope=${scope}&nonce=${nonce}`;\n\n              window.location.href = authUrl;\n            }}\n          >\n            <img src=\"/images/icons/google.png\" alt=\"Google\" className=\"w-5 h-5\" />\n            Continue with Google\n          </Button>\n        </form>\n      </CardContent>\n      <CardFooter className=\"justify-center pt-4 pb-6\">\n        <p className=\"text-sm text-muted-foreground\">\n          Already have an account?{\" \"}\n          <Link href={ROUTES.login} className=\"text-primary hover:underline\">\n            Sign in\n          </Link>\n        </p>\n      </CardFooter>\n    </Card>\n  );\n}\n\nexport default function RegisterPage() {\n  return (\n    <Suspense fallback={\n      <Card>\n        <CardContent className=\"flex items-center justify-center p-8\">\n          <Loader2 className=\"h-8 w-8 animate-spin text-muted-foreground\" />\n        </CardContent>\n      </Card>\n    }>\n      <RegisterForm />\n    </Suspense>\n  );\n}\n
+"use client";
+
+import { Suspense, useState } from "react";
+import Link from "next/link";
+import { useRouter, useSearchParams } from "next/navigation";
+import { useForm } from "react-hook-form";
+import { Eye, EyeOff, Loader2 } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
+import { Checkbox } from "@/components/ui/checkbox";
+import { authAPI } from "@/lib/api/auth";
+import { ROUTES } from "@/lib/constants";
+
+interface RegisterFormData {
+  email: string;
+  mobile?: string;
+  password: string;
+  confirm_password: string;
+  full_name: string;
+  referral_code?: string;
+}
+
+function RegisterForm() {
+  const router = useRouter();
+  const searchParams = useSearchParams();
+  const referralCode = searchParams.get("ref");
+  const [showPassword, setShowPassword] = useState(false);
+  const [acceptTerms, setAcceptTerms] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  const {
+    register,
+    handleSubmit,
+    watch,
+    formState: { errors },
+  } = useForm<RegisterFormData>({
+    defaultValues: {
+      referral_code: referralCode || "",
+    },
+  });
+
+  const password = watch("password");
+
+  const onSubmit = async (data: RegisterFormData) => {
+    if (!acceptTerms) return;
+
+    setIsLoading(true);
+    setError(null);
+
+    try {
+      const { confirm_password, ...registerData } = data;
+      
+      // Call the API directly - send full_name as is
+      await authAPI.register({
+        ...registerData,
+        full_name: registerData.full_name,
+      });
+      
+      // Redirect to verify email page with email parameter for animated waiting page
+      const emailParam = encodeURIComponent(registerData.email || "");
+      router.replace(`${ROUTES.verifyEmail}?email=${emailParam}`);
+    } catch (err: any) {
+      setError(err?.response?.data?.detail || err?.message || "Registration failed");
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  return (
+    <Card className="border-0 shadow-2xl">
+      <CardHeader className="text-center pb-6">
+        <CardTitle className="text-2xl">Create an Account</CardTitle>
+        <CardDescription className="text-sm">Start earning cashback and saving money today</CardDescription>
+      </CardHeader>
+      <CardContent className="px-6">
+        <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
+          {error && (
+            <div className="rounded-lg bg-destructive/10 p-2 text-sm text-destructive">
+              {error}
+            </div>
+          )}
+
+          <div className="space-y-2">
+            <Label htmlFor="full_name">Full Name</Label>
+            <Input
+              id="full_name"
+              placeholder="John Doe"
+              {...register("full_name", { required: "Full name is required" })}
+              error={!!errors.full_name}
+            />
+            {errors.full_name && (
+              <p className="text-xs text-destructive">{errors.full_name.message}</p>
+            )}
+          </div>
+
+          <div className="space-y-2">
+            <Label htmlFor="email">Email</Label>
+            <Input
+              id="email"
+              type="email"
+              placeholder="you@example.com"
+              {...register("email", {
+                required: "Email is required",
+                pattern: {
+                  value: /^[^\s@]+@[^\s@]+\.[^\s@]+$/,
+                  message: "Invalid email address",
+                },
+              })}
+              error={!!errors.email}
+              onChange={() => setError(null)}
+            />
+            {errors.email && (
+              <p className="text-xs text-destructive">{errors.email.message}</p>
+            )}
+          </div>
+
+          <div className="space-y-2">
+            <Label htmlFor="mobile">Mobile (Optional)</Label>
+            <Input
+              id="mobile"
+              type="tel"
+              placeholder="+91 98765 43210"
+              {...register("mobile")}
+            />
+          </div>
+
+          <div className="space-y-2">
+            <Label htmlFor="password">Password</Label>
+            <div className="relative">
+              <Input
+                id="password"
+                type={showPassword ? "text" : "password"}
+                placeholder="Create a strong password"
+                {...register("password", {
+                  required: "Password is required",
+                  minLength: {
+                    value: 8,
+                    message: "Password must be at least 8 characters",
+                  },
+                })}
+                error={!!errors.password}
+              />
+              <Button
+                type="button"
+                variant="ghost"
+                size="icon"
+                className="absolute right-1 top-1 h-8 w-8"
+                onClick={() => setShowPassword(!showPassword)}
+              >
+                {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+              </Button>
+            </div>
+            {errors.password && (
+              <p className="text-xs text-destructive">{errors.password.message}</p>
+            )}
+          </div>
+
+          <div className="space-y-2">
+            <Label htmlFor="confirm_password">Confirm Password</Label>
+            <Input
+              id="confirm_password"
+              type="password"
+              placeholder="Confirm your password"
+              {...register("confirm_password", {
+                required: "Please confirm your password",
+                validate: (value) => value === password || "Passwords don't match",
+              })}
+              error={!!errors.confirm_password}
+            />
+            {errors.confirm_password && (
+              <p className="text-xs text-destructive">{errors.confirm_password.message}</p>
+            )}
+          </div>
+
+          <div className="space-y-2">
+            <Label htmlFor="referral_code">Referral Code (Optional)</Label>
+            <Input
+              id="referral_code"
+              placeholder="Enter referral code"
+              {...register("referral_code")}
+            />
+          </div>
+
+          <div className="flex items-start gap-2">
+            <Checkbox
+              id="terms"
+              checked={acceptTerms}
+              onCheckedChange={(checked) => setAcceptTerms(checked === true)}
+              className="mt-0.5"
+            />
+            <Label htmlFor="terms" className="text-sm font-normal leading-tight">
+              I agree to the{" "}
+              <Link href={ROUTES.terms} className="text-primary hover:underline">
+                Terms of Service
+              </Link>{" "}
+              and{" "}
+              <Link href={ROUTES.privacy} className="text-primary hover:underline">
+                Privacy Policy
+              </Link>
+            </Label>
+          </div>
+
+          <Button type="submit" className="w-full h-10 text-base" disabled={isLoading || !acceptTerms}>
+            {isLoading ? (
+              <>
+                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                Creating account...
+              </>
+            ) : (
+              "Create Account"
+            )}
+          </Button>
+
+          <div className="relative my-6">
+            <div className="absolute inset-0 flex items-center">
+              <span className="w-full border-t" />
+            </div>
+            <div className="relative flex justify-center text-xs uppercase">
+              <span className="bg-card px-2 text-muted-foreground">Or</span>
+            </div>
+          </div>
+
+          <Button 
+            type="button"
+            variant="outline" 
+            className="w-full h-10 flex items-center justify-center gap-2 text-base" 
+            onClick={() => {
+              const clientId = "433927974317-omujf5cn8ndhtdrofprnv9sb0uo3irl1.apps.googleusercontent.com";
+              // Use current host for redirect
+              const redirectUri = `${window.location.origin}/google/callback`;
+              const scope = "openid email profile";
+              const responseType = "id_token token";
+              const nonce = Math.random().toString(36).substring(7);
+              
+              const authUrl = `https://accounts.google.com/o/oauth2/v2/auth?client_id=${clientId}&redirect_uri=${redirectUri}&response_type=${responseType}&scope=${scope}&nonce=${nonce}`;
+              
+              window.location.href = authUrl;
+            }}
+          >
+            <img src="/images/icons/google.png" alt="Google" className="w-5 h-5" />
+            Continue with Google
+          </Button>
+        </form>
+      </CardContent>
+      <CardFooter className="justify-center pt-4 pb-6">
+        <p className="text-sm text-muted-foreground">
+          Already have an account?{" "}
+          <Link href={ROUTES.login} className="text-primary hover:underline">
+            Sign in
+          </Link>
+        </p>
+      </CardFooter>
+    </Card>
+  );
+}
+
+export default function RegisterPage() {
+  return (
+    <Suspense fallback={
+      <Card>
+        <CardContent className="flex items-center justify-center p-8">
+          <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
+        </CardContent>
+      </Card>
+    }>
+      <RegisterForm />
+    </Suspense>
+  );
+}

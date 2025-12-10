@@ -42,9 +42,9 @@ class Settings(BaseSettings):
     EMAIL_ENABLED: bool = True  # Enable email sending
     SMTP_HOST: str = "smtp.gmail.com"
     SMTP_PORT: int = 587
-    SMTP_USER: str = "samadalam1216@gmail.com"
-    SMTP_PASSWORD: str = "udyfkatjssqlqyqy"
-    EMAIL_FROM: str = "samadalam1216@gmail.com"
+    SMTP_USER: str = ""
+    SMTP_PASSWORD: str = ""
+    EMAIL_FROM: str = "noreply@couponali.com"
     # Optional SendGrid API key. If provided, SendGrid is preferred over SMTP.
     SENDGRID_API_KEY: str = ""
 
