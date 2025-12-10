@@ -22,22 +22,26 @@ def create_admin():
         
         if admin:
             # Update existing admin
-            admin.hashed_password = get_password_hash("admin123")
+            admin.password_hash = get_password_hash("admin123")
             admin.is_admin = True
-            admin.is_verified = True  # CRITICAL: Ensure admin is verified
+            admin.is_verified = True
             admin.is_active = True
             admin.role = "admin"
+            admin.status = "active"
+            admin.email_verified_at = datetime.utcnow()
             print("✅ Updated existing admin user")
         else:
             # Create new admin
             admin = User(
                 email="admin@couponali.com",
-                hashed_password=get_password_hash("admin123"),
-                name="Admin User",
+                password_hash=get_password_hash("admin123"),
+                full_name="Admin User",
                 is_admin=True,
-                is_verified=True,  # CRITICAL: Mark as verified
+                is_verified=True,
                 is_active=True,
-                role="admin"
+                role="admin",
+                status="active",
+                email_verified_at=datetime.utcnow()
             )
             db.add(admin)
             print("✅ Created new admin user")
@@ -49,13 +53,15 @@ def create_admin():
         print("\n" + "="*50)
         print("ADMIN ACCOUNT DETAILS:")
         print("="*50)
-        print(f"Email:        admin@couponali.com")
-        print(f"Password:     admin123")
-        print(f"ID:           {admin.id}")
-        print(f"Is Admin:     {admin.is_admin}")
-        print(f"Is Verified:  {admin.is_verified}")
-        print(f"Is Active:    {admin.is_active}")
-        print(f"Role:         {admin.role}")
+        print(f"Email:           admin@couponali.com")
+        print(f"Password:        admin123")
+        print(f"ID:              {admin.id}")
+        print(f"Is Admin:        {admin.is_admin}")
+        print(f"Is Verified:     {admin.is_verified}")
+        print(f"Is Active:       {admin.is_active}")
+        print(f"Status:          {admin.status}")
+        print(f"Role:            {admin.role}")
+        print(f"Email Verified:  {admin.email_verified_at}")
         print("="*50)
         
         if not admin.is_verified:

@@ -84,37 +84,18 @@ export default function AdminDashboard() {
         return;
       }
 
-      // Check if user is verified
-      if (currentUser && !currentUser.is_verified) {
-        console.error("❌ Admin account is not verified");
-        alert("Your admin account is not verified. Please contact system administrator to verify your account.");
-        router.push("/");
-        return;
-      }
-
+      // Silently fetch data without verification checks
       const [statsResponse, merchantsResponse, offersResponse] = await Promise.allSettled([
         adminApiClient.get("/analytics/dashboard"),
         adminApiClient.get("/merchants", { params: { limit: 5 } }),
         adminApiClient.get("/offers", { params: { limit: 5 } }),
       ]);
 
-      // Handle 403 errors - check if it's verification issue
-      if (statsResponse.status === "rejected") {
-        const errorMsg = statsResponse.reason?.response?.data?.error?.message || "";
-        
-        if (errorMsg.includes("not verified")) {
-          console.error("❌ Account verification required");
-          alert("Your admin account needs to be verified. Please run: python backend/scripts/create_admin.py");
-          router.push("/");
-          return;
-        }
-        
-        if (statsResponse.reason?.response?.status === 403) {
-          console.error("❌ Access denied");
-          useAuthStore.setState({ user: null, accessToken: null, isAuthenticated: false });
-          router.push("/login");
-          return;
-        }
+      // Handle 403 errors silently - redirect to login
+      if (statsResponse.status === "rejected" && statsResponse.reason?.response?.status === 403) {
+        useAuthStore.setState({ user: null, accessToken: null, isAuthenticated: false });
+        router.push("/login");
+        return;
       }
 
       if (statsResponse.status === "fulfilled") {

@@ -146,8 +146,16 @@ adminApiClient.interceptors.request.use(
 // Response interceptor for adminApiClient
 adminApiClient.interceptors.response.use(
   (response) => response,
-  (error) => {
-    // Silently handle errors without console logs
+  async (error) => {
+    // Handle 403 - clear auth and redirect
+    if (error.response?.status === 403) {
+      if (typeof window !== 'undefined') {
+        const { useAuthStore } = await import('@/store/authStore');
+        useAuthStore.getState().logout();
+        window.location.href = '/login';
+      }
+    }
+    
     return Promise.reject(error);
   }
 );
