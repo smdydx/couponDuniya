@@ -24,7 +24,6 @@ def list_products(
     sort_by: str | None = None,
     db: Session = Depends(get_db),
     _: dict = Depends(rate_limit_dependency("products:list", limit=100, window_seconds=60)),
-    current_user: User = Depends(get_current_user),
 ):
     """List all active products with variants"""
     # Base query with joins
@@ -126,7 +125,7 @@ def list_products(
 
 
 @router.get("/featured", response_model=dict)
-def featured_products(limit: int = 8, db: Session = Depends(get_db), current_user: User = Depends(get_current_user)):
+def featured_products(limit: int = 8, db: Session = Depends(get_db)):
     """Get featured products"""
     query = select(Product, Merchant).outerjoin(Merchant, Product.merchant_id == Merchant.id)
     query = query.where(Product.is_active == True, Product.is_featured == True)
@@ -170,7 +169,7 @@ def featured_products(limit: int = 8, db: Session = Depends(get_db), current_use
 
 
 @router.get("/bestsellers", response_model=dict)
-def bestseller_products(limit: int = 8, db: Session = Depends(get_db), current_user: User = Depends(get_current_user)):
+def bestseller_products(limit: int = 8, db: Session = Depends(get_db)):
     """Get bestseller products"""
     query = select(Product, Merchant).outerjoin(Merchant, Product.merchant_id == Merchant.id)
     query = query.where(Product.is_active == True, Product.is_bestseller == True)
@@ -214,7 +213,7 @@ def bestseller_products(limit: int = 8, db: Session = Depends(get_db), current_u
 
 
 @router.get("/{slug}", response_model=dict)
-def get_product(slug: str, db: Session = Depends(get_db), current_user: User = Depends(get_current_user)):
+def get_product(slug: str, db: Session = Depends(get_db)):
     """Get product by slug with all details"""
     query = select(Product, Merchant).outerjoin(Merchant, Product.merchant_id == Merchant.id)
     query = query.where(Product.slug == slug, Product.is_active == True)
