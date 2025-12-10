@@ -4,7 +4,7 @@ import { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import accessApi from "@/lib/api/accessControl";
+import accessApi from "@/lib/api/access";
 
 export default function AdminAccessPage() {
   const [roles, setRoles] = useState<any[]>([]);
