@@ -4,6 +4,7 @@ export interface User {
   uuid?: string;
   email: string;
   mobile?: string;
+  mobile_verified?: boolean;
   full_name?: string;
   first_name?: string;
   last_name?: string;

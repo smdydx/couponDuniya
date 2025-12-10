@@ -39,14 +39,29 @@ const getAuthToken = () => {
 // Request interceptor to add auth token
 apiClient.interceptors.request.use(
   (config) => {
-    const state = useAuthStore.getState();
-    const token = state.accessToken;
+    // In a real app, you'd import and use your auth store here, e.g.:
+    // import { useAuthStore } from '@/store/authStore';
+    // const state = useAuthStore.getState();
+    // const token = state.accessToken;
 
-    // Always check both store and localStorage
-    const storedToken = token || localStorage.getItem('access_token');
+    // For now, directly access localStorage for the token
+    let token = localStorage.getItem('access_token');
 
-    if (storedToken) {
-      config.headers.Authorization = `Bearer ${storedToken}`;
+    // Fallback to auth-storage if access_token is not found
+    if (!token) {
+      const authStorage = localStorage.getItem('auth-storage');
+      if (authStorage) {
+        try {
+          const parsed = JSON.parse(authStorage);
+          token = parsed.state?.accessToken || null;
+        } catch (e) {
+          console.error('Failed to parse auth storage:', e);
+        }
+      }
+    }
+
+    if (token) {
+      config.headers.Authorization = `Bearer ${token}`;
     }
 
     return config;
@@ -60,6 +75,10 @@ apiClient.interceptors.response.use(
   (error) => {
     if (error.response?.status === 401) {
       console.error('Unauthorized request to:', error.config?.url);
+      // Redirect to login page if unauthorized
+      if (typeof window !== 'undefined') {
+        window.location.href = '/login';
+      }
     }
     if (error.response?.status === 404) {
       console.error('Endpoint not found:', error.config?.url);

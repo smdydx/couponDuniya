@@ -57,6 +57,16 @@ function ProfileContent() {
   const [saveSuccess, setSaveSuccess] = useState(false);
   const [passwordSuccess, setPasswordSuccess] = useState(false);
 
+  // Profile Picture State
+  const [uploadingAvatar, setUploadingAvatar] = useState(false);
+  const [avatarPreview, setAvatarPreview] = useState<string | null>(null);
+
+  // Mobile Verification State
+  const [verifyingMobile, setVerifyingMobile] = useState(false);
+  const [mobileOtp, setMobileOtp] = useState("");
+  const [otpSent, setOtpSent] = useState(false);
+  const [otpError, setOtpError] = useState("");
+
   // KYC State
   const [kycData, setKycData] = useState<KYCData | null>(null);
   const [loadingKyc, setLoadingKyc] = useState(false);
@@ -300,6 +310,106 @@ function ProfileContent() {
     }
   };
 
+  const handleAvatarUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    // Validate file type
+    if (!file.type.startsWith('image/')) {
+      toast.error('Please select an image file');
+      return;
+    }
+
+    // Validate file size (max 5MB)
+    if (file.size > 5 * 1024 * 1024) {
+      toast.error('Image size should be less than 5MB');
+      return;
+    }
+
+    setUploadingAvatar(true);
+    try {
+      const formData = new FormData();
+      formData.append('file', file);
+
+      const response = await apiClient.post('/users/upload-avatar', formData, {
+        headers: {
+          'Content-Type': 'multipart/form-data',
+        },
+      });
+
+      if (response.data.success) {
+        updateUser({ avatar_url: response.data.data.avatar_url });
+        toast.success('Profile picture updated successfully');
+        setAvatarPreview(null);
+      }
+    } catch (error: any) {
+      toast.error(error?.response?.data?.detail || 'Failed to upload profile picture');
+    } finally {
+      setUploadingAvatar(false);
+    }
+  };
+
+  const handleAvatarPreview = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        setAvatarPreview(reader.result as string);
+      };
+      reader.readAsDataURL(file);
+    }
+  };
+
+  const handleSendMobileOtp = async () => {
+    const mobile = (document.getElementById('mobile') as HTMLInputElement)?.value;
+    if (!mobile || mobile.length < 10) {
+      setOtpError('Please enter a valid mobile number');
+      return;
+    }
+
+    setVerifyingMobile(true);
+    setOtpError('');
+    try {
+      const response = await apiClient.post('/auth/send-mobile-otp', { mobile });
+      if (response.data.success) {
+        setOtpSent(true);
+        toast.success('OTP sent to your mobile number');
+      }
+    } catch (error: any) {
+      setOtpError(error?.response?.data?.detail || 'Failed to send OTP');
+    } finally {
+      setVerifyingMobile(false);
+    }
+  };
+
+  const handleVerifyMobileOtp = async () => {
+    if (!mobileOtp || mobileOtp.length !== 6) {
+      setOtpError('Please enter a valid 6-digit OTP');
+      return;
+    }
+
+    setVerifyingMobile(true);
+    setOtpError('');
+    try {
+      const mobile = (document.getElementById('mobile') as HTMLInputElement)?.value;
+      const response = await apiClient.post('/auth/verify-mobile-otp', {
+        mobile,
+        otp: mobileOtp,
+      });
+
+      if (response.data.success) {
+        updateUser({ mobile_verified: true });
+        toast.success('Mobile number verified successfully');
+        setOtpSent(false);
+        setMobileOtp('');
+      }
+    } catch (error: any) {
+      setOtpError(error?.response?.data?.detail || 'Invalid OTP');
+    } finally {
+      setVerifyingMobile(false);
+    }
+  };
+
   const getKycStatusBadge = () => {
     if (!kycData) return <Badge variant="secondary">Not Submitted</Badge>;
     
@@ -320,11 +430,11 @@ function ProfileContent() {
       <Breadcrumbs items={[{ label: "Profile" }]} />
 
       <div className="mb-6 flex items-center gap-4">
-        <div className="relative h-20 w-20 rounded-full overflow-hidden bg-muted">
-          {user?.avatar_url ? (
+        <div className="relative h-20 w-20 rounded-full overflow-hidden bg-muted group">
+          {avatarPreview || user?.avatar_url ? (
             <img
-              src={user.avatar_url}
-              alt={user.full_name || "Profile"}
+              src={avatarPreview || user.avatar_url}
+              alt={user?.full_name || "Profile"}
               className="h-full w-full object-cover"
             />
           ) : (
@@ -332,6 +442,25 @@ function ProfileContent() {
               {user?.full_name?.charAt(0)?.toUpperCase() || user?.email?.charAt(0)?.toUpperCase() || "U"}
             </div>
           )}
+          <label
+            htmlFor="avatar-upload"
+            className="absolute inset-0 flex items-center justify-center bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity cursor-pointer"
+          >
+            <span className="text-white text-xs">
+              {uploadingAvatar ? <Loader2 className="h-5 w-5 animate-spin" /> : "Change"}
+            </span>
+          </label>
+          <input
+            id="avatar-upload"
+            type="file"
+            accept="image/*"
+            className="hidden"
+            onChange={(e) => {
+              handleAvatarPreview(e);
+              handleAvatarUpload(e);
+            }}
+            disabled={uploadingAvatar}
+          />
         </div>
         <div>
           <h1 className="text-2xl font-bold">Profile Settings</h1>
@@ -405,12 +534,69 @@ function ProfileContent() {
                 </div>
 
                 <div className="space-y-2">
-                  <Label htmlFor="mobile">Mobile Number</Label>
-                  <Input
-                    id="mobile"
-                    type="tel"
-                    {...register("mobile")}
-                  />
+                  <Label htmlFor="mobile">
+                    Mobile Number
+                    {user?.mobile_verified && (
+                      <CheckCircle className="inline-block ml-2 h-4 w-4 text-green-600" />
+                    )}
+                  </Label>
+                  <div className="flex gap-2">
+                    <Input
+                      id="mobile"
+                      type="tel"
+                      {...register("mobile")}
+                      disabled={user?.mobile_verified || otpSent}
+                    />
+                    {!user?.mobile_verified && !otpSent && (
+                      <Button
+                        type="button"
+                        variant="outline"
+                        onClick={handleSendMobileOtp}
+                        disabled={verifyingMobile}
+                      >
+                        {verifyingMobile ? (
+                          <Loader2 className="h-4 w-4 animate-spin" />
+                        ) : (
+                          "Verify"
+                        )}
+                      </Button>
+                    )}
+                  </div>
+                  {otpSent && (
+                    <div className="space-y-2 mt-2">
+                      <div className="flex gap-2">
+                        <Input
+                          placeholder="Enter 6-digit OTP"
+                          value={mobileOtp}
+                          onChange={(e) => setMobileOtp(e.target.value.replace(/\D/g, '').slice(0, 6))}
+                          maxLength={6}
+                        />
+                        <Button
+                          type="button"
+                          onClick={handleVerifyMobileOtp}
+                          disabled={verifyingMobile}
+                        >
+                          {verifyingMobile ? (
+                            <Loader2 className="h-4 w-4 animate-spin" />
+                          ) : (
+                            "Verify OTP"
+                          )}
+                        </Button>
+                      </div>
+                      {otpError && (
+                        <p className="text-sm text-red-600">{otpError}</p>
+                      )}
+                      <Button
+                        type="button"
+                        variant="link"
+                        className="text-sm p-0 h-auto"
+                        onClick={handleSendMobileOtp}
+                        disabled={verifyingMobile}
+                      >
+                        Resend OTP
+                      </Button>
+                    </div>
+                  )}
                 </div>
 
                 <div className="grid gap-4 sm:grid-cols-2">

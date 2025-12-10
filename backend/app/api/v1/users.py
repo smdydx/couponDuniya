@@ -1,14 +1,24 @@
-
-from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi import APIRouter, Depends, HTTPException, status, UploadFile, File
 from sqlalchemy.orm import Session
 from pydantic import BaseModel, EmailStr
 from datetime import datetime
+import os
+import uuid
 
-from ...database import get_db
-from ...models import User
-from ...dependencies import get_current_user
+from app.database import get_db
+from app.dependencies import get_current_user
+from app.models.user import User
+from app.schemas.user import UserResponse, UserUpdate
+from app.responses import success_response, error_response
+from app.twilio_service import send_otp, verify_otp
+
 
 router = APIRouter(prefix="/users", tags=["Users"])
+
+UPLOAD_DIR = "app/images/avatars"
+os.makedirs(UPLOAD_DIR, exist_ok=True)
+ALLOWED_EXTENSIONS = {".jpg", ".jpeg", ".png", ".gif", ".webp"}
+MAX_FILE_SIZE = 5 * 1024 * 1024  # 5MB
 
 
 class ProfileUpdateRequest(BaseModel):
@@ -42,7 +52,7 @@ def get_current_user_profile(current_user: User = Depends(get_current_user)):
     name_parts = (current_user.full_name or "").split(' ', 1)
     first_name = name_parts[0] if len(name_parts) > 0 else ''
     last_name = name_parts[1] if len(name_parts) > 1 else ''
-    
+
     return {
         "success": True,
         "data": {
@@ -79,10 +89,10 @@ def update_profile(
         # Update fields if provided
         if payload.first_name is not None:
             current_user.first_name = payload.first_name
-        
+
         if payload.last_name is not None:
             current_user.last_name = payload.last_name
-        
+
         if payload.full_name is not None:
             current_user.full_name = payload.full_name
         elif payload.first_name or payload.last_name:
@@ -90,7 +100,7 @@ def update_profile(
             first = payload.first_name or current_user.first_name or ""
             last = payload.last_name or current_user.last_name or ""
             current_user.full_name = f"{first} {last}".strip()
-        
+
         if payload.mobile is not None:
             # Check if mobile is already taken by another user
             existing = db.query(User).filter(
@@ -103,20 +113,20 @@ def update_profile(
                     detail="Mobile number already in use"
                 )
             current_user.mobile = payload.mobile
-        
+
         if payload.date_of_birth is not None:
             current_user.date_of_birth = payload.date_of_birth
-        
+
         if payload.gender is not None:
             current_user.gender = payload.gender
-        
+
         if payload.avatar_url is not None:
             current_user.avatar_url = payload.avatar_url
-        
+
         current_user.updated_at = datetime.utcnow()
         db.commit()
         db.refresh(current_user)
-        
+
         return {
             "success": True,
             "message": "Profile updated successfully",
@@ -131,7 +141,7 @@ def update_profile(
                 "avatar_url": current_user.avatar_url,
             }
         }
-    
+
     except HTTPException:
         raise
     except Exception as e:
@@ -149,24 +159,24 @@ def change_password(
     db: Session = Depends(get_db)
 ):
     """Change user password - Protected route"""
-    from ...security import verify_password, get_password_hash
-    
+    from app.security import verify_password, get_password_hash
+
     if not current_user.password_hash:
         raise HTTPException(
             status_code=400,
             detail="Password not set. Please use set-password endpoint."
         )
-    
+
     if not verify_password(payload.current_password, current_user.password_hash):
         raise HTTPException(
             status_code=400,
             detail="Current password is incorrect"
         )
-    
+
     current_user.password_hash = get_password_hash(payload.new_password)
     current_user.updated_at = datetime.utcnow()
     db.commit()
-    
+
     return {
         "success": True,
         "message": "Password changed successfully"
@@ -180,12 +190,12 @@ def update_kyc(
     db: Session = Depends(get_db)
 ):
     """Update KYC details - Protected route"""
-    from ...models.user_kyc import UserKYC
-    
+    from app.models.user_kyc import UserKYC
+
     try:
         # Find or create KYC record
         kyc = db.query(UserKYC).filter(UserKYC.user_id == current_user.id).first()
-        
+
         if not kyc:
             kyc = UserKYC(
                 user_id=current_user.id,
@@ -217,21 +227,23 @@ def update_kyc(
                 kyc.upi_id = payload.upi_id
             kyc.status = "pending"
             kyc.submitted_at = datetime.utcnow()
-        
+
         db.commit()
         db.refresh(kyc)
-        
+
         return {
             "success": True,
             "message": "KYC details submitted for verification",
             "data": {
                 "status": kyc.status,
                 "pan_number": kyc.pan_number,
+                "pan_verified": kyc.pan_verified,
                 "aadhaar_number": kyc.aadhaar_number,
+                "aadhaar_verified": kyc.aadhaar_verified,
                 "submitted_at": kyc.submitted_at.isoformat() if kyc.submitted_at else None
             }
         }
-    
+
     except Exception as e:
         db.rollback()
         raise HTTPException(
@@ -246,10 +258,10 @@ def get_kyc_status(
     db: Session = Depends(get_db)
 ):
     """Get KYC status - Protected route"""
-    from ...models.user_kyc import UserKYC
-    
+    from app.models.user_kyc import UserKYC
+
     kyc = db.query(UserKYC).filter(UserKYC.user_id == current_user.id).first()
-    
+
     if not kyc:
         return {
             "success": True,
@@ -268,7 +280,7 @@ def get_kyc_status(
                 "verified_at": None
             }
         }
-    
+
     return {
         "success": True,
         "data": {
@@ -286,3 +298,108 @@ def get_kyc_status(
             "verified_at": kyc.verified_at.isoformat() if kyc.verified_at else None
         }
     }
+
+
+@router.post("/upload-avatar")
+async def upload_avatar(
+    file: UploadFile = File(...),
+    current_user: User = Depends(get_current_user),
+    db: Session = Depends(get_db)
+):
+    """Upload user profile picture"""
+    # Validate file extension
+    file_ext = os.path.splitext(file.filename)[1].lower()
+    if file_ext not in ALLOWED_EXTENSIONS:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail=f"File type not allowed. Allowed types: {', '.join(ALLOWED_EXTENSIONS)}"
+        )
+
+    # Read file content and validate size
+    content = await file.read()
+    if len(content) > MAX_FILE_SIZE:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="File size exceeds 5MB limit"
+        )
+
+    # Generate unique filename
+    filename = f"{uuid.uuid4().hex}{file_ext}"
+    file_path = os.path.join(UPLOAD_DIR, filename)
+
+    # Save file
+    with open(file_path, "wb") as f:
+        f.write(content)
+
+    # Update user avatar URL
+    avatar_url = f"/images/avatars/{filename}"
+    current_user.avatar_url = avatar_url
+    db.commit()
+
+    return success_response(
+        data={"avatar_url": avatar_url},
+        message="Profile picture uploaded successfully"
+    )
+
+
+@router.post("/send-otp")
+async def send_mobile_otp(
+    current_user: User = Depends(get_current_user),
+    db: Session = Depends(get_db)
+):
+    """Send OTP to user's mobile number for verification"""
+    if not current_user.mobile:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Mobile number not set. Please update your profile first."
+        )
+
+    try:
+        send_otp(current_user.mobile)
+        return success_response(message="OTP sent successfully to your mobile number.")
+    except Exception as e:
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Failed to send OTP: {str(e)}"
+        )
+
+
+@router.post("/verify-otp")
+async def verify_mobile_otp(
+    payload: dict,
+    current_user: User = Depends(get_current_user),
+    db: Session = Depends(get_db)
+):
+    """Verify OTP sent to user's mobile number"""
+    otp = payload.get("otp")
+    if not otp:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="OTP is required."
+        )
+
+    if not current_user.mobile:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Mobile number not set. Please update your profile first."
+        )
+
+    try:
+        is_valid = verify_otp(current_user.mobile, otp)
+        if is_valid:
+            current_user.is_verified = True
+            current_user.updated_at = datetime.utcnow()
+            db.commit()
+            return success_response(message="Mobile number verified successfully.")
+        else:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="Invalid OTP."
+            )
+    except HTTPException:
+        raise
+    except Exception as e:
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Failed to verify OTP: {str(e)}"
+        )

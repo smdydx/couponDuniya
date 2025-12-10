@@ -3,7 +3,7 @@ from fastapi.responses import RedirectResponse
 from sqlalchemy.orm import Session
 from sqlalchemy import select
 from pydantic import BaseModel, EmailStr, Field
-from datetime import datetime
+from datetime import datetime, timedelta
 import httpx
 import json
 import time
@@ -45,8 +45,6 @@ def create_refresh_token_for_user(
     token_family: str | None = None
 ) -> str:
     """Create a new refresh token and store it in the database"""
-    from datetime import timedelta
-
     raw_token = secrets.token_urlsafe(64)
     token_hash = _hash_token(raw_token)
 
@@ -79,8 +77,6 @@ def validate_and_rotate_refresh_token(
     Validate a refresh token, revoke it, and return a new one (rotation).
     Returns (user, new_refresh_token, error_message)
     """
-    from datetime import timedelta
-
     token_hash = _hash_token(raw_token)
 
     stored_token = db.scalar(
@@ -167,6 +163,9 @@ class VerifyOTPRequest(BaseModel):
     otp: str
     otp_id: str | None = None
 
+class OTPVerifyRequest(BaseModel):
+    mobile: str
+    otp: str
 
 class SocialLoginRequest(BaseModel):
     provider: str
@@ -175,6 +174,12 @@ class SocialLoginRequest(BaseModel):
 
 class RefreshRequest(BaseModel):
     refresh_token: str
+
+def success_response(data: dict = {}, message: str = "Success"):
+    return {"success": True, "message": message, "data": data}
+
+def error_response(message: str, status_code: int = 400):
+    raise HTTPException(status_code=status_code, detail=message)
 
 
 @router.post("/register", status_code=status.HTTP_201_CREATED, response_model=RegisterResponse)
@@ -208,6 +213,7 @@ def register(payload: RegisterRequest, db: Session = Depends(get_db)):
         is_verified=False,
         role="customer",
         auth_provider="email",
+        mobile_verified=False # Initialize mobile_verified to False
     )
 
     db.add(user)
@@ -260,8 +266,6 @@ def register(payload: RegisterRequest, db: Session = Depends(get_db)):
 @router.post("/login", response_model=dict)
 def login(payload: LoginRequest, db: Session = Depends(get_db)):
     """Login with email/mobile and password. Email must be verified first."""
-    from datetime import datetime
-
     if not payload.identifier or not payload.password:
         raise HTTPException(status_code=400, detail="Missing credentials")
 
@@ -327,6 +331,7 @@ def login(payload: LoginRequest, db: Session = Depends(get_db)):
         "role": user.role,
         "is_admin": user.is_admin,
         "is_verified": user.is_verified,
+        "mobile_verified": user.mobile_verified, # Include mobile_verified status
     }
 
     session_payload = {"user": user_data, "login_at": int(time.time())}
@@ -349,7 +354,7 @@ def login(payload: LoginRequest, db: Session = Depends(get_db)):
 async def request_otp_endpoint(payload: OTPRequest, db: Session = Depends(get_db)):
     """Request OTP for mobile login/registration."""
     from ...twilio_service import send_verification_sms
-    
+
     # Validate mobile format
     mobile = payload.mobile.strip()
     if not mobile.startswith("+"):
@@ -407,10 +412,17 @@ def verify_otp_endpoint(payload: VerifyOTPRequest, db: Session = Depends(get_db)
             is_verified=True,  # Mobile verified via OTP
             referral_code=f"USER{str(uuid.uuid4())[:8].upper()}",
             role="customer", # Default role
+            mobile_verified=True # Mark mobile as verified upon auto-registration
         )
         db.add(user)
         db.commit()
         db.refresh(user)
+
+    else:
+        # If user exists, update their mobile_verified status
+        user.mobile_verified = True
+        db.commit()
+
 
     # Create access token and proper refresh token
     access_token = create_access_token(str(user.id))
@@ -429,6 +441,7 @@ def verify_otp_endpoint(payload: VerifyOTPRequest, db: Session = Depends(get_db)
         "role": user.role,
         "is_admin": user.is_admin,
         "is_verified": user.is_verified,
+        "mobile_verified": user.mobile_verified, # Include mobile_verified status
     }
 
     session_payload = {"user": user_data, "login_at": int(time.time())}
@@ -473,6 +486,7 @@ def refresh_token_endpoint(payload: RefreshRequest, db: Session = Depends(get_db
         "role": user.role,
         "is_admin": user.is_admin,
         "is_verified": user.is_verified,
+        "mobile_verified": user.mobile_verified, # Include mobile_verified status
     }
 
     session_payload = {"user": user_data, "login_at": int(time.time())}
@@ -720,6 +734,7 @@ def me(authorization: str | None = Header(None), db: Session = Depends(get_db)):
             "is_verified": user.is_verified,
             "auth_provider": user.auth_provider,
             "password_hash": user.password_hash is not None,
+            "mobile_verified": user.mobile_verified, # Include mobile_verified status
         }
     }
 
@@ -869,6 +884,7 @@ async def login_with_google(
             is_admin=False,
             auth_provider="google",
             avatar_url=user_info.get("picture"),
+            mobile_verified=False # Initialize mobile_verified to False
         )
         db.add(user)
         db.flush()
@@ -928,7 +944,8 @@ async def login_with_google(
                 "is_admin": user.is_admin,
                 "is_verified": user.is_verified,
                 "auth_provider": user.auth_provider,
-                "password_hash": user.password_hash is not None
+                "password_hash": user.password_hash is not None,
+                "mobile_verified": user.mobile_verified, # Include mobile_verified status
             }
         }
     }
@@ -980,6 +997,7 @@ async def login_with_facebook(
                 email_verified_at=datetime.utcnow() if user_info["email_verified"] else None,
                 auth_provider="facebook",
                 role="customer",
+                mobile_verified=False # Initialize mobile_verified to False
             )
             db.add(user)
             db.flush()
@@ -1009,7 +1027,8 @@ async def login_with_facebook(
                 "email": user.email,
                 "full_name": user.full_name,
                 "is_admin": user.is_admin,
-                "role": user.role
+                "role": user.role,
+                "mobile_verified": user.mobile_verified, # Include mobile_verified status
             }
         }
     }
@@ -1138,6 +1157,7 @@ async def google_callback(
                     is_admin=False,
                     auth_provider="google",
                     avatar_url=user_info.get("picture"),
+                    mobile_verified=False # Initialize mobile_verified to False
                 )
                 db.add(user)
                 db.flush()
@@ -1176,3 +1196,217 @@ async def google_callback(
     except Exception as e:
         frontend_url = getattr(settings, 'FRONTEND_URL', 'http://localhost:5000')
         return RedirectResponse(url=f"{frontend_url}/login?error=auth_failed")
+
+
+# --- New endpoints for mobile verification ---
+
+@router.post("/send-mobile-otp")
+async def send_mobile_otp_endpoint(
+    request: dict,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user)
+):
+    """Send OTP to mobile number for verification"""
+    mobile = request.get("mobile")
+    if not mobile:
+        raise HTTPException(status_code=400, detail="Mobile number is required")
+
+    # Ensure mobile number is in E.164 format
+    if not mobile.startswith("+"):
+        mobile = "+91" + mobile # Default to India if no country code
+
+    # Check if mobile is already verified by another user
+    existing_user = db.query(User).filter(
+        User.mobile == mobile,
+        User.mobile_verified == True,
+        User.id != current_user.id
+    ).first()
+
+    if existing_user:
+        raise HTTPException(
+            status_code=400,
+            detail="This mobile number is already verified by another user"
+        )
+
+    # Check rate limit for OTP requests
+    allowed, remaining, ttl = rate_limit(f"otp:{mobile}", 5, 300)
+    if not allowed:
+        raise HTTPException(status_code=429, detail=f"OTP limit reached. Try again in {ttl}s")
+
+    # Generate OTP and send via SMS
+    otp_code, message = create_otp(mobile)
+    if not otp_code:
+        raise HTTPException(status_code=500, detail=message or "Failed to generate OTP")
+
+    sms_success, sms_message = send_otp_sms(mobile, otp_code)
+    if not sms_success and not settings.DEBUG:
+        raise HTTPException(status_code=500, detail=f"Failed to send OTP: {sms_message}")
+
+    # Store OTP details for verification (e.g., in cache)
+    # For simplicity here, we assume create_otp/verify_and_consume_otp handle storage
+
+    return success_response(message="OTP sent successfully")
+
+
+@router.post("/verify-mobile-otp")
+async def verify_mobile_otp_endpoint(
+    request: dict,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user)
+):
+    """Verify mobile OTP and update user's mobile number"""
+    mobile = request.get("mobile")
+    otp = request.get("otp")
+
+    if not mobile or not otp:
+        raise HTTPException(status_code=400, detail="Mobile and OTP are required")
+
+    # Ensure mobile number is in E.164 format
+    if not mobile.startswith("+"):
+        mobile = "+91" + mobile # Default to India if no country code
+
+    # Verify OTP
+    is_valid, message = verify_and_consume_otp(mobile, otp)
+    if not is_valid:
+        raise HTTPException(status_code=400, detail=message)
+
+    # Check if the mobile number is already verified by another user
+    existing_user = db.query(User).filter(
+        User.mobile == mobile,
+        User.mobile_verified == True,
+        User.id != current_user.id
+    ).first()
+
+    if existing_user:
+        raise HTTPException(
+            status_code=400,
+            detail="This mobile number is already verified by another user"
+        )
+
+    # Update user's mobile and mark as verified
+    current_user.mobile = mobile
+    current_user.mobile_verified = True
+    db.commit()
+
+    # Refresh user data to include updated mobile_verified status
+    db.refresh(current_user)
+
+    return success_response(
+        data={"mobile_verified": True},
+        message="Mobile number verified successfully"
+    )
+
+# Profile update endpoint (example, assuming it exists elsewhere or needs to be added)
+@router.put("/profile", response_model=dict)
+async def update_profile(
+    payload: dict, # Using dict for flexibility, Pydantic model recommended
+    current_user: User = Depends(get_current_user),
+    db: Session = Depends(get_db)
+):
+    """Update user profile information"""
+    if "full_name" in payload:
+        current_user.full_name = payload["full_name"]
+    if "email" in payload and current_user.auth_provider == "email": # Only allow email change if auth_provider is email
+        current_user.email = payload["email"]
+        current_user.is_verified = False # Email needs re-verification
+        current_user.email_verified_at = None
+        # Trigger email verification flow (e.g., send verification email)
+        from ...verification import generate_verification_token
+        from ...email import email_service
+        token = generate_verification_token(current_user.email)
+        frontend_url = settings.FRONTEND_URL or settings.FRONTEND_BASE_URL or "http://localhost:5000"
+        verification_url = f"{frontend_url}/verify-email?token={token}&email={current_user.email}"
+        if settings.EMAIL_ENABLED:
+            email_service.send_welcome_email(current_user.email, verification_url)
+
+    # Add other updatable fields as needed
+
+    db.commit()
+    db.refresh(current_user)
+
+    # Construct user data similar to login/me endpoints
+    name_parts = (current_user.full_name or "").split(' ', 1)
+    first_name = name_parts[0] if len(name_parts) > 0 else ''
+    last_name = name_parts[1] if len(name_parts) > 1 else ''
+
+    user_data = {
+        "id": current_user.id,
+        "uuid": str(current_user.uuid),
+        "email": current_user.email,
+        "mobile": current_user.mobile,
+        "full_name": current_user.full_name,
+        "first_name": first_name,
+        "last_name": last_name,
+        "avatar_url": current_user.avatar_url,
+        "wallet_balance": float(current_user.wallet_balance or 0),
+        "pending_cashback": float(current_user.pending_cashback or 0),
+        "referral_code": current_user.referral_code,
+        "role": current_user.role,
+        "is_admin": current_user.is_admin,
+        "is_verified": current_user.is_verified,
+        "auth_provider": current_user.auth_provider,
+        "password_hash": current_user.password_hash is not None,
+        "mobile_verified": current_user.mobile_verified,
+    }
+
+    return success_response(data={"user": user_data}, message="Profile updated successfully")
+
+
+# Endpoint for profile picture upload
+@router.post("/profile/avatar")
+async def upload_avatar(
+    file: UploadFile = File(...),
+    current_user: User = Depends(get_current_user),
+    db: Session = Depends(get_db)
+):
+    """Upload and update user's avatar"""
+    from ...storage import upload_to_s3 # Assuming you have a storage utility
+
+    if not file:
+        raise HTTPException(status_code=400, detail="No file uploaded")
+
+    try:
+        # Upload file to storage (e.g., S3)
+        # The upload_to_s3 function should return the URL of the uploaded file
+        avatar_url = await upload_to_s3(file.file, bucket_name="user-avatars", file_key=f"user_{current_user.uuid}.jpg")
+
+        if not avatar_url:
+            raise HTTPException(status_code=500, detail="Failed to upload avatar")
+
+        # Update user's avatar_url in the database
+        current_user.avatar_url = avatar_url
+        db.commit()
+        db.refresh(current_user)
+
+        # Construct user data similar to login/me endpoints
+        name_parts = (current_user.full_name or "").split(' ', 1)
+        first_name = name_parts[0] if len(name_parts) > 0 else ''
+        last_name = name_parts[1] if len(name_parts) > 1 else ''
+
+        user_data = {
+            "id": current_user.id,
+            "uuid": str(current_user.uuid),
+            "email": current_user.email,
+            "mobile": current_user.mobile,
+            "full_name": current_user.full_name,
+            "first_name": first_name,
+            "last_name": last_name,
+            "avatar_url": current_user.avatar_url,
+            "wallet_balance": float(current_user.wallet_balance or 0),
+            "pending_cashback": float(current_user.pending_cashback or 0),
+            "referral_code": current_user.referral_code,
+            "role": current_user.role,
+            "is_admin": current_user.is_admin,
+            "is_verified": current_user.is_verified,
+            "auth_provider": current_user.auth_provider,
+            "password_hash": current_user.password_hash is not None,
+            "mobile_verified": current_user.mobile_verified,
+        }
+
+        return success_response(data={"user": user_data}, message="Avatar uploaded successfully")
+
+    except HTTPException:
+        raise # Re-raise HTTPExceptions
+    except Exception as e:
+        print(f"Error uploading avatar: {e}") # Log the error
+        raise HTTPException(status_code=500, detail="An error occurred during avatar upload")
