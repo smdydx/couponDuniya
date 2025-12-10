@@ -79,7 +79,7 @@ def get_current_user_profile(current_user: User = Depends(get_current_user)):
     }
 
 
-@router.put("/profile", response_model=dict)
+@router.post("/profile/update", response_model=dict)
 def update_profile(
     payload: ProfileUpdateRequest,
     current_user: User = Depends(get_current_user_unverified),
