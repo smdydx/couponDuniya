@@ -25,16 +25,27 @@ apiClient.interceptors.request.use(
   (config: InternalAxiosRequestConfig) => {
     // Get token from localStorage (zustand persists here)
     if (typeof window !== 'undefined') {
+      // Try multiple storage locations
+      let token = null;
+      
+      // Try auth-storage first (zustand)
       const authStorage = localStorage.getItem('auth-storage');
       if (authStorage) {
         try {
           const { state } = JSON.parse(authStorage);
-          if (state?.accessToken) {
-            config.headers.Authorization = `Bearer ${state.accessToken}`;
-          }
-        } catch {
-          // Ignore parse errors
+          token = state?.accessToken || state?.token;
+        } catch (e) {
+          console.debug('Failed to parse auth-storage');
         }
+      }
+      
+      // Fallback to direct token storage
+      if (!token) {
+        token = localStorage.getItem('access_token') || localStorage.getItem('token');
+      }
+      
+      if (token) {
+        config.headers.Authorization = `Bearer ${token}`;
       }
     }
     return config;

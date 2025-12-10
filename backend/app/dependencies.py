@@ -152,8 +152,8 @@ def get_current_user_unverified(db: Session = Depends(get_db), authorization: st
     return user
 
 
-def get_current_admin_user(current_user: User = Depends(get_current_user)):
-    """Verify user has admin role"""
+def get_current_admin_user(current_user: User = Depends(get_current_user_unverified)):
+    """Verify user has admin role - admins don't need to be verified to access admin panel"""
     if current_user.role != "admin" and not current_user.is_admin:
         raise HTTPException(status_code=403, detail="Admin access required")
     return current_user
