@@ -1213,7 +1213,7 @@ async def send_mobile_otp_endpoint(
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_user_unverified)
 ):
-    """Send OTP to mobile number for verification"""
+    """Send OTP to mobile number for verification (via user's email)"""
     mobile = request.get("mobile")
     if not mobile:
         raise HTTPException(status_code=400, detail="Mobile number is required")
@@ -1240,19 +1240,31 @@ async def send_mobile_otp_endpoint(
     if not allowed:
         raise HTTPException(status_code=429, detail=f"OTP limit reached. Try again in {ttl}s")
 
-    # Generate OTP and send via SMS
+    # Generate OTP
     otp_code, message = create_otp(mobile)
     if not otp_code:
         raise HTTPException(status_code=500, detail=message or "Failed to generate OTP")
 
-    sms_success, sms_message = send_otp_sms(mobile, otp_code)
-    if not sms_success and not settings.DEBUG:
-        raise HTTPException(status_code=500, detail=f"Failed to send OTP: {sms_message}")
-
-    # Store OTP details for verification (e.g., in cache)
-    # For simplicity here, we assume create_otp/verify_and_consume_otp handle storage
-
-    return success_response(message="OTP sent successfully")
+    # Send OTP via email (if user has email)
+    if current_user.email:
+        from ...sms import sms_service
+        email_success, email_message = sms_service.send_otp_email(current_user.email, otp_code)
+        
+        if not email_success and not settings.DEBUG:
+            raise HTTPException(status_code=500, detail=f"Failed to send OTP: {email_message}")
+        
+        return success_response(
+            data={"sent_via": "email", "email": current_user.email},
+            message=f"OTP sent to your email: {current_user.email}"
+        )
+    else:
+        # Fallback: Try SMS (will log in dev mode)
+        sms_success, sms_message = send_otp_sms(mobile, otp_code)
+        
+        return success_response(
+            data={"sent_via": "sms", "mobile": mobile, "dev_otp": otp_code if settings.DEBUG else None},
+            message="OTP sent via SMS" if sms_success else sms_message
+        )
 
 
 @router.post("/verify-mobile-otp")
