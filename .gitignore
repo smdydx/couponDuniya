@@ -177,6 +177,9 @@ Thumbs.db
 .idea/
 *.sublime-*
 
+# Replit agent state files
+.local/
+
 # Logs
 logs/
 *.log
