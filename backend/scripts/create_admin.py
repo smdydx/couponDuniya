@@ -1,9 +1,9 @@
-
 """
 Script to create or update the admin user.
 """
 import sys
 import os
+from datetime import datetime
 
 # Add backend directory to path
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
@@ -19,7 +19,7 @@ def create_admin():
     try:
         # Check if admin exists
         admin = db.query(User).filter(User.email == "admin@couponali.com").first()
-        
+
         if admin:
             # Update existing admin
             admin.password_hash = get_password_hash("admin123")
@@ -45,10 +45,10 @@ def create_admin():
             )
             db.add(admin)
             print("✅ Created new admin user")
-        
+
         db.commit()
         db.refresh(admin)
-        
+
         # Verify the settings
         print("\n" + "="*50)
         print("ADMIN ACCOUNT DETAILS:")
@@ -63,15 +63,15 @@ def create_admin():
         print(f"Role:            {admin.role}")
         print(f"Email Verified:  {admin.email_verified_at}")
         print("="*50)
-        
+
         if not admin.is_verified:
             print("\n⚠️  WARNING: Admin account is NOT verified!")
             print("Run this script again to fix it.")
             return False
-        
+
         print("\n✅ Admin account is ready to use!")
         return True
-        
+
     except Exception as e:
         print(f"\n❌ Error creating admin: {e}")
         db.rollback()
