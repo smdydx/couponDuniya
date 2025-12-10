@@ -78,6 +78,15 @@ export default function AdminDashboard() {
   const fetchDashboardData = useCallback(async () => {
     try {
       console.log("📊 Fetching dashboard data...");
+      
+      // Check if we have a valid token before making requests
+      const { accessToken: currentToken } = useAuthStore.getState();
+      if (!currentToken) {
+        console.error("❌ No access token found");
+        router.push("/login");
+        return;
+      }
+
       const [statsResponse, merchantsResponse, offersResponse] = await Promise.allSettled([
         adminApiClient.get("/analytics/dashboard"),
         adminApiClient.get("/merchants", { params: { limit: 5 } }),
@@ -87,6 +96,14 @@ export default function AdminDashboard() {
       console.log("✅ Stats response:", statsResponse);
       console.log("✅ Merchants response:", merchantsResponse);
       console.log("✅ Offers response:", offersResponse);
+
+      // Handle 403 errors - redirect to login
+      if (statsResponse.status === "rejected" && statsResponse.reason?.response?.status === 403) {
+        console.error("❌ Access denied - redirecting to login");
+        useAuthStore.setState({ user: null, accessToken: null, isAuthenticated: false });
+        router.push("/login");
+        return;
+      }
 
       if (statsResponse.status === "fulfilled") {
         const statsData = statsResponse.value.data;
@@ -107,10 +124,6 @@ export default function AdminDashboard() {
         }
       } else {
         console.error("❌ Stats fetch failed:", statsResponse.reason);
-        if (statsResponse.reason?.response) {
-          console.error("Response data:", statsResponse.reason.response.data);
-          console.error("Response status:", statsResponse.reason.response.status);
-        }
         setStats(defaultStats);
       }
 
@@ -174,8 +187,17 @@ export default function AdminDashboard() {
       const currentToken = currentState.accessToken;
       const currentAuth = currentState.isAuthenticated;
 
+      console.log("🔐 After hydration check:", {
+        hasUser: !!currentUser,
+        hasToken: !!currentToken,
+        isAuth: currentAuth,
+        userRole: currentUser?.role,
+        isAdmin: currentUser?.is_admin
+      });
+
       if (!currentAuth || !currentToken || !currentUser) {
         console.log("❌ No auth found after waiting, redirecting to login");
+        alert("Please login to access admin dashboard");
         router.push("/login");
         return;
       }
@@ -183,7 +205,10 @@ export default function AdminDashboard() {
       const isAdminUser = currentUser.is_admin === true || currentUser.role === 'admin';
 
       if (!isAdminUser) {
-        console.log("❌ Access denied - User is not admin");
+        console.log("❌ Access denied - User is not admin", {
+          is_admin: currentUser.is_admin,
+          role: currentUser.role
+        });
         alert("Access denied. Admin privileges required.");
         router.push("/");
         return;
