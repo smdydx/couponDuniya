@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { usePathname } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import {
   LayoutDashboard,
   Store,
@@ -20,11 +20,12 @@ import {
   Coins,
   Image,
   FolderTree,
+  LogOut,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { ROUTES } from "@/lib/constants";
-import { useRouter } from "next/navigation";
+import { useAuthStore } from "@/store/authStore";
 
 const adminNavItems = [
   {
@@ -117,6 +118,12 @@ interface AdminSidebarProps {
 export function AdminSidebar({ isOpen, onToggle }: AdminSidebarProps) {
   const pathname = usePathname();
   const router = useRouter();
+  const { logout } = useAuthStore();
+
+  const handleLogout = () => {
+    logout();
+    router.push("/login");
+  };
 
   return (
     <aside
@@ -178,14 +185,17 @@ export function AdminSidebar({ isOpen, onToggle }: AdminSidebarProps) {
       </nav>
 
       <div className={cn("absolute bottom-4 left-0 right-0 px-4", !isOpen && "lg:px-2")}>
-        <div className={cn("rounded-lg border bg-muted/50 p-4", !isOpen && "lg:hidden")}>
-          <p className="text-xs text-muted-foreground">
-            Need help? Check the{" "}
-            <Link href="/admin/docs" className="text-primary hover:underline">
-              documentation
-            </Link>
-          </p>
-        </div>
+        <Button
+          variant="ghost"
+          className={cn(
+            "w-full justify-start gap-3 text-muted-foreground hover:text-destructive hover:bg-destructive/10",
+            !isOpen && "lg:justify-center lg:px-2"
+          )}
+          onClick={handleLogout}
+        >
+          <LogOut className="h-5 w-5 shrink-0" />
+          <span className={cn("transition-opacity", !isOpen && "lg:hidden")}>Logout</span>
+        </Button>
       </div>
     </aside>
   );
