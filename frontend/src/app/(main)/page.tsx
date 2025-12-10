@@ -252,7 +252,6 @@ export default function HomePage() {
 
         return data.data;
       } catch (err: any) {
-        console.error("Homepage fetch error:", err);
         // Return empty data structure instead of throwing
         return {
           banners: [],

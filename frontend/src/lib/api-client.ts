@@ -20,6 +20,7 @@ export const apiClient = axios.create({
     'Content-Type': 'application/json',
   },
   withCredentials: false,
+  validateStatus: (status) => status < 500, // Don't throw on client errors (4xx)
 });
 
 const getAuthToken = () => {
@@ -105,8 +106,7 @@ apiClient.interceptors.response.use(
 
     // Handle 403 Forbidden - insufficient permissions
     if (error.response?.status === 403) {
-      console.error('Access forbidden:', error.response?.data);
-      // Don't logout on 403, just reject the promise
+      // Silently handle 403 errors
       return Promise.reject(error);
     }
 
@@ -121,6 +121,7 @@ export const adminApiClient = axios.create({
   headers: {
     'Content-Type': 'application/json',
   },
+  validateStatus: (status) => status < 500, // Don't throw on client errors (4xx)
 });
 
 // Request interceptor for adminApiClient - use same auth-storage as main client
@@ -139,10 +140,7 @@ adminApiClient.interceptors.request.use(
 adminApiClient.interceptors.response.use(
   (response) => response,
   (error) => {
-    if (error.response?.status === 401) {
-      console.error('Admin API unauthorized:', error.config?.url);
-      // In a real app, you might want to redirect to login or refresh token here as well
-    }
+    // Silently handle errors without console logs
     return Promise.reject(error);
   }
 );

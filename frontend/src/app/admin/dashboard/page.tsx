@@ -77,12 +77,9 @@ export default function AdminDashboard() {
 
   const fetchDashboardData = useCallback(async () => {
     try {
-      console.log("📊 Fetching dashboard data...");
-      
       // Check if we have a valid token before making requests
       const { accessToken: currentToken } = useAuthStore.getState();
       if (!currentToken) {
-        console.error("❌ No access token found");
         router.push("/login");
         return;
       }
@@ -93,13 +90,8 @@ export default function AdminDashboard() {
         adminApiClient.get("/offers", { params: { limit: 5 } }),
       ]);
 
-      console.log("✅ Stats response:", statsResponse);
-      console.log("✅ Merchants response:", merchantsResponse);
-      console.log("✅ Offers response:", offersResponse);
-
       // Handle 403 errors - redirect to login
       if (statsResponse.status === "rejected" && statsResponse.reason?.response?.status === 403) {
-        console.error("❌ Access denied - redirecting to login");
         useAuthStore.setState({ user: null, accessToken: null, isAuthenticated: false });
         router.push("/login");
         return;
@@ -107,29 +99,22 @@ export default function AdminDashboard() {
 
       if (statsResponse.status === "fulfilled") {
         const statsData = statsResponse.value.data;
-        console.log("📊 Stats data received:", statsData);
 
         if (statsData?.data) {
-          console.log("✅ Setting stats from statsData.data:", statsData.data);
           setStats(statsData.data);
         } else if (statsData && typeof statsData === 'object' && 'orders' in statsData) {
-          console.log("✅ Setting stats directly:", statsData);
           setStats(statsData);
         } else if (statsData?.success === false) {
-          console.error("❌ Stats API returned error:", statsData.error);
           setStats(defaultStats);
         } else {
-          console.warn("⚠️ Unexpected stats data format, using defaults");
           setStats(defaultStats);
         }
       } else {
-        console.error("❌ Stats fetch failed:", statsResponse.reason);
         setStats(defaultStats);
       }
 
       if (merchantsResponse.status === "fulfilled") {
         const merchantsData = merchantsResponse.value.data;
-        console.log("🏪 Merchants data:", merchantsData);
         const merchantsList = merchantsData?.merchants || merchantsData?.data?.merchants || merchantsData?.data || [];
         setRecentMerchants(Array.isArray(merchantsList) ? merchantsList.slice(0, 5) : []);
       }
@@ -137,7 +122,6 @@ export default function AdminDashboard() {
       if (offersResponse.status === "fulfilled") {
         try {
           const offersData = offersResponse.value.data;
-          console.log("🏷️ Offers data:", offersData);
           const offersList = offersData?.offers || offersData?.data?.offers || offersData?.data || [];
           const offersArray = Array.isArray(offersList) ? offersList : [];
           setRecentOffers(offersArray.slice(0, 5).map((o: any) => ({
@@ -147,12 +131,10 @@ export default function AdminDashboard() {
             merchant_name: o.merchant_name || o.merchant?.name || "Unknown",
           })));
         } catch (error) {
-          console.error("Error processing offers:", error);
           setRecentOffers([]);
         }
       }
     } catch (error) {
-      console.error("❌ Failed to fetch dashboard data:", error);
       setStats(defaultStats);
     } finally {
       setLoading(false);
@@ -167,17 +149,8 @@ export default function AdminDashboard() {
     if (!mounted) return;
 
     const checkAuth = async () => {
-      console.log("🔐 Admin auth check:", { 
-        hasToken: !!accessToken, 
-        hasUser: !!user,
-        isAuthenticated,
-        userRole: user?.role,
-        isAdmin: user?.is_admin
-      });
-
       // If no user data, wait a bit for store hydration
       if (!user && !accessToken) {
-        console.log("⏳ Waiting for auth store hydration...");
         await new Promise(resolve => setTimeout(resolve, 500));
       }
 
@@ -187,17 +160,7 @@ export default function AdminDashboard() {
       const currentToken = currentState.accessToken;
       const currentAuth = currentState.isAuthenticated;
 
-      console.log("🔐 After hydration check:", {
-        hasUser: !!currentUser,
-        hasToken: !!currentToken,
-        isAuth: currentAuth,
-        userRole: currentUser?.role,
-        isAdmin: currentUser?.is_admin
-      });
-
       if (!currentAuth || !currentToken || !currentUser) {
-        console.log("❌ No auth found after waiting, redirecting to login");
-        alert("Please login to access admin dashboard");
         router.push("/login");
         return;
       }
@@ -205,16 +168,10 @@ export default function AdminDashboard() {
       const isAdminUser = currentUser.is_admin === true || currentUser.role === 'admin';
 
       if (!isAdminUser) {
-        console.log("❌ Access denied - User is not admin", {
-          is_admin: currentUser.is_admin,
-          role: currentUser.role
-        });
-        alert("Access denied. Admin privileges required.");
         router.push("/");
         return;
       }
 
-      console.log("✅ Admin access granted - loading dashboard data");
       setAuthChecked(true);
     };
 
