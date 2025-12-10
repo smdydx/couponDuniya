@@ -345,7 +345,7 @@ async def upload_avatar(
 
 @router.post("/send-otp")
 async def send_mobile_otp(
-    current_user: User = Depends(get_current_user),
+    current_user: User = Depends(get_current_user_unverified),
     db: Session = Depends(get_db)
 ):
     """Send OTP to user's mobile number for verification"""
@@ -368,7 +368,7 @@ async def send_mobile_otp(
 @router.post("/verify-otp")
 async def verify_mobile_otp(
     payload: dict,
-    current_user: User = Depends(get_current_user),
+    current_user: User = Depends(get_current_user_unverified),
     db: Session = Depends(get_db)
 ):
     """Verify OTP sent to user's mobile number"""
@@ -392,7 +392,11 @@ async def verify_mobile_otp(
             current_user.is_verified = True
             current_user.updated_at = datetime.utcnow()
             db.commit()
-            return success_response(message="Mobile number verified successfully.")
+            db.refresh(current_user)
+            return success_response(
+                data={"mobile_verified": True, "mobile": current_user.mobile},
+                message="Mobile number verified successfully."
+            )
         else:
             raise HTTPException(
                 status_code=status.HTTP_400_BAD_REQUEST,

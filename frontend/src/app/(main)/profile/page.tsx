@@ -161,14 +161,14 @@ function ProfileContent() {
     setSaveError(null);
     setSaveSuccess(false);
     try {
-      await userAPI.updateProfile({
+      const updatedUser = await userAPI.updateProfile({
         first_name: data.first_name,
         last_name: data.last_name,
         mobile: data.mobile,
         date_of_birth: data.date_of_birth,
         gender: data.gender,
       });
-      updateUser(data);
+      updateUser(updatedUser);
       setSaveSuccess(true);
       toast.success("Profile updated successfully");
       setTimeout(() => setSaveSuccess(false), 3000);
