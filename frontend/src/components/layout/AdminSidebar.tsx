@@ -17,6 +17,9 @@ import {
   FileText,
   Shield,
   Network,
+  Coins,
+  Image,
+  FolderTree,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
@@ -45,6 +48,16 @@ const adminNavItems = [
     icon: Gift,
   },
   {
+    title: "Categories",
+    href: ROUTES.admin.categories,
+    icon: FolderTree,
+  },
+  {
+    title: "Banners",
+    href: ROUTES.admin.banners,
+    icon: Image,
+  },
+  {
     title: "Orders",
     href: ROUTES.admin.orders,
     icon: ShoppingCart,
@@ -60,14 +73,14 @@ const adminNavItems = [
     icon: Network,
   },
   {
+    title: "Cashback",
+    href: ROUTES.admin.cashback,
+    icon: Coins,
+  },
+  {
     title: "Withdrawals",
     href: ROUTES.admin.withdrawals,
     icon: Wallet,
-  },
-  {
-    title: "Queues",
-    href: ROUTES.admin.queues,
-    icon: FileText,
   },
   {
     title: "Gift Cards",
@@ -75,14 +88,14 @@ const adminNavItems = [
     icon: Gift,
   },
   {
-    title: "CMS",
-    href: ROUTES.admin.cms,
-    icon: FileText,
-  },
-  {
     title: "Analytics",
     href: ROUTES.admin.analytics,
     icon: BarChart3,
+  },
+  {
+    title: "CMS",
+    href: ROUTES.admin.cms,
+    icon: FileText,
   },
   {
     title: "Access Control",

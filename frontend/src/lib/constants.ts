@@ -109,6 +109,7 @@ export const ROUTES = {
     users: '/admin/users',
     analytics: '/admin/analytics',
     withdrawals: '/admin/withdrawals',
+    cashback: '/admin/cashback',
     queues: '/admin/queues',
     giftCards: '/admin/gift-cards',
     cms: '/admin/cms',

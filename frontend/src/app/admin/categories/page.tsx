@@ -58,7 +58,16 @@ export default function AdminCategoriesPage() {
     setLoading(true);
     try {
       const response = await apiClient.get('/categories');
-      setCategories(response.data?.data?.categories || []);
+      const data = response.data;
+      if (data?.data?.categories) {
+        setCategories(data.data.categories);
+      } else if (Array.isArray(data?.data)) {
+        setCategories(data.data);
+      } else if (data?.categories) {
+        setCategories(data.categories);
+      } else {
+        setCategories([]);
+      }
     } catch (error) {
       console.error("Failed to fetch categories:", error);
       setCategories([]);
@@ -99,9 +108,9 @@ export default function AdminCategoriesPage() {
     setSaving(true);
     try {
       if (editingCategory) {
-        await apiClient.put(`/categories/${editingCategory.id}`, formData);
+        await apiClient.put(`/admin/categories/${editingCategory.id}`, formData);
       } else {
-        await apiClient.post('/categories/', formData);
+        await apiClient.post('/admin/categories', formData);
       }
       setDialogOpen(false);
       fetchCategories();
@@ -115,7 +124,7 @@ export default function AdminCategoriesPage() {
   const handleDelete = async () => {
     if (!deletingCategory) return;
     try {
-      await apiClient.delete(`/categories/${deletingCategory.id}`);
+      await apiClient.delete(`/admin/categories/${deletingCategory.id}`);
       setDeleteDialogOpen(false);
       setDeletingCategory(null);
       fetchCategories();

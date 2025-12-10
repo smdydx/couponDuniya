@@ -334,6 +334,179 @@ const adminApi = {
     const response = await apiClient.get('/admin/gift-cards/stats');
     return response.data?.data || response.data;
   },
+
+  // Cashback APIs
+  getCashback: async (params: { page?: number; limit?: number; status?: string } = {}): Promise<{ cashback_events: CashbackEvent[]; pagination: Pagination }> => {
+    const queryParams = new URLSearchParams();
+    if (params.page) queryParams.append('page', String(params.page));
+    if (params.limit) queryParams.append('limit', String(params.limit));
+    if (params.status) queryParams.append('status', params.status);
+
+    const response = await apiClient.get(`/admin/cashback?${queryParams.toString()}`);
+    const data = response.data;
+    if (data?.data?.cashback_events && data?.data?.pagination) {
+      return { cashback_events: data.data.cashback_events, pagination: data.data.pagination };
+    }
+    if (data?.cashback_events && data?.pagination) {
+      return { cashback_events: data.cashback_events, pagination: data.pagination };
+    }
+    return { cashback_events: [], pagination: { current_page: 1, total_pages: 1, total_items: 0, per_page: 20 } };
+  },
+
+  confirmCashback: async (id: number): Promise<void> => {
+    await apiClient.patch(`/admin/cashback/${id}/confirm`);
+  },
+
+  rejectCashback: async (id: number): Promise<void> => {
+    await apiClient.patch(`/admin/cashback/${id}/reject`);
+  },
+
+  // Banner APIs
+  getBanners: async (params: { page?: number; limit?: number; banner_type?: string } = {}): Promise<{ banners: Banner[]; pagination: Pagination }> => {
+    const queryParams = new URLSearchParams();
+    if (params.page) queryParams.append('page', String(params.page));
+    if (params.limit) queryParams.append('limit', String(params.limit));
+    if (params.banner_type) queryParams.append('banner_type', params.banner_type);
+
+    const response = await apiClient.get(`/admin/banners?${queryParams.toString()}`);
+    const data = response.data;
+    if (data?.data?.banners && data?.data?.pagination) {
+      return { banners: data.data.banners, pagination: data.data.pagination };
+    }
+    if (data?.banners && data?.pagination) {
+      return { banners: data.banners, pagination: data.pagination };
+    }
+    return { banners: [], pagination: { current_page: 1, total_pages: 1, total_items: 0, per_page: 20 } };
+  },
+
+  createBanner: async (data: Omit<Banner, 'id' | 'created_at'>): Promise<Banner> => {
+    const response = await apiClient.post('/admin/banners', data);
+    return response.data?.data || response.data;
+  },
+
+  updateBanner: async (id: number, data: Partial<Banner>): Promise<Banner> => {
+    const response = await apiClient.put(`/admin/banners/${id}`, data);
+    return response.data?.data || response.data;
+  },
+
+  deleteBanner: async (id: number): Promise<void> => {
+    await apiClient.delete(`/admin/banners/${id}`);
+  },
+
+  reorderBanner: async (id: number, order_index: number): Promise<void> => {
+    await apiClient.patch(`/admin/banners/${id}/reorder`, { order_index });
+  },
+
+  // Category APIs
+  getCategories: async (params: { page?: number; limit?: number; search?: string } = {}): Promise<{ categories: Category[]; pagination: Pagination }> => {
+    const queryParams = new URLSearchParams();
+    if (params.page) queryParams.append('page', String(params.page));
+    if (params.limit) queryParams.append('limit', String(params.limit));
+    if (params.search) queryParams.append('search', params.search);
+
+    const response = await apiClient.get(`/categories?${queryParams.toString()}`);
+    const data = response.data;
+    if (data?.data?.categories && data?.data?.pagination) {
+      return { categories: data.data.categories, pagination: data.data.pagination };
+    }
+    if (data?.categories && data?.pagination) {
+      return { categories: data.categories, pagination: data.pagination };
+    }
+    if (Array.isArray(data?.data)) {
+      return { categories: data.data, pagination: { current_page: 1, total_pages: 1, total_items: data.data.length, per_page: 100 } };
+    }
+    return { categories: [], pagination: { current_page: 1, total_pages: 1, total_items: 0, per_page: 20 } };
+  },
+
+  createCategory: async (data: { name: string; slug: string; description?: string; icon_name?: string; is_active?: boolean }): Promise<Category> => {
+    const response = await apiClient.post('/admin/categories', data);
+    return response.data?.data || response.data;
+  },
+
+  updateCategory: async (id: number, data: { name?: string; slug?: string; description?: string; icon_name?: string; is_active?: boolean }): Promise<Category> => {
+    const response = await apiClient.put(`/admin/categories/${id}`, data);
+    return response.data?.data || response.data;
+  },
+
+  // Product Variants
+  addProductVariant: async (productId: number, data: { sku: string; name: string; price: number; stock: number; is_available?: boolean }): Promise<ProductVariant> => {
+    const response = await apiClient.post(`/admin/products/${productId}/variants`, data);
+    return response.data?.data || response.data;
+  },
+
+  // Complete withdrawal
+  completeWithdrawal: async (id: number, data: { transaction_id?: string; admin_notes?: string }): Promise<void> => {
+    await apiClient.patch(`/admin/withdrawals/${id}/complete`, data);
+  },
+
+  // Upload APIs
+  uploadImage: async (file: File, category: string = 'general'): Promise<{ url: string; filename: string }> => {
+    const formData = new FormData();
+    formData.append('file', file);
+    formData.append('category', category);
+    const response = await apiClient.post('/admin/upload/image', formData, {
+      headers: { 'Content-Type': 'multipart/form-data' }
+    });
+    return response.data?.data || response.data;
+  },
+
+  deleteImage: async (category: string, filename: string): Promise<void> => {
+    await apiClient.delete(`/admin/upload/image/${category}/${filename}`);
+  },
+
+  // Invalidate cache
+  invalidateMerchantCache: async (slug: string): Promise<void> => {
+    await apiClient.post(`/admin/merchants/${slug}/invalidate`);
+  },
 };
+
+export interface CashbackEvent {
+  id: number;
+  user_id: number;
+  user_email?: string;
+  order_id?: number;
+  amount: number;
+  status: string;
+  created_at: string;
+  confirmed_at?: string;
+}
+
+export interface Banner {
+  id: number;
+  title: string;
+  banner_type: string;
+  image_url?: string;
+  brand_name?: string;
+  badge_text?: string;
+  badge_color?: string;
+  headline?: string;
+  description?: string;
+  code?: string;
+  style_metadata?: string;
+  link_url?: string;
+  is_active: boolean;
+  order_index: number;
+  created_at?: string;
+}
+
+export interface Category {
+  id: number;
+  name: string;
+  slug: string;
+  description?: string;
+  icon_name?: string;
+  is_active: boolean;
+  created_at?: string;
+}
+
+export interface ProductVariant {
+  id: number;
+  product_id: number;
+  sku: string;
+  name: string;
+  price: number;
+  stock: number;
+  is_available: boolean;
+}
 
 export default adminApi;
