@@ -88,16 +88,12 @@ function VerifyOtpForm() {
     try {
       const response = await authAPI.verifyOtp(mobile, otpCode);
       
-      if (response?.data?.access_token && response?.data?.user) {
+      if (response?.access_token && response?.user) {
         setAuthFromGoogle(
-          response.data.user, 
-          response.data.access_token, 
-          response.data.refresh_token
+          response.user, 
+          response.access_token, 
+          response.refresh_token
         );
-        setSuccess("Phone verified successfully!");
-        setTimeout(() => router.push(ROUTES.home), 1000);
-      } else if (response.access_token && response.user) {
-        setAuthFromGoogle(response.user, response.access_token, response.refresh_token);
         setSuccess("Phone verified successfully!");
         setTimeout(() => router.push(ROUTES.home), 1000);
       } else {
