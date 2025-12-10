@@ -25,7 +25,7 @@ export function MerchantCard({ merchant }: MerchantCardProps) {
               <img
                 src={merchant.logo_url}
                 alt={merchant.name}
-                className="max-w-full max-h-full object-contain transition-transform group-hover:scale-105 rounded-xl"
+                className="max-w-full max-h-full object-contain transition-transform group-hover:scale-105 rounded-lg"
                 loading="lazy"
                 onError={(e) => {
                   const target = e.currentTarget;

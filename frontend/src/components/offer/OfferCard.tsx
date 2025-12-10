@@ -61,7 +61,7 @@ export function OfferCard({ offer, onClickTrack }: OfferCardProps) {
               <img
                 src={offer.merchant.logo_url}
                 alt={offer.merchant.name}
-                className="max-w-full max-h-full object-contain transition-transform duration-300 group-hover:scale-110"
+                className="max-w-full max-h-full object-contain transition-transform duration-300 group-hover:scale-110 rounded-lg"
                 onError={(e) => {
                   const target = e.currentTarget;
                   target.style.display = 'none';

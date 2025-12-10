@@ -48,7 +48,7 @@ export function FeaturedMerchantSection({ merchants }: FeaturedMerchantSectionPr
                   <img
                     src={merchant.logo_url}
                     alt={merchant.name}
-                    className="w-full h-full object-contain transition-transform duration-300 group-hover:scale-110 rounded-2xl"
+                    className="w-full h-full object-contain transition-transform duration-300 group-hover:scale-110 rounded-lg"
                     loading="lazy"
                     onError={(e) => {
                       const target = e.currentTarget;

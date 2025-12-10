@@ -74,7 +74,7 @@ export function ProductCard({ product, compact = false }: ProductCardProps) {
               <img
                 src={product.image_url || '/images/gift-cards/placeholder.png'}
                 alt={product.name}
-                className="max-w-full max-h-full object-contain group-hover:scale-110 transition-transform duration-300"
+                className="max-w-full max-h-full object-contain group-hover:scale-110 transition-transform duration-300 rounded-lg"
                 onError={(e) => {
                   const target = e.currentTarget;
                   target.style.display = 'none';
