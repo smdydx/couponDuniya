@@ -119,6 +119,39 @@ def get_current_user(db: Session = Depends(get_db), authorization: str | None = 
 
     return user
 
+def get_current_user_unverified(db: Session = Depends(get_db), authorization: str | None = Header(None)):
+    """Extract user from JWT token without requiring mobile verification.
+    Use this for endpoints that allow unverified users (like OTP verification)."""
+    if not authorization or not authorization.startswith("Bearer "):
+        raise HTTPException(status_code=401, detail="Not authenticated")
+
+    token = authorization.replace("Bearer ", "")
+
+    try:
+        payload = jwt.decode(token, settings.SECRET_KEY, algorithms=[settings.JWT_ALGORITHM])
+        user_id_str = payload.get("sub")
+        if user_id_str is None:
+            raise HTTPException(status_code=401, detail="Invalid token")
+        try:
+            user_id = int(user_id_str)
+        except (ValueError, TypeError):
+            raise HTTPException(status_code=401, detail="Invalid user ID in token")
+    except JWTError as e:
+        raise HTTPException(status_code=401, detail=f"Invalid token: {str(e)}")
+
+    user = db.scalar(select(User).where(User.id == user_id))
+    if not user:
+        raise HTTPException(status_code=401, detail="User not found")
+
+    if not user.is_active:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="User account is inactive"
+        )
+
+    return user
+
+
 def get_current_admin_user(current_user: User = Depends(get_current_user)):
     """Verify user has admin role"""
     if current_user.role != "admin" and not current_user.is_admin:

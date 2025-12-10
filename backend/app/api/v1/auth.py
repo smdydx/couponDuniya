@@ -20,7 +20,7 @@ from ...models import User
 from ...models.social_account import SocialAccount
 from ...models.refresh_token import RefreshToken
 from ...config import get_settings
-from ...dependencies import get_current_user
+from ...dependencies import get_current_user, get_current_user_unverified
 import hashlib
 import secrets
 
@@ -1211,7 +1211,7 @@ async def google_callback(
 async def send_mobile_otp_endpoint(
     request: dict,
     db: Session = Depends(get_db),
-    current_user: User = Depends(get_current_user)
+    current_user: User = Depends(get_current_user_unverified)
 ):
     """Send OTP to mobile number for verification"""
     mobile = request.get("mobile")
@@ -1259,7 +1259,7 @@ async def send_mobile_otp_endpoint(
 async def verify_mobile_otp_endpoint(
     request: dict,
     db: Session = Depends(get_db),
-    current_user: User = Depends(get_current_user)
+    current_user: User = Depends(get_current_user_unverified)
 ):
     """Verify mobile OTP and update user's mobile number"""
     mobile = request.get("mobile")
