@@ -74,43 +74,50 @@ apiClient.interceptors.request.use(
 apiClient.interceptors.response.use(
   (response) => response,
   async (error) => {
+    // Network error - return empty data structure instead of rejecting
+    if (!error.response) {
+      console.warn("Network error - API unavailable:", error.message);
+      return Promise.resolve({ data: { data: null } });
+    }
+
     const originalRequest = error.config;
 
-    // Handle 401 Unauthorized - token expired or invalid
+    // Handle 401 errors
     if (error.response?.status === 401 && !originalRequest._retry) {
       originalRequest._retry = true;
 
       try {
-        // Assuming useAuthStore is available and has refreshAccessToken and accessToken
-        // This part relies on the existence and proper setup of your auth store
-        // If 'useAuthStore' is not defined, you'll need to import it or define it.
-        // For example: import { useAuthStore } from '@/path/to/your/authStore';
-        const { refreshAccessToken } = await import('@/store/authStore'); // Adjust path as necessary
-        const { accessToken } = await import('@/store/authStore'); // Adjust path as necessary
+        const refreshToken = localStorage.getItem("refreshToken");
+        if (!refreshToken) {
+          throw new Error("No refresh token");
+        }
 
-        await refreshAccessToken(); // Call the refresh token function
+        const response = await axios.post(
+          `${API_BASE_URL}/auth/refresh`,
+          { refresh_token: refreshToken }
+        );
 
-        const currentAccessToken = accessToken(); // Get the new access token
-        originalRequest.headers.Authorization = `Bearer ${currentAccessToken}`;
+        const { access_token, refresh_token } = response.data.data;
+        localStorage.setItem("token", access_token);
+        localStorage.setItem("refreshToken", refresh_token);
 
+        originalRequest.headers.Authorization = `Bearer ${access_token}`;
         return apiClient(originalRequest);
       } catch (refreshError) {
-        const { logout } = await import('@/store/authStore'); // Adjust path as necessary
-        logout();
-        if (typeof window !== 'undefined') {
-          window.location.href = '/login';
+        localStorage.removeItem("token");
+        localStorage.removeItem("refreshToken");
+        if (typeof window !== "undefined") {
+          window.location.href = "/login";
         }
         return Promise.reject(refreshError);
       }
     }
 
-    // Handle 403 Forbidden - insufficient permissions
+    // Handle 403 errors gracefully for non-admin pages
     if (error.response?.status === 403) {
-      // Silently handle 403 errors
-      return Promise.reject(error);
+      console.warn("Access forbidden:", error.config?.url);
     }
 
-    // For other errors, just reject the promise
     return Promise.reject(error);
   }
 );

@@ -46,9 +46,15 @@ export default function ProductsPage() {
       if (searchQuery) params.append("search", searchQuery);
       if (sortBy) params.append("sort_by", sortBy);
 
-      const response = await api.get(`/products/?${params.toString()}`);
-      return response.data;
+      try {
+        const response = await api.get(`/products/?${params.toString()}`);
+        return response.data?.data || { data: [], pagination: { current_page: 1, total_pages: 1, total_items: 0, items_per_page: 24 } };
+      } catch (err) {
+        console.warn("Products fetch error - using fallback:", err);
+        return { data: [], pagination: { current_page: 1, total_pages: 1, total_items: 0, items_per_page: 24 } };
+      }
     },
+    retry: 1,
   });
 
   const products = data?.data || [];
