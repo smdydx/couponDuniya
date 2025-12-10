@@ -8,7 +8,7 @@ import hmac
 import hashlib
 
 from ...database import get_db
-from ...dependencies import get_current_user
+from ...dependencies import get_current_user_unverified
 from ...models import User, Product, ProductVariant, Order, OrderItem, PromoCode, Payment, WalletBalance
 from ...schemas.cart import (
     CartValidateRequest,
@@ -61,7 +61,7 @@ def calculate_promo_discount(
 def validate_cart(
     request: CartValidateRequest,
     db: Session = Depends(get_db),
-    current_user: User = Depends(get_current_user)
+    current_user: User = Depends(get_current_user_unverified)
 ):
     """Validate cart items, check stock, apply promo code, calculate totals."""
     validated_items = []
@@ -212,13 +212,13 @@ def validate_cart(
 
 
 @router.get("/", response_model=dict)
-def get_cart_state(current_user: User = Depends(get_current_user)):
+def get_cart_state(current_user: User = Depends(get_current_user_unverified)):
     """Return the user's cart stored in Redis."""
     return {"success": True, "data": redis_get_cart(current_user.id)}
 
 
 @router.post("/add", response_model=dict)
-def add_to_cart(item: Dict, current_user: User = Depends(get_current_user)):
+def add_to_cart(item: Dict, current_user: User = Depends(get_current_user_unverified)):
     """Add item to cart stored in Redis. Expect variant_id and quantity."""
     if "variant_id" not in item or "quantity" not in item:
         raise HTTPException(status_code=400, detail="variant_id and quantity required")
@@ -230,7 +230,7 @@ def add_to_cart(item: Dict, current_user: User = Depends(get_current_user)):
 
 
 @router.post("/update", response_model=dict)
-def update_cart_item(item: Dict, current_user: User = Depends(get_current_user)):
+def update_cart_item(item: Dict, current_user: User = Depends(get_current_user_unverified)):
     """Update quantity for an item."""
     if "variant_id" not in item or "quantity" not in item:
         raise HTTPException(status_code=400, detail="variant_id and quantity required")
@@ -239,7 +239,7 @@ def update_cart_item(item: Dict, current_user: User = Depends(get_current_user))
 
 
 @router.post("/remove", response_model=dict)
-def remove_cart_item(item: Dict, current_user: User = Depends(get_current_user)):
+def remove_cart_item(item: Dict, current_user: User = Depends(get_current_user_unverified)):
     """Remove an item."""
     if "variant_id" not in item:
         raise HTTPException(status_code=400, detail="variant_id required")
@@ -248,7 +248,7 @@ def remove_cart_item(item: Dict, current_user: User = Depends(get_current_user))
 
 
 @router.post("/clear", response_model=dict)
-def clear_cart_items(current_user: User = Depends(get_current_user)):
+def clear_cart_items(current_user: User = Depends(get_current_user_unverified)):
     """Clear cart."""
     clear_cart(current_user.id)
     return {"success": True, "data": redis_get_cart(current_user.id)}
@@ -258,7 +258,7 @@ def clear_cart_items(current_user: User = Depends(get_current_user)):
 def checkout(
     payload: CheckoutRequest,
     db: Session = Depends(get_db),
-    current_user: User = Depends(get_current_user)
+    current_user: User = Depends(get_current_user_unverified)
 ):
     """Create order and initiate payment"""
     # Only check if user account is active
@@ -416,7 +416,7 @@ def checkout(
 def verify_payment(
     request: PaymentVerificationRequest,
     db: Session = Depends(get_db),
-    current_user: User = Depends(get_current_user)
+    current_user: User = Depends(get_current_user_unverified)
 ):
     """Verify Razorpay payment and update order status."""
     # Get order
