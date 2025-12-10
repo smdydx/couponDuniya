@@ -608,19 +608,6 @@ export default function AdminDashboard() {
           )}
         </div>
       )}
-      {/* Logout button added here */}
-      <div className="flex justify-center mt-8">
-        <Button
-          onClick={() => {
-            useAuthStore.setState({ user: null, accessToken: null, isAuthenticated: false });
-            router.push("/login");
-          }}
-          variant="destructive"
-          className="px-6 py-3 text-lg font-semibold shadow-md hover:shadow-lg"
-        >
-          Logout
-        </Button>
-      </div>
     </div>
   );
 }
