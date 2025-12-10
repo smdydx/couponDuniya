@@ -227,25 +227,53 @@ export default function HomePage() {
   const { data: homepageData, isLoading, error, refetch } = useQuery({
     queryKey: ["homepage"],
     queryFn: async () => {
-      const response = await apiClient.get("/api/v1/homepage", {
-        params: {
-          limit_merchants: 12,
-          limit_featured_offers: 8,
-          limit_exclusive_offers: 6,
-          limit_products: 12,
-          limit_banners: 5,
-        },
-      });
-      console.log("Homepage data:", response.data);
+      try {
+        // Call backend directly - homepage is public data
+        const backendUrl = process.env.NEXT_PUBLIC_API_URL || 'http://127.0.0.1:8000';
+        const response = await fetch(`${backendUrl}/api/v1/homepage/?limit_merchants=12&limit_featured_offers=8&limit_exclusive_offers=6&limit_products=12&limit_banners=5`, {
+          method: 'GET',
+          headers: {
+            'Content-Type': 'application/json',
+            'Accept': 'application/json',
+          },
+          cache: 'no-store',
+        });
 
-      if (response.data.empty) {
-        console.warn("⚠️ Homepage is empty. Run: python backend/scripts/seed_homepage_data.py");
+        if (!response.ok) {
+          throw new Error(`HTTP ${response.status}`);
+        }
+
+        const data = await response.json();
+        console.log("Homepage data:", data);
+
+        if (data.empty) {
+          console.warn("⚠️ Homepage is empty. Run: python backend/scripts/seed_homepage_data.py");
+        }
+
+        return data.data;
+      } catch (err: any) {
+        console.error("Homepage fetch error:", err);
+        // Return empty data structure instead of throwing
+        return {
+          banners: [],
+          promo_banners: [],
+          featured_merchants: [],
+          featured_offers: [],
+          exclusive_offers: [],
+          featured_products: [],
+          stats: {
+            total_merchants: 0,
+            total_offers: 0,
+            total_products: 0,
+            total_banners: 0
+          }
+        };
       }
-
-      return response.data.data;
     },
     staleTime: 2 * 60 * 1000,
-    retry: 2,
+    retry: 1,
+    refetchOnMount: false,
+    refetchOnWindowFocus: false,
   });
 
   // ALL HOOKS MUST BE CALLED BEFORE ANY CONDITIONAL RETURNS

@@ -1,3 +1,4 @@
+
 import { NextRequest, NextResponse } from 'next/server';
 
 export async function GET(request: NextRequest) {
@@ -7,15 +8,27 @@ export async function GET(request: NextRequest) {
     
     const backendUrl = `http://127.0.0.1:8000/api/v1/homepage/?${queryString}`;
     
+    // Get authorization token from request headers
+    const authHeader = request.headers.get('authorization');
+    
+    const headers: HeadersInit = {
+      'Content-Type': 'application/json',
+      'Accept': 'application/json',
+    };
+    
+    // Forward the authorization header if present
+    if (authHeader) {
+      headers['Authorization'] = authHeader;
+    }
+    
     const response = await fetch(backendUrl, {
       method: 'GET',
-      headers: {
-        'Content-Type': 'application/json',
-        'Accept': 'application/json',
-      },
+      headers,
+      cache: 'no-store', // Prevent caching to ensure fresh data
     });
     
     if (!response.ok) {
+      console.error('Backend homepage error:', response.status, response.statusText);
       return NextResponse.json(
         { error: 'Failed to fetch homepage data' },
         { status: response.status }
