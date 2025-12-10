@@ -229,7 +229,7 @@ export default function HomePage() {
     queryFn: async () => {
       try {
         // Call backend directly - homepage is public data
-        const backendUrl = process.env.NEXT_PUBLIC_API_URL || 'http://127.0.0.1:8000';
+        const backendUrl = process.env.NEXT_PUBLIC_API_URL || 'http://0.0.0.0:8000';
         const response = await fetch(`${backendUrl}/api/v1/homepage/?limit_merchants=12&limit_featured_offers=8&limit_exclusive_offers=6&limit_products=12&limit_banners=5`, {
           method: 'GET',
           headers: {

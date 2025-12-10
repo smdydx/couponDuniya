@@ -261,12 +261,15 @@ def checkout(
     current_user: User = Depends(get_current_user)
 ):
     """Create order and initiate payment"""
-    # Check if user account is active (removed strict email verification requirement)
+    # Only check if user account is active
+    # Email and mobile verification are NOT required for checkout
+    # This allows better UX for users who registered via social login or OTP
     if not current_user.is_active:
         raise HTTPException(
             status_code=403,
             detail="Your account is not active. Please contact support."
         )
+    
     # First validate cart
     validation = validate_cart(
         CartValidateRequest(
@@ -476,30 +479,38 @@ def verify_payment(
     db.commit()
     db.refresh(order)
 
-    # Send order confirmation email
-    if current_user.email:
-        items = db.query(OrderItem).filter(OrderItem.order_id == order.id).all()
-        items_data = [{
-            'product_name': item.product_name,
-            'quantity': item.quantity,
-            'unit_price': float(item.unit_price),
-            'subtotal': float(item.subtotal)
-        } for item in items]
+    # Send order confirmation email (only if email exists)
+    try:
+        if current_user.email and settings.EMAIL_ENABLED:
+            items = db.query(OrderItem).filter(OrderItem.order_id == order.id).all()
+            items_data = [{
+                'product_name': item.product_name,
+                'quantity': item.quantity,
+                'unit_price': float(item.unit_price),
+                'subtotal': float(item.subtotal)
+            } for item in items]
 
-        send_order_confirmation(
-            current_user.email,
-            order.order_number,
-            float(order.total_amount),
-            items_data
-        )
+            send_order_confirmation(
+                current_user.email,
+                order.order_number,
+                float(order.total_amount),
+                items_data
+            )
+    except Exception as e:
+        # Don't fail checkout if email sending fails
+        print(f"Failed to send order confirmation email: {e}")
 
-    # Send SMS notification
-    if current_user.mobile:
-        send_order_notification(
-            current_user.mobile,
-            order.order_number,
-            float(order.total_amount)
-        )
+    # Send SMS notification (only if mobile exists)
+    try:
+        if current_user.mobile and settings.SMS_ENABLED:
+            send_order_notification(
+                current_user.mobile,
+                order.order_number,
+                float(order.total_amount)
+            )
+    except Exception as e:
+        # Don't fail checkout if SMS sending fails
+        print(f"Failed to send order notification SMS: {e}")
 
     return PaymentVerificationResponse(
         success=True,
