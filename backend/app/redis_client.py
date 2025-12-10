@@ -51,8 +51,14 @@ try:
         health_check_interval=30,
         retry_on_timeout=True,
     )
-    redis_client.ping()
-except Exception:
+    try:
+        redis_client.ping()
+        print("✅ Redis connected successfully")
+    except:
+        print("⚠️  Redis connection failed, using MockRedis")
+        redis_client = MockRedis()
+except Exception as e:
+    print(f"⚠️  Redis import/setup failed: {e}, using MockRedis")
     redis_client = MockRedis()
 
 
@@ -190,18 +196,32 @@ def publish(channel: str, payload: Any) -> None:
 # Monitoring snapshot
 def redis_stats() -> dict:
     try:
+        # Try to ping first to check connection
+        redis_client.ping()
         info = redis_client.info()
         hits = info.get("keyspace_hits", 0)
         misses = info.get("keyspace_misses", 0)
         hit_rate = (hits / (hits + misses)) * 100 if (hits + misses) else 0.0
         return {
-            "connected_clients": info.get("connected_clients"),
-            "used_memory_human": info.get("used_memory_human"),
-            "total_commands_processed": info.get("total_commands_processed"),
+            "connected": True,
+            "connected_clients": info.get("connected_clients", 0),
+            "used_memory_human": info.get("used_memory_human", "0B"),
+            "total_commands_processed": info.get("total_commands_processed", 0),
             "cache_hit_rate_percent": round(hit_rate, 2),
+            "keys_count": redis_client.dbsize() if hasattr(redis_client, 'dbsize') else 0,
+            "memory_used": info.get("used_memory_human", "0 MB"),
         }
-    except Exception:
-        return {"connected_clients": 0, "used_memory_human": "0B", "total_commands_processed": 0, "cache_hit_rate_percent": 0.0}
+    except Exception as e:
+        print(f"Redis stats error: {e}")
+        return {
+            "connected": False,
+            "connected_clients": 0,
+            "used_memory_human": "0B",
+            "total_commands_processed": 0,
+            "cache_hit_rate_percent": 0.0,
+            "keys_count": 0,
+            "memory_used": "0 MB",
+        }
 
 
 def cached(fn: Callable, key_builder: Callable[..., str], ttl: int):

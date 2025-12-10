@@ -1093,21 +1093,16 @@ def analytics_dashboard(
         logger.info(f"Available products: {available_products}")
 
         # Redis stats
+        from ...redis_client import redis_stats as get_redis_stats
         try:
-            redis_info = redis_client.info()
-            redis_stats = {
-                "connected": True,
-                "keys_count": redis_client.dbsize(),
-                "memory_used": redis_info.get("used_memory_human", "N/A"),
-                "connected_clients": redis_info.get("connected_clients", 0),
-            }
+            redis_stats = get_redis_stats()
             logger.info(f"Redis stats: {redis_stats}")
         except Exception as redis_err:
             logger.error(f"Redis connection error: {redis_err}")
             redis_stats = {
                 "connected": False,
                 "keys_count": 0,
-                "memory_used": "N/A",
+                "memory_used": "0 MB",
                 "connected_clients": 0,
             }
 
