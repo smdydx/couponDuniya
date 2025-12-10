@@ -85,6 +85,10 @@ externalPort = 3001
 localPort = 43687
 externalPort = 3000
 
+[[ports]]
+localPort = 44763
+externalPort = 3003
+
 [deployment]
 deploymentTarget = "static"
 build = ["bash", "-c", "cd frontend && npm run build && npm run export || npx next build"]
