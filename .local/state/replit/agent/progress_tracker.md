@@ -160,3 +160,15 @@
 [x] 153. Ran seed_homepage_data.py script to populate sample data (5 categories, 8 merchants, 12 offers, 8 products, 4 banners)
 [x] 154. Fixed manifest.json icon sizes to use "any" for flexible sizing
 [x] 155. ✅ **Homepage now loads correctly with all data and UI elements**
+
+## Admin Login Fix (Dec 10, 2025):
+[x] 156. Fixed frontend API client base URL - Updated to '/backend-api/api/v1' for correct routing
+[x] 157. Created admin user with correct password hash (pbkdf2_sha256 not bcrypt)
+    - Email: admin@couponali.com
+    - Password: admin123
+[x] 158. ✅ **Admin login now working correctly at /login page**
+
+## Login Credentials:
+- Admin: admin@couponali.com / admin123
+- Login page: /login (not /admin/login)
+- After login, admins can access /admin/dashboard
