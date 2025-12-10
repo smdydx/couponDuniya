@@ -4,7 +4,7 @@ import { useState, useEffect } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useForm } from "react-hook-form";
-import { Eye, EyeOff, Loader2 } from "lucide-react";
+import { Eye, EyeOff, Loader2, Phone } from "lucide-react"; // Added Phone icon import
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -60,7 +60,7 @@ export default function LoginPage() {
 
         // Wait for state to update properly before redirecting
         await new Promise(resolve => setTimeout(resolve, 500));
-        
+
         // Use router.push instead of window.location for smooth navigation
         router.push(redirectUrl);
       } else {
@@ -71,6 +71,25 @@ export default function LoginPage() {
       // Error is handled by store
     }
   };
+
+  // Placeholder for handleSendOtp and isValidMobile, which would be needed for OTP functionality
+  const handleSendOtp = async () => {
+    // Implement your SMTP OTP sending logic here
+    console.log("Sending OTP via email...");
+    // Simulate sending OTP
+    await new Promise(resolve => setTimeout(resolve, 1000));
+    alert("OTP sent to your email. Please check your inbox.");
+  };
+
+  const isValidMobile = (mobile: string) => {
+    // For email OTP, this check might not be directly applicable,
+    // but if you were to collect email first, you'd validate it here.
+    // For now, let's assume it's always valid to proceed to button click.
+    return true;
+  };
+
+  const [mobile, setMobile] = useState(""); // State to hold mobile number/email for OTP
+  const [isSending, setIsSending] = useState(false); // State to track OTP sending
 
   return (
     <Card>
@@ -158,6 +177,46 @@ export default function LoginPage() {
             )}
           </Button>
         </form>
+
+        {/* This section would be for OTP login if implemented */}
+        {/* For now, it's commented out as the primary login is email/password */}
+        {/*
+        <div className="mt-6">
+          <Label htmlFor="mobileOrEmailForOtp">Enter your Email for OTP</Label>
+          <Input
+            id="mobileOrEmailForOtp"
+            type="text"
+            placeholder="Enter your email"
+            value={mobile}
+            onChange={(e) => {
+              setMobile(e.target.value);
+              clearError(); // Clear error when input changes
+            }}
+            className="mb-2"
+          />
+          <Button
+            onClick={handleSendOtp}
+            disabled={isSending || !isValidMobile(mobile)}
+            className="w-full"
+          >
+            {isSending ? (
+              <>
+                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                Sending OTP via Email...
+              </>
+            ) : (
+              <>
+                <Phone className="mr-2 h-4 w-4" />
+                Send OTP (via Email)
+              </>
+            )}
+          </Button>
+          <p className="text-xs text-muted-foreground text-center mt-2">
+            OTP will be sent to your email address
+          </p>
+        </div>
+        */}
+
 
         <div className="relative my-6">
           <Separator />
