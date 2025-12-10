@@ -100,10 +100,6 @@
 - 10 Banners (4 hero + 6 promo)
 - 5 Users (1 admin + 4 test)
 
-## Login Credentials:
-- Admin: admin@couponali.com / admin123
-- Test User: user1@test.com / test123
-
 ## Payment Gateway (Razorpay):
 - Configured in backend/app/config.py with test keys
 - RAZORPAY_KEY_ID: rzp_test_RcsDiWWWebnqQU
@@ -130,6 +126,27 @@
 [x] 166. Verified homepage loads correctly with full navigation, search bar, hero section, and stats
 [x] 167. ✅ **IMPORT MIGRATION FULLY COMPLETED - Project is fully operational and ready for development**
 
+## Bug Fixes (Dec 10, 2025 - This Session):
+[x] 168. Fixed 401 Unauthorized error on merchants API endpoint
+    - **Root Cause:** Merchants endpoint required authentication (`get_current_user`) but should be public
+    - **Fix Applied:** Removed `current_user: User = Depends(get_current_user)` from list_merchants endpoint
+[x] 169. Fixed 401 Unauthorized error on featured merchants endpoint
+    - **Fix Applied:** Removed authentication requirement from featured_merchants endpoint
+    - **Removed duplicate:** Deleted redundant featured_merchants function definition
+[x] 170. Fixed 401 error on get_merchant by slug endpoint
+    - **Fix Applied:** Removed authentication requirement from get_merchant endpoint
+[x] 171. Fixed 401 error on offers list endpoint
+    - **Root Cause:** Offers endpoint required authentication but should be public
+    - **Fix Applied:** Removed `current_user: User = Depends(get_current_user)` from list_offers endpoint
+[x] 172. Created admin user with correct credentials
+    - Email: admin@couponali.com
+    - Password: admin123
+    - Role: admin, is_admin: true
+[x] 173. Added missing `mobile_verified` field to User model
+    - **Root Cause:** Database had `mobile_verified` column but model was missing it
+    - **Fix Applied:** Added `mobile_verified: Mapped[bool] = mapped_column(Boolean, default=False)` to User model
+[x] 174. ✅ **All API endpoints working correctly - merchants, offers, and categories now accessible without authentication**
+
 ## Swagger UI Access:
 - Backend Swagger Docs: http://localhost:8000/docs
 - OpenAPI JSON: http://localhost:8000/openapi.json
@@ -140,3 +157,11 @@
 - Admin: admin@couponali.com / admin123
 - Login page: /login (not /admin/login)
 - After login, admins can access /admin/dashboard
+
+## Public Endpoints (No Auth Required):
+- GET /api/v1/merchants/ - List all merchants
+- GET /api/v1/merchants/featured - Get featured merchants
+- GET /api/v1/merchants/{slug} - Get merchant by slug
+- GET /api/v1/offers/ - List all offers
+- GET /api/v1/categories/ - List all categories
+- GET /api/v1/homepage/ - Get homepage data

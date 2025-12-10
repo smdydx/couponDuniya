@@ -50,6 +50,7 @@ class User(Base):
     email: Mapped[str | None] = mapped_column(String(255), unique=True, index=True, nullable=True)
     email_normalized: Mapped[str | None] = mapped_column(String(255), unique=True, index=True, nullable=True)
     mobile: Mapped[str | None] = mapped_column(String(20), unique=True, index=True, nullable=True)
+    mobile_verified: Mapped[bool] = mapped_column(Boolean, default=False)
     mobile_verified_at: Mapped[datetime | None] = mapped_column(DateTime, nullable=True)
     mobile_country_code: Mapped[str | None] = mapped_column(String(5), nullable=True, default="+91")
 

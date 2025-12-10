@@ -30,7 +30,6 @@ def list_offers(
     is_verified: bool | None = None,
     has_cashback: bool | None = None,
     db: Session = Depends(get_db),
-    current_user: User = Depends(get_current_user),
     _: dict = Depends(rate_limit_dependency("offers:list", limit=100, window_seconds=60))
 ):
     """List all offers with filtering and pagination"""
