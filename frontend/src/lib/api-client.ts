@@ -10,7 +10,7 @@ const getApiBaseUrl = () => {
   return process.env.NEXT_PUBLIC_API_URL || "http://127.0.0.1:8000/api/v1";
 };
 
-const API_BASE_URL = typeof window !== 'undefined' 
+const API_BASE_URL = typeof window !== 'undefined'
   ? `${window.location.protocol}//${window.location.hostname}:8000/api/v1`
   : process.env.NEXT_PUBLIC_API_URL || "http://127.0.0.1:8000/api/v1";
 
@@ -72,17 +72,45 @@ apiClient.interceptors.request.use(
 // Response interceptor - handle errors gracefully
 apiClient.interceptors.response.use(
   (response) => response,
-  (error) => {
-    if (error.response?.status === 401) {
-      console.error('Unauthorized request to:', error.config?.url);
-      // Redirect to login page if unauthorized
-      if (typeof window !== 'undefined') {
-        window.location.href = '/login';
+  async (error) => {
+    const originalRequest = error.config;
+
+    // Handle 401 Unauthorized - token expired or invalid
+    if (error.response?.status === 401 && !originalRequest._retry) {
+      originalRequest._retry = true;
+
+      try {
+        // Assuming useAuthStore is available and has refreshAccessToken and accessToken
+        // This part relies on the existence and proper setup of your auth store
+        // If 'useAuthStore' is not defined, you'll need to import it or define it.
+        // For example: import { useAuthStore } from '@/path/to/your/authStore';
+        const { refreshAccessToken } = await import('@/store/authStore'); // Adjust path as necessary
+        const { accessToken } = await import('@/store/authStore'); // Adjust path as necessary
+
+        await refreshAccessToken(); // Call the refresh token function
+
+        const currentAccessToken = accessToken(); // Get the new access token
+        originalRequest.headers.Authorization = `Bearer ${currentAccessToken}`;
+
+        return apiClient(originalRequest);
+      } catch (refreshError) {
+        const { logout } = await import('@/store/authStore'); // Adjust path as necessary
+        logout();
+        if (typeof window !== 'undefined') {
+          window.location.href = '/login';
+        }
+        return Promise.reject(refreshError);
       }
     }
-    if (error.response?.status === 404) {
-      console.error('Endpoint not found:', error.config?.url);
+
+    // Handle 403 Forbidden - insufficient permissions
+    if (error.response?.status === 403) {
+      console.error('Access forbidden:', error.response?.data);
+      // Don't logout on 403, just reject the promise
+      return Promise.reject(error);
     }
+
+    // For other errors, just reject the promise
     return Promise.reject(error);
   }
 );
@@ -113,6 +141,7 @@ adminApiClient.interceptors.response.use(
   (error) => {
     if (error.response?.status === 401) {
       console.error('Admin API unauthorized:', error.config?.url);
+      // In a real app, you might want to redirect to login or refresh token here as well
     }
     return Promise.reject(error);
   }

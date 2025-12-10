@@ -9,21 +9,24 @@ from .redis_client import rk, cache_get, rate_limit
 from .models import User
 from .security import decode_token
 import os
+from typing import Annotated
 
 settings = get_settings()
 security = HTTPBearer()
 
 
 def get_current_user(
-    credentials: HTTPAuthorizationCredentials = Depends(security),
+    token: Annotated[str, Depends(security)],
     db: Session = Depends(get_db)
 ) -> User:
     """Get current authenticated user from token"""
-    token = credentials.credentials
+    # The token is already extracted by HTTPBearer.
+    # We just need to access credentials.credentials.
+    token_str = token
 
     try:
         # Decode and validate token
-        payload = decode_token(token)
+        payload = decode_token(token_str)
         user_id = payload.get("sub")
 
         if not user_id:

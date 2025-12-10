@@ -60,6 +60,7 @@ def get_current_user_profile(current_user: User = Depends(get_current_user)):
             "uuid": str(current_user.uuid),
             "email": current_user.email,
             "mobile": current_user.mobile,
+            "mobile_verified": current_user.mobile_verified_at is not None,
             "full_name": current_user.full_name,
             "first_name": current_user.first_name or first_name,
             "last_name": current_user.last_name or last_name,
@@ -387,6 +388,7 @@ async def verify_mobile_otp(
     try:
         is_valid = verify_otp(current_user.mobile, otp)
         if is_valid:
+            current_user.mobile_verified_at = datetime.utcnow()
             current_user.is_verified = True
             current_user.updated_at = datetime.utcnow()
             db.commit()
