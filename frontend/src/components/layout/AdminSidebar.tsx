@@ -22,7 +22,6 @@ import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { ROUTES } from "@/lib/constants";
 import { useRouter } from "next/navigation";
-import { LogOut } from "lucide-react";
 
 const adminNavItems = [
   {
@@ -106,12 +105,6 @@ export function AdminSidebar({ isOpen, onToggle }: AdminSidebarProps) {
   const pathname = usePathname();
   const router = useRouter();
 
-  const handleLogout = () => {
-    localStorage.removeItem('admin_token');
-    localStorage.removeItem('admin_user');
-    router.push('/login');
-  };
-
   return (
     <aside
       className={cn(
@@ -171,18 +164,7 @@ export function AdminSidebar({ isOpen, onToggle }: AdminSidebarProps) {
         })}
       </nav>
 
-      <div className={cn("absolute bottom-4 left-0 right-0 px-4 space-y-2", !isOpen && "lg:px-2")}>
-        <Button
-          variant="ghost"
-          className={cn(
-            "w-full justify-start text-red-600 hover:text-red-700 hover:bg-red-50 dark:hover:bg-red-950",
-            !isOpen && "lg:justify-center lg:px-2"
-          )}
-          onClick={handleLogout}
-        >
-          <LogOut className={cn("h-5 w-5", isOpen ? "mr-3" : "lg:mr-0 mr-3")} />
-          <span className={cn("transition-opacity", !isOpen && "lg:hidden")}>Logout</span>
-        </Button>
+      <div className={cn("absolute bottom-4 left-0 right-0 px-4", !isOpen && "lg:px-2")}>
         <div className={cn("rounded-lg border bg-muted/50 p-4", !isOpen && "lg:hidden")}>
           <p className="text-xs text-muted-foreground">
             Need help? Check the{" "}
