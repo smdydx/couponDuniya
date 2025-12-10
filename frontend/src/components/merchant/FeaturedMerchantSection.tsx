@@ -48,21 +48,21 @@ export function FeaturedMerchantSection({ merchants }: FeaturedMerchantSectionPr
                   <img
                     src={merchant.logo_url}
                     alt={merchant.name}
-                    className="w-full h-full object-contain transition-transform duration-300 group-hover:scale-110 rounded-full"
+                    className="w-full h-full object-contain transition-transform duration-300 group-hover:scale-110 rounded-2xl"
                     loading="lazy"
                     onError={(e) => {
                       const target = e.currentTarget;
                       target.style.display = 'none';
                       if (target.parentElement) {
                         const fallback = document.createElement('div');
-                        fallback.className = 'w-16 h-16 sm:w-20 sm:h-20 rounded-full bg-gradient-to-br from-purple-100 to-indigo-100 dark:from-purple-900 dark:to-indigo-900 flex items-center justify-center shadow-inner';
+                        fallback.className = 'w-16 h-16 sm:w-20 sm:h-20 rounded-2xl bg-gradient-to-br from-purple-100 to-indigo-100 dark:from-purple-900 dark:to-indigo-900 flex items-center justify-center shadow-inner';
                         fallback.innerHTML = `<span class="text-2xl sm:text-3xl font-bold text-purple-600 dark:text-purple-300">${merchant.name.charAt(0)}</span>`;
                         target.parentElement.appendChild(fallback);
                       }
                     }}
                   />
                 ) : (
-                  <div className="w-16 h-16 sm:w-20 sm:h-20 rounded-full bg-gradient-to-br from-purple-100 to-indigo-100 dark:from-purple-900 dark:to-indigo-900 flex items-center justify-center shadow-inner">
+                  <div className="w-16 h-16 sm:w-20 sm:h-20 rounded-2xl bg-gradient-to-br from-purple-100 to-indigo-100 dark:from-purple-900 dark:to-indigo-900 flex items-center justify-center shadow-inner">
                     <span className="text-2xl sm:text-3xl font-bold text-purple-600 dark:text-purple-300">
                       {merchant.name.charAt(0)}
                     </span>
