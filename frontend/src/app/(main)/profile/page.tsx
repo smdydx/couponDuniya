@@ -433,7 +433,7 @@ function ProfileContent() {
         <div className="relative h-20 w-20 rounded-full overflow-hidden bg-muted group">
           {avatarPreview || user?.avatar_url ? (
             <img
-              src={avatarPreview || user.avatar_url}
+              src={avatarPreview || user?.avatar_url || ''}
               alt={user?.full_name || "Profile"}
               className="h-full w-full object-cover"
             />
