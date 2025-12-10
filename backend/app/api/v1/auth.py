@@ -210,7 +210,8 @@ def register(payload: RegisterRequest, db: Session = Depends(get_db)):
         password_hash=get_password_hash(payload.password),
         full_name=payload.full_name or "User",
         is_active=True,
-        is_verified=False,
+        is_verified=False,  # Email needs verification
+        status="active",  # But account is active for login
         role="customer",
         auth_provider="email",
         mobile_verified_at=None # Initialize mobile_verified_at to None
@@ -410,6 +411,7 @@ def verify_otp_endpoint(payload: VerifyOTPRequest, db: Session = Depends(get_db)
             full_name=f"User {mobile[-4:]}",
             is_active=True,
             is_verified=True,  # Mobile verified via OTP
+            status="active",  # Set status to active
             referral_code=f"USER{str(uuid.uuid4())[:8].upper()}",
             role="customer", # Default role
             mobile_verified_at=datetime.utcnow() # Mark mobile as verified upon auto-registration
@@ -419,8 +421,11 @@ def verify_otp_endpoint(payload: VerifyOTPRequest, db: Session = Depends(get_db)
         db.refresh(user)
 
     else:
-        # If user exists, update their mobile_verified status
+        # If user exists, update their mobile_verified status and mark as verified
         user.mobile_verified_at = datetime.utcnow()
+        user.is_verified = True
+        user.is_active = True
+        user.status = "active"
         db.commit()
 
 
@@ -878,7 +883,9 @@ async def login_with_google(
             email=user_info["email"],
             full_name=full_name or f"{first_name} {last_name}".strip(),
             password_hash=None,
-            is_verified=bool(email_verified),
+            is_verified=True,  # Google users are pre-verified
+            is_active=True,
+            status="active",
             email_verified_at=datetime.utcnow() if email_verified else None,
             role="customer",
             is_admin=False,
