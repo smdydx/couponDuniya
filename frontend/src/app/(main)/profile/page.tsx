@@ -1,9 +1,10 @@
+
 "use client";
 
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { useForm } from "react-hook-form";
-import { Loader2, User, Shield, Bell, Save, Link2, Unlink } from "lucide-react";
+import { Loader2, User, Shield, Bell, Save, Link2, Unlink, CheckCircle, AlertCircle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -15,11 +16,10 @@ import { Badge } from "@/components/ui/badge";
 import { Breadcrumbs } from "@/components/common/Breadcrumbs";
 import { useAuthStore } from "@/store/authStore";
 import { toast } from "@/store/uiStore";
-import { KYC_STATUSES } from "@/lib/constants";
+import { ProtectedRoute } from "@/components/auth/ProtectedRoute";
 import apiClient from "@/lib/api-client";
 import { authAPI } from "@/lib/api/auth";
 import { userAPI } from "@/lib/api/user";
-import { ProtectedRoute } from "@/components/auth/ProtectedRoute";
 
 interface SocialAccount {
   provider: string;
@@ -27,11 +27,27 @@ interface SocialAccount {
   linked_at: string;
 }
 
+interface KYCData {
+  status: string;
+  pan_number: string | null;
+  pan_verified: boolean;
+  aadhaar_number: string | null;
+  aadhaar_verified: boolean;
+  account_holder_name: string | null;
+  account_number: string | null;
+  ifsc_code: string | null;
+  bank_name: string | null;
+  upi_id: string | null;
+  submitted_at: string | null;
+  verified_at: string | null;
+}
+
 function ProfileContent() {
   const { user, updateUser } = useAuthStore();
   const [activeTab, setActiveTab] = useState("personal");
   const [isSaving, setIsSaving] = useState(false);
   const [passwordError, setPasswordError] = useState("");
+  const [currentPassword, setCurrentPassword] = useState("");
   const [newPassword, setNewPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
   const [socialAccounts, setSocialAccounts] = useState<SocialAccount[]>([]);
@@ -40,6 +56,27 @@ function ProfileContent() {
   const [saveError, setSaveError] = useState<string | null>(null);
   const [saveSuccess, setSaveSuccess] = useState(false);
   const [passwordSuccess, setPasswordSuccess] = useState(false);
+
+  // KYC State
+  const [kycData, setKycData] = useState<KYCData | null>(null);
+  const [loadingKyc, setLoadingKyc] = useState(false);
+  const [kycFormData, setKycFormData] = useState({
+    pan_number: "",
+    aadhaar_number: "",
+    account_holder_name: "",
+    account_number: "",
+    ifsc_code: "",
+    bank_name: "",
+    upi_id: ""
+  });
+
+  // Notifications State
+  const [notifications, setNotifications] = useState({
+    email: true,
+    sms: true,
+    promotional: false,
+    cashback: true
+  });
 
   type ProfileForm = {
     first_name: string;
@@ -79,6 +116,36 @@ function ProfileContent() {
     }
   }, [user, setValue]);
 
+  // Fetch KYC data
+  const fetchKycData = async () => {
+    setLoadingKyc(true);
+    try {
+      const response = await apiClient.get('/users/kyc');
+      if (response.data.success) {
+        setKycData(response.data.data);
+        setKycFormData({
+          pan_number: response.data.data.pan_number || "",
+          aadhaar_number: response.data.data.aadhaar_number || "",
+          account_holder_name: response.data.data.account_holder_name || "",
+          account_number: response.data.data.account_number || "",
+          ifsc_code: response.data.data.ifsc_code || "",
+          bank_name: response.data.data.bank_name || "",
+          upi_id: response.data.data.upi_id || ""
+        });
+      }
+    } catch (error) {
+      console.error("Failed to fetch KYC data:", error);
+    } finally {
+      setLoadingKyc(false);
+    }
+  };
+
+  useEffect(() => {
+    if (activeTab === "kyc") {
+      fetchKycData();
+    }
+  }, [activeTab]);
+
   const onSubmit = async (data: ProfileForm) => {
     setIsSaving(true);
     setSaveError(null);
@@ -91,13 +158,49 @@ function ProfileContent() {
         date_of_birth: data.date_of_birth,
         gender: data.gender,
       });
-      updateUser(data); // Update store with new data
+      updateUser(data);
       setSaveSuccess(true);
       toast.success("Profile updated successfully");
       setTimeout(() => setSaveSuccess(false), 3000);
     } catch (error: any) {
       setSaveError(error?.response?.data?.detail || "Failed to update profile");
       toast.error(error?.response?.data?.detail || "Failed to update profile");
+    } finally {
+      setIsSaving(false);
+    }
+  };
+
+  const handlePasswordChange = async () => {
+    setPasswordError("");
+    setPasswordSuccess(false);
+
+    if (newPassword.length < 8) {
+      setPasswordError("Password must be at least 8 characters");
+      return;
+    }
+
+    if (newPassword !== confirmPassword) {
+      setPasswordError("Passwords do not match");
+      return;
+    }
+
+    setIsSaving(true);
+    try {
+      const response = await apiClient.post('/users/change-password', {
+        current_password: currentPassword,
+        new_password: newPassword
+      });
+
+      if (response.data.success) {
+        setPasswordSuccess(true);
+        toast.success("Password changed successfully!");
+        setCurrentPassword("");
+        setNewPassword("");
+        setConfirmPassword("");
+        setTimeout(() => setPasswordSuccess(false), 5000);
+      }
+    } catch (error: any) {
+      setPasswordError(error.response?.data?.detail || "Failed to change password");
     } finally {
       setIsSaving(false);
     }
@@ -125,10 +228,9 @@ function ProfileContent() {
 
       if (response.data.success) {
         setPasswordSuccess(true);
-        toast.success("Password set successfully! You can now login with email and password.");
+        toast.success("Password set successfully!");
         setNewPassword("");
         setConfirmPassword("");
-        // Update user state to reflect password is set
         updateUser({ ...user, password_hash: true });
         setTimeout(() => setPasswordSuccess(false), 5000);
       }
@@ -138,8 +240,6 @@ function ProfileContent() {
       setIsSaving(false);
     }
   };
-
-  const kycStatus = KYC_STATUSES[(user?.kyc_status || "pending") as keyof typeof KYC_STATUSES];
 
   useEffect(() => {
     if (activeTab === "linked") {
@@ -183,6 +283,36 @@ function ProfileContent() {
 
     const authUrl = `https://accounts.google.com/o/oauth2/v2/auth?client_id=${clientId}&redirect_uri=${redirectUri}&response_type=${responseType}&scope=${scope}&nonce=${nonce}&state=${state}`;
     window.location.href = authUrl;
+  };
+
+  const handleKycSubmit = async () => {
+    setIsSaving(true);
+    try {
+      const response = await apiClient.put('/users/kyc', kycFormData);
+      if (response.data.success) {
+        toast.success("KYC details submitted for verification");
+        fetchKycData();
+      }
+    } catch (error: any) {
+      toast.error(error?.response?.data?.detail || "Failed to submit KYC");
+    } finally {
+      setIsSaving(false);
+    }
+  };
+
+  const getKycStatusBadge = () => {
+    if (!kycData) return <Badge variant="secondary">Not Submitted</Badge>;
+    
+    switch (kycData.status) {
+      case "verified":
+        return <Badge className="bg-green-500">Verified</Badge>;
+      case "pending":
+        return <Badge className="bg-yellow-500">Pending</Badge>;
+      case "rejected":
+        return <Badge className="bg-red-500">Rejected</Badge>;
+      default:
+        return <Badge variant="secondary">Not Submitted</Badge>;
+    }
   };
 
   return (
@@ -327,9 +457,7 @@ function ProfileContent() {
                 )}
                 {saveSuccess && (
                   <div className="rounded-lg bg-green-50 border border-green-200 p-3 text-sm text-green-700 flex items-center gap-2">
-                    <svg className="h-5 w-5 text-green-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-                    </svg>
+                    <CheckCircle className="h-5 w-5" />
                     Profile updated successfully!
                   </div>
                 )}
@@ -349,33 +477,131 @@ function ProfileContent() {
                     Complete KYC to enable withdrawals
                   </CardDescription>
                 </div>
-                <Badge className={kycStatus.color}>{kycStatus.label}</Badge>
+                {getKycStatusBadge()}
               </div>
             </CardHeader>
             <CardContent className="space-y-6">
-              <div className="space-y-4">
-                <div className="space-y-2">
-                  <Label htmlFor="pan_number">PAN Number</Label>
-                  <Input id="pan_number" placeholder="ABCDE1234F" />
+              {loadingKyc ? (
+                <div className="flex justify-center py-8">
+                  <Loader2 className="h-8 w-8 animate-spin" />
                 </div>
+              ) : (
+                <>
+                  <div className="space-y-4">
+                    {/* PAN Card */}
+                    <div className="space-y-2">
+                      <Label htmlFor="pan_number">
+                        PAN Number
+                        {kycData?.pan_verified && (
+                          <CheckCircle className="inline-block ml-2 h-4 w-4 text-green-600" />
+                        )}
+                      </Label>
+                      <Input
+                        id="pan_number"
+                        placeholder="ABCDE1234F"
+                        value={kycFormData.pan_number}
+                        onChange={(e) => setKycFormData({...kycFormData, pan_number: e.target.value.toUpperCase()})}
+                        maxLength={10}
+                        disabled={kycData?.pan_verified}
+                      />
+                    </div>
 
-                <div className="space-y-2">
-                  <Label htmlFor="bank_account">Bank Account Number</Label>
-                  <Input id="bank_account" placeholder="Enter account number" />
-                </div>
+                    {/* Aadhaar Card */}
+                    <div className="space-y-2">
+                      <Label htmlFor="aadhaar_number">
+                        Aadhaar Number
+                        {kycData?.aadhaar_verified && (
+                          <CheckCircle className="inline-block ml-2 h-4 w-4 text-green-600" />
+                        )}
+                      </Label>
+                      <Input
+                        id="aadhaar_number"
+                        placeholder="XXXX-XXXX-XXXX"
+                        value={kycFormData.aadhaar_number}
+                        onChange={(e) => setKycFormData({...kycFormData, aadhaar_number: e.target.value})}
+                        maxLength={12}
+                        disabled={kycData?.aadhaar_verified}
+                      />
+                    </div>
 
-                <div className="space-y-2">
-                  <Label htmlFor="ifsc_code">IFSC Code</Label>
-                  <Input id="ifsc_code" placeholder="e.g., SBIN0001234" />
-                </div>
+                    {/* Account Holder Name */}
+                    <div className="space-y-2">
+                      <Label htmlFor="account_holder_name">Account Holder Name</Label>
+                      <Input
+                        id="account_holder_name"
+                        placeholder="As per bank account"
+                        value={kycFormData.account_holder_name}
+                        onChange={(e) => setKycFormData({...kycFormData, account_holder_name: e.target.value})}
+                      />
+                    </div>
 
-                <div className="space-y-2">
-                  <Label htmlFor="upi_id">UPI ID</Label>
-                  <Input id="upi_id" placeholder="yourname@upi" />
-                </div>
-              </div>
+                    {/* Bank Account */}
+                    <div className="space-y-2">
+                      <Label htmlFor="account_number">Bank Account Number</Label>
+                      <Input
+                        id="account_number"
+                        placeholder="Enter account number"
+                        value={kycFormData.account_number}
+                        onChange={(e) => setKycFormData({...kycFormData, account_number: e.target.value})}
+                      />
+                    </div>
 
-              <Button>Submit for Verification</Button>
+                    <div className="grid gap-4 sm:grid-cols-2">
+                      {/* IFSC Code */}
+                      <div className="space-y-2">
+                        <Label htmlFor="ifsc_code">IFSC Code</Label>
+                        <Input
+                          id="ifsc_code"
+                          placeholder="SBIN0001234"
+                          value={kycFormData.ifsc_code}
+                          onChange={(e) => setKycFormData({...kycFormData, ifsc_code: e.target.value.toUpperCase()})}
+                          maxLength={11}
+                        />
+                      </div>
+
+                      {/* Bank Name */}
+                      <div className="space-y-2">
+                        <Label htmlFor="bank_name">Bank Name</Label>
+                        <Input
+                          id="bank_name"
+                          placeholder="State Bank of India"
+                          value={kycFormData.bank_name}
+                          onChange={(e) => setKycFormData({...kycFormData, bank_name: e.target.value})}
+                        />
+                      </div>
+                    </div>
+
+                    {/* UPI ID */}
+                    <div className="space-y-2">
+                      <Label htmlFor="upi_id">UPI ID (Optional)</Label>
+                      <Input
+                        id="upi_id"
+                        placeholder="yourname@upi"
+                        value={kycFormData.upi_id}
+                        onChange={(e) => setKycFormData({...kycFormData, upi_id: e.target.value})}
+                      />
+                    </div>
+                  </div>
+
+                  {kycData?.status === "verified" ? (
+                    <div className="rounded-lg bg-green-50 border border-green-200 p-4 text-sm text-green-700">
+                      <CheckCircle className="inline-block mr-2 h-5 w-5" />
+                      Your KYC has been verified successfully!
+                    </div>
+                  ) : (
+                    <Button onClick={handleKycSubmit} disabled={isSaving}>
+                      {isSaving ? (
+                        <>
+                          <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                          Submitting...
+                        </>
+                      ) : (
+                        "Submit for Verification"
+                      )}
+                    </Button>
+                  )}
+                </>
+              )}
             </CardContent>
           </Card>
         </TabsContent>
@@ -391,31 +617,30 @@ function ProfileContent() {
               </CardTitle>
               <CardDescription>
                 {user?.auth_provider === 'google' && !user?.password_hash
-                  ? 'Set a password to enable email/password login in addition to Google'
+                  ? 'Set a password to enable email/password login'
                   : 'Update your password to keep your account secure'}
               </CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
+              {passwordError && (
+                <div className="rounded-lg bg-red-50 border border-red-200 p-3 text-sm text-red-700">
+                  <AlertCircle className="inline-block mr-2 h-4 w-4" />
+                  {passwordError}
+                </div>
+              )}
+
+              {passwordSuccess && (
+                <div className="rounded-lg bg-green-50 border border-green-200 p-3 text-sm text-green-700 flex items-center gap-2">
+                  <CheckCircle className="h-5 w-5" />
+                  Password {user?.password_hash ? 'changed' : 'set'} successfully!
+                </div>
+              )}
+
               {user?.auth_provider === 'google' && !user?.password_hash ? (
                 <>
                   <div className="rounded-lg bg-blue-50 p-4 text-sm text-blue-800 mb-4">
                     You signed up with Google. Setting a password will allow you to log in using your email and password as well.
                   </div>
-
-                  {passwordError && (
-                    <div className="rounded-lg bg-red-50 border border-red-200 p-3 text-sm text-red-700">
-                      {passwordError}
-                    </div>
-                  )}
-
-                  {passwordSuccess && (
-                    <div className="rounded-lg bg-green-50 border border-green-200 p-3 text-sm text-green-700 flex items-center gap-2">
-                      <svg className="h-5 w-5 text-green-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-                      </svg>
-                      Password set successfully! You can now login with email and password.
-                    </div>
-                  )}
 
                   <div className="space-y-2">
                     <Label htmlFor="new_password">New Password</Label>
@@ -454,20 +679,44 @@ function ProfileContent() {
                 <>
                   <div className="space-y-2">
                     <Label htmlFor="current_password">Current Password</Label>
-                    <Input id="current_password" type="password" />
+                    <Input
+                      id="current_password"
+                      type="password"
+                      value={currentPassword}
+                      onChange={(e) => setCurrentPassword(e.target.value)}
+                    />
                   </div>
 
                   <div className="space-y-2">
                     <Label htmlFor="new_password">New Password</Label>
-                    <Input id="new_password" type="password" />
+                    <Input
+                      id="new_password"
+                      type="password"
+                      value={newPassword}
+                      onChange={(e) => setNewPassword(e.target.value)}
+                    />
                   </div>
 
                   <div className="space-y-2">
                     <Label htmlFor="confirm_new_password">Confirm New Password</Label>
-                    <Input id="confirm_new_password" type="password" />
+                    <Input
+                      id="confirm_new_password"
+                      type="password"
+                      value={confirmPassword}
+                      onChange={(e) => setConfirmPassword(e.target.value)}
+                    />
                   </div>
 
-                  <Button>Update Password</Button>
+                  <Button onClick={handlePasswordChange} disabled={isSaving}>
+                    {isSaving ? (
+                      <>
+                        <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                        Updating...
+                      </>
+                    ) : (
+                      "Update Password"
+                    )}
+                  </Button>
                 </>
               )}
             </CardContent>
@@ -491,7 +740,10 @@ function ProfileContent() {
                     Receive order updates and offers via email
                   </p>
                 </div>
-                <Switch defaultChecked />
+                <Switch
+                  checked={notifications.email}
+                  onCheckedChange={(checked) => setNotifications({...notifications, email: checked})}
+                />
               </div>
 
               <div className="flex items-center justify-between">
@@ -501,7 +753,10 @@ function ProfileContent() {
                     Receive order updates via SMS
                   </p>
                 </div>
-                <Switch defaultChecked />
+                <Switch
+                  checked={notifications.sms}
+                  onCheckedChange={(checked) => setNotifications({...notifications, sms: checked})}
+                />
               </div>
 
               <div className="flex items-center justify-between">
@@ -511,7 +766,10 @@ function ProfileContent() {
                     Receive offers and deals via email
                   </p>
                 </div>
-                <Switch />
+                <Switch
+                  checked={notifications.promotional}
+                  onCheckedChange={(checked) => setNotifications({...notifications, promotional: checked})}
+                />
               </div>
 
               <div className="flex items-center justify-between">
@@ -521,7 +779,10 @@ function ProfileContent() {
                     Get notified about cashback status changes
                   </p>
                 </div>
-                <Switch defaultChecked />
+                <Switch
+                  checked={notifications.cashback}
+                  onCheckedChange={(checked) => setNotifications({...notifications, cashback: checked})}
+                />
               </div>
 
               <Button>Save Preferences</Button>
@@ -535,7 +796,7 @@ function ProfileContent() {
             <CardHeader>
               <CardTitle>Linked Accounts</CardTitle>
               <CardDescription>
-                Manage your connected social accounts for easier sign-in
+                Manage your connected social accounts
               </CardDescription>
             </CardHeader>
             <CardContent className="space-y-6">
@@ -545,7 +806,6 @@ function ProfileContent() {
                 </div>
               ) : (
                 <>
-                  {/* Google Account */}
                   <div className="flex items-center justify-between p-4 border rounded-lg">
                     <div className="flex items-center gap-4">
                       <div className="h-10 w-10 rounded-full bg-white flex items-center justify-center border">
@@ -588,8 +848,7 @@ function ProfileContent() {
 
                   {socialAccounts.length === 0 && (
                     <div className="rounded-lg bg-muted p-4 text-sm text-muted-foreground">
-                      <p>No social accounts are currently linked to your profile.</p>
-                      <p className="mt-2">Link an account for faster and easier sign-in options.</p>
+                      <p>No social accounts are currently linked.</p>
                     </div>
                   )}
 
@@ -597,7 +856,6 @@ function ProfileContent() {
                     <div className="rounded-lg bg-amber-50 border border-amber-200 p-4 text-sm text-amber-800">
                       <p className="font-medium">Set a password before unlinking</p>
                       <p className="mt-1">
-                        You signed up with Google and haven&apos;t set a password yet.
                         Set a password in the Security tab before unlinking your Google account.
                       </p>
                     </div>

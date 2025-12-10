@@ -27,9 +27,12 @@ class PasswordChangeRequest(BaseModel):
 
 
 class KYCUpdateRequest(BaseModel):
-    pan_number: str
+    pan_number: str | None = None
+    aadhaar_number: str | None = None
+    account_holder_name: str | None = None
     bank_account_number: str | None = None
     ifsc_code: str | None = None
+    bank_name: str | None = None
     upi_id: str | None = None
 
 
@@ -187,19 +190,29 @@ def update_kyc(
             kyc = UserKYC(
                 user_id=current_user.id,
                 pan_number=payload.pan_number,
-                bank_account_number=payload.bank_account_number,
+                aadhaar_number=payload.aadhaar_number,
+                account_holder_name=payload.account_holder_name,
+                account_number=payload.bank_account_number,
                 ifsc_code=payload.ifsc_code,
+                bank_name=payload.bank_name,
                 upi_id=payload.upi_id,
                 status="pending",
                 submitted_at=datetime.utcnow()
             )
             db.add(kyc)
         else:
-            kyc.pan_number = payload.pan_number
+            if payload.pan_number:
+                kyc.pan_number = payload.pan_number
+            if payload.aadhaar_number:
+                kyc.aadhaar_number = payload.aadhaar_number
+            if payload.account_holder_name:
+                kyc.account_holder_name = payload.account_holder_name
             if payload.bank_account_number:
-                kyc.bank_account_number = payload.bank_account_number
+                kyc.account_number = payload.bank_account_number
             if payload.ifsc_code:
                 kyc.ifsc_code = payload.ifsc_code
+            if payload.bank_name:
+                kyc.bank_name = payload.bank_name
             if payload.upi_id:
                 kyc.upi_id = payload.upi_id
             kyc.status = "pending"
@@ -214,6 +227,7 @@ def update_kyc(
             "data": {
                 "status": kyc.status,
                 "pan_number": kyc.pan_number,
+                "aadhaar_number": kyc.aadhaar_number,
                 "submitted_at": kyc.submitted_at.isoformat() if kyc.submitted_at else None
             }
         }
@@ -242,9 +256,16 @@ def get_kyc_status(
             "data": {
                 "status": "not_submitted",
                 "pan_number": None,
-                "bank_account_number": None,
+                "pan_verified": False,
+                "aadhaar_number": None,
+                "aadhaar_verified": False,
+                "account_holder_name": None,
+                "account_number": None,
                 "ifsc_code": None,
-                "upi_id": None
+                "bank_name": None,
+                "upi_id": None,
+                "submitted_at": None,
+                "verified_at": None
             }
         }
     
@@ -253,8 +274,13 @@ def get_kyc_status(
         "data": {
             "status": kyc.status,
             "pan_number": kyc.pan_number,
-            "bank_account_number": kyc.bank_account_number,
+            "pan_verified": kyc.pan_verified,
+            "aadhaar_number": kyc.aadhaar_number,
+            "aadhaar_verified": kyc.aadhaar_verified,
+            "account_holder_name": kyc.account_holder_name,
+            "account_number": kyc.account_number,
             "ifsc_code": kyc.ifsc_code,
+            "bank_name": kyc.bank_name,
             "upi_id": kyc.upi_id,
             "submitted_at": kyc.submitted_at.isoformat() if kyc.submitted_at else None,
             "verified_at": kyc.verified_at.isoformat() if kyc.verified_at else None

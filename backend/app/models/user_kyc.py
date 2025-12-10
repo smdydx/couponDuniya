@@ -15,7 +15,11 @@ class UserKYC(Base):
     upi_id: Mapped[str | None] = mapped_column(String(100))
     pan_number: Mapped[str | None] = mapped_column(String(10))
     pan_verified: Mapped[bool] = mapped_column(Boolean, default=False)
+    aadhaar_number: Mapped[str | None] = mapped_column(String(12))
+    aadhaar_verified: Mapped[bool] = mapped_column(Boolean, default=False)
     status: Mapped[str] = mapped_column(String(20), default="pending")
+    submitted_at: Mapped[datetime | None] = mapped_column(DateTime, nullable=True)
+    verified_at: Mapped[datetime | None] = mapped_column(DateTime, nullable=True)
     created_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow)
     updated_at: Mapped[datetime | None] = mapped_column(DateTime)
 
