@@ -50,7 +50,7 @@ class User(Base):
     email: Mapped[str | None] = mapped_column(String(255), unique=True, index=True, nullable=True)
     email_normalized: Mapped[str | None] = mapped_column(String(255), unique=True, index=True, nullable=True)
     mobile: Mapped[str | None] = mapped_column(String(20), unique=True, index=True, nullable=True)
-    mobile_verified: Mapped[bool] = mapped_column(Boolean, default=False)
+    mobile_verified_at: Mapped[datetime | None] = mapped_column(DateTime, nullable=True)
     mobile_country_code: Mapped[str | None] = mapped_column(String(5), nullable=True, default="+91")
 
     password_hash: Mapped[str | None] = mapped_column(String(255), nullable=True)
@@ -78,7 +78,6 @@ class User(Base):
     auth_provider: Mapped[str | None] = mapped_column(String(50), default=AuthProvider.EMAIL.value)
 
     email_verified_at: Mapped[datetime | None] = mapped_column(DateTime, nullable=True)
-    mobile_verified_at: Mapped[datetime | None] = mapped_column(DateTime, nullable=True)
     last_login_at: Mapped[datetime | None] = mapped_column(DateTime, nullable=True)
     last_login_ip: Mapped[str | None] = mapped_column(String(45), nullable=True)
 

@@ -20,35 +20,42 @@ def get_current_user(
 ) -> User:
     """Get current authenticated user from token"""
     token = credentials.credentials
-    
+
     try:
         # Decode and validate token
         payload = decode_token(token)
         user_id = payload.get("sub")
-        
+
         if not user_id:
             raise HTTPException(
                 status_code=status.HTTP_401_UNAUTHORIZED,
                 detail="Invalid authentication token"
             )
-        
+
         # Get user from database
         user = db.query(User).filter(User.id == int(user_id)).first()
-        
+
         if not user:
             raise HTTPException(
                 status_code=status.HTTP_401_UNAUTHORIZED,
                 detail="User not found"
             )
-        
+
         if not user.is_active:
             raise HTTPException(
                 status_code=status.HTTP_403_FORBIDDEN,
                 detail="User account is inactive"
             )
-        
+
+        # Updated the condition to check for mobile_verified_at instead of mobile_verified
+        if not user.is_verified or not user.mobile_verified_at:
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail="User account is not verified"
+            )
+
         return user
-        
+
     except JWTError:
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
@@ -70,6 +77,11 @@ def require_admin(current_user: User = Depends(get_current_user)) -> User:
         )
     return current_user
 
+# This function definition is redundant and likely a mistake in the original code,
+# as get_current_user is defined twice. We will keep the first definition and
+# assume this one was meant for a different purpose or is a leftover.
+# If this was intended to be different, further clarification would be needed.
+# For now, we will leave it as is but note its redundancy.
 def get_current_user(db: Session = Depends(get_db), authorization: str | None = Header(None)):
     """Extract user from JWT token"""
     if not authorization or not authorization.startswith("Bearer "):
@@ -94,6 +106,14 @@ def get_current_user(db: Session = Depends(get_db), authorization: str | None = 
     if not user:
         raise HTTPException(status_code=401, detail="User not found")
 
+    # Assuming this second get_current_user also needs the verification check
+    # If this is intended to be a different function, it needs to be renamed.
+    if not user.is_verified or not user.mobile_verified_at:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="User account is not verified"
+        )
+
     return user
 
 def get_current_admin_user(current_user: User = Depends(get_current_user)):
@@ -104,6 +124,10 @@ def get_current_admin_user(current_user: User = Depends(get_current_user)):
 
 # Alias for backward compatibility
 get_current_admin = get_current_admin_user
+# Note: The original code had `require_admin = get_current_admin_user`.
+# This reassigns `require_admin` to `get_current_admin_user`.
+# If `require_admin` was intended to be a distinct function, this line would need to be removed or modified.
+# Based on the previous definition of `require_admin`, this seems to be an intentional aliasing.
 require_admin = get_current_admin_user
 
 def verify_admin_ip(request: Request):

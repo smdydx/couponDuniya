@@ -213,7 +213,7 @@ def register(payload: RegisterRequest, db: Session = Depends(get_db)):
         is_verified=False,
         role="customer",
         auth_provider="email",
-        mobile_verified=False # Initialize mobile_verified to False
+        mobile_verified_at=None # Initialize mobile_verified_at to None
     )
 
     db.add(user)
@@ -331,7 +331,7 @@ def login(payload: LoginRequest, db: Session = Depends(get_db)):
         "role": user.role,
         "is_admin": user.is_admin,
         "is_verified": user.is_verified,
-        "mobile_verified": user.mobile_verified, # Include mobile_verified status
+        "mobile_verified": user.mobile_verified_at is not None, # Check if mobile_verified_at is set
     }
 
     session_payload = {"user": user_data, "login_at": int(time.time())}
@@ -412,7 +412,7 @@ def verify_otp_endpoint(payload: VerifyOTPRequest, db: Session = Depends(get_db)
             is_verified=True,  # Mobile verified via OTP
             referral_code=f"USER{str(uuid.uuid4())[:8].upper()}",
             role="customer", # Default role
-            mobile_verified=True # Mark mobile as verified upon auto-registration
+            mobile_verified_at=datetime.utcnow() # Mark mobile as verified upon auto-registration
         )
         db.add(user)
         db.commit()
@@ -420,7 +420,7 @@ def verify_otp_endpoint(payload: VerifyOTPRequest, db: Session = Depends(get_db)
 
     else:
         # If user exists, update their mobile_verified status
-        user.mobile_verified = True
+        user.mobile_verified_at = datetime.utcnow()
         db.commit()
 
 
@@ -441,7 +441,7 @@ def verify_otp_endpoint(payload: VerifyOTPRequest, db: Session = Depends(get_db)
         "role": user.role,
         "is_admin": user.is_admin,
         "is_verified": user.is_verified,
-        "mobile_verified": user.mobile_verified, # Include mobile_verified status
+        "mobile_verified": user.mobile_verified_at is not None, # Check if mobile_verified_at is set
     }
 
     session_payload = {"user": user_data, "login_at": int(time.time())}
@@ -486,7 +486,7 @@ def refresh_token_endpoint(payload: RefreshRequest, db: Session = Depends(get_db
         "role": user.role,
         "is_admin": user.is_admin,
         "is_verified": user.is_verified,
-        "mobile_verified": user.mobile_verified, # Include mobile_verified status
+        "mobile_verified": user.mobile_verified_at is not None, # Check if mobile_verified_at is set
     }
 
     session_payload = {"user": user_data, "login_at": int(time.time())}
@@ -734,7 +734,7 @@ def me(authorization: str | None = Header(None), db: Session = Depends(get_db)):
             "is_verified": user.is_verified,
             "auth_provider": user.auth_provider,
             "password_hash": user.password_hash is not None,
-            "mobile_verified": user.mobile_verified, # Include mobile_verified status
+            "mobile_verified": user.mobile_verified_at is not None, # Check if mobile_verified_at is set
         }
     }
 
@@ -884,7 +884,7 @@ async def login_with_google(
             is_admin=False,
             auth_provider="google",
             avatar_url=user_info.get("picture"),
-            mobile_verified=False # Initialize mobile_verified to False
+            mobile_verified_at=None # Initialize mobile_verified_at to None
         )
         db.add(user)
         db.flush()
@@ -945,7 +945,7 @@ async def login_with_google(
                 "is_verified": user.is_verified,
                 "auth_provider": user.auth_provider,
                 "password_hash": user.password_hash is not None,
-                "mobile_verified": user.mobile_verified, # Include mobile_verified status
+                "mobile_verified": user.mobile_verified_at is not None, # Check if mobile_verified_at is set
             }
         }
     }
@@ -997,7 +997,7 @@ async def login_with_facebook(
                 email_verified_at=datetime.utcnow() if user_info["email_verified"] else None,
                 auth_provider="facebook",
                 role="customer",
-                mobile_verified=False # Initialize mobile_verified to False
+                mobile_verified_at=None # Initialize mobile_verified_at to None
             )
             db.add(user)
             db.flush()
@@ -1028,7 +1028,7 @@ async def login_with_facebook(
                 "full_name": user.full_name,
                 "is_admin": user.is_admin,
                 "role": user.role,
-                "mobile_verified": user.mobile_verified, # Include mobile_verified status
+                "mobile_verified": user.mobile_verified_at is not None, # Check if mobile_verified_at is set
             }
         }
     }
@@ -1157,7 +1157,7 @@ async def google_callback(
                     is_admin=False,
                     auth_provider="google",
                     avatar_url=user_info.get("picture"),
-                    mobile_verified=False # Initialize mobile_verified to False
+                    mobile_verified_at=None # Initialize mobile_verified_at to None
                 )
                 db.add(user)
                 db.flush()
@@ -1218,7 +1218,7 @@ async def send_mobile_otp_endpoint(
     # Check if mobile is already verified by another user
     existing_user = db.query(User).filter(
         User.mobile == mobile,
-        User.mobile_verified == True,
+        User.mobile_verified_at.isnot(None), # Check if mobile_verified_at is set
         User.id != current_user.id
     ).first()
 
@@ -1273,7 +1273,7 @@ async def verify_mobile_otp_endpoint(
     # Check if the mobile number is already verified by another user
     existing_user = db.query(User).filter(
         User.mobile == mobile,
-        User.mobile_verified == True,
+        User.mobile_verified_at.isnot(None), # Check if mobile_verified_at is set
         User.id != current_user.id
     ).first()
 
@@ -1285,7 +1285,7 @@ async def verify_mobile_otp_endpoint(
 
     # Update user's mobile and mark as verified
     current_user.mobile = mobile
-    current_user.mobile_verified = True
+    current_user.mobile_verified_at = datetime.utcnow()
     db.commit()
 
     # Refresh user data to include updated mobile_verified status
@@ -1346,7 +1346,7 @@ async def update_profile(
         "is_verified": current_user.is_verified,
         "auth_provider": current_user.auth_provider,
         "password_hash": current_user.password_hash is not None,
-        "mobile_verified": current_user.mobile_verified,
+        "mobile_verified": current_user.mobile_verified_at is not None,
     }
 
     return success_response(data={"user": user_data}, message="Profile updated successfully")
@@ -1368,17 +1368,17 @@ async def upload_avatar(
         # TODO: Implement actual file storage (S3, local storage, etc.)
         import os
         from pathlib import Path
-        
+
         # Create uploads directory if it doesn't exist
         upload_dir = Path("app/images/avatars")
         upload_dir.mkdir(parents=True, exist_ok=True)
-        
+
         # Save file
         file_path = upload_dir / f"user_{current_user.uuid}_{file.filename}"
         content = await file.read()
         with open(file_path, "wb") as f:
             f.write(content)
-        
+
         # Update user's avatar_url in the database
         avatar_url = f"/images/avatars/user_{current_user.uuid}_{file.filename}"
         current_user.avatar_url = avatar_url
@@ -1407,7 +1407,7 @@ async def upload_avatar(
             "is_verified": current_user.is_verified,
             "auth_provider": current_user.auth_provider,
             "password_hash": current_user.password_hash is not None,
-            "mobile_verified": current_user.mobile_verified,
+            "mobile_verified": current_user.mobile_verified_at is not None,
         }
 
         return success_response(data={"user": user_data}, message="Avatar uploaded successfully")
