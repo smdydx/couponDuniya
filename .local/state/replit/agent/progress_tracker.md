@@ -151,3 +151,12 @@
 [x] 149. Verified database tables created successfully
 [x] 150. Verified homepage loads correctly with full navigation, search bar, and UI elements
 [x] 151. ✅ **IMPORT MIGRATION FULLY COMPLETED - Project is fully operational and ready for development**
+
+## Bug Fixes (Dec 10, 2025):
+[x] 152. Fixed homepage 404 error - API path was duplicated (/api/v1/api/v1/homepage)
+    - **Root Cause:** Next.js rewrite was adding /api/v1/ prefix, but frontend API also included it
+    - **Fix 1:** Removed prefix from homepage router (backend/app/api/v1/homepage.py)
+    - **Fix 2:** Updated Next.js rewrite to map /backend-api/:path* to http://127.0.0.1:8000/:path*
+[x] 153. Ran seed_homepage_data.py script to populate sample data (5 categories, 8 merchants, 12 offers, 8 products, 4 banners)
+[x] 154. Fixed manifest.json icon sizes to use "any" for flexible sizing
+[x] 155. ✅ **Homepage now loads correctly with all data and UI elements**

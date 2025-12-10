@@ -9,10 +9,10 @@ from ...redis_client import cache_get, cache_set, rk
 from ...dependencies import get_current_user
 import logging
 
-router = APIRouter(prefix="/homepage", tags=["Homepage"])
+router = APIRouter(tags=["Homepage"])
 log = logging.getLogger(__name__)
 
-@router.get("/", response_model=dict)
+@router.get("/homepage", response_model=dict)
 def get_homepage_data(
     limit_merchants: int = Query(12, ge=1, le=50),
     limit_featured_offers: int = Query(8, ge=1, le=50),
