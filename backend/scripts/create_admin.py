@@ -1,84 +1,80 @@
 
-#!/usr/bin/env python3
 """
-Script to create an admin user or promote existing user to admin
+Script to create or update the admin user.
 """
 import sys
-from pathlib import Path
+import os
 
-# Add parent directory to path
-sys.path.insert(0, str(Path(__file__).parent.parent))
+# Add backend directory to path
+sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
-from app.database import SessionLocal
-from app.models import User
+from sqlalchemy.orm import Session
+from app.database import SessionLocal, engine
+from app.models.user import User
 from app.security import get_password_hash
 
-
-def create_admin_user(email: str, password: str, full_name: str = "Admin User"):
-    """Create a new admin user or promote existing user"""
-    db = SessionLocal()
-    
+def create_admin():
+    """Create or update admin user with verified status."""
+    db: Session = SessionLocal()
     try:
-        # Check if user exists
-        user = db.query(User).filter(User.email == email).first()
+        # Check if admin exists
+        admin = db.query(User).filter(User.email == "admin@couponali.com").first()
         
-        if user:
-            print(f"User with email {email} already exists.")
-            user.is_admin = True
-            user.role = "admin"
-            user.is_active = True
-            user.is_verified = True
-            print(f"✅ Promoted {email} to admin")
+        if admin:
+            # Update existing admin
+            admin.hashed_password = get_password_hash("admin123")
+            admin.is_admin = True
+            admin.is_verified = True  # CRITICAL: Ensure admin is verified
+            admin.is_active = True
+            admin.role = "admin"
+            print("✅ Updated existing admin user")
         else:
-            # Create new admin user
-            user = User(
-                email=email,
-                password_hash=get_password_hash(password),
-                full_name=full_name,
+            # Create new admin
+            admin = User(
+                email="admin@couponali.com",
+                hashed_password=get_password_hash("admin123"),
+                name="Admin User",
                 is_admin=True,
-                role="admin",
+                is_verified=True,  # CRITICAL: Mark as verified
                 is_active=True,
-                is_verified=True,
-                referral_code=f"ADMIN{email[:4].upper()}"
+                role="admin"
             )
-            db.add(user)
-            print(f"✅ Created new admin user: {email}")
+            db.add(admin)
+            print("✅ Created new admin user")
         
         db.commit()
-        db.refresh(user)
+        db.refresh(admin)
         
-        print(f"\n{'='*50}")
-        print(f"Admin User Details:")
-        print(f"{'='*50}")
-        print(f"Email: {user.email}")
-        print(f"Role: {user.role}")
-        print(f"Is Admin: {user.is_admin}")
-        print(f"Is Active: {user.is_active}")
-        print(f"Is Verified: {user.is_verified}")
-        print(f"{'='*50}\n")
+        # Verify the settings
+        print("\n" + "="*50)
+        print("ADMIN ACCOUNT DETAILS:")
+        print("="*50)
+        print(f"Email:        admin@couponali.com")
+        print(f"Password:     admin123")
+        print(f"ID:           {admin.id}")
+        print(f"Is Admin:     {admin.is_admin}")
+        print(f"Is Verified:  {admin.is_verified}")
+        print(f"Is Active:    {admin.is_active}")
+        print(f"Role:         {admin.role}")
+        print("="*50)
         
-        return user
+        if not admin.is_verified:
+            print("\n⚠️  WARNING: Admin account is NOT verified!")
+            print("Run this script again to fix it.")
+            return False
+        
+        print("\n✅ Admin account is ready to use!")
+        return True
         
     except Exception as e:
+        print(f"\n❌ Error creating admin: {e}")
         db.rollback()
-        print(f"❌ Error: {str(e)}")
-        raise
+        import traceback
+        traceback.print_exc()
+        return False
     finally:
         db.close()
 
-
 if __name__ == "__main__":
-    print("\n🔐 Admin User Creator\n")
-    
-    # Default admin credentials
-    email = "admin@example.com"
-    password = "Admin@123"
-    full_name = "Admin User"
-    
-    create_admin_user(email, password, full_name)
-    
-    print("\n✅ You can now login with these credentials:")
-    print(f"   Email: {email}")
-    print(f"   Password: {password}")
-    print(f"\n🌐 Login at: http://0.0.0.0:5000/login")
-    print(f"   Then navigate to: http://0.0.0.0:5000/admin/dashboard\n")
+    success = create_admin()
+    sys.exit(0 if success else 1)

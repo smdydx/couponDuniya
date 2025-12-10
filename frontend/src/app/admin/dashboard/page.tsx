@@ -78,9 +78,17 @@ export default function AdminDashboard() {
   const fetchDashboardData = useCallback(async () => {
     try {
       // Check if we have a valid token before making requests
-      const { accessToken: currentToken } = useAuthStore.getState();
+      const { accessToken: currentToken, user: currentUser } = useAuthStore.getState();
       if (!currentToken) {
         router.push("/login");
+        return;
+      }
+
+      // Check if user is verified
+      if (currentUser && !currentUser.is_verified) {
+        console.error("❌ Admin account is not verified");
+        alert("Your admin account is not verified. Please contact system administrator to verify your account.");
+        router.push("/");
         return;
       }
 
@@ -90,11 +98,23 @@ export default function AdminDashboard() {
         adminApiClient.get("/offers", { params: { limit: 5 } }),
       ]);
 
-      // Handle 403 errors - redirect to login
-      if (statsResponse.status === "rejected" && statsResponse.reason?.response?.status === 403) {
-        useAuthStore.setState({ user: null, accessToken: null, isAuthenticated: false });
-        router.push("/login");
-        return;
+      // Handle 403 errors - check if it's verification issue
+      if (statsResponse.status === "rejected") {
+        const errorMsg = statsResponse.reason?.response?.data?.error?.message || "";
+        
+        if (errorMsg.includes("not verified")) {
+          console.error("❌ Account verification required");
+          alert("Your admin account needs to be verified. Please run: python backend/scripts/create_admin.py");
+          router.push("/");
+          return;
+        }
+        
+        if (statsResponse.reason?.response?.status === 403) {
+          console.error("❌ Access denied");
+          useAuthStore.setState({ user: null, accessToken: null, isAuthenticated: false });
+          router.push("/login");
+          return;
+        }
       }
 
       if (statsResponse.status === "fulfilled") {
