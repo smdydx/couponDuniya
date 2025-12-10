@@ -6,7 +6,7 @@ import os
 import uuid
 
 from app.database import get_db
-from app.dependencies import get_current_user
+from app.dependencies import get_current_user, get_current_user_unverified
 from app.models.user import User
 from app.schemas.user import UserResponse, UserUpdate
 from app.responses import success_response, error_response
@@ -82,7 +82,7 @@ def get_current_user_profile(current_user: User = Depends(get_current_user)):
 @router.put("/profile", response_model=dict)
 def update_profile(
     payload: ProfileUpdateRequest,
-    current_user: User = Depends(get_current_user),
+    current_user: User = Depends(get_current_user_unverified),
     db: Session = Depends(get_db)
 ):
     """Update user profile - Protected route"""

@@ -1,31 +1,86 @@
-"""SMS service for sending OTP and notifications via MSG91."""
-import requests
+"""SMS service for sending OTP and notifications via Twilio."""
 import logging
+import os
 from typing import Optional
+import phonenumbers
+from twilio.rest import Client
+from twilio.base.exceptions import TwilioRestException
 from .config import get_settings
 
 settings = get_settings()
 logger = logging.getLogger(__name__)
 
 
-class SMSService:
-    """SMS service using MSG91 API."""
+def normalize_phone_number(mobile: str, default_region: str = "IN") -> str:
+    """
+    Normalize phone number to E.164 format.
     
-    BASE_URL = "https://api.msg91.com/api/v5"
+    Args:
+        mobile: Phone number in any format
+        default_region: Default region code (IN for India)
+        
+    Returns:
+        Phone number in E.164 format (e.g., +919876543210)
+    """
+    mobile = mobile.strip()
+    
+    if mobile.startswith("+"):
+        try:
+            parsed = phonenumbers.parse(mobile, None)
+            if phonenumbers.is_valid_number(parsed):
+                return phonenumbers.format_number(parsed, phonenumbers.PhoneNumberFormat.E164)
+        except phonenumbers.NumberParseException:
+            pass
+        return mobile
+    
+    mobile = mobile.lstrip("0")
+    
+    if mobile.startswith("91") and len(mobile) == 12:
+        try:
+            parsed = phonenumbers.parse("+" + mobile, None)
+            if phonenumbers.is_valid_number(parsed):
+                return phonenumbers.format_number(parsed, phonenumbers.PhoneNumberFormat.E164)
+        except phonenumbers.NumberParseException:
+            pass
+        return "+" + mobile
+    
+    try:
+        parsed = phonenumbers.parse(mobile, default_region)
+        if phonenumbers.is_valid_number(parsed):
+            return phonenumbers.format_number(parsed, phonenumbers.PhoneNumberFormat.E164)
+    except phonenumbers.NumberParseException:
+        pass
+    
+    if len(mobile) == 10:
+        return f"+91{mobile}"
+    
+    logger.warning(f"Could not normalize phone number: {mobile}")
+    return f"+{mobile}" if not mobile.startswith("+") else mobile
+
+
+class SMSService:
+    """SMS service using Twilio API."""
     
     def __init__(self):
-        self.auth_key = settings.MSG91_AUTH_KEY
-        self.sender_id = settings.MSG91_SENDER_ID
-        self.route = settings.MSG91_ROUTE
-        self.template_id = settings.MSG91_DLT_TEMPLATE_ID
+        self.account_sid = os.getenv("TWILIO_ACCOUNT_SID")
+        self.auth_token = os.getenv("TWILIO_AUTH_TOKEN")
+        self.phone_number = os.getenv("TWILIO_PHONE_NUMBER")
         self.enabled = settings.SMS_ENABLED
+        self._client = None
+    
+    @property
+    def client(self):
+        """Lazy load Twilio client."""
+        if self._client is None and self.account_sid and self.auth_token:
+            self._client = Client(self.account_sid, self.auth_token)
+        return self._client
     
     def send_otp(self, mobile: str, otp: str) -> tuple[bool, str]:
         """
-        Send OTP via SMS.
+        Send OTP via SMS using Twilio.
         
         Args:
-            mobile: Mobile number with country code (e.g., "919876543210")
+            mobile: Mobile number with country code (e.g., "+919876543210")
             otp: OTP code to send
             
         Returns:
@@ -35,147 +90,77 @@ class SMSService:
             logger.info(f"[SMS DISABLED] OTP for {mobile}: {otp}")
             return True, f"[DEV MODE] OTP: {otp}"
         
-        if not self.auth_key:
-            logger.error("MSG91_AUTH_KEY not configured")
+        if not self.account_sid or not self.auth_token or not self.phone_number:
+            logger.error("Twilio credentials not configured")
             return False, "SMS service not configured"
         
-        # Remove + if present
-        mobile = mobile.replace("+", "")
+        mobile = normalize_phone_number(mobile)
         
-        # MSG91 OTP API
-        url = f"{self.BASE_URL}/otp"
-        
-        params = {
-            "template_id": self.template_id,
-            "mobile": mobile,
-            "authkey": self.auth_key,
-            "otp": otp,
-        }
+        message_body = f"Your CouponAli verification code is: {otp}. Valid for 5 minutes. Do not share this code with anyone."
         
         try:
-            response = requests.get(url, params=params, timeout=10)
-            response.raise_for_status()
+            message = self.client.messages.create(
+                body=message_body,
+                from_=self.phone_number,
+                to=mobile
+            )
             
-            data = response.json()
-            
-            if data.get("type") == "success":
-                logger.info(f"OTP sent successfully to {mobile}")
-                return True, "OTP sent successfully"
-            else:
-                logger.error(f"MSG91 error: {data}")
-                return False, "Failed to send OTP"
+            logger.info(f"OTP sent successfully to {mobile}, SID: {message.sid}")
+            return True, "OTP sent successfully"
                 
-        except requests.exceptions.RequestException as e:
+        except TwilioRestException as e:
+            logger.error(f"Twilio error: {e}")
+            return False, f"Failed to send OTP: {str(e)}"
+        except Exception as e:
             logger.error(f"SMS send error: {e}")
             return False, "Failed to send OTP"
-    
-    def verify_otp_via_msg91(self, mobile: str, otp: str) -> tuple[bool, str]:
-        """
-        Verify OTP using MSG91's verification API (optional - we use Redis).
-        
-        Args:
-            mobile: Mobile number
-            otp: OTP to verify
-            
-        Returns:
-            Tuple of (success, message)
-        """
-        if not self.enabled:
-            return True, "Verified (dev mode)"
-        
-        mobile = mobile.replace("+", "")
-        
-        url = f"{self.BASE_URL}/otp/verify"
-        
-        params = {
-            "authkey": self.auth_key,
-            "mobile": mobile,
-            "otp": otp,
-        }
-        
-        try:
-            response = requests.get(url, params=params, timeout=10)
-            response.raise_for_status()
-            
-            data = response.json()
-            
-            if data.get("type") == "success":
-                return True, "OTP verified"
-            else:
-                return False, "Invalid OTP"
-                
-        except requests.exceptions.RequestException as e:
-            logger.error(f"OTP verification error: {e}")
-            return False, "Verification failed"
     
     def send_transactional_sms(
         self,
         mobile: str,
         message: str,
-        template_id: Optional[str] = None
     ) -> tuple[bool, str]:
         """
-        Send a transactional SMS (order confirmation, voucher codes, etc.).
+        Send transactional SMS using Twilio.
         
         Args:
-            mobile: Mobile number
-            message: SMS content
-            template_id: DLT template ID (optional)
+            mobile: Mobile number with country code
+            message: Message to send
             
         Returns:
             Tuple of (success, message)
         """
         if not self.enabled:
-            logger.info(f"[SMS DISABLED] To {mobile}: {message}")
+            logger.info(f"[SMS DISABLED] Message to {mobile}: {message}")
             return True, "[DEV MODE] SMS logged"
         
-        mobile = mobile.replace("+", "")
+        if not self.account_sid or not self.auth_token or not self.phone_number:
+            logger.error("Twilio credentials not configured")
+            return False, "SMS service not configured"
         
-        url = f"{self.BASE_URL}/flow/"
-        
-        headers = {
-            "authkey": self.auth_key,
-            "Content-Type": "application/json"
-        }
-        
-        payload = {
-            "sender": self.sender_id,
-            "route": self.route,
-            "country": "91",
-            "sms": [
-                {
-                    "message": message,
-                    "to": [mobile]
-                }
-            ]
-        }
-        
-        if template_id:
-            payload["DLT_TE_ID"] = template_id
+        mobile = normalize_phone_number(mobile)
         
         try:
-            response = requests.post(url, json=payload, headers=headers, timeout=10)
-            response.raise_for_status()
+            msg = self.client.messages.create(
+                body=message,
+                from_=self.phone_number,
+                to=mobile
+            )
             
-            data = response.json()
-            
-            if data.get("type") == "success":
-                logger.info(f"SMS sent successfully to {mobile}")
-                return True, "SMS sent successfully"
-            else:
-                logger.error(f"MSG91 error: {data}")
-                return False, "Failed to send SMS"
+            logger.info(f"SMS sent successfully to {mobile}, SID: {msg.sid}")
+            return True, "SMS sent successfully"
                 
-        except requests.exceptions.RequestException as e:
+        except TwilioRestException as e:
+            logger.error(f"Twilio error: {e}")
+            return False, f"Failed to send SMS: {str(e)}"
+        except Exception as e:
             logger.error(f"SMS send error: {e}")
             return False, "Failed to send SMS"
 
 
-# Singleton instance
 sms_service = SMSService()
 
 
-# Convenience functions
 def send_otp_sms(mobile: str, otp: str) -> tuple[bool, str]:
     """Send OTP via SMS."""
     return sms_service.send_otp(mobile, otp)
@@ -183,7 +168,7 @@ def send_otp_sms(mobile: str, otp: str) -> tuple[bool, str]:
 
 def send_order_notification(mobile: str, order_number: str, amount: float) -> tuple[bool, str]:
     """Send order confirmation SMS."""
-    message = f"Your CouponAli order {order_number} of ₹{amount:.2f} is confirmed. Thank you!"
+    message = f"Your CouponAli order {order_number} of Rs.{amount:.2f} is confirmed. Thank you!"
     return sms_service.send_transactional_sms(mobile, message)
 
 
@@ -193,28 +178,23 @@ def send_voucher_sms(mobile: str, voucher_code: str, merchant_name: str) -> tupl
     return sms_service.send_transactional_sms(mobile, message)
 
 
-def send_cashback_notification(mobile: str, amount: float, description: str) -> tuple[bool, str]:
+def send_cashback_notification(mobile: str, amount: float, description: str = "") -> tuple[bool, str]:
     """Send cashback notification SMS."""
-    message = f"CouponAli: ₹{amount:.2f} cashback credited. {description}"
+    message = f"CouponAli: Rs.{amount:.2f} cashback credited to your wallet!"
+    if description:
+        message += f" {description}"
     return sms_service.send_transactional_sms(mobile, message)
 
 
 def send_withdrawal_sms(mobile: str, amount: float, status: str) -> tuple[bool, str]:
     """Send withdrawal notification SMS."""
     if status == "pending":
-        message = f"CouponAli: Your withdrawal request for ₹{amount:.2f} is submitted and under review."
+        message = f"CouponAli: Your withdrawal request for Rs.{amount:.2f} is submitted and under review."
     elif status == "approved":
-        message = f"CouponAli: Your withdrawal of ₹{amount:.2f} has been approved and processed."
+        message = f"CouponAli: Your withdrawal of Rs.{amount:.2f} has been approved and processed."
     elif status == "rejected":
-        message = f"CouponAli: Your withdrawal request was rejected. ₹{amount:.2f} refunded to wallet."
+        message = f"CouponAli: Your withdrawal request was rejected. Rs.{amount:.2f} refunded to wallet."
     else:
-        message = f"CouponAli: Withdrawal status update - ₹{amount:.2f}"
+        message = f"CouponAli: Withdrawal status update - Rs.{amount:.2f}"
     
-    return sms_service.send_transactional_sms(mobile, message)
-    return sms_service.send_transactional_sms(mobile, message)
-
-
-def send_cashback_notification(mobile: str, amount: float) -> tuple[bool, str]:
-    """Send cashback credit notification."""
-    message = f"₹{amount:.2f} cashback credited to your CouponAli wallet!"
     return sms_service.send_transactional_sms(mobile, message)
