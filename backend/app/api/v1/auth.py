@@ -1,4 +1,4 @@
-from fastapi import APIRouter, HTTPException, status, Header, Depends, File, UploadFile
+from fastapi import APIRouter, HTTPException, status, Header, Depends, UploadFile, File
 from fastapi.responses import RedirectResponse
 from sqlalchemy.orm import Session
 from sqlalchemy import select
@@ -1355,25 +1355,32 @@ async def update_profile(
 # Endpoint for profile picture upload
 @router.post("/profile/avatar")
 async def upload_avatar(
-    file: UploadFile = File(...),
     current_user: User = Depends(get_current_user),
-    db: Session = Depends(get_db)
+    db: Session = Depends(get_db),
+    file: UploadFile = File(...)
 ):
     """Upload and update user's avatar"""
-    from ...storage import upload_to_s3 # Assuming you have a storage utility
-
     if not file:
         raise HTTPException(status_code=400, detail="No file uploaded")
 
     try:
-        # Upload file to storage (e.g., S3)
-        # The upload_to_s3 function should return the URL of the uploaded file
-        avatar_url = await upload_to_s3(file.file, bucket_name="user-avatars", file_key=f"user_{current_user.uuid}.jpg")
-
-        if not avatar_url:
-            raise HTTPException(status_code=500, detail="Failed to upload avatar")
-
+        # For now, store a placeholder URL or save file locally
+        # TODO: Implement actual file storage (S3, local storage, etc.)
+        import os
+        from pathlib import Path
+        
+        # Create uploads directory if it doesn't exist
+        upload_dir = Path("app/images/avatars")
+        upload_dir.mkdir(parents=True, exist_ok=True)
+        
+        # Save file
+        file_path = upload_dir / f"user_{current_user.uuid}_{file.filename}"
+        content = await file.read()
+        with open(file_path, "wb") as f:
+            f.write(content)
+        
         # Update user's avatar_url in the database
+        avatar_url = f"/images/avatars/user_{current_user.uuid}_{file.filename}"
         current_user.avatar_url = avatar_url
         db.commit()
         db.refresh(current_user)
