@@ -36,6 +36,7 @@ export interface Offer {
 export interface Product {
   id: number;
   merchant_id: number;
+  category_id?: number;
   merchant_name?: string;
   name: string;
   slug: string;

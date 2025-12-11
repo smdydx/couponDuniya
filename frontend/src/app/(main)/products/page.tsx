@@ -1,7 +1,8 @@
 
 "use client";
 
-import { useState } from "react";
+import { useState, Suspense } from "react";
+import { useSearchParams } from "next/navigation";
 import { ProductGrid } from "@/components/product/ProductGrid";
 import { CategoryNav } from "@/components/common/CategoryNav";
 import { Breadcrumbs } from "@/components/common/Breadcrumbs";
@@ -32,19 +33,22 @@ interface ProductsResponse {
   };
 }
 
-export default function ProductsPage() {
+function ProductsPageContent() {
+  const searchParams = useSearchParams();
+  const categoryId = searchParams.get("category");
   const [searchQuery, setSearchQuery] = useState("");
   const [sortBy, setSortBy] = useState("popular");
   const [currentPage, setCurrentPage] = useState(1);
 
   const { data, isLoading, error } = useQuery<ProductsResponse>({
-    queryKey: ["products", currentPage, searchQuery, sortBy],
+    queryKey: ["products", currentPage, searchQuery, sortBy, categoryId],
     queryFn: async () => {
       const params = new URLSearchParams();
       params.append("page", currentPage.toString());
       params.append("limit", "24");
       if (searchQuery) params.append("search", searchQuery);
       if (sortBy) params.append("sort_by", sortBy);
+      if (categoryId) params.append("category_id", categoryId);
 
       try {
         const response = await api.get(`/products/?${params.toString()}`);
@@ -157,5 +161,13 @@ export default function ProductsPage() {
         )}
       </div>
     </div>
+  );
+}
+
+export default function ProductsPage() {
+  return (
+    <Suspense fallback={<LoadingSpinner />}>
+      <ProductsPageContent />
+    </Suspense>
   );
 }
