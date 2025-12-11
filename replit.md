@@ -26,7 +26,84 @@ This is a full-stack e-commerce platform for coupons, cashback offers, and gift 
 - Git ignore file created
 - Admin dashboard accessible without login (no authentication required)
 
-## Recent Changes (December 2024)
+## Recent Changes (December 2025)
+
+### Production-Level Data Models Upgrade (December 2025)
+The application has been upgraded with production-grade data models for a dropshipping platform comparable to Amazon/Flipkart:
+
+**New/Upgraded Models:**
+
+1. **Merchant Model** - Comprehensive seller management:
+   - Business details: GSTIN, PAN, CIN, MSME, TAN (Indian compliance)
+   - Registered and warehouse addresses
+   - Bank details for payouts (account, IFSC, UPI)
+   - Commission rates, TCS/TDS handling
+   - KYC verification workflow
+   - Performance metrics (fulfillment rate, on-time delivery, return rate)
+   - Seller tiers (bronze, silver, gold, platinum)
+
+2. **Product Model** - Full e-commerce catalog:
+   - SKU, barcode, HSN code for tax compliance
+   - Multi-tier pricing (MRP, cost price, selling price, special price)
+   - Multiple images with ProductImage table
+   - Dimensional data (weight, length, width, height)
+   - Shipping class and delivery time estimates
+   - Return policy and warranty information
+   - SEO fields and product specifications
+   - Rating breakdown (1-5 stars distribution)
+
+3. **Order Model** - Complete order lifecycle:
+   - Full shipping and billing address snapshots
+   - GST breakup (CGST, SGST, IGST)
+   - AWB tracking and courier partner integration
+   - Invoice generation
+   - COD handling and collection tracking
+   - Seller payout calculation
+   - Order status history tracking
+
+4. **Returns & Refunds Models**:
+   - Return request with RMA numbers
+   - Pickup scheduling and tracking
+   - Quality check/inspection workflow
+   - Multiple refund methods (original payment, wallet, bank)
+   - Return status tracking
+
+5. **Reviews & Ratings Models**:
+   - Product reviews with verified purchase flag
+   - Per-dimension ratings (quality, value, delivery, packaging)
+   - Image/video attachments
+   - Helpful votes tracking
+   - Seller reply capability
+   - Merchant reviews
+
+6. **Shipping Models**:
+   - Shipping zones with state/pincode mapping
+   - Weight-based and value-based rate calculation
+   - Courier partner integration (Delhivery, Shiprocket, etc.)
+   - Shipment tracking events
+   - Free shipping rules
+
+7. **Supporting Models**:
+   - Address model with Indian pincode validation
+   - Pincode master for serviceability
+   - Brand model for product categorization
+   - Enhanced Category with hierarchy support
+
+**New Schemas Created:**
+- `backend/app/schemas/returns.py`
+- `backend/app/schemas/review.py`
+- `backend/app/schemas/shipping.py`
+- `backend/app/schemas/address.py`
+- `backend/app/schemas/brand.py`
+
+**Key Files Updated:**
+- `backend/app/models/merchant.py` - Full merchant management
+- `backend/app/models/product.py` - Enhanced product catalog
+- `backend/app/models/order.py` - Complete order tracking
+- `backend/app/models/category.py` - Hierarchical categories
+- `backend/app/models/product_variant.py` - Enhanced variants
+- `backend/app/models/order_item.py` - Detailed order items
+- `backend/app/models/__init__.py` - All model exports
 
 ### Admin Dashboard Redesign - Professional Colorful UI
 The admin dashboard has been completely redesigned with a vibrant, professional colorful UI:
