@@ -1,10 +1,10 @@
 from .user import User, UserStatus, AuthProvider, UserRole
 from .social_account import SocialAccount
 from .refresh_token import RefreshToken, OTPAttempt, PasswordResetToken
-from .merchant import Merchant
+from .merchant import Merchant, MerchantDocument
 from .offer import Offer
-from .product import Product
-from .order import Order
+from .product import Product, ProductImage, ProductSpecification
+from .order import Order, OrderStatusHistory, OrderShipment
 from .wallet import WalletTransaction
 from .offer_click import OfferClick
 from .product_variant import ProductVariant
@@ -37,6 +37,11 @@ from .affiliate_merchant_map import AffiliateMerchantMap
 from .cashback_rule import CashbackRule
 from .blog_post import BlogPost
 from .banner import Banner
+from .brand import Brand
+from .address import Address, Pincode
+from .returns import ReturnRequest, Refund
+from .review import ProductReview, ReviewHelpful, MerchantReview
+from .shipping import ShippingZone, ShippingRate, CourierPartner, ShipmentTracking, FreeShippingRule
 
 __all__ = [
     "User",
@@ -48,9 +53,14 @@ __all__ = [
     "OTPAttempt",
     "PasswordResetToken",
     "Merchant",
+    "MerchantDocument",
     "Offer",
     "Product",
+    "ProductImage",
+    "ProductSpecification",
     "Order",
+    "OrderStatusHistory",
+    "OrderShipment",
     "WalletTransaction",
     "OfferClick",
     "ProductVariant",
@@ -87,4 +97,17 @@ __all__ = [
     "CashbackRule",
     "BlogPost",
     "Banner",
+    "Brand",
+    "Address",
+    "Pincode",
+    "ReturnRequest",
+    "Refund",
+    "ProductReview",
+    "ReviewHelpful",
+    "MerchantReview",
+    "ShippingZone",
+    "ShippingRate",
+    "CourierPartner",
+    "ShipmentTracking",
+    "FreeShippingRule",
 ]
