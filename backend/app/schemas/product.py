@@ -8,6 +8,8 @@ class ProductVariantRead(BaseModel):
     sku: str
     name: str
     price: float
+    denomination: float | None = None  # Original price (for gift cards)
+    selling_price: float | None = None  # Actual selling price
     stock: int
     is_available: bool = True
 

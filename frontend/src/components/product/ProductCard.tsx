@@ -47,22 +47,26 @@ export function ProductCard({ product, compact = false }: ProductCardProps) {
     : 0;
 
   // Determine min and max prices for display, considering variants
-  const variantPrices = product.variants.map(v => ({
-    sellingPrice: v.selling_price,
-    denomination: v.denomination,
-    isAvailable: v.is_available
-  })).filter(v => v.isAvailable); // Filter out unavailable variants
+  const validVariants = product.variants?.filter(v => v && v.selling_price && v.denomination && (Number(v.selling_price) > 0 || Number(v.denomination) > 0)) || [];
+  const availableVariants = validVariants.filter(v => v.is_available);
 
-  const minSellingPrice = variantPrices.length > 0 ? Math.min(...variantPrices.map(v => v.sellingPrice)) : 0;
-  const maxSellingPrice = variantPrices.length > 0 ? Math.max(...variantPrices.map(v => v.sellingPrice)) : 0;
-  const minDenomination = variantPrices.length > 0 ? Math.min(...variantPrices.map(v => v.denomination)) : 0;
-  const maxDenomination = variantPrices.length > 0 ? Math.max(...variantPrices.map(v => v.denomination)) : 0;
+  const variantPrices = availableVariants.length > 0 ? availableVariants : validVariants;
+  
+  // If no valid variants with prices, don't render the card
+  if (variantPrices.length === 0) {
+    return null;
+  }
 
-  // If no variants are available, use the first variant's prices or default to 0
-  const minPrice = variantPrices.length > 0 ? minSellingPrice : (product.variants[0]?.selling_price ?? 0);
-  const maxPrice = variantPrices.length > 0 ? maxSellingPrice : (product.variants[0]?.selling_price ?? 0);
-  const originalMinPrice = variantPrices.length > 0 ? minDenomination : (product.variants[0]?.denomination ?? 0);
-  const originalMaxPrice = variantPrices.length > 0 ? maxDenomination : (product.variants[0]?.denomination ?? 0);
+  const minSellingPrice = Math.min(...variantPrices.map(v => Number(v.selling_price) || 0));
+  const maxSellingPrice = Math.max(...variantPrices.map(v => Number(v.selling_price) || 0));
+  const minDenomination = Math.min(...variantPrices.map(v => Number(v.denomination) || 0));
+  const maxDenomination = Math.max(...variantPrices.map(v => Number(v.denomination) || 0));
+
+  // Set final prices - guaranteed to be valid at this point
+  const minPrice = minSellingPrice || 0;
+  const maxPrice = maxSellingPrice || minPrice;
+  const originalMinPrice = minDenomination || 0;
+  const originalMaxPrice = maxDenomination || originalMinPrice;
 
 
   if (compact) {
@@ -80,8 +84,13 @@ export function ProductCard({ product, compact = false }: ProductCardProps) {
                   target.style.display = 'none';
                   if (target.parentElement) {
                     target.parentElement.innerHTML = `
-                      <div class="w-14 h-14 sm:w-16 sm:h-16 rounded-full bg-gradient-to-br from-purple-100 to-indigo-100 flex items-center justify-center shadow-inner">
-                        <span class="text-xl sm:text-2xl font-bold bg-gradient-to-r from-purple-600 to-indigo-600 bg-clip-text text-transparent">${product.name.charAt(0)}</span>
+                      <div class="w-full h-full flex items-center justify-center bg-gradient-to-br from-slate-100 to-slate-200">
+                        <div class="text-center">
+                          <svg class="w-12 h-12 sm:w-16 sm:h-16 mx-auto text-slate-400 mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"></path>
+                          </svg>
+                          <p class="text-xs sm:text-sm text-slate-600 font-medium">Stock Card</p>
+                        </div>
                       </div>
                     `;
                   }
@@ -105,9 +114,9 @@ export function ProductCard({ product, compact = false }: ProductCardProps) {
             <div className="flex items-center justify-between mt-auto">
               <div>
                 <p className="text-[11px] sm:text-xs font-bold bg-gradient-to-r from-purple-600 to-indigo-600 bg-clip-text text-transparent">
-                  {formatCurrency(minPrice)}
+                  {minPrice > 0 ? formatCurrency(minPrice) : 'NaN'}
                 </p>
-                {minPrice !== maxPrice && (
+                {minPrice !== maxPrice && maxPrice > 0 && (
                   <p className="text-[8px] sm:text-[9px] text-gray-500">
                     - {formatCurrency(maxPrice)}
                   </p>

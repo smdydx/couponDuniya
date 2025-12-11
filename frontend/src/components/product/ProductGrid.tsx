@@ -16,11 +16,15 @@ interface ProductGridProps {
 }
 
 export function ProductGrid({ products, isLoading, columns = 4, showTwoRows = false, compact = false }: ProductGridProps) {
-  // The original gridClass logic seems to be replaced by the logic within the changes snippet.
-  // I will use the logic from the changes snippet and adapt it to the original isLoading and products.length === 0 conditions.
+  // Filter out products with no valid variants or pricing
+  const validProducts = products.filter(product => {
+    if (!product.variants || product.variants.length === 0) return false;
+    const hasValidPrice = product.variants.some(v => v && (v.selling_price || v.denomination) && (v.selling_price > 0 || v.denomination > 0));
+    return hasValidPrice;
+  });
 
-  const skeletonCount = columns === 6 ? 12 : 8; // This line might be less relevant if the 'columns' prop is fully replaced by 'compact' in the new logic. However, keeping it for now.
-  const displayProducts = showTwoRows ? products.slice(0, 12) : products;
+  const skeletonCount = columns === 6 ? 12 : 8;
+  const displayProducts = showTwoRows ? validProducts.slice(0, 12) : validProducts;
 
   // Applying the changes logic for the grid class based on 'compact' prop
   const gridClass = cn(
@@ -32,7 +36,7 @@ export function ProductGrid({ products, isLoading, columns = 4, showTwoRows = fa
 
   if (isLoading) {
     return (
-      <div className={gridClass}> {/* Using the new gridClass */}
+      <div className={gridClass}>
         {Array.from({ length: skeletonCount }).map((_, i) => (
           <div key={i} className="rounded-lg border bg-card">
             <Skeleton className="aspect-[4/3] w-full rounded-t-lg" />
@@ -54,7 +58,7 @@ export function ProductGrid({ products, isLoading, columns = 4, showTwoRows = fa
     );
   }
 
-  if (products.length === 0) {
+  if (validProducts.length === 0) {
     return (
       <EmptyState
         icon={Gift}
