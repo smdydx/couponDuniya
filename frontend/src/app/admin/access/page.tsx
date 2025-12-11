@@ -4,7 +4,7 @@ import { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import accessApi from "@/lib/api/access";
+import * as accessApi from "@/lib/api/access";
 
 export default function AdminAccessPage() {
   const [roles, setRoles] = useState<any[]>([]);
@@ -34,7 +34,8 @@ export default function AdminAccessPage() {
   const handleCreateRole = async () => {
     if (!newRoleName) return;
     try {
-      const created = await accessApi.createRole({ name: newRoleName });
+      const slug = newRoleName.trim().toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/(^-|-$)/g, "");
+      const created = await accessApi.createRole({ name: newRoleName, slug });
       setRoles((s) => [created, ...s]);
       setNewRoleName("");
     } catch (err) {

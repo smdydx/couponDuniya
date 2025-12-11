@@ -15,6 +15,7 @@ import {
   ChevronRight,
   Wallet,
   FileText,
+  Image,
   Shield,
   Network,
   Layers,
@@ -70,6 +71,11 @@ const adminNavItems = [
     title: "Queues",
     href: ROUTES.admin.queues,
     icon: Layers,
+  },
+  {
+    title: "Banners",
+    href: ROUTES.admin.banners,
+    icon: Image,
   },
   {
     title: "Gift Cards",

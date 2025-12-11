@@ -13,8 +13,8 @@ export function FeaturedMerchantSection({ merchants }: FeaturedMerchantSectionPr
     return null;
   }
 
-  // Take first 11 merchants for the grid
-  const displayMerchants = merchants.slice(0, 11);
+  // Take first 14 merchants for the grid (7 items per row × 2 rows)
+  const displayMerchants = merchants.slice(0, 14);
 
   return (
     <div className="w-full">
@@ -24,8 +24,8 @@ export function FeaturedMerchantSection({ merchants }: FeaturedMerchantSectionPr
         </h2>
       </div>
 
-      {/* Grid Container - Responsive */}
-      <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 lg:grid-cols-6 xl:grid-cols-7 gap-2 sm:gap-3">
+      {/* Grid Container - Responsive: 3 cols mobile, 5 cols tablet, 7 cols desktop */}
+      <div className="grid grid-cols-3 sm:grid-cols-5 md:grid-cols-6 lg:grid-cols-7 gap-2 sm:gap-3">
         {displayMerchants.map((merchant) => (
           <Link
             key={merchant.id}

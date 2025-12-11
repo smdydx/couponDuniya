@@ -95,8 +95,9 @@ export const authAPI = {
     await apiClient.post('/auth/reset-password', { token, password });
   },
 
-  verifyEmail: async (token: string): Promise<void> => {
-    await apiClient.post('/auth/verify-email', { token });
+  verifyEmail: async (token: string): Promise<any> => {
+    const response = await apiClient.post('/auth/verify-email', { token });
+    return response.data?.data ?? response.data;
   },
 
   sendVerificationEmail: async (): Promise<void> => {
