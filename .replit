@@ -1,4 +1,4 @@
-modules = ["bash", "nodejs-20", "python-3.11", "web"]
+modules = ["nodejs-20", "python-3.11", "web"]
 [agent]
 expertMode = true
 integrations = ["twilio:1.0.0"]
