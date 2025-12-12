@@ -88,11 +88,11 @@ export const authAPI = {
   },
 
   requestPasswordReset: async (email: string): Promise<void> => {
-    await apiClient.post('/auth/forgot-password', { email });
+    await apiClient.post('/auth/password-reset/request', { email });
   },
 
   resetPassword: async (token: string, password: string): Promise<void> => {
-    await apiClient.post('/auth/reset-password', { token, password });
+    await apiClient.post('/auth/password-reset/confirm', { token, new_password: password });
   },
 
   verifyEmail: async (token: string): Promise<any> => {
