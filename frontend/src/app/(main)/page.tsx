@@ -110,7 +110,16 @@ function PromoSlider({ promoOffers }: { promoOffers: any[] }) {
             style={{ scrollbarWidth: "none", msOverflowStyle: "none" }}
           >
             {promoOffers.map((offer, index) => {
-              const metadata = offer.metadata ? JSON.parse(offer.metadata) : {};
+              let metadata: any = {};
+              try {
+                if (typeof offer.metadata === 'string' && offer.metadata) {
+                  metadata = JSON.parse(offer.metadata);
+                } else if (offer.metadata && typeof offer.metadata === 'object') {
+                  metadata = offer.metadata;
+                }
+              } catch (e) {
+                metadata = {};
+              }
               const gradient =
                 metadata.gradient || "from-purple-500 to-blue-600";
               const emoji = metadata.emoji || "🎁";
