@@ -145,7 +145,6 @@ class Merchant(Base):
     last_login_at: Mapped[Optional[datetime]] = mapped_column(DateTime, nullable=True)
     
     # Relationships
-    products = relationship("Product", back_populates="merchant")
     offers = relationship("Offer", back_populates="merchant")
 
 
