@@ -181,10 +181,10 @@ def get_analytics_dashboard(
     
     # Revenue from orders
     total_revenue = db.scalar(
-        select(func.coalesce(func.sum(Order.total_amount), 0)).select_from(Order).where(Order.status == "completed")
+        select(func.coalesce(func.sum(Order.amount), 0)).select_from(Order).where(Order.status == "completed")
     ) or 0
     today_revenue = db.scalar(
-        select(func.coalesce(func.sum(Order.total_amount), 0)).select_from(Order).where(
+        select(func.coalesce(func.sum(Order.amount), 0)).select_from(Order).where(
             and_(Order.status == "completed", Order.created_at >= today_start)
         )
     ) or 0
@@ -488,7 +488,7 @@ def list_admin_merchants(
         "name": m.name,
         "slug": m.slug,
         "logo_url": m.logo_url,
-        "cashback_rate": str(m.cashback_rate) if m.cashback_rate else None,
+        "cashback_rate": str(m.commission_rate) if m.commission_rate else None,
         "is_active": m.is_active,
         "is_featured": m.is_featured,
         "offers_count": offers_counts.get(m.id, 0),

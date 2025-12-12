@@ -13,7 +13,7 @@ class Settings(BaseSettings):
     SECRET_KEY: str = "dev-secret"
     JWT_ALGORITHM: str = "HS256"
     ACCESS_TOKEN_EXPIRE_MINUTES: int = 1440
-    CORS_ORIGINS: str = "http://localhost:3000"
+    CORS_ORIGINS: str = "http://localhost:3000,http://localhost:5000,https://6ffa3b2a-7dde-4702-a441-961495bdfd9f-00-32le1irrikyoe.sisko.replit.dev"
     DEFAULT_PASSWORD: str = "hardik123"
 
     # SMS Configuration (MSG91)
@@ -33,7 +33,7 @@ class Settings(BaseSettings):
     FACEBOOK_APP_SECRET: str = ""
 
     # Frontend URL for redirects
-    FRONTEND_URL: str = "https://dafc9188-a0bd-4022-aeb0-e4fcf20f899a-00-33uno060mq1q6.picard.replit.dev"
+    FRONTEND_URL: str = "https://6ffa3b2a-7dde-4702-a441-961495bdfd9f-00-32le1irrikyoe.sisko.replit.dev"
 
     # Razorpay Payment Gateway
     RAZORPAY_KEY_ID: str = "rzp_test_Rp3sBYQKRm8xxB"
