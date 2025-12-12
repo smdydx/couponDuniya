@@ -14,7 +14,7 @@ from pydantic import BaseModel, Field
 
 from ...redis_client import cache_invalidate_prefix, rk, redis_client
 from ...database import get_db
-from ...models import User, Withdrawal, WalletTransaction, Merchant, Offer, Category, GiftCard, Banner
+from ...models import User, Withdrawal, WalletTransaction, Merchant, Offer, Category, GiftCard, Banner, Order, Product, CashbackEvent, SupportTicket
 from ...queue import push_email_job, push_sms_job
 from ...config import get_settings
 from ...dependencies import get_current_admin, require_admin
@@ -67,6 +67,37 @@ class BannerPayload(BaseModel):
     link_url: str | None = None
     banner_type: str = "hero"
     order_index: int = 0
+    is_active: bool = True
+
+
+class WithdrawalApprovePayload(BaseModel):
+    status: str = "approved"
+    transaction_id: str | None = None
+    admin_notes: str | None = None
+
+
+class WithdrawalRejectPayload(BaseModel):
+    status: str = "rejected"
+    admin_notes: str | None = None
+
+
+class ProductPayload(BaseModel):
+    merchant_id: int | None = None
+    category_id: int | None = None
+    name: str = Field(..., min_length=1)
+    slug: str = Field(..., min_length=1)
+    description: str | None = None
+    image_url: str | None = None
+    price: float = Field(..., ge=0)
+    stock: int = Field(default=0, ge=0)
+    is_active: bool = True
+
+
+class CategoryPayload(BaseModel):
+    name: str = Field(..., min_length=1)
+    slug: str = Field(..., min_length=1)
+    description: str | None = None
+    icon_name: str | None = None
     is_active: bool = True
 
 
@@ -691,14 +722,14 @@ def delete_banner(id: int, _: User = Depends(require_admin), db: Session = Depen
 def list_admin_withdrawals(
     page: int = 1,
     limit: int = 20,
-    status: str | None = None,
+    status_filter: str | None = None,
     _: User = Depends(require_admin),
     db: Session = Depends(get_db)
 ):
     """List all withdrawal requests"""
     query = select(Withdrawal)
-    if status:
-        query = query.where(Withdrawal.status == status)
+    if status_filter:
+        query = query.where(Withdrawal.status == status_filter)
 
     count_query = select(func.count()).select_from(query.subquery())
     total_count = db.scalar(count_query) or 0
@@ -709,25 +740,40 @@ def list_admin_withdrawals(
     withdrawals_data = [{
         "id": w.id,
         "user_id": w.user_id,
-        "amount": str(w.amount) if w.amount else None,
+        "amount": float(w.amount) if w.amount else 0,
+        "method": w.method or "bank",
         "status": w.status,
+        "upi_id": w.upi_id,
+        "bank_account_number": w.bank_account_number,
+        "bank_ifsc": w.bank_ifsc,
+        "bank_account_name": w.bank_account_name,
+        "admin_notes": w.admin_notes,
+        "transaction_id": w.transaction_id,
+        "processed_at": w.processed_at.isoformat() if w.processed_at else None,
         "created_at": w.created_at.isoformat() if w.created_at else None,
     } for w in withdrawals]
 
     return {
         "success": True,
-        "withdrawals": withdrawals_data,
-        "pagination": {
-            "current_page": page,
-            "total_pages": ceil(total_count / limit) if total_count else 0,
-            "total_items": total_count,
-            "per_page": limit,
-        },
+        "data": {
+            "withdrawals": withdrawals_data,
+            "pagination": {
+                "current_page": page,
+                "total_pages": ceil(total_count / limit) if total_count else 0,
+                "total_items": total_count,
+                "per_page": limit,
+            },
+        }
     }
 
 
-@router.put("/withdrawals/{id}/approve", response_model=dict)
-def approve_withdrawal(id: int, _: User = Depends(require_admin), db: Session = Depends(get_db)):
+@router.patch("/withdrawals/{id}/approve", response_model=dict)
+def approve_withdrawal(
+    id: int,
+    payload: WithdrawalApprovePayload,
+    _: User = Depends(require_admin),
+    db: Session = Depends(get_db)
+):
     """Approve a withdrawal request"""
     withdrawal = db.scalar(select(Withdrawal).where(Withdrawal.id == id))
     if not withdrawal:
@@ -737,12 +783,20 @@ def approve_withdrawal(id: int, _: User = Depends(require_admin), db: Session = 
         raise HTTPException(status_code=400, detail="Withdrawal is not pending")
 
     withdrawal.status = "approved"
+    withdrawal.transaction_id = payload.transaction_id
+    withdrawal.admin_notes = payload.admin_notes
+    withdrawal.processed_at = datetime.utcnow()
     db.commit()
     return {"success": True, "message": "Withdrawal approved"}
 
 
-@router.put("/withdrawals/{id}/reject", response_model=dict)
-def reject_withdrawal(id: int, _: User = Depends(require_admin), db: Session = Depends(get_db)):
+@router.patch("/withdrawals/{id}/reject", response_model=dict)
+def reject_withdrawal(
+    id: int,
+    payload: WithdrawalRejectPayload,
+    _: User = Depends(require_admin),
+    db: Session = Depends(get_db)
+):
     """Reject a withdrawal request"""
     withdrawal = db.scalar(select(Withdrawal).where(Withdrawal.id == id))
     if not withdrawal:
@@ -752,5 +806,416 @@ def reject_withdrawal(id: int, _: User = Depends(require_admin), db: Session = D
         raise HTTPException(status_code=400, detail="Withdrawal is not pending")
 
     withdrawal.status = "rejected"
+    withdrawal.admin_notes = payload.admin_notes
+    withdrawal.processed_at = datetime.utcnow()
     db.commit()
     return {"success": True, "message": "Withdrawal rejected"}
+
+
+@router.patch("/withdrawals/{id}/complete", response_model=dict)
+def complete_withdrawal(
+    id: int,
+    payload: WithdrawalApprovePayload,
+    _: User = Depends(require_admin),
+    db: Session = Depends(get_db)
+):
+    """Mark a withdrawal as completed"""
+    withdrawal = db.scalar(select(Withdrawal).where(Withdrawal.id == id))
+    if not withdrawal:
+        raise HTTPException(status_code=404, detail="Withdrawal not found")
+
+    if withdrawal.status not in ["pending", "approved"]:
+        raise HTTPException(status_code=400, detail="Withdrawal cannot be completed")
+
+    withdrawal.status = "completed"
+    withdrawal.transaction_id = payload.transaction_id
+    withdrawal.admin_notes = payload.admin_notes
+    withdrawal.processed_at = datetime.utcnow()
+    db.commit()
+    return {"success": True, "message": "Withdrawal completed"}
+
+
+# ============== ORDERS ==============
+
+@router.get("/orders", response_model=dict)
+def list_admin_orders(
+    page: int = 1,
+    limit: int = 20,
+    status: str | None = None,
+    _: User = Depends(require_admin),
+    db: Session = Depends(get_db)
+):
+    """List all orders"""
+    query = select(Order)
+    if status:
+        query = query.where(Order.status == status)
+
+    count_query = select(func.count()).select_from(query.subquery())
+    total_count = db.scalar(count_query) or 0
+    
+    query = query.order_by(desc(Order.created_at)).offset((page - 1) * limit).limit(limit)
+    orders = db.scalars(query).all()
+
+    orders_data = [{
+        "id": o.id,
+        "order_reference": o.order_reference,
+        "user_id": o.user_id,
+        "merchant_id": o.merchant_id,
+        "amount": float(o.amount) if o.amount else 0,
+        "cashback_amount": float(o.cashback_amount) if o.cashback_amount else 0,
+        "status": o.status,
+        "created_at": o.created_at.isoformat() if o.created_at else None,
+    } for o in orders]
+
+    return {
+        "success": True,
+        "orders": orders_data,
+        "pagination": {
+            "current_page": page,
+            "total_pages": ceil(total_count / limit) if total_count else 0,
+            "total_items": total_count,
+            "per_page": limit,
+        },
+    }
+
+
+@router.patch("/orders/{id}/status", response_model=dict)
+def update_order_status(
+    id: int,
+    status: str = Query(...),
+    _: User = Depends(require_admin),
+    db: Session = Depends(get_db)
+):
+    """Update order status"""
+    order = db.scalar(select(Order).where(Order.id == id))
+    if not order:
+        raise HTTPException(status_code=404, detail="Order not found")
+
+    order.status = status
+    db.commit()
+    return {"success": True, "message": f"Order status updated to {status}"}
+
+
+# ============== PRODUCTS ==============
+
+@router.get("/products", response_model=dict)
+def list_admin_products(
+    page: int = 1,
+    limit: int = 20,
+    search: str | None = None,
+    _: User = Depends(require_admin),
+    db: Session = Depends(get_db)
+):
+    """List all products"""
+    query = select(Product)
+    if search:
+        query = query.where(or_(Product.name.ilike(f"%{search}%"), Product.slug.ilike(f"%{search}%")))
+
+    count_query = select(func.count()).select_from(query.subquery())
+    total_count = db.scalar(count_query) or 0
+    
+    query = query.order_by(desc(Product.created_at)).offset((page - 1) * limit).limit(limit)
+    products = db.scalars(query).all()
+
+    products_data = [{
+        "id": p.id,
+        "name": p.name,
+        "slug": p.slug,
+        "description": p.description,
+        "image_url": p.image_url,
+        "price": float(p.price) if p.price else 0,
+        "stock": p.stock or 0,
+        "merchant_id": p.merchant_id,
+        "category_id": p.category_id,
+        "is_active": p.is_active,
+        "created_at": p.created_at.isoformat() if p.created_at else None,
+    } for p in products]
+
+    return {
+        "success": True,
+        "products": products_data,
+        "pagination": {
+            "current_page": page,
+            "total_pages": ceil(total_count / limit) if total_count else 0,
+            "total_items": total_count,
+            "per_page": limit,
+        },
+    }
+
+
+@router.post("/products", response_model=dict)
+def create_product(payload: ProductPayload, _: User = Depends(require_admin), db: Session = Depends(get_db)):
+    """Create a new product"""
+    existing = db.scalar(select(Product).where(Product.slug == payload.slug))
+    if existing:
+        raise HTTPException(status_code=400, detail=f"Product with slug '{payload.slug}' already exists")
+
+    product = Product(
+        merchant_id=payload.merchant_id,
+        category_id=payload.category_id,
+        name=payload.name,
+        slug=payload.slug,
+        description=payload.description,
+        image_url=payload.image_url,
+        price=Decimal(str(payload.price)),
+        stock=payload.stock,
+        is_active=payload.is_active
+    )
+    db.add(product)
+    db.commit()
+    db.refresh(product)
+
+    return {"success": True, "message": "Product created", "data": {"id": product.id}}
+
+
+@router.put("/products/{id}", response_model=dict)
+def update_product(id: int, payload: ProductPayload, _: User = Depends(require_admin), db: Session = Depends(get_db)):
+    """Update a product"""
+    product = db.scalar(select(Product).where(Product.id == id))
+    if not product:
+        raise HTTPException(status_code=404, detail="Product not found")
+
+    if payload.slug != product.slug:
+        existing = db.scalar(select(Product).where(and_(Product.slug == payload.slug, Product.id != id)))
+        if existing:
+            raise HTTPException(status_code=400, detail=f"Product with slug '{payload.slug}' already exists")
+
+    product.merchant_id = payload.merchant_id
+    product.category_id = payload.category_id
+    product.name = payload.name
+    product.slug = payload.slug
+    product.description = payload.description
+    product.image_url = payload.image_url
+    product.price = Decimal(str(payload.price))
+    product.stock = payload.stock
+    product.is_active = payload.is_active
+
+    db.commit()
+    return {"success": True, "message": "Product updated"}
+
+
+@router.delete("/products/{id}", response_model=dict)
+def delete_product(id: int, _: User = Depends(require_admin), db: Session = Depends(get_db)):
+    """Soft delete a product"""
+    product = db.scalar(select(Product).where(Product.id == id))
+    if not product:
+        raise HTTPException(status_code=404, detail="Product not found")
+
+    product.is_active = False
+    db.commit()
+    return {"success": True, "message": "Product deactivated"}
+
+
+# ============== CATEGORIES ==============
+
+@router.get("/categories", response_model=dict)
+def list_admin_categories(
+    page: int = 1,
+    limit: int = 50,
+    search: str | None = None,
+    _: User = Depends(require_admin),
+    db: Session = Depends(get_db)
+):
+    """List all categories"""
+    query = select(Category)
+    if search:
+        query = query.where(Category.name.ilike(f"%{search}%"))
+
+    count_query = select(func.count()).select_from(query.subquery())
+    total_count = db.scalar(count_query) or 0
+    
+    query = query.order_by(Category.name.asc()).offset((page - 1) * limit).limit(limit)
+    categories = db.scalars(query).all()
+
+    categories_data = [{
+        "id": c.id,
+        "name": c.name,
+        "slug": c.slug,
+        "description": c.description,
+        "icon_name": c.icon_name,
+        "is_active": c.is_active,
+    } for c in categories]
+
+    return {
+        "success": True,
+        "categories": categories_data,
+        "pagination": {
+            "current_page": page,
+            "total_pages": ceil(total_count / limit) if total_count else 0,
+            "total_items": total_count,
+            "per_page": limit,
+        },
+    }
+
+
+@router.post("/categories", response_model=dict)
+def create_category(payload: CategoryPayload, _: User = Depends(require_admin), db: Session = Depends(get_db)):
+    """Create a new category"""
+    existing = db.scalar(select(Category).where(Category.slug == payload.slug))
+    if existing:
+        raise HTTPException(status_code=400, detail=f"Category with slug '{payload.slug}' already exists")
+
+    category = Category(
+        name=payload.name,
+        slug=payload.slug,
+        description=payload.description,
+        icon_name=payload.icon_name,
+        is_active=payload.is_active
+    )
+    db.add(category)
+    db.commit()
+    db.refresh(category)
+
+    return {"success": True, "message": "Category created", "data": {"id": category.id}}
+
+
+@router.put("/categories/{id}", response_model=dict)
+def update_category(id: int, payload: CategoryPayload, _: User = Depends(require_admin), db: Session = Depends(get_db)):
+    """Update a category"""
+    category = db.scalar(select(Category).where(Category.id == id))
+    if not category:
+        raise HTTPException(status_code=404, detail="Category not found")
+
+    if payload.slug != category.slug:
+        existing = db.scalar(select(Category).where(and_(Category.slug == payload.slug, Category.id != id)))
+        if existing:
+            raise HTTPException(status_code=400, detail=f"Category with slug '{payload.slug}' already exists")
+
+    category.name = payload.name
+    category.slug = payload.slug
+    category.description = payload.description
+    category.icon_name = payload.icon_name
+    category.is_active = payload.is_active
+
+    db.commit()
+    return {"success": True, "message": "Category updated"}
+
+
+# ============== CASHBACK ==============
+
+@router.get("/cashback", response_model=dict)
+def list_admin_cashback(
+    page: int = 1,
+    limit: int = 20,
+    status: str | None = None,
+    _: User = Depends(require_admin),
+    db: Session = Depends(get_db)
+):
+    """List all cashback events"""
+    query = select(CashbackEvent)
+    if status:
+        query = query.where(CashbackEvent.status == status)
+
+    count_query = select(func.count()).select_from(query.subquery())
+    total_count = db.scalar(count_query) or 0
+    
+    query = query.order_by(desc(CashbackEvent.created_at)).offset((page - 1) * limit).limit(limit)
+    events = db.scalars(query).all()
+
+    events_data = [{
+        "id": e.id,
+        "user_id": e.user_id,
+        "order_id": e.order_id,
+        "amount": float(e.amount) if e.amount else 0,
+        "status": e.status,
+        "created_at": e.created_at.isoformat() if e.created_at else None,
+        "confirmed_at": e.confirmed_at.isoformat() if e.confirmed_at else None,
+    } for e in events]
+
+    return {
+        "success": True,
+        "cashback_events": events_data,
+        "pagination": {
+            "current_page": page,
+            "total_pages": ceil(total_count / limit) if total_count else 0,
+            "total_items": total_count,
+            "per_page": limit,
+        },
+    }
+
+
+@router.patch("/cashback/{id}/confirm", response_model=dict)
+def confirm_cashback(id: int, _: User = Depends(require_admin), db: Session = Depends(get_db)):
+    """Confirm a cashback event"""
+    event = db.scalar(select(CashbackEvent).where(CashbackEvent.id == id))
+    if not event:
+        raise HTTPException(status_code=404, detail="Cashback event not found")
+
+    event.status = "confirmed"
+    event.confirmed_at = datetime.utcnow()
+    db.commit()
+    return {"success": True, "message": "Cashback confirmed"}
+
+
+@router.patch("/cashback/{id}/reject", response_model=dict)
+def reject_cashback(id: int, _: User = Depends(require_admin), db: Session = Depends(get_db)):
+    """Reject a cashback event"""
+    event = db.scalar(select(CashbackEvent).where(CashbackEvent.id == id))
+    if not event:
+        raise HTTPException(status_code=404, detail="Cashback event not found")
+
+    event.status = "rejected"
+    db.commit()
+    return {"success": True, "message": "Cashback rejected"}
+
+
+# ============== SUPPORT TICKETS ==============
+
+@router.get("/support", response_model=dict)
+def list_admin_support_tickets(
+    page: int = 1,
+    limit: int = 20,
+    status: str | None = None,
+    priority: str | None = None,
+    _: User = Depends(require_admin),
+    db: Session = Depends(get_db)
+):
+    """List all support tickets"""
+    query = select(SupportTicket)
+    if status:
+        query = query.where(SupportTicket.status == status)
+    if priority:
+        query = query.where(SupportTicket.priority == priority)
+
+    count_query = select(func.count()).select_from(query.subquery())
+    total_count = db.scalar(count_query) or 0
+    
+    query = query.order_by(desc(SupportTicket.created_at)).offset((page - 1) * limit).limit(limit)
+    tickets = db.scalars(query).all()
+
+    tickets_data = [{
+        "id": t.id,
+        "user_id": t.user_id,
+        "subject": t.subject,
+        "status": t.status,
+        "priority": t.priority,
+        "created_at": t.created_at.isoformat() if t.created_at else None,
+    } for t in tickets]
+
+    return {
+        "success": True,
+        "tickets": tickets_data,
+        "pagination": {
+            "current_page": page,
+            "total_pages": ceil(total_count / limit) if total_count else 0,
+            "total_items": total_count,
+            "per_page": limit,
+        },
+    }
+
+
+@router.patch("/support/{id}/status", response_model=dict)
+def update_support_ticket_status(
+    id: int,
+    status: str = Query(...),
+    _: User = Depends(require_admin),
+    db: Session = Depends(get_db)
+):
+    """Update support ticket status"""
+    ticket = db.scalar(select(SupportTicket).where(SupportTicket.id == id))
+    if not ticket:
+        raise HTTPException(status_code=404, detail="Support ticket not found")
+
+    ticket.status = status
+    db.commit()
+    return {"success": True, "message": f"Ticket status updated to {status}"}
