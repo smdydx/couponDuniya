@@ -4,6 +4,14 @@
 
 CouponAli is a full-stack e-commerce platform designed for coupons, cashback offers, and gift cards, aspiring to become a comprehensive dropshipping solution comparable to major e-commerce platforms. It aims to provide a robust, scalable system for managing merchants, products, orders, and an extensive affiliate network. The platform features a dynamic admin dashboard for operations and analytics, integrating advanced data models for Indian compliance and diverse e-commerce functionalities.
 
+## Recent Changes (December 12, 2025)
+
+- Fixed frontend API client to align with backend contracts
+- Updated auth.ts password reset endpoints to match backend routes
+- Created user.ts API file with complete user profile, KYC, and OTP management
+- Fixed OTP endpoints: sendMobileOTP() takes no parameters, verifyMobileOTP(otp) takes only OTP string
+- All frontend API clients now properly match backend FastAPI endpoint contracts
+
 ## User Preferences
 
 - Development environment for testing the full stack
