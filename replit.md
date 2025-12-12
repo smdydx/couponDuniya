@@ -1,56 +1,105 @@
-# CouponAli - Replit Setup
+# CouponAli - E-Commerce Coupons & Cashback Platform
 
 ## Overview
 
-CouponAli is a full-stack e-commerce platform designed for coupons, cashback offers, and gift cards, aspiring to become a comprehensive dropshipping solution comparable to major e-commerce platforms. It aims to provide a robust, scalable system for managing merchants, products, orders, and an extensive affiliate network. The platform features a dynamic admin dashboard for operations and analytics, integrating advanced data models for Indian compliance and diverse e-commerce functionalities.
+CouponAli is a production-grade e-commerce platform for coupons, cashback offers, gift cards, and dropshipping. Built with enterprise-level architecture featuring Next.js frontend and FastAPI backend.
+
+## Project Structure
+
+```
+couponali/
+├── backend/                    # Python FastAPI Backend
+│   ├── alembic/               # Database migrations
+│   ├── app/                   # Main application
+│   │   ├── api/              # API route handlers
+│   │   ├── models/           # SQLAlchemy database models
+│   │   ├── schemas/          # Pydantic request/response schemas
+│   │   ├── services/         # Business logic services
+│   │   ├── tasks/            # Background task handlers
+│   │   ├── config.py         # Configuration settings
+│   │   ├── database.py       # Database connection
+│   │   ├── main.py           # FastAPI app entry point
+│   │   └── security.py       # Auth & JWT handling
+│   ├── scripts/              # Utility & seed scripts
+│   ├── tests/                # Backend unit tests
+│   ├── workers/              # Background job workers
+│   ├── uploads/              # User uploaded content
+│   └── requirements.txt      # Python dependencies
+│
+├── frontend/                   # Next.js 16 Frontend
+│   ├── public/               # Static assets
+│   │   └── images/          # Images (logos, merchants, etc)
+│   ├── src/
+│   │   ├── app/             # Next.js App Router pages
+│   │   │   ├── (auth)/     # Authentication pages
+│   │   │   ├── (main)/     # Main user pages
+│   │   │   ├── admin/      # Admin dashboard
+│   │   │   └── api/        # API routes
+│   │   ├── components/      # React components
+│   │   │   ├── admin/      # Admin components
+│   │   │   ├── auth/       # Auth components
+│   │   │   ├── common/     # Shared components
+│   │   │   ├── layout/     # Layout components
+│   │   │   ├── ui/         # UI primitives
+│   │   │   └── wallet/     # Wallet components
+│   │   ├── hooks/          # Custom React hooks
+│   │   ├── lib/            # Utilities & API clients
+│   │   ├── store/          # Zustand state stores
+│   │   └── types/          # TypeScript types
+│   └── package.json        # Node.js dependencies
+│
+├── docs/                       # Documentation
+│   ├── architecture/         # System architecture docs
+│   └── guides/              # Setup & API guides
+│
+├── README.md                  # Project documentation
+└── replit.md                  # This file
+```
+
+## Tech Stack
+
+| Layer | Technology |
+|-------|-----------|
+| Frontend | Next.js 16, React 19, TypeScript, Tailwind CSS |
+| Backend | FastAPI, Python 3.11, SQLAlchemy ORM |
+| Database | PostgreSQL (Neon) |
+| State | Zustand (frontend), Redis (backend cache) |
+| Auth | JWT tokens, bcrypt password hashing |
+
+## Running the Project
+
+**Backend (Port 8000):**
+```bash
+cd backend && uvicorn app.main:app --host 0.0.0.0 --port 8000 --reload
+```
+
+**Frontend (Port 5000):**
+```bash
+cd frontend && npm run dev
+```
+
+## Key Features
+
+- User authentication (email/phone OTP, social login)
+- Merchant & offer management
+- Gift card system with email delivery
+- Multi-level referral program (50 levels)
+- Wallet with cashback tracking
+- Admin dashboard with analytics
+- Order management & shipping integration
+
+## Environment Variables
+
+Required secrets (set in Replit Secrets):
+- `DATABASE_URL` - PostgreSQL connection string
+- `JWT_SECRET_KEY` - JWT signing key
+- `RAZORPAY_KEY_ID` / `RAZORPAY_KEY_SECRET` - Payment gateway
+- `TWILIO_ACCOUNT_SID` / `TWILIO_AUTH_TOKEN` - SMS service
+- `SENDGRID_API_KEY` - Email service
 
 ## Recent Changes (December 12, 2025)
 
-- Fixed frontend API client to align with backend contracts
-- Updated auth.ts password reset endpoints to match backend routes
-- Created user.ts API file with complete user profile, KYC, and OTP management
-- Fixed OTP endpoints: sendMobileOTP() takes no parameters, verifyMobileOTP(otp) takes only OTP string
-- All frontend API clients now properly match backend FastAPI endpoint contracts
-
-## User Preferences
-
-- Development environment for testing the full stack
-- Production deployment requires proper database, Redis, and third-party API keys
-
-## System Architecture
-
-The project is a full-stack application with a Next.js 16 (React 19, TypeScript) frontend on Port 5000 and a FastAPI (Python 3.11) backend on Port 8000. It uses SQLite for development (with PostgreSQL as the production database), and Redis is gracefully mocked for caching. Additional microservices (redirector, webhooks) are built with Bun.
-
-**UI/UX Decisions:**
-The admin dashboard features a professional and colorful UI with:
-- **Colorful Gradient Cards:** For displaying statistics.
-- **Referral System Visualization:** A 50-level matrix and binary tree view with zoom, search, and color-coded legends.
-- **Enhanced Product & Category Pages:** Including category selection dropdowns, filter options, and CRUD operations.
-
-**Technical Implementations & Feature Specifications:**
-- **Production-level Data Models:** Comprehensive models for Merchant, Product, Order, Returns & Refunds, Reviews & Ratings, Shipping, Address, Brand, and Category, supporting complex e-commerce operations and Indian compliance requirements (e.g., GSTIN, HSN code).
-- **Admin Dashboard Authentication:** Secure login using JWT tokens stored in `localStorage`, with auto-redirection to the dashboard post-login. Passwords are hashed using `passlib` with `pbkdf2_sha256`.
-- **State Management:** Frontend uses Zustand for state management, specifically `createWithEqualityFn` and `skipHydration` for persistence, to address SSR and hydration issues.
-- **Replit Proxy Configuration:** Frontend is dynamically configured to adapt to Replit's preview proxy system, ensuring correct functionality across varying workspace URLs.
-- **Real-time Features:** Utilizes WebSockets and Redis for real-time functionalities.
-- **API Documentation:** Accessible via Swagger UI and ReDoc.
-
-**System Design Choices:**
-- **Modular Structure:** Clearly separated frontend, backend, and microservices for maintainability and scalability.
-- **Database Migrations:** Managed with Alembic for schema evolution.
-- **Environment Variable Management:** Utilizes `.env` files and Replit's environment variables for configuration.
-- **Seeded Data:** Includes pre-populated data for merchants, coupons, and gift cards to facilitate immediate testing.
-
-## External Dependencies
-
-- **Database:** SQLite (development), PostgreSQL (production, configured via Replit's Database tool)
-- **Cache:** Redis (mocked in development, Upstash recommended for production)
-- **Payment Gateway:** Razorpay (for Indian market, requires `RAZORPAY_KEY_ID`, `RAZORPAY_KEY_SECRET`)
-- **SMS Service:** MSG91 (optional, requires credentials when `SMS_ENABLED=True`)
-- **Email Service:** SendGrid (optional, requires API key when `EMAIL_ENABLED=True`)
-- **Affiliate Networks:** Admitad, VCommission, CueLinks (optional, requires credentials)
-- **Frontend Framework:** Next.js 16
-- **Backend Framework:** FastAPI
-- **Package Managers:** Bun (for microservices), npm (for frontend), pip (for backend)
-- **Password Hashing:** `passlib`
-- **State Management:** Zustand
+- Cleaned up project structure to MNC-level organization
+- Removed duplicate folders and unnecessary files
+- Consolidated documentation into docs/
+- Fixed frontend/backend API alignment
