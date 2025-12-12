@@ -115,5 +115,9 @@ export const ROUTES = {
     cms: '/admin/cms',
     referrals: '/admin/referrals',
     referralTree: '/admin/referrals/tree',
+    returns: '/admin/returns',
+    reviews: '/admin/reviews',
+    support: '/admin/support',
+    payments: '/admin/payments',
   },
 } as const;

@@ -20,6 +20,10 @@ import {
   Network,
   Layers,
   LogOut,
+  RotateCcw,
+  Star,
+  Headphones,
+  CreditCard,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
@@ -53,6 +57,16 @@ const adminNavItems = [
     icon: ShoppingCart,
   },
   {
+    title: "Payments",
+    href: ROUTES.admin.payments,
+    icon: CreditCard,
+  },
+  {
+    title: "Returns",
+    href: ROUTES.admin.returns,
+    icon: RotateCcw,
+  },
+  {
     title: "Users",
     href: ROUTES.admin.users,
     icon: Users,
@@ -66,6 +80,16 @@ const adminNavItems = [
     title: "Withdrawals",
     href: ROUTES.admin.withdrawals,
     icon: Wallet,
+  },
+  {
+    title: "Reviews",
+    href: ROUTES.admin.reviews,
+    icon: Star,
+  },
+  {
+    title: "Support",
+    href: ROUTES.admin.support,
+    icon: Headphones,
   },
   {
     title: "Queues",

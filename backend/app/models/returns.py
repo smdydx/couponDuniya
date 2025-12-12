@@ -100,10 +100,15 @@ class ReturnRequest(Base):
     closed_at: Mapped[Optional[datetime]] = mapped_column(DateTime, nullable=True)
     
     # Relationships
-    order = relationship("Order")
+    order = relationship("Order", foreign_keys=[order_id])
+    exchange_order = relationship("Order", foreign_keys=[exchange_order_id])
     user = relationship("User")
     merchant = relationship("Merchant")
     product = relationship("Product", foreign_keys=[product_id])
+    exchange_product = relationship("Product", foreign_keys=[exchange_product_id])
+    order_item = relationship("OrderItem", foreign_keys=[order_item_id])
+    variant = relationship("ProductVariant", foreign_keys=[variant_id])
+    exchange_variant = relationship("ProductVariant", foreign_keys=[exchange_variant_id])
 
 
 class Refund(Base):
@@ -150,5 +155,6 @@ class Refund(Base):
     notes: Mapped[Optional[str]] = mapped_column(Text, nullable=True)
     
     # Relationships
-    order = relationship("Order")
-    user = relationship("User")
+    order = relationship("Order", foreign_keys=[order_id])
+    user = relationship("User", foreign_keys=[user_id])
+    return_request = relationship("ReturnRequest", foreign_keys=[return_request_id])

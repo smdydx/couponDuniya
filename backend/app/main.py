@@ -25,7 +25,8 @@ from .api.v1 import (
     notifications, audit_logs, payments, cms_pages, sessions, kyc, inventory,
     commissions, redirects, offer_views, categories, search, cms, checkout,
     cart, health, affiliate, queue, flags, realtime, blog, blog_uploads,
-    homepage, uploads, admin_referrals,
+    homepage, uploads, admin_referrals, admin_returns, admin_reviews,
+    admin_payments, admin_support,
 )
 
 from .database import Base, engine
@@ -268,6 +269,10 @@ app.include_router(orders.router, prefix="/api/v1")
 app.include_router(wallet.router, prefix="/api/v1")
 app.include_router(admin.router, prefix="/api/v1")
 app.include_router(admin_referrals.router, prefix="/api/v1")
+app.include_router(admin_returns.router, prefix="/api/v1")
+app.include_router(admin_reviews.router, prefix="/api/v1")
+app.include_router(admin_payments.router, prefix="/api/v1")
+app.include_router(admin_support.router, prefix="/api/v1")
 app.include_router(access.router, prefix="/api/v1")
 app.include_router(gift_cards.router, prefix="/api/v1")
 app.include_router(referrals.router, prefix="/api/v1")

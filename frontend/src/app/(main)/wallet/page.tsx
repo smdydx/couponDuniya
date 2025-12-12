@@ -9,132 +9,108 @@ import { WalletBalance } from "@/components/wallet/WalletBalance";
 import { TransactionList } from "@/components/wallet/TransactionList";
 import { CashbackTracker } from "@/components/wallet/CashbackTracker";
 import { WithdrawForm } from "@/components/wallet/WithdrawForm";
+import { Skeleton } from "@/components/ui/skeleton";
 import { useAuthStore } from "@/store/authStore";
 import { ROUTES } from "@/lib/constants";
-import { AlertCircle, HelpCircle } from "lucide-react";
+import { AlertCircle, HelpCircle, Loader2 } from "lucide-react";
+import apiClient from "@/lib/api/client";
 import type { WalletTransaction, CashbackEvent, WithdrawalRequest } from "@/types";
-
-// Mock data
-const mockTransactions: WalletTransaction[] = [
-  {
-    id: 1,
-    wallet_id: 1,
-    type: "credit",
-    amount: 150,
-    balance_after: 650,
-    category: "cashback",
-    description: "Cashback from Amazon purchase",
-    status: "completed",
-    created_at: new Date(Date.now() - 86400000).toISOString(),
-  },
-  {
-    id: 2,
-    wallet_id: 1,
-    type: "debit",
-    amount: 100,
-    balance_after: 500,
-    category: "order_payment",
-    description: "Used for order ORD-ABC123",
-    status: "completed",
-    created_at: new Date(Date.now() - 172800000).toISOString(),
-  },
-  {
-    id: 3,
-    wallet_id: 1,
-    type: "credit",
-    amount: 50,
-    balance_after: 600,
-    category: "referral",
-    description: "Referral bonus - John Doe signed up",
-    status: "completed",
-    created_at: new Date(Date.now() - 259200000).toISOString(),
-  },
-];
-
-const mockCashbackEvents: CashbackEvent[] = [
-  {
-    id: 1,
-    user_id: 1,
-    offer_id: 1,
-    merchant_id: 1,
-    merchant: {
-      id: 1,
-      name: "Amazon",
-      slug: "amazon",
-      website_url: "",
-      affiliate_url: "",
-      default_cashback_type: "percentage",
-      default_cashback_value: 10,
-      is_featured: true,
-      is_active: true,
-      created_at: "",
-      updated_at: "",
-    },
-    click_id: "clk_123",
-    order_amount: 1500,
-    cashback_amount: 150,
-    status: "pending",
-    created_at: new Date(Date.now() - 86400000).toISOString(),
-  },
-  {
-    id: 2,
-    user_id: 1,
-    offer_id: 2,
-    merchant_id: 2,
-    merchant: {
-      id: 2,
-      name: "Flipkart",
-      slug: "flipkart",
-      website_url: "",
-      affiliate_url: "",
-      default_cashback_type: "percentage",
-      default_cashback_value: 8,
-      is_featured: true,
-      is_active: true,
-      created_at: "",
-      updated_at: "",
-    },
-    click_id: "clk_124",
-    order_amount: 2000,
-    cashback_amount: 160,
-    status: "confirmed",
-    confirmation_date: new Date(Date.now() - 604800000).toISOString(),
-    created_at: new Date(Date.now() - 1209600000).toISOString(),
-  },
-];
-
-const mockWithdrawals: WithdrawalRequest[] = [
-  {
-    id: 1,
-    user_id: 1,
-    amount: 500,
-    withdrawal_method: "upi",
-    account_details: { upi_id: "user@upi" },
-    status: "completed",
-    processed_at: new Date(Date.now() - 604800000).toISOString(),
-    created_at: new Date(Date.now() - 691200000).toISOString(),
-  },
-];
 
 export default function WalletPage() {
   const [isWithdrawOpen, setIsWithdrawOpen] = useState(false);
   const [activeTab, setActiveTab] = useState("balance");
+  const [loading, setLoading] = useState(true);
+  const [walletData, setWalletData] = useState({
+    balance: 0,
+    pending_cashback: 0,
+    lifetime_earnings: 0,
+    total_withdrawn: 0,
+  });
+  const [transactions, setTransactions] = useState<WalletTransaction[]>([]);
+  const [cashbackEvents, setCashbackEvents] = useState<CashbackEvent[]>([]);
+  const [withdrawals, setWithdrawals] = useState<WithdrawalRequest[]>([]);
 
-  // Mock wallet data
-  const walletBalance = 500;
-  const pendingCashback = 310;
-  const lifetimeEarnings = 2500;
+  useEffect(() => {
+    const fetchWalletData = async () => {
+      try {
+        setLoading(true);
+        const results = await Promise.allSettled([
+          apiClient.get('/wallet/'),
+          apiClient.get('/wallet/transactions?limit=50'),
+          apiClient.get('/wallet/withdrawals?limit=20'),
+        ]);
+
+        if (results[0].status === 'fulfilled') {
+          const wallet = results[0].value.data?.data || results[0].value.data || {};
+          setWalletData({
+            balance: wallet.balance || 0,
+            pending_cashback: wallet.pending_cashback || 0,
+            lifetime_earnings: wallet.lifetime_earnings || 0,
+            total_withdrawn: wallet.total_withdrawn || 0,
+          });
+        }
+
+        if (results[1].status === 'fulfilled') {
+          const txData = results[1].value.data?.data || results[1].value.data || {};
+          setTransactions(txData.transactions || []);
+        }
+
+        if (results[2].status === 'fulfilled') {
+          const wdData = results[2].value.data?.data || results[2].value.data || {};
+          setWithdrawals(wdData.withdrawals || []);
+        }
+      } catch (err) {
+        console.error("Failed to fetch wallet data:", err);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchWalletData();
+  }, []);
 
   const handleWithdraw = async (
     amount: number,
     method: string,
     details: Record<string, string>
   ) => {
-    // Mock API call
-    await new Promise((resolve) => setTimeout(resolve, 1500));
-    console.log("Withdrawal request:", { amount, method, details });
-    setIsWithdrawOpen(false);
+    try {
+      await apiClient.post('/wallet/withdraw', {
+        amount,
+        method,
+        account_details: details,
+      });
+      setIsWithdrawOpen(false);
+      const walletRes = await apiClient.get('/wallet/');
+      const wallet = walletRes.data?.data || walletRes.data || {};
+      setWalletData({
+        balance: wallet.balance || 0,
+        pending_cashback: wallet.pending_cashback || 0,
+        lifetime_earnings: wallet.lifetime_earnings || 0,
+        total_withdrawn: wallet.total_withdrawn || 0,
+      });
+    } catch (err) {
+      console.error("Withdrawal failed:", err);
+      throw err;
+    }
   };
+
+  if (loading) {
+    return (
+      <div className="container py-6">
+        <Breadcrumbs items={[{ label: "Wallet" }]} />
+        <div className="mb-6">
+          <Skeleton className="h-8 w-32 mb-2" />
+          <Skeleton className="h-4 w-64" />
+        </div>
+        <div className="grid gap-4 sm:grid-cols-3 mb-8">
+          <Skeleton className="h-32" />
+          <Skeleton className="h-32" />
+          <Skeleton className="h-32" />
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="container py-6">
@@ -155,9 +131,9 @@ export default function WalletPage() {
 
       {/* Wallet Balance Cards */}
       <WalletBalance
-        balance={walletBalance}
-        pendingCashback={pendingCashback}
-        lifetimeEarnings={lifetimeEarnings}
+        balance={walletData.balance}
+        pendingCashback={walletData.pending_cashback}
+        lifetimeEarnings={walletData.lifetime_earnings}
         onWithdraw={() => setIsWithdrawOpen(true)}
       />
 
@@ -171,7 +147,7 @@ export default function WalletPage() {
           </TabsList>
 
           <TabsContent value="balance">
-            <TransactionList transactions={mockTransactions} />
+            <TransactionList transactions={transactions} />
           </TabsContent>
 
           <TabsContent value="cashback">
@@ -188,17 +164,17 @@ export default function WalletPage() {
                 </div>
               </div>
             </div>
-            <CashbackTracker events={mockCashbackEvents} />
+            <CashbackTracker events={cashbackEvents} />
           </TabsContent>
 
           <TabsContent value="withdrawals">
-            {mockWithdrawals.length === 0 ? (
+            {withdrawals.length === 0 ? (
               <div className="py-12 text-center">
                 <p className="text-muted-foreground">No withdrawal history yet</p>
               </div>
             ) : (
               <div className="divide-y rounded-lg border">
-                {mockWithdrawals.map((withdrawal) => (
+                {withdrawals.map((withdrawal) => (
                   <div key={withdrawal.id} className="flex items-center justify-between p-4">
                     <div>
                       <p className="font-medium">
@@ -232,7 +208,7 @@ export default function WalletPage() {
       <WithdrawForm
         open={isWithdrawOpen}
         onClose={() => setIsWithdrawOpen(false)}
-        balance={walletBalance}
+        balance={walletData.balance}
         onSubmit={handleWithdraw}
       />
     </div>
