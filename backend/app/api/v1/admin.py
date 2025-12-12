@@ -50,15 +50,15 @@ class OfferPayload(BaseModel):
     is_exclusive: bool = False
 
 
-class GiftCardPayload(BaseModel):
-    name: str = Field(..., min_length=1)
-    brand: str | None = None
-    description: str | None = None
-    image_url: str | None = None
-    min_amount: float | None = None
-    max_amount: float | None = None
-    discount_percent: float | None = None
-    is_active: bool = True
+class GiftCardBulkCreatePayload(BaseModel):
+    count: int = Field(..., ge=1, le=1000)
+    value: float = Field(..., gt=0)
+    expires_in_days: int | None = None
+
+
+class GiftCardUpdatePayload(BaseModel):
+    is_active: bool | None = None
+    remaining_value: float | None = None
 
 
 class BannerPayload(BaseModel):
@@ -386,17 +386,23 @@ def list_admin_gift_cards(
     page: int = 1,
     limit: int = 20,
     search: str | None = None,
-    is_active: bool | None = None,
+    status: str | None = None,
     _: User = Depends(require_admin),
     db: Session = Depends(get_db)
 ):
-    """List all gift cards"""
+    """List all gift cards with code, value, status"""
     query = select(GiftCard)
 
     if search:
-        query = query.where(or_(GiftCard.name.ilike(f"%{search}%"), GiftCard.brand.ilike(f"%{search}%")))
-    if is_active is not None:
-        query = query.where(GiftCard.is_active == is_active)
+        query = query.where(GiftCard.code.ilike(f"%{search}%"))
+    
+    # Filter by status
+    if status == "active":
+        query = query.where(and_(GiftCard.is_active == True, GiftCard.remaining_value > 0))
+    elif status == "used":
+        query = query.where(GiftCard.remaining_value == 0)
+    elif status == "expired":
+        query = query.where(and_(GiftCard.expires_at != None, GiftCard.expires_at < datetime.utcnow()))
 
     count_query = select(func.count()).select_from(query.subquery())
     total_count = db.scalar(count_query) or 0
@@ -406,63 +412,123 @@ def list_admin_gift_cards(
 
     cards_data = [{
         "id": gc.id,
-        "name": gc.name,
-        "brand": gc.brand,
-        "image_url": gc.image_url,
-        "min_amount": str(gc.min_amount) if gc.min_amount else None,
-        "max_amount": str(gc.max_amount) if gc.max_amount else None,
-        "discount_percent": str(gc.discount_percent) if gc.discount_percent else None,
+        "code": gc.code,
+        "initial_value": float(gc.initial_value) if gc.initial_value else 0,
+        "remaining_value": float(gc.remaining_value) if gc.remaining_value else 0,
+        "user_id": gc.user_id,
         "is_active": gc.is_active,
+        "expires_at": gc.expires_at.isoformat() if gc.expires_at else None,
         "created_at": gc.created_at.isoformat() if gc.created_at else None,
     } for gc in gift_cards]
 
     return {
         "success": True,
-        "gift_cards": cards_data,
-        "pagination": {
-            "current_page": page,
-            "total_pages": ceil(total_count / limit) if total_count else 0,
-            "total_items": total_count,
-            "per_page": limit,
-        },
+        "data": {
+            "gift_cards": cards_data,
+            "pagination": {
+                "current_page": page,
+                "total_pages": ceil(total_count / limit) if total_count else 0,
+                "total_items": total_count,
+                "per_page": limit,
+            },
+        }
     }
 
 
-@router.post("/gift-cards", response_model=dict)
-def create_gift_card(payload: GiftCardPayload, _: User = Depends(require_admin), db: Session = Depends(get_db)):
-    """Create a new gift card"""
-    gift_card = GiftCard(
-        name=payload.name,
-        brand=payload.brand,
-        description=payload.description,
-        image_url=payload.image_url,
-        min_amount=Decimal(str(payload.min_amount)) if payload.min_amount else None,
-        max_amount=Decimal(str(payload.max_amount)) if payload.max_amount else None,
-        discount_percent=Decimal(str(payload.discount_percent)) if payload.discount_percent else None,
-        is_active=payload.is_active
-    )
-    db.add(gift_card)
+@router.get("/gift-cards/stats", response_model=dict)
+def get_gift_card_stats(_: User = Depends(require_admin), db: Session = Depends(get_db)):
+    """Get gift card statistics"""
+    total_cards = db.scalar(select(func.count()).select_from(GiftCard)) or 0
+    active_cards = db.scalar(
+        select(func.count()).select_from(GiftCard).where(
+            and_(GiftCard.is_active == True, GiftCard.remaining_value > 0)
+        )
+    ) or 0
+    assigned_cards = db.scalar(
+        select(func.count()).select_from(GiftCard).where(GiftCard.user_id != None)
+    ) or 0
+    total_value = db.scalar(select(func.sum(GiftCard.initial_value))) or 0
+    redeemed_value = db.scalar(
+        select(func.sum(GiftCard.initial_value - GiftCard.remaining_value))
+    ) or 0
+    available_value = db.scalar(select(func.sum(GiftCard.remaining_value))) or 0
+
+    return {
+        "total_cards": total_cards,
+        "active_cards": active_cards,
+        "assigned_cards": assigned_cards,
+        "total_value": float(total_value),
+        "redeemed_value": float(redeemed_value),
+        "available_value": float(available_value),
+    }
+
+
+@router.post("/gift-cards/bulk-create", response_model=dict)
+def bulk_create_gift_cards(
+    payload: GiftCardBulkCreatePayload,
+    _: User = Depends(require_admin),
+    db: Session = Depends(get_db)
+):
+    """Create multiple gift cards with auto-generated codes"""
+    import secrets
+    
+    expires_at = None
+    if payload.expires_in_days:
+        expires_at = datetime.utcnow() + timedelta(days=payload.expires_in_days)
+    
+    created_cards = []
+    for _ in range(payload.count):
+        # Generate unique code
+        for attempt in range(5):
+            code = secrets.token_hex(8).upper()
+            if not db.scalar(select(GiftCard).where(GiftCard.code == code)):
+                break
+        
+        gc = GiftCard(
+            code=code,
+            initial_value=payload.value,
+            remaining_value=payload.value,
+            expires_at=expires_at,
+            is_active=True
+        )
+        db.add(gc)
+        created_cards.append(gc)
+    
     db.commit()
-    db.refresh(gift_card)
+    
+    cards_data = [{
+        "id": gc.id,
+        "code": gc.code,
+        "initial_value": float(gc.initial_value),
+        "remaining_value": float(gc.remaining_value),
+        "is_active": gc.is_active,
+        "expires_at": gc.expires_at.isoformat() if gc.expires_at else None,
+        "created_at": gc.created_at.isoformat() if gc.created_at else None,
+    } for gc in created_cards]
 
-    return {"success": True, "message": "Gift card created", "data": {"id": gift_card.id}}
+    return {
+        "success": True,
+        "created_count": len(created_cards),
+        "gift_cards": cards_data
+    }
 
 
-@router.put("/gift-cards/{id}", response_model=dict)
-def update_gift_card(id: int, payload: GiftCardPayload, _: User = Depends(require_admin), db: Session = Depends(get_db)):
+@router.patch("/gift-cards/{id}", response_model=dict)
+def update_gift_card(
+    id: int,
+    payload: GiftCardUpdatePayload,
+    _: User = Depends(require_admin),
+    db: Session = Depends(get_db)
+):
     """Update a gift card"""
     gift_card = db.scalar(select(GiftCard).where(GiftCard.id == id))
     if not gift_card:
         raise HTTPException(status_code=404, detail="Gift card not found")
 
-    gift_card.name = payload.name
-    gift_card.brand = payload.brand
-    gift_card.description = payload.description
-    gift_card.image_url = payload.image_url
-    gift_card.min_amount = Decimal(str(payload.min_amount)) if payload.min_amount else None
-    gift_card.max_amount = Decimal(str(payload.max_amount)) if payload.max_amount else None
-    gift_card.discount_percent = Decimal(str(payload.discount_percent)) if payload.discount_percent else None
-    gift_card.is_active = payload.is_active
+    if payload.is_active is not None:
+        gift_card.is_active = payload.is_active
+    if payload.remaining_value is not None:
+        gift_card.remaining_value = payload.remaining_value
 
     db.commit()
     return {"success": True, "message": "Gift card updated"}
