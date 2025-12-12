@@ -164,8 +164,6 @@ def seed_database():
         print(f"   - {len(categories)} categories")
         print(f"   - {len(merchants)} merchants")
         print(f"   - {len(offers)} offers")
-        print(f"   - {len(products)} products")
-        print(f"   - {len(variants)} product variants")
         print(f"   - {len(hero_banners) + len(promo_banners)} banners")
         print("\n🎉 Your homepage should now be populated with data!")
 

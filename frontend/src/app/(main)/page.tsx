@@ -228,9 +228,9 @@ export default function HomePage() {
     queryKey: ["homepage"],
     queryFn: async () => {
       try {
-        // Call backend directly - homepage is public data
-        const backendUrl = process.env.NEXT_PUBLIC_API_URL || 'http://0.0.0.0:8000';
-        const response = await fetch(`${backendUrl}/api/v1/homepage/?limit_merchants=12&limit_featured_offers=8&limit_exclusive_offers=6&limit_products=12&limit_banners=5`, {
+        // Use proxy path for client-side requests
+        const apiUrl = '/backend-api/api/v1/homepage/?limit_merchants=12&limit_featured_offers=8&limit_exclusive_offers=6&limit_gift_cards=12&limit_banners=5';
+        const response = await fetch(apiUrl, {
           method: 'GET',
           headers: {
             'Content-Type': 'application/json',

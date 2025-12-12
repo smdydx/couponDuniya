@@ -130,45 +130,39 @@ def get_homepage_data(
                     "name": m.name,
                     "slug": m.slug,
                     "logo_url": m.logo_url,
-                    "cashback_rate": str(m.cashback_rate) if m.cashback_rate else "0",
-                    "offer_count": m.offer_count or 0
+                    "cashback_rate": str(m.commission_rate) if m.commission_rate else "0",
+                    "offer_count": 0
                 } for m in featured_merchants
             ],
             "featured_offers": [
                 {
                     "id": o.id,
                     "title": o.title,
-                    "description": o.description,
                     "code": o.code,
-                    "discount_value": str(o.discount_value) if o.discount_value else None,
-                    "discount_type": o.discount_type,
+                    "image_url": o.image_url,
                     "merchant_name": o.merchant.name if o.merchant else None,
                     "merchant_logo": o.merchant.logo_url if o.merchant else None,
-                    "expires_at": o.expires_at.isoformat() if o.expires_at else None
+                    "end_date": o.end_date.isoformat() if o.end_date else None
                 } for o in featured_offers
             ],
             "exclusive_offers": [
                 {
                     "id": o.id,
                     "title": o.title,
-                    "description": o.description,
                     "code": o.code,
-                    "discount_value": str(o.discount_value) if o.discount_value else None,
-                    "discount_type": o.discount_type,
+                    "image_url": o.image_url,
                     "merchant_name": o.merchant.name if o.merchant else None,
                     "merchant_logo": o.merchant.logo_url if o.merchant else None,
-                    "expires_at": o.expires_at.isoformat() if o.expires_at else None
+                    "end_date": o.end_date.isoformat() if o.end_date else None
                 } for o in exclusive_offers
             ],
             "featured_gift_cards": [
                 {
                     "id": gc.id,
-                    "name": gc.name,
-                    "brand": gc.brand,
-                    "image_url": gc.image_url,
-                    "min_amount": str(gc.min_amount) if gc.min_amount else None,
-                    "max_amount": str(gc.max_amount) if gc.max_amount else None,
-                    "discount_percent": str(gc.discount_percent) if gc.discount_percent else None
+                    "code": gc.code,
+                    "initial_value": str(gc.initial_value) if gc.initial_value else None,
+                    "remaining_value": str(gc.remaining_value) if gc.remaining_value else None,
+                    "expires_at": gc.expires_at.isoformat() if gc.expires_at else None
                 } for gc in featured_gift_cards
             ],
             "stats": {

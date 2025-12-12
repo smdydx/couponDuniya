@@ -20,7 +20,7 @@ SMS_ENABLED = "False"
 EMAIL_ENABLED = "False"
 DEBUG = "True"
 APP_NAME = "CouponAli API"
-NEXT_PUBLIC_API_URL = "/backend-api"
+NEXT_PUBLIC_API_URL = "http://127.0.0.1:8000"
 GOOGLE_REDIRECT_URI = "https://b9783ea6-b2c7-4447-9b9b-72c7de8af1ea-00-2kvvw7zoy5j1u.riker.replit.dev/backend-api/social/google/callback"
 FRONTEND_URL = "https://b9783ea6-b2c7-4447-9b9b-72c7de8af1ea-00-2kvvw7zoy5j1u.riker.replit.dev"
 
