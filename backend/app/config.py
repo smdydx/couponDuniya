@@ -1,12 +1,14 @@
 from pydantic_settings import BaseSettings
 from functools import lru_cache
 
+import os
+
 class Settings(BaseSettings):
     # Application
     APP_NAME: str = "CouponAli API"
     DEBUG: bool = True
-    # PostgreSQL database connection
-    DATABASE_URL: str = "postgresql+psycopg://coupon:hardik123@127.0.0.1:5432/couponali"
+    # PostgreSQL database connection - uses environment variable
+    DATABASE_URL: str = os.getenv("DATABASE_URL", "postgresql+psycopg://coupon:hardik123@127.0.0.1:5432/couponali")
     REDIS_URL: str = "redis://localhost:6379"
     SECRET_KEY: str = "dev-secret"
     JWT_ALGORITHM: str = "HS256"

@@ -36,12 +36,17 @@ def seed_data():
                 )
                 db.add(user)
                 
-                # Add wallet balance
-                wallet = WalletBalance(user=user, balance=100.0, pending_cashback=50.0)
-                db.add(wallet)
+            db.commit()
+            
+            # Add wallet balances after users are committed to get their IDs
+            for user in db.query(User).filter(User.role == "user").all():
+                existing_wallet = db.query(WalletBalance).filter(WalletBalance.user_id == user.id).first()
+                if not existing_wallet:
+                    wallet = WalletBalance(user_id=user.id, balance=100.0)
+                    db.add(wallet)
             
             db.commit()
-            print("✅ Created 5 test users")
+            print("✅ Created 5 test users with wallets")
         
         # Create test merchants
         if db.query(Merchant).count() < 3:
@@ -74,23 +79,38 @@ def seed_data():
             db.commit()
             print("✅ Created test offers")
         
-        # Create test products
+        # Create test products with variants
         if merchants and db.query(Product).count() < 3:
             print("Creating test products...")
-            for merchant in merchants[:2]:
+            from app.models import ProductVariant
+            import uuid
+            for i, merchant in enumerate(merchants[:2]):
                 product = Product(
                     merchant_id=merchant.id,
                     name=f"{merchant.name} Gift Card",
                     slug=f"{merchant.slug}-gift-card",
-                    price=500.0,
-                    stock=100,
+                    sku=f"GC-{merchant.slug.upper()}-{uuid.uuid4().hex[:6]}",
                     is_active=True,
                     is_featured=True,
                     is_bestseller=True
                 )
                 db.add(product)
+                db.flush()  # Get product ID
+                
+                # Add variants
+                for denom in [100, 250, 500, 1000]:
+                    variant = ProductVariant(
+                        product_id=product.id,
+                        denomination=denom,
+                        selling_price=denom * 0.95,  # 5% discount
+                        cost_price=denom * 0.85,
+                        discount_percentage=5.0,
+                        is_available=True,
+                        stock_quantity=50
+                    )
+                    db.add(variant)
             db.commit()
-            print("✅ Created test products")
+            print("✅ Created test products with variants")
         
         # Create test orders
         users = db.query(User).filter(User.role == "user").all()
