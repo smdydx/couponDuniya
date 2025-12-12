@@ -40,6 +40,7 @@ from .api.v1 import (
     offers,
     categories,
     gift_cards,
+    products,
     
     # Wallet & Cashback
     wallet,
@@ -160,6 +161,7 @@ app.include_router(merchants.router, prefix="/api/v1")
 app.include_router(offers.router, prefix="/api/v1")
 app.include_router(categories.router, prefix="/api/v1")
 app.include_router(gift_cards.router, prefix="/api/v1")
+app.include_router(products.router, prefix="/api/v1")
 app.include_router(wallet.router, prefix="/api/v1")
 app.include_router(cashback.router, prefix="/api/v1")
 app.include_router(withdrawals.router, prefix="/api/v1")

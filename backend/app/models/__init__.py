@@ -39,6 +39,9 @@ from .banner import Banner
 # Gift Cards
 from .gift_card import GiftCard
 
+# Products (Purchasable Gift Cards)
+from .product import Product, ProductVariant
+
 # Orders
 from .order import Order
 
@@ -96,6 +99,10 @@ __all__ = [
     
     # Gift Cards
     "GiftCard",
+    
+    # Products
+    "Product",
+    "ProductVariant",
     
     # Orders
     "Order",

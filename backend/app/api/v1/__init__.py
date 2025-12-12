@@ -25,6 +25,7 @@ from . import (
     offers,
     categories,
     gift_cards,
+    products,
     
     # Wallet & Cashback
     wallet,
