@@ -5,7 +5,7 @@ integrations = ["twilio:1.0.0"]
 
 [nix]
 channel = "stable-25_05"
-packages = ["cargo", "freetype", "gcc", "glibc", "lcms2", "libiconv", "libimagequant", "libjpeg", "libtiff", "libwebp", "libxcrypt", "openjpeg", "postgresql", "rustc", "tcl", "tk", "zlib", "libpq"]
+packages = ["cargo", "freetype", "gcc", "glibc", "lcms2", "libiconv", "libimagequant", "libjpeg", "libpq", "libtiff", "libwebp", "libxcrypt", "openjpeg", "postgresql", "rustc", "tcl", "tk", "zlib"]
 
 [userenv]
 
@@ -49,7 +49,7 @@ outputType = "webview"
 
 [[workflows.workflow.tasks]]
 task = "shell.exec"
-args = "cd frontend && npm run dev"
+args = "cd frontend && pnpm run dev"
 waitForPort = 5000
 
 [[workflows.workflow]]
