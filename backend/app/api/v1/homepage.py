@@ -1,12 +1,16 @@
+"""
+Homepage API - Coupon & Cashback Platform
+==========================================
+Returns homepage data: banners, merchants, offers, gift cards.
+"""
+
 from fastapi import APIRouter, Depends, HTTPException, Query
 from sqlalchemy.orm import Session, joinedload
 from sqlalchemy import select, and_, func, or_
 from ...database import get_db
-from ...models import Merchant, Offer, Product, User
+from ...models import Merchant, Offer, GiftCard
 from ...models.banner import Banner
-from ...schemas import MerchantRead, OfferRead, ProductRead
 from ...redis_client import cache_get, cache_set, rk
-from ...dependencies import get_current_user
 import logging
 
 router = APIRouter(tags=["Homepage"])
@@ -17,24 +21,23 @@ def get_homepage_data(
     limit_merchants: int = Query(12, ge=1, le=50),
     limit_featured_offers: int = Query(8, ge=1, le=50),
     limit_exclusive_offers: int = Query(6, ge=1, le=50),
-    limit_products: int = Query(12, ge=1, le=50),
+    limit_gift_cards: int = Query(12, ge=1, le=50),
     limit_banners: int = Query(5, ge=1, le=20),
     limit_promo_banners: int = Query(10, ge=1, le=20),
     db: Session = Depends(get_db)
 ):
     """
-    Get data for the homepage with graceful empty state handling:
+    Get homepage data:
     - Hero banners/slider
-    - Promo banners (promotional offers slider)
+    - Promo banners
     - Featured merchants
     - Featured offers
     - Exclusive offers
-    - Featured products (gift cards)
+    - Featured gift cards
     """
 
     try:
-        # Try cache first (shorter TTL for dynamic content)
-        cache_key = rk("cache", "homepage", f"b{limit_banners}_m{limit_merchants}_fo{limit_featured_offers}_eo{limit_exclusive_offers}_p{limit_products}_pb{limit_promo_banners}")
+        cache_key = rk("cache", "homepage", f"b{limit_banners}_m{limit_merchants}_fo{limit_featured_offers}_eo{limit_exclusive_offers}_gc{limit_gift_cards}_pb{limit_promo_banners}")
         cached = cache_get(cache_key)
         if cached:
             return {"success": True, "data": cached, "cached": True, "empty": False}
@@ -48,7 +51,7 @@ def get_homepage_data(
         )
         banners = db.scalars(banners_stmt).all()
 
-        # Fetch promotional banners (promo slider)
+        # Fetch promotional banners
         promo_banners_stmt = (
             select(Banner)
             .where(and_(Banner.is_active == True, Banner.banner_type == "promo"))
@@ -85,31 +88,16 @@ def get_homepage_data(
         )
         exclusive_offers = db.scalars(exclusive_offers_stmt).all()
 
-        # Fetch featured products (gift cards) - Get products with at least one available variant AND stock > 0
-        from ...models import ProductVariant
-
-        products_stmt = (
-            select(Product)
-            .options(joinedload(Product.merchant), joinedload(Product.variants))
-            .join(ProductVariant, Product.id == ProductVariant.product_id)
-            .where(
-                and_(
-                    Product.is_active == True,
-                    ProductVariant.is_available == True,
-                    ProductVariant.stock > 0,  # Filter out of stock products
-                    or_(
-                        Product.is_bestseller == True,
-                        Product.is_featured == True
-                    )
-                )
-            )
-            .group_by(Product.id)
-            .order_by(Product.is_bestseller.desc(), Product.created_at.desc())
-            .limit(limit_products)
+        # Fetch featured gift cards
+        gift_cards_stmt = (
+            select(GiftCard)
+            .where(GiftCard.is_active == True)
+            .order_by(GiftCard.created_at.desc())
+            .limit(limit_gift_cards)
         )
-        featured_products = db.scalars(products_stmt).unique().all()
+        featured_gift_cards = db.scalars(gift_cards_stmt).all()
 
-        # Build response with proper validation
+        # Build response
         result = {
             "banners": [
                 {
@@ -136,29 +124,70 @@ def get_homepage_data(
                 }
                 for b in promo_banners
             ],
-            "featured_merchants": [MerchantRead.model_validate(m).model_dump() for m in featured_merchants],
-            "featured_offers": [OfferRead.model_validate(o).model_dump() for o in featured_offers],
-            "exclusive_offers": [OfferRead.model_validate(o).model_dump() for o in exclusive_offers],
-            "featured_products": [ProductRead.model_validate(p).model_dump() for p in featured_products],
+            "featured_merchants": [
+                {
+                    "id": m.id,
+                    "name": m.name,
+                    "slug": m.slug,
+                    "logo_url": m.logo_url,
+                    "cashback_rate": str(m.cashback_rate) if m.cashback_rate else "0",
+                    "offer_count": m.offer_count or 0
+                } for m in featured_merchants
+            ],
+            "featured_offers": [
+                {
+                    "id": o.id,
+                    "title": o.title,
+                    "description": o.description,
+                    "code": o.code,
+                    "discount_value": str(o.discount_value) if o.discount_value else None,
+                    "discount_type": o.discount_type,
+                    "merchant_name": o.merchant.name if o.merchant else None,
+                    "merchant_logo": o.merchant.logo_url if o.merchant else None,
+                    "expires_at": o.expires_at.isoformat() if o.expires_at else None
+                } for o in featured_offers
+            ],
+            "exclusive_offers": [
+                {
+                    "id": o.id,
+                    "title": o.title,
+                    "description": o.description,
+                    "code": o.code,
+                    "discount_value": str(o.discount_value) if o.discount_value else None,
+                    "discount_type": o.discount_type,
+                    "merchant_name": o.merchant.name if o.merchant else None,
+                    "merchant_logo": o.merchant.logo_url if o.merchant else None,
+                    "expires_at": o.expires_at.isoformat() if o.expires_at else None
+                } for o in exclusive_offers
+            ],
+            "featured_gift_cards": [
+                {
+                    "id": gc.id,
+                    "name": gc.name,
+                    "brand": gc.brand,
+                    "image_url": gc.image_url,
+                    "min_amount": str(gc.min_amount) if gc.min_amount else None,
+                    "max_amount": str(gc.max_amount) if gc.max_amount else None,
+                    "discount_percent": str(gc.discount_percent) if gc.discount_percent else None
+                } for gc in featured_gift_cards
+            ],
             "stats": {
                 "total_merchants": len(featured_merchants),
                 "total_offers": len(featured_offers) + len(exclusive_offers),
-                "total_products": len(featured_products),
+                "total_gift_cards": len(featured_gift_cards),
                 "total_banners": len(banners) + len(promo_banners)
             }
         }
 
-        # Detect if homepage is empty
         is_empty = all([
             len(result["banners"]) == 0,
             len(result["promo_banners"]) == 0,
             len(result["featured_merchants"]) == 0,
             len(result["featured_offers"]) == 0,
             len(result["exclusive_offers"]) == 0,
-            len(result["featured_products"]) == 0
+            len(result["featured_gift_cards"]) == 0
         ])
 
-        # Cache for 2 minutes (shorter for fresh content)
         cache_set(cache_key, result, ttl=120)
 
         return {
@@ -171,8 +200,7 @@ def get_homepage_data(
 
     except HTTPException as e:
         log.error(f"Homepage API HTTP error: {e.detail}")
-        raise e # Re-raise HTTPException to be handled by FastAPI
+        raise e
     except Exception as e:
         log.error(f"Homepage API error: {e}")
-        # Return empty data with success: False on error
         return {"success": False, "data": {}, "cached": False}

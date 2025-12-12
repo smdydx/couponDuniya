@@ -9,7 +9,7 @@ import uuid
 from ...database import get_db
 from ...models import User
 from ...models.newsletter import NewsletterSubscriber, NewsletterCampaign, NewsletterDelivery
-from ...security import get_current_user
+from ...dependencies import get_current_user
 from ...queue import push_email_job
 
 router = APIRouter(prefix="/newsletter", tags=["Newsletter"])

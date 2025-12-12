@@ -63,14 +63,14 @@ def list_categories(
 
     categories = db.scalars(query).all()
 
-    # Count products for each category
-    from ...models import Product
+    # Count offers for each category
+    from ...models import Offer
     category_data = []
     for c in categories:
-        product_count = db.scalar(
-            select(func.count()).select_from(Product).where(
-                Product.category_id == c.id,
-                Product.is_active == True
+        offer_count = db.scalar(
+            select(func.count()).select_from(Offer).where(
+                Offer.category_id == c.id,
+                Offer.is_active == True
             )
         )
         category_data.append({
@@ -80,7 +80,7 @@ def list_categories(
             "description": c.description,
             "icon_url": c.icon_url,
             "is_active": c.is_active,
-            "products_count": product_count or 0,
+            "offers_count": offer_count or 0,
             "created_at": c.created_at.isoformat() if c.created_at else None
         })
 

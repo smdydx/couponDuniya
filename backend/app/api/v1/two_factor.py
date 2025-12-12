@@ -7,7 +7,7 @@ from datetime import datetime
 from ...database import get_db
 from ...models import User
 from ...models.user_2fa import User2FA, User2FALog
-from ...security import get_current_user
+from ...dependencies import get_current_user
 from ...two_factor import (
     generate_totp_secret,
     generate_totp_uri,

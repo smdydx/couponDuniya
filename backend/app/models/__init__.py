@@ -1,113 +1,127 @@
+"""
+CouponAli Backend - Database Models
+====================================
+Domain-driven model organization for a professional coupon & cashback platform.
+
+Core Domains:
+- Users & Authentication
+- Merchants & Affiliates  
+- Offers & Coupons
+- Gift Cards
+- Wallet & Cashback
+- Referrals
+- Admin & Support
+"""
+
+# User & Authentication
 from .user import User, UserStatus, AuthProvider, UserRole
 from .social_account import SocialAccount
 from .refresh_token import RefreshToken, OTPAttempt, PasswordResetToken
-from .merchant import Merchant, MerchantDocument
-from .offer import Offer
-from .product import Product, ProductImage, ProductSpecification
-from .order import Order, OrderStatusHistory, OrderShipment
-from .wallet import WalletTransaction
-from .offer_click import OfferClick
-from .product_variant import ProductVariant
-from .order_item import OrderItem
-from .wallet_balance import WalletBalance
-from .category import Category
-from .access_control import Role, Permission, RolePermission, Department, UserRole, UserDepartment
-from .gift_card import GiftCard
-from .referral import Referral
-from .cashback_event import CashbackEvent
-from .withdrawal_request import WithdrawalRequest
-from .payout import Payout
-from .support_ticket import SupportTicket
-from .notification import Notification
-from .audit_log import AuditLog
 from .user_session import UserSession
 from .user_kyc import UserKYC
+from .user_2fa import User2FA
+
+# Merchants & Affiliates
+from .merchant import Merchant, MerchantDocument
 from .merchant_commission import MerchantCommission
-from .offer_view import OfferView
-from .inventory import Inventory
-from .payment import Payment
-from .payment_response import PaymentResponse
-from .withdrawal import Withdrawal
-from .seo_redirect import SEORedirect
-from .cms_page import CMSPage
-from .promo_code import PromoCode
 from .affiliate_click import AffiliateClick
 from .affiliate_transaction import AffiliateTransaction
 from .affiliate_merchant_map import AffiliateMerchantMap
-from .cashback_rule import CashbackRule
-from .blog_post import BlogPost
+
+# Offers & Coupons
+from .offer import Offer
+from .offer_click import OfferClick
+from .offer_view import OfferView
+from .category import Category
+from .promo_code import PromoCode
 from .banner import Banner
-from .brand import Brand
-from .address import Address, Pincode
-from .returns import ReturnRequest, Refund
-from .review import ProductReview, ReviewHelpful, MerchantReview
-from .shipping import ShippingZone, ShippingRate, CourierPartner, ShipmentTracking, FreeShippingRule
+
+# Gift Cards
+from .gift_card import GiftCard
+
+# Wallet & Cashback
+from .wallet import WalletTransaction
+from .wallet_balance import WalletBalance
+from .cashback_event import CashbackEvent
+from .cashback_rule import CashbackRule
+from .payout import Payout
+from .withdrawal import Withdrawal
+from .withdrawal_request import WithdrawalRequest
+
+# Referrals
+from .referral import Referral
+
+# Admin & Support
+from .access_control import Role, Permission, RolePermission, Department, UserRole as AdminUserRole, UserDepartment
+from .support_ticket import SupportTicket
+from .notification import Notification
+from .audit_log import AuditLog
+from .newsletter import NewsletterSubscriber, NewsletterCampaign
+from .push_subscription import PushSubscription, PushNotification
+from .analytics import AnalyticsEvent, UserMetric
+from .ab_test import ABTestExperiment, ABTestVariant
 
 __all__ = [
+    # User & Auth
     "User",
-    "UserStatus",
+    "UserStatus", 
     "AuthProvider",
     "UserRole",
     "SocialAccount",
     "RefreshToken",
     "OTPAttempt",
     "PasswordResetToken",
+    "UserSession",
+    "UserKYC",
+    "User2FA",
+    
+    # Merchants & Affiliates
     "Merchant",
     "MerchantDocument",
+    "MerchantCommission",
+    "AffiliateClick",
+    "AffiliateTransaction",
+    "AffiliateMerchantMap",
+    
+    # Offers & Coupons
     "Offer",
-    "Product",
-    "ProductImage",
-    "ProductSpecification",
-    "Order",
-    "OrderStatusHistory",
-    "OrderShipment",
-    "WalletTransaction",
     "OfferClick",
-    "ProductVariant",
-    "OrderItem",
-    "WalletBalance",
+    "OfferView",
     "Category",
+    "PromoCode",
+    "Banner",
+    
+    # Gift Cards
+    "GiftCard",
+    
+    # Wallet & Cashback
+    "WalletTransaction",
+    "WalletBalance",
+    "CashbackEvent",
+    "CashbackRule",
+    "Payout",
+    "Withdrawal",
+    "WithdrawalRequest",
+    
+    # Referrals
+    "Referral",
+    
+    # Admin & Support
     "Role",
     "Permission",
     "RolePermission",
     "Department",
-    "UserRole",
+    "AdminUserRole",
     "UserDepartment",
-    "GiftCard",
-    "Referral",
-    "CashbackEvent",
-    "WithdrawalRequest",
-    "Payout",
     "SupportTicket",
     "Notification",
     "AuditLog",
-    "UserSession",
-    "UserKYC",
-    "MerchantCommission",
-    "OfferView",
-    "Inventory",
-    "Payment",
-    "Withdrawal",
-    "SEORedirect",
-    "CMSPage",
-    "PromoCode",
-    "AffiliateClick",
-    "AffiliateTransaction",
-    "AffiliateMerchantMap",
-    "CashbackRule",
-    "BlogPost",
-    "Banner",
-    "Brand",
-    "Address",
-    "Pincode",
-    "ReturnRequest",
-    "Refund",
-    "ProductReview",
-    "ReviewHelpful",
-    "MerchantReview",
-    "ShippingZone",
-    "ShippingRate",
-    "CourierPartner",
-    "ShipmentTracking",
-    "FreeShippingRule",
+    "NewsletterSubscriber",
+    "NewsletterCampaign",
+    "PushSubscription",
+    "PushNotification",
+    "AnalyticsEvent",
+    "UserMetric",
+    "ABTestExperiment",
+    "ABTestVariant",
 ]

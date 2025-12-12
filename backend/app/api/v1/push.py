@@ -8,7 +8,7 @@ from typing import Dict, Optional
 from ...database import get_db
 from ...models import User
 from ...models.push_subscription import PushSubscription, PushNotification
-from ...security import get_current_user
+from ...dependencies import get_current_user
 from ...push_notifications import send_web_push, create_notification_payload
 
 router = APIRouter(prefix="/push", tags=["Push Notifications"])
