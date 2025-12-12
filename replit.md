@@ -1,145 +1,111 @@
-# CouponAli - Coupon & Cashback Platform
+# CouponDunia - Coupon & Cashback Platform
 
 ## Overview
-
-CouponAli is a production-grade coupon and cashback platform for merchants, offers, gift cards, wallet management, and referral systems. Built with enterprise-level architecture featuring Next.js frontend and FastAPI backend.
-
-**Note:** This platform focuses exclusively on coupon-based commerce (not traditional e-commerce/dropshipping).
+CouponDunia is a full-stack coupon/cashback platform with a FastAPI backend and Next.js frontend. The platform allows:
+- **Users**: Register, login, browse coupons/gift cards, and earn cashback
+- **Merchants**: Apply for verification, get approved, and list their coupons/deals
+- **Admin**: Manage merchants, coupons, gift cards, users, and commission distribution
 
 ## Project Structure
 
 ```
-couponali/
-├── backend/                    # Python FastAPI Backend
-│   ├── alembic/               # Database migrations
-│   ├── app/                   # Main application
-│   │   ├── api/v1/           # API route handlers
-│   │   ├── models/           # SQLAlchemy database models
-│   │   ├── schemas/          # Pydantic request/response schemas
-│   │   ├── services/         # Business logic services
-│   │   ├── config.py         # Configuration settings
-│   │   ├── database.py       # Database connection
-│   │   ├── main.py           # FastAPI app entry point
-│   │   └── security.py       # Auth & JWT handling
-│   ├── scripts/              # Utility & seed scripts
-│   └── requirements.txt      # Python dependencies
-│
-├── frontend/                   # Next.js 16 Frontend
-│   ├── public/               # Static assets
-│   │   └── images/          # Images (merchants, coupons, gift-cards)
+├── backend/                 # FastAPI backend
+│   ├── app/
+│   │   ├── api/v1/         # API endpoints
+│   │   ├── models/         # SQLAlchemy models
+│   │   ├── schemas/        # Pydantic schemas
+│   │   ├── services/       # Business logic
+│   │   ├── config.py       # Configuration
+│   │   ├── database.py     # Database connection
+│   │   └── main.py         # FastAPI application
+│   ├── alembic/            # Database migrations
+│   ├── scripts/            # Utility scripts
+│   └── requirements.txt
+├── frontend/               # Next.js frontend
 │   ├── src/
-│   │   ├── app/             # Next.js App Router pages
-│   │   ├── components/      # React components
-│   │   ├── hooks/           # Custom React hooks
-│   │   ├── lib/             # Utilities & API clients
-│   │   ├── store/           # Zustand state stores
-│   │   └── types/           # TypeScript types
-│   └── package.json         # Node.js dependencies
-│
-├── docs/                       # Documentation
-└── replit.md                   # This file
+│   │   ├── app/           # Next.js pages
+│   │   ├── components/    # React components
+│   │   ├── lib/           # API client and utilities
+│   │   └── store/         # Zustand state stores
+│   └── package.json
+└── docs/                   # Documentation
 ```
 
-## Tech Stack
+## Technology Stack
 
-| Layer | Technology |
-|-------|-----------|
-| Frontend | Next.js 16, React 19, TypeScript, Tailwind CSS |
-| Backend | FastAPI, Python 3.11, SQLAlchemy ORM |
-| Database | PostgreSQL (Neon) |
-| State | Zustand (frontend), Redis (backend cache) |
-| Auth | JWT tokens, bcrypt password hashing |
+### Backend
+- **Framework**: FastAPI
+- **Database**: PostgreSQL with SQLAlchemy ORM
+- **Migrations**: Alembic
+- **Authentication**: JWT with password hashing
+- **Cache**: Redis (optional)
 
-## Running the Project
-
-**Backend (Port 8000):**
-```bash
-cd backend && uvicorn app.main:app --host 0.0.0.0 --port 8000 --reload
-```
-
-**Frontend (Port 5000):**
-```bash
-cd frontend && npm run dev
-```
-
-## Core Domains
-
-### Backend API Modules
-- **Auth & Users**: auth, users, sessions, social_auth, two_factor, kyc
-- **Merchants & Offers**: merchants, offers, categories, gift_cards
-- **Wallet & Cashback**: wallet, cashback, withdrawals, payouts
-- **Referrals & Affiliates**: referrals, affiliate, commissions
-- **Homepage & Content**: homepage, newsletter
-- **Admin**: admin, admin_referrals, admin_support, access, audit_logs
-- **Notifications**: notifications, push, support_tickets
-- **System**: health, uploads, queue, realtime, flags, offer_views
-
-### Database Models
-- Users & Authentication (User, UserSession, User2FA, UserKYC)
-- Merchants & Affiliates (Merchant, AffiliateClick, AffiliateTransaction)
-- Offers & Coupons (Offer, Category, Banner, PromoCode)
-- Gift Cards (GiftCard)
-- Wallet & Cashback (WalletTransaction, WalletBalance, Withdrawal)
-- Referrals (Referral)
-- Admin & Support (Role, Permission, AuditLog, SupportTicket)
+### Frontend
+- **Framework**: Next.js 16 with React 19
+- **Styling**: Tailwind CSS 4
+- **State Management**: Zustand
+- **API Client**: Axios with React Query
 
 ## Key Features
 
-- User authentication (email/phone OTP, social login)
-- Merchant & offer management
-- Gift card system with email delivery
-- Multi-level referral program (50 levels)
-- Wallet with cashback tracking
-- Admin dashboard with analytics
-- Newsletter & push notifications
+### User System
+- Email/mobile registration and login
+- Profile management with optional KYC verification
+- Wallet system for cashback
+- Referral system
+
+### Merchant System
+- Merchant registration with business details
+- KYC verification workflow (pending -> under_review -> approved/rejected)
+- Commission rate management
+- Product/offer management
+
+### Admin Dashboard
+- Comprehensive dashboard with stats
+- Merchant approval workflow
+- Coupon and offer management
+- Gift card management
+- User management
+- Withdrawal processing
+- Analytics
+
+### Commission System
+- Platform commission rate per merchant
+- TCS/TDS calculation support
+- Automatic commission distribution
+- Payout management
 
 ## Environment Variables
 
-Required secrets (set in Replit Secrets):
-- `DATABASE_URL` - PostgreSQL connection string
-- `JWT_SECRET_KEY` - JWT signing key
-- `RAZORPAY_KEY_ID` / `RAZORPAY_KEY_SECRET` - Payment gateway
-- `TWILIO_ACCOUNT_SID` / `TWILIO_AUTH_TOKEN` - SMS service
-- `SENDGRID_API_KEY` - Email service
+Key environment variables (stored as secrets):
+- `DATABASE_URL`: PostgreSQL connection string
+- `SECRET_KEY`: JWT signing key
+- `CORS_ORIGINS`: Allowed frontend origins
 
-## Recent Changes (December 12, 2025)
+## Running the Project
 
-### Project Import Complete
-- Python 3.11 and Node.js 20 installed
-- All backend packages installed from requirements.txt
-- All frontend packages installed via npm
-- PostgreSQL database created and connected
-- Alembic migration generated and executed (initial_schema)
-- Fixed postgresql dialect import in migration file
-- Homepage data seeded successfully
-- Both Backend (port 8000) and Frontend (port 5000) running
+### Development
+- Backend: `cd backend && uvicorn app.main:app --host 0.0.0.0 --port 8000 --reload`
+- Frontend: `cd frontend && npm run dev`
 
-### Backend Cleanup (Coupon-Focused)
-- Removed all dropshipping-related models: Product, ProductVariant, Order, OrderItem, Inventory, Shipping, Returns, Reviews
-- Removed unused API endpoints: products, cart, checkout, orders, inventory, blog, cms, search, redirects
-- Updated admin.py to remove Product/Order CRUD (now focuses on Merchants, Offers, Gift Cards, Users, Banners, Withdrawals)
-- Updated homepage.py to use GiftCard instead of Product
-- Updated categories.py to count Offers instead of Products
-- Fixed import issues in newsletter.py and push.py (get_current_user from dependencies)
-- Installed pywebpush for push notification support
-- Backend now starts successfully on port 8000
+### Credentials
+- Admin: admin@couponali.com / admin123
 
-## Pending Work for Next Session
+## API Documentation
+- Swagger UI: http://localhost:8000/docs
+- ReDoc: http://localhost:8000/redoc
 
-### User Flow
-1. User registration/login - partially implemented
-2. User profile with optional verification for merchants
-3. Coupon browsing and purchase flow
-4. Merchant deal integration with commission tracking
+## Recent Changes
+- December 12, 2025: Project import and setup completed
+  - Database migrations applied
+  - Admin user created
+  - Test merchants and offers seeded
+  - Backend and frontend workflows configured
 
-### Merchant Flow
-1. Merchant registration with full verification
-2. Admin approval workflow for merchant requests
-3. Merchant dashboard for adding coupons/offers
-4. Commission management for merchants
-
-### Admin Dashboard
-1. Complete merchant approval UI
-2. Coupon/offer management
-3. User management with KYC verification
-4. Commission distribution tracking
+## Next Steps / TODO
+1. Complete merchant verification workflow UI
+2. Implement coupon purchase flow
+3. Add commission tracking dashboard
+4. Integrate payment gateway for purchases
+5. Add merchant self-service portal
+6. Implement notification system
