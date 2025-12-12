@@ -31,7 +31,9 @@ class MerchantPayload(BaseModel):
     description: str | None = None
     logo_url: str | None = None
     website_url: str | None = None
-    cashback_rate: float | None = None
+    tracking_url: str | None = None
+    affiliate_network: str | None = None
+    commission_rate: float | None = None
     is_active: bool = True
     is_featured: bool = False
 
@@ -430,7 +432,9 @@ def create_merchant(
         description=payload.description,
         logo_url=payload.logo_url,
         website_url=payload.website_url,
-        cashback_rate=Decimal(str(payload.cashback_rate)) if payload.cashback_rate else None,
+        tracking_url=payload.tracking_url,
+        affiliate_network=payload.affiliate_network,
+        commission_rate=Decimal(str(payload.commission_rate)) if payload.commission_rate is not None else None,
         is_active=payload.is_active,
         is_featured=payload.is_featured
     )
@@ -487,8 +491,12 @@ def list_admin_merchants(
         "id": m.id,
         "name": m.name,
         "slug": m.slug,
+        "description": m.description,
         "logo_url": m.logo_url,
-        "cashback_rate": str(m.commission_rate) if m.commission_rate else None,
+        "website_url": m.website_url,
+        "tracking_url": m.tracking_url,
+        "affiliate_network": m.affiliate_network,
+        "commission_rate": float(m.commission_rate) if m.commission_rate else None,
         "is_active": m.is_active,
         "is_featured": m.is_featured,
         "offers_count": offers_counts.get(m.id, 0),
@@ -529,7 +537,9 @@ def update_merchant(
     merchant.description = payload.description
     merchant.logo_url = payload.logo_url
     merchant.website_url = payload.website_url
-    merchant.cashback_rate = Decimal(str(payload.cashback_rate)) if payload.cashback_rate else None
+    merchant.tracking_url = payload.tracking_url
+    merchant.affiliate_network = payload.affiliate_network
+    merchant.commission_rate = Decimal(str(payload.commission_rate)) if payload.commission_rate else None
     merchant.is_active = payload.is_active
     merchant.is_featured = payload.is_featured
 

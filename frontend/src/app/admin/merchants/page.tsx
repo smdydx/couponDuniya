@@ -53,6 +53,10 @@ export default function AdminMerchantsPage() {
     slug: "",
     description: "",
     logo_url: "",
+    website_url: "",
+    tracking_url: "",
+    affiliate_network: "",
+    commission_rate: 0,
     is_active: true,
     is_featured: false,
   });
@@ -97,6 +101,10 @@ export default function AdminMerchantsPage() {
       slug: "",
       description: "",
       logo_url: "",
+      website_url: "",
+      tracking_url: "",
+      affiliate_network: "",
+      commission_rate: 0,
       is_active: true,
       is_featured: false,
     });
@@ -110,6 +118,10 @@ export default function AdminMerchantsPage() {
       slug: merchant.slug,
       description: merchant.description || "",
       logo_url: merchant.logo_url || "",
+      website_url: merchant.website_url || "",
+      tracking_url: merchant.tracking_url || "",
+      affiliate_network: merchant.affiliate_network || "",
+      commission_rate: merchant.commission_rate || 0,
       is_active: merchant.is_active,
       is_featured: merchant.is_featured || false,
     });
@@ -417,6 +429,64 @@ export default function AdminMerchantsPage() {
               category="merchants"
               aspectRatio="square"
             />
+            <div className="grid gap-2">
+              <Label htmlFor="website_url" className="text-sm font-medium">Website URL</Label>
+              <Input
+                id="website_url"
+                value={formData.website_url}
+                onChange={(e) =>
+                  setFormData((prev) => ({ ...prev, website_url: e.target.value }))
+                }
+                placeholder="https://example.com"
+                className="h-11"
+              />
+            </div>
+            <div className="grid gap-2">
+              <Label htmlFor="tracking_url" className="text-sm font-medium">Tracking URL (Affiliate)</Label>
+              <Input
+                id="tracking_url"
+                value={formData.tracking_url}
+                onChange={(e) =>
+                  setFormData((prev) => ({ ...prev, tracking_url: e.target.value }))
+                }
+                placeholder="https://affiliate.example.com/track?id={click_id}"
+                className="h-11"
+              />
+            </div>
+            <div className="grid gap-2">
+              <Label htmlFor="affiliate_network" className="text-sm font-medium">Affiliate Network</Label>
+              <select
+                id="affiliate_network"
+                value={formData.affiliate_network}
+                onChange={(e) =>
+                  setFormData((prev) => ({ ...prev, affiliate_network: e.target.value }))
+                }
+                className="h-11 rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+              >
+                <option value="">Select network...</option>
+                <option value="admitad">Admitad</option>
+                <option value="impact">Impact</option>
+                <option value="cuelinks">Cuelinks</option>
+                <option value="vcommission">vCommission</option>
+                <option value="inhouse">In-house</option>
+              </select>
+            </div>
+            <div className="grid gap-2">
+              <Label htmlFor="commission_rate" className="text-sm font-medium">Commission Rate (%)</Label>
+              <Input
+                id="commission_rate"
+                type="number"
+                min="0"
+                max="100"
+                step="0.1"
+                value={formData.commission_rate}
+                onChange={(e) =>
+                  setFormData((prev) => ({ ...prev, commission_rate: parseFloat(e.target.value) || 0 }))
+                }
+                placeholder="e.g., 5.0"
+                className="h-11"
+              />
+            </div>
             <div className="flex items-center justify-between rounded-xl border border-gray-200 p-4 bg-gray-50/50">
               <div className="space-y-0.5">
                 <Label className="text-sm font-medium">Active</Label>

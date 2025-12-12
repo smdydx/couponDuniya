@@ -15,6 +15,10 @@ export interface Merchant {
   slug: string;
   description?: string;
   logo_url?: string;
+  website_url?: string;
+  tracking_url?: string;
+  affiliate_network?: string;
+  commission_rate?: number;
   is_active: boolean;
   is_featured?: boolean;
   created_at?: string;
