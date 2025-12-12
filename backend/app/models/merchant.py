@@ -70,17 +70,28 @@ class Merchant(Base):
     
     # Commission & Pricing
     commission_rate: Mapped[float] = mapped_column(Numeric(5, 2), default=0)  # Platform commission %
+    base_commission: Mapped[Optional[float]] = mapped_column(Numeric(5, 2), nullable=True)  # Base commission % for affiliates
     tcs_rate: Mapped[float] = mapped_column(Numeric(5, 2), default=1.0)  # TCS rate %
     tds_rate: Mapped[float] = mapped_column(Numeric(5, 2), default=0)  # TDS rate %
     fixed_fee_per_order: Mapped[float] = mapped_column(Numeric(10, 2), default=0)  # Fixed fee per order
+    
+    # Affiliate Settings
+    affiliate_network: Mapped[Optional[str]] = mapped_column(String(50), nullable=True)  # admitad, impact, cuelinks, inhouse
+    affiliate_network_id: Mapped[Optional[str]] = mapped_column(String(100), nullable=True)
+    tracking_url: Mapped[Optional[str]] = mapped_column(String(1000), nullable=True)
+    
+    # Display Settings
+    show_on_homepage: Mapped[bool] = mapped_column(Boolean, default=False)
     minimum_payout_amount: Mapped[float] = mapped_column(Numeric(10, 2), default=500)  # Minimum payout threshold
     payout_frequency: Mapped[str] = mapped_column(String(20), default="weekly")  # daily, weekly, biweekly, monthly
     
     # Verification & KYC
+    status: Mapped[str] = mapped_column(String(30), default="pending")  # pending, reviewing, approved, rejected (alias for verification_status)
     verification_status: Mapped[str] = mapped_column(String(30), default="pending")  # pending, under_review, approved, rejected, suspended
     kyc_status: Mapped[str] = mapped_column(String(30), default="pending")  # pending, submitted, verified, rejected
     kyc_documents: Mapped[Optional[dict]] = mapped_column(JSON, nullable=True)  # Store document URLs
     verified_at: Mapped[Optional[datetime]] = mapped_column(DateTime, nullable=True)
+    approved_at: Mapped[Optional[datetime]] = mapped_column(DateTime, nullable=True)  # When merchant was approved
     verified_by: Mapped[Optional[int]] = mapped_column(Integer, nullable=True)
     rejection_reason: Mapped[Optional[str]] = mapped_column(Text, nullable=True)
     

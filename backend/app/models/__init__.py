@@ -23,6 +23,7 @@ from .user_2fa import User2FA
 
 # Merchants & Affiliates
 from .merchant import Merchant, MerchantDocument
+from .merchant_category import MerchantCategory
 from .merchant_commission import MerchantCommission
 from .affiliate_click import AffiliateClick
 from .affiliate_transaction import AffiliateTransaction
@@ -84,6 +85,7 @@ __all__ = [
     # Merchants & Affiliates
     "Merchant",
     "MerchantDocument",
+    "MerchantCategory",
     "MerchantCommission",
     "AffiliateClick",
     "AffiliateTransaction",
