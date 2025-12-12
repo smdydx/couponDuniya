@@ -104,6 +104,16 @@ Required secrets (set in Replit Secrets):
 
 ## Recent Changes (December 12, 2025)
 
+### Project Import Complete
+- Python 3.11 and Node.js 20 installed
+- All backend packages installed from requirements.txt
+- All frontend packages installed via npm
+- PostgreSQL database created and connected
+- Alembic migration generated and executed (initial_schema)
+- Fixed postgresql dialect import in migration file
+- Homepage data seeded successfully
+- Both Backend (port 8000) and Frontend (port 5000) running
+
 ### Backend Cleanup (Coupon-Focused)
 - Removed all dropshipping-related models: Product, ProductVariant, Order, OrderItem, Inventory, Shipping, Returns, Reviews
 - Removed unused API endpoints: products, cart, checkout, orders, inventory, blog, cms, search, redirects
@@ -113,3 +123,23 @@ Required secrets (set in Replit Secrets):
 - Fixed import issues in newsletter.py and push.py (get_current_user from dependencies)
 - Installed pywebpush for push notification support
 - Backend now starts successfully on port 8000
+
+## Pending Work for Next Session
+
+### User Flow
+1. User registration/login - partially implemented
+2. User profile with optional verification for merchants
+3. Coupon browsing and purchase flow
+4. Merchant deal integration with commission tracking
+
+### Merchant Flow
+1. Merchant registration with full verification
+2. Admin approval workflow for merchant requests
+3. Merchant dashboard for adding coupons/offers
+4. Commission management for merchants
+
+### Admin Dashboard
+1. Complete merchant approval UI
+2. Coupon/offer management
+3. User management with KYC verification
+4. Commission distribution tracking
