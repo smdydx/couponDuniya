@@ -22,8 +22,10 @@ from app.models import (  # noqa
     SupportTicket, Notification,
     Role, Permission, RolePermission, Department, UserRole, UserDepartment,
     AuditLog, UserSession, UserKYC, Inventory, CMSPage, SEORedirect,
-    CashbackRule, BlogPost, Banner
+    CashbackRule, BlogPost, Banner, ProductReview, Wishlist, Cart, CartItem,
+    AffiliateLink, ProductImage, MerchantRating, ProductReviewImage,Product 
 )
+
 
 settings = get_settings()
 
