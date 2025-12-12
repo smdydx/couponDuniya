@@ -79,7 +79,7 @@ def subscribe_to_newsletter(
     # Create new subscription
     subscriber = NewsletterSubscriber(
         email=payload.email,
-        name=payload.name or (user.name if user else None),
+        name=payload.name or (user.full_name if user else None),
         user_id=user.id if user else None,
         source=payload.source,
         status="active",
@@ -241,8 +241,8 @@ def list_campaigns(
             ],
             "pagination": {
                 "current_page": page,
-                "total_pages": (total_count + limit - 1) // limit,
-                "total_items": total_count,
+                "total_pages": ((total_count or 0) + limit - 1) // limit,
+                "total_items": total_count or 0,
                 "per_page": limit
             }
         }
@@ -361,8 +361,8 @@ def list_subscribers(
             ],
             "pagination": {
                 "current_page": page,
-                "total_pages": (total_count + limit - 1) // limit,
-                "total_items": total_count,
+                "total_pages": ((total_count or 0) + limit - 1) // limit,
+                "total_items": total_count or 0,
                 "per_page": limit
             }
         }
