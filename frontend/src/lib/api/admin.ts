@@ -470,6 +470,29 @@ const adminApi = {
   invalidateMerchantCache: async (slug: string): Promise<void> => {
     await apiClient.post(`/admin/merchants/${slug}/invalidate`);
   },
+
+  // Merchant Verification APIs
+  getPendingMerchantApplications: async (params: { page?: number; limit?: number; status?: string } = {}): Promise<{ applications: MerchantApplication[]; pagination: Pagination }> => {
+    const queryParams = new URLSearchParams();
+    if (params.page) queryParams.append('page', String(params.page));
+    if (params.limit) queryParams.append('limit', String(params.limit));
+    if (params.status) queryParams.append('status', params.status || 'pending');
+
+    const response = await apiClient.get(`/merchants/admin/pending-applications?${queryParams.toString()}`);
+    const data = response.data;
+    if (data?.data?.applications && data?.data?.pagination) {
+      return { applications: data.data.applications, pagination: data.data.pagination };
+    }
+    return { applications: [], pagination: { current_page: 1, total_pages: 1, total_items: 0, per_page: 20 } };
+  },
+
+  approveMerchantApplication: async (merchantId: number, notes?: string): Promise<void> => {
+    await apiClient.post(`/merchants/admin/verify/${merchantId}`, { action: 'approve', notes });
+  },
+
+  rejectMerchantApplication: async (merchantId: number, notes?: string): Promise<void> => {
+    await apiClient.post(`/merchants/admin/verify/${merchantId}`, { action: 'reject', notes });
+  },
 };
 
 export interface CashbackEvent {
@@ -519,6 +542,34 @@ export interface ProductVariant {
   price: number;
   stock: number;
   is_available: boolean;
+}
+
+export interface MerchantApplication {
+  id: number;
+  merchant: {
+    id: number;
+    name: string;
+    slug: string;
+    status: string;
+    is_verified: boolean;
+    is_active: boolean;
+  };
+  business_name: string;
+  business_email: string;
+  business_phone: string;
+  business_address: string;
+  business_city: string;
+  business_state: string;
+  business_pincode: string;
+  gst_number?: string;
+  pan_number?: string;
+  website_url?: string;
+  user?: {
+    id: number;
+    email: string;
+    full_name?: string;
+  };
+  created_at: string;
 }
 
 export default adminApi;
