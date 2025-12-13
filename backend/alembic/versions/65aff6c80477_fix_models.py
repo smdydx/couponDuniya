@@ -1,11 +1,11 @@
-"""new coloumn"""
+"""fix models"""
 
 from alembic import op
 import sqlalchemy as sa
 
 # revision identifiers, used by Alembic.
-revision = '77a86e25896f'
-down_revision = '7397422db297'
+revision = '65aff6c80477'
+down_revision = '68a176332af4'
 branch_labels = None
 depends_on = None
 
