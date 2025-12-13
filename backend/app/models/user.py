@@ -27,9 +27,17 @@ class AuthProvider(str, enum.Enum):
 
 class UserRole(str, enum.Enum):
     CUSTOMER = "customer"
+    MERCHANT = "merchant"
     ADMIN = "admin"
     SUPER_ADMIN = "super_admin"
     SUPPORT = "support"
+
+
+class MerchantVerificationStatus(str, enum.Enum):
+    NOT_APPLIED = "not_applied"
+    PENDING = "pending"
+    APPROVED = "approved"
+    REJECTED = "rejected"
 
 
 class User(Base):
@@ -73,6 +81,10 @@ class User(Base):
     is_active: Mapped[bool] = mapped_column(Boolean, default=True)
     is_verified: Mapped[bool] = mapped_column(Boolean, default=False)
     is_admin: Mapped[bool] = mapped_column(Boolean, default=False)
+    is_merchant: Mapped[bool] = mapped_column(Boolean, default=False)
+    merchant_verified: Mapped[bool] = mapped_column(Boolean, default=False)
+    merchant_verification_status: Mapped[str] = mapped_column(String(30), default=MerchantVerificationStatus.NOT_APPLIED.value)
+    merchant_id: Mapped[int | None] = mapped_column(nullable=True, index=True)
     role: Mapped[str] = mapped_column(String(50), default=UserRole.CUSTOMER.value)
 
     auth_provider: Mapped[str | None] = mapped_column(String(50), default=AuthProvider.EMAIL.value)
@@ -136,6 +148,10 @@ class User(Base):
             "referral_code": self.referral_code,
             "role": self.role,
             "is_admin": self.is_admin,
+            "is_merchant": self.is_merchant,
+            "merchant_verified": self.merchant_verified,
+            "merchant_verification_status": self.merchant_verification_status,
+            "merchant_id": self.merchant_id,
             "is_verified": self.is_verified,
             "auth_provider": self.auth_provider,
             "has_password": self.password_hash is not None,

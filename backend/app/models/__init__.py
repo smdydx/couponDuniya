@@ -1,7 +1,7 @@
-from .user import User, UserStatus, AuthProvider, UserRole
+from .user import User, UserStatus, AuthProvider, UserRole, MerchantVerificationStatus
 from .social_account import SocialAccount
 from .refresh_token import RefreshToken, OTPAttempt, PasswordResetToken
-from .merchant import Merchant
+from .merchant import Merchant, MerchantStatus
 from .offer import Offer
 from .product import Product
 from .order import Order
