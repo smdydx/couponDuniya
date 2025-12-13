@@ -7,134 +7,123 @@ import { Button } from "@/components/ui/button";
 import { Breadcrumbs } from "@/components/common/Breadcrumbs";
 import { WalletBalance } from "@/components/wallet/WalletBalance";
 import { TransactionList } from "@/components/wallet/TransactionList";
-import { CashbackTracker } from "@/components/wallet/CashbackTracker";
 import { WithdrawForm } from "@/components/wallet/WithdrawForm";
 import { useAuthStore } from "@/store/authStore";
 import { ROUTES } from "@/lib/constants";
-import { AlertCircle, HelpCircle } from "lucide-react";
-import type { WalletTransaction, CashbackEvent, WithdrawalRequest } from "@/types";
-
-// Mock data
-const mockTransactions: WalletTransaction[] = [
-  {
-    id: 1,
-    wallet_id: 1,
-    type: "credit",
-    amount: 150,
-    balance_after: 650,
-    category: "cashback",
-    description: "Cashback from Amazon purchase",
-    status: "completed",
-    created_at: new Date(Date.now() - 86400000).toISOString(),
-  },
-  {
-    id: 2,
-    wallet_id: 1,
-    type: "debit",
-    amount: 100,
-    balance_after: 500,
-    category: "order_payment",
-    description: "Used for order ORD-ABC123",
-    status: "completed",
-    created_at: new Date(Date.now() - 172800000).toISOString(),
-  },
-  {
-    id: 3,
-    wallet_id: 1,
-    type: "credit",
-    amount: 50,
-    balance_after: 600,
-    category: "referral",
-    description: "Referral bonus - John Doe signed up",
-    status: "completed",
-    created_at: new Date(Date.now() - 259200000).toISOString(),
-  },
-];
-
-const mockCashbackEvents: CashbackEvent[] = [
-  {
-    id: 1,
-    user_id: 1,
-    offer_id: 1,
-    merchant_id: 1,
-    merchant: {
-      id: 1,
-      name: "Amazon",
-      slug: "amazon",
-      website_url: "",
-      affiliate_url: "",
-      default_cashback_type: "percentage",
-      default_cashback_value: 10,
-      is_featured: true,
-      is_active: true,
-      created_at: "",
-      updated_at: "",
-    },
-    click_id: "clk_123",
-    order_amount: 1500,
-    cashback_amount: 150,
-    status: "pending",
-    created_at: new Date(Date.now() - 86400000).toISOString(),
-  },
-  {
-    id: 2,
-    user_id: 1,
-    offer_id: 2,
-    merchant_id: 2,
-    merchant: {
-      id: 2,
-      name: "Flipkart",
-      slug: "flipkart",
-      website_url: "",
-      affiliate_url: "",
-      default_cashback_type: "percentage",
-      default_cashback_value: 8,
-      is_featured: true,
-      is_active: true,
-      created_at: "",
-      updated_at: "",
-    },
-    click_id: "clk_124",
-    order_amount: 2000,
-    cashback_amount: 160,
-    status: "confirmed",
-    confirmation_date: new Date(Date.now() - 604800000).toISOString(),
-    created_at: new Date(Date.now() - 1209600000).toISOString(),
-  },
-];
-
-const mockWithdrawals: WithdrawalRequest[] = [
-  {
-    id: 1,
-    user_id: 1,
-    amount: 500,
-    withdrawal_method: "upi",
-    account_details: { upi_id: "user@upi" },
-    status: "completed",
-    processed_at: new Date(Date.now() - 604800000).toISOString(),
-    created_at: new Date(Date.now() - 691200000).toISOString(),
-  },
-];
+import { AlertCircle, HelpCircle, Loader2 } from "lucide-react";
+import { apiClient } from "@/lib/api";
+import { toast } from "sonner";
+import type { WalletTransaction, WithdrawalRequest } from "@/types";
 
 export default function WalletPage() {
   const [isWithdrawOpen, setIsWithdrawOpen] = useState(false);
   const [activeTab, setActiveTab] = useState("balance");
+  const [loading, setLoading] = useState(true);
+  const [walletData, setWalletData] = useState({
+    balance: 0,
+    pendingCashback: 0,
+    lifetimeEarnings: 0,
+    totalWithdrawn: 0
+  });
+  const [transactions, setTransactions] = useState<WalletTransaction[]>([]);
+  const [withdrawals, setWithdrawals] = useState<WithdrawalRequest[]>([]);
+  const { user, isAuthenticated } = useAuthStore();
+  const router = useRouter();
 
-  // Mock wallet data
-  const walletBalance = 500;
-  const pendingCashback = 310;
-  const lifetimeEarnings = 2500;
+  useEffect(() => {
+    if (!isAuthenticated) {
+      router.push(ROUTES.login);
+      return;
+    }
+    fetchWalletData();
+  }, [isAuthenticated]);
+
+  useEffect(() => {
+    if (activeTab === "balance") {
+      fetchTransactions();
+    } else if (activeTab === "withdrawals") {
+      fetchWithdrawals();
+    }
+  }, [activeTab]);
+
+  const fetchWalletData = async () => {
+    try {
+      const response = await apiClient.get('/wallet/');
+      if (response.data.success) {
+        setWalletData({
+          balance: response.data.data.balance || 0,
+          pendingCashback: response.data.data.pending_cashback || 0,
+          lifetimeEarnings: response.data.data.lifetime_earnings || 0,
+          totalWithdrawn: response.data.data.total_withdrawn || 0
+        });
+      }
+    } catch (error) {
+      console.error("Failed to fetch wallet data:", error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const fetchTransactions = async () => {
+    try {
+      const response = await apiClient.get('/wallet/transactions');
+      if (response.data.success) {
+        setTransactions(response.data.data.transactions || []);
+      }
+    } catch (error) {
+      console.error("Failed to fetch transactions:", error);
+    }
+  };
+
+  const fetchWithdrawals = async () => {
+    try {
+      const response = await apiClient.get('/wallet/withdrawals');
+      if (response.data.success) {
+        setWithdrawals(response.data.data.withdrawals || []);
+      }
+    } catch (error) {
+      console.error("Failed to fetch withdrawals:", error);
+    }
+  };
 
   const handleWithdraw = async (
     amount: number,
     method: string,
     details: Record<string, string>
   ) => {
-    // Mock API call
-    await new Promise((resolve) => setTimeout(resolve, 1500));
-    console.log("Withdrawal request:", { amount, method, details });
-    setIsWithdrawOpen(false);
+    try {
+      const payload: any = {
+        amount,
+        method,
+      };
+      
+      if (method === "upi") {
+        payload.upi_id = details.upi_id;
+      } else if (method === "bank_transfer") {
+        payload.bank_account_number = details.account_number;
+        payload.bank_ifsc = details.ifsc_code;
+        payload.bank_account_name = details.account_name;
+      }
+
+      const response = await apiClient.post('/wallet/withdraw', payload);
+      if (response.data.success) {
+        toast.success(response.data.message || "Withdrawal request submitted successfully");
+        setIsWithdrawOpen(false);
+        fetchWalletData();
+        fetchWithdrawals();
+      }
+    } catch (error: any) {
+      toast.error(error?.response?.data?.detail || "Failed to submit withdrawal request");
+    }
   };
+
+  if (loading) {
+    return (
+      <div className="container py-6 flex items-center justify-center min-h-[400px]">
+        <Loader2 className="h-8 w-8 animate-spin text-primary" />
+      </div>
+    );
+  }
 
   return (
     <div className="container py-6">
@@ -153,57 +142,44 @@ export default function WalletPage() {
         </Button>
       </div>
 
-      {/* Wallet Balance Cards */}
       <WalletBalance
-        balance={walletBalance}
-        pendingCashback={pendingCashback}
-        lifetimeEarnings={lifetimeEarnings}
+        balance={walletData.balance}
+        pendingCashback={walletData.pendingCashback}
+        lifetimeEarnings={walletData.lifetimeEarnings}
         onWithdraw={() => setIsWithdrawOpen(true)}
       />
 
-      {/* Tabs */}
       <div className="mt-8">
         <Tabs value={activeTab} onValueChange={setActiveTab}>
           <TabsList className="mb-6">
             <TabsTrigger value="balance">Transactions</TabsTrigger>
-            <TabsTrigger value="cashback">Cashback Tracker</TabsTrigger>
             <TabsTrigger value="withdrawals">Withdrawals</TabsTrigger>
           </TabsList>
 
           <TabsContent value="balance">
-            <TransactionList transactions={mockTransactions} />
-          </TabsContent>
-
-          <TabsContent value="cashback">
-            <div className="mb-4 rounded-lg border border-yellow-200 bg-yellow-50 p-4">
-              <div className="flex gap-2">
-                <AlertCircle className="h-5 w-5 shrink-0 text-yellow-600" />
-                <div className="text-sm text-yellow-800">
-                  <p className="font-medium">About Cashback Confirmation</p>
-                  <p className="mt-1">
-                    Cashback is typically confirmed within 30-90 days after your purchase.
-                    Some merchants may take longer. Once confirmed, cashback is added to
-                    your wallet automatically.
-                  </p>
-                </div>
+            {transactions.length === 0 ? (
+              <div className="py-12 text-center text-muted-foreground">
+                <p>No transactions yet</p>
+                <p className="text-sm mt-2">Your wallet transactions will appear here</p>
               </div>
-            </div>
-            <CashbackTracker events={mockCashbackEvents} />
+            ) : (
+              <TransactionList transactions={transactions} />
+            )}
           </TabsContent>
 
           <TabsContent value="withdrawals">
-            {mockWithdrawals.length === 0 ? (
+            {withdrawals.length === 0 ? (
               <div className="py-12 text-center">
                 <p className="text-muted-foreground">No withdrawal history yet</p>
               </div>
             ) : (
               <div className="divide-y rounded-lg border">
-                {mockWithdrawals.map((withdrawal) => (
+                {withdrawals.map((withdrawal) => (
                   <div key={withdrawal.id} className="flex items-center justify-between p-4">
                     <div>
                       <p className="font-medium">
                         ₹{withdrawal.amount} via{" "}
-                        {withdrawal.withdrawal_method.toUpperCase()}
+                        {withdrawal.method?.toUpperCase() || withdrawal.withdrawal_method?.toUpperCase()}
                       </p>
                       <p className="text-sm text-muted-foreground">
                         {new Date(withdrawal.created_at).toLocaleDateString()}
@@ -211,10 +187,12 @@ export default function WalletPage() {
                     </div>
                     <span
                       className={`rounded-full px-3 py-1 text-xs font-medium ${
-                        withdrawal.status === "completed"
+                        withdrawal.status === "approved"
                           ? "bg-green-100 text-green-800"
-                          : withdrawal.status === "processing"
-                          ? "bg-blue-100 text-blue-800"
+                          : withdrawal.status === "pending"
+                          ? "bg-yellow-100 text-yellow-800"
+                          : withdrawal.status === "rejected"
+                          ? "bg-red-100 text-red-800"
                           : "bg-gray-100 text-gray-800"
                       }`}
                     >
@@ -228,11 +206,10 @@ export default function WalletPage() {
         </Tabs>
       </div>
 
-      {/* Withdraw Modal */}
       <WithdrawForm
         open={isWithdrawOpen}
         onClose={() => setIsWithdrawOpen(false)}
-        balance={walletBalance}
+        balance={walletData.balance}
         onSubmit={handleWithdraw}
       />
     </div>

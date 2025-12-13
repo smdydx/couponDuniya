@@ -1,80 +1,84 @@
 "use client";
 
-import { useState } from "react";
-import { Copy, Check, Share2, Users, Wallet, Gift, MessageCircle, Twitter, Facebook, Trophy, Award, Star } from "lucide-react";
+import { useState, useEffect } from "react";
+import { useRouter } from "next/navigation";
+import { Copy, Check, Share2, Users, Wallet, Gift, MessageCircle, Twitter, Facebook, Trophy, Award, Star, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { Breadcrumbs } from "@/components/common/Breadcrumbs";
 import { formatCurrency, formatDate } from "@/lib/utils";
+import { useAuthStore } from "@/store/authStore";
+import { apiClient } from "@/lib/api";
+import { ROUTES } from "@/lib/constants";
 import type { Referral } from "@/types";
-
-// Mock data
-const referralCode = "JOHN2024";
-const referralLink = `https://biduacoupons.com/register?ref=${referralCode}`;
-
-const mockReferrals: Referral[] = [
-  {
-    id: 1,
-    referrer_id: 1,
-    referred_id: 2,
-    referred_user: {
-      id: 2,
-      email: "jane@example.com",
-      first_name: "Jane",
-      last_name: "Doe",
-      role: "customer",
-      is_verified: true,
-      kyc_status: "pending",
-      referral_code: "JANE2024",
-      created_at: new Date(Date.now() - 604800000).toISOString(),
-    },
-    status: "earned",
-    referrer_bonus_amount: 50,
-    referred_bonus_amount: 25,
-    earned_amount: 50,
-    created_at: new Date(Date.now() - 604800000).toISOString(),
-  },
-  {
-    id: 2,
-    referrer_id: 1,
-    referred_id: 3,
-    referred_user: {
-      id: 3,
-      email: "bob@example.com",
-      first_name: "Bob",
-      last_name: "Smith",
-      role: "customer",
-      is_verified: true,
-      kyc_status: "pending",
-      referral_code: "BOB2024",
-      created_at: new Date(Date.now() - 259200000).toISOString(),
-    },
-    status: "active",
-    referrer_bonus_amount: 50,
-    referred_bonus_amount: 25,
-    earned_amount: 0,
-    created_at: new Date(Date.now() - 259200000).toISOString(),
-  },
-];
 
 export default function ReferralsPage() {
   const [copied, setCopied] = useState<"code" | "link" | null>(null);
-  const [achievements] = useState([
-    { id: 1, title: "Rookie Referrer", desc: "First successful referral", icon: Star, achieved: true },
-    { id: 2, title: "Streak Saver", desc: "3 referrals in 7 days", icon: Trophy, achieved: false },
-    { id: 3, title: "Top Influencer", desc: "10 total referrals", icon: Award, achieved: false },
-  ]);
-  const [rewards] = useState([
-    { id: 1, title: "₹100 Bonus Cashback", cost: "5 referrals", status: "locked" },
-    { id: 2, title: "₹250 Gift Card", cost: "10 referrals", status: "locked" },
-    { id: 3, title: "Exclusive Badge", cost: "1 referral", status: "available" },
-  ]);
+  const [loading, setLoading] = useState(true);
+  const [referralCode, setReferralCode] = useState("");
+  const [referralLink, setReferralLink] = useState("");
+  const [referrals, setReferrals] = useState<Referral[]>([]);
+  const [badges, setBadges] = useState<any[]>([]);
+  const [userBadges, setUserBadges] = useState<string[]>([]);
+  const [rewards, setRewards] = useState<any[]>([]);
+  const { user, isAuthenticated } = useAuthStore();
+  const router = useRouter();
 
-  const totalReferrals = mockReferrals.length;
-  const activeReferrals = mockReferrals.filter((r) => r.status === "active" || r.status === "earned").length;
-  const totalEarnings = mockReferrals.reduce((sum, r) => sum + r.earned_amount, 0);
+  useEffect(() => {
+    if (!isAuthenticated) {
+      router.push(ROUTES.login);
+      return;
+    }
+    fetchReferralData();
+  }, [isAuthenticated]);
+
+  const fetchReferralData = async () => {
+    try {
+      const [codeRes, badgesRes, rewardsRes] = await Promise.all([
+        apiClient.get('/referrals/my-code'),
+        apiClient.get('/referrals/my-badges'),
+        apiClient.get('/referrals/rewards')
+      ]);
+
+      if (codeRes.data.success) {
+        setReferralCode(codeRes.data.data.referral_code || user?.referral_code || "");
+        setReferralLink(codeRes.data.data.referral_link || "");
+      }
+
+      if (badgesRes.data.success) {
+        setUserBadges(badgesRes.data.data.badges || []);
+        setBadges(Object.entries(badgesRes.data.data.definitions || {}).map(([key, val]: [string, any]) => ({
+          id: key,
+          title: val.label || key,
+          desc: val.description || "",
+          achieved: (badgesRes.data.data.badges || []).includes(key)
+        })));
+      }
+
+      if (rewardsRes.data.success) {
+        setRewards(Object.entries(rewardsRes.data.data || {}).map(([key, val]: [string, any]) => ({
+          id: key,
+          title: val.label || key,
+          cost: val.description || "",
+          status: "locked"
+        })));
+      }
+    } catch (error) {
+      console.error("Failed to fetch referral data:", error);
+      if (user?.referral_code) {
+        setReferralCode(user.referral_code);
+        setReferralLink(`https://yourcoupondomain.com/signup?ref=${user.referral_code}`);
+      }
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const totalReferrals = referrals.length;
+  const activeReferrals = referrals.filter((r) => r.status === "active" || r.status === "earned").length;
+  const totalEarnings = referrals.reduce((sum, r) => sum + (r.earned_amount || 0), 0);
 
   const handleCopy = async (text: string, type: "code" | "link") => {
     await navigator.clipboard.writeText(text);
@@ -98,6 +102,14 @@ export default function ReferralsPage() {
     }
   };
 
+  if (loading) {
+    return (
+      <div className="container py-6 flex items-center justify-center min-h-[400px]">
+        <Loader2 className="h-8 w-8 animate-spin text-primary" />
+      </div>
+    );
+  }
+
   return (
     <div className="container py-6">
       <Breadcrumbs items={[{ label: "Refer & Earn" }]} />
@@ -109,7 +121,6 @@ export default function ReferralsPage() {
         </p>
       </div>
 
-      {/* Referral Code Section */}
       <Card className="mb-8 bg-gradient-to-br from-primary/10 via-background to-background">
         <CardContent className="p-6">
           <div className="grid gap-6 md:grid-cols-2">
@@ -122,13 +133,14 @@ export default function ReferralsPage() {
               <div className="mt-4 flex gap-2">
                 <div className="flex-1 rounded-lg border-2 border-dashed border-primary bg-primary/5 p-4">
                   <code className="text-2xl font-bold tracking-wider text-primary">
-                    {referralCode}
+                    {referralCode || "Loading..."}
                   </code>
                 </div>
                 <Button
                   size="lg"
                   onClick={() => handleCopy(referralCode, "code")}
                   className="px-6"
+                  disabled={!referralCode}
                 >
                   {copied === "code" ? (
                     <Check className="h-5 w-5" />
@@ -145,13 +157,13 @@ export default function ReferralsPage() {
                   <Button
                     variant="outline"
                     onClick={() => handleCopy(referralLink, "link")}
+                    disabled={!referralLink}
                   >
                     {copied === "link" ? <Check className="h-4 w-4" /> : <Copy className="h-4 w-4" />}
                   </Button>
                 </div>
               </div>
 
-              {/* Share Buttons */}
               <div className="mt-4 flex gap-2">
                 <Button
                   variant="outline"
@@ -215,7 +227,6 @@ export default function ReferralsPage() {
         </CardContent>
       </Card>
 
-      {/* Stats Cards */}
       <div className="mb-8 grid gap-4 sm:grid-cols-3">
         <Card>
           <CardContent className="flex items-center gap-4 p-6">
@@ -254,59 +265,60 @@ export default function ReferralsPage() {
         </Card>
       </div>
 
-      {/* Achievements */}
-      <Card className="mb-6">
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <Award className="h-5 w-5" /> Badges & Achievements
-          </CardTitle>
-        </CardHeader>
-        <CardContent className="grid gap-3 sm:grid-cols-3">
-          {achievements.map((a) => (
-            <div key={a.id} className="flex items-start gap-3 rounded-lg border p-3">
-              <a.icon className={`h-5 w-5 ${a.achieved ? "text-green-600" : "text-muted-foreground"}`} />
-              <div>
-                <p className="font-semibold">{a.title}</p>
-                <p className="text-xs text-muted-foreground">{a.desc}</p>
-                <Badge variant={a.achieved ? "success" : "secondary"} className="mt-1">
-                  {a.achieved ? "Unlocked" : "Locked"}
-                </Badge>
+      {badges.length > 0 && (
+        <Card className="mb-6">
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <Award className="h-5 w-5" /> Badges & Achievements
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="grid gap-3 sm:grid-cols-3">
+            {badges.map((a) => (
+              <div key={a.id} className="flex items-start gap-3 rounded-lg border p-3">
+                <Star className={`h-5 w-5 ${a.achieved ? "text-green-600" : "text-muted-foreground"}`} />
+                <div>
+                  <p className="font-semibold">{a.title}</p>
+                  <p className="text-xs text-muted-foreground">{a.desc}</p>
+                  <Badge variant={a.achieved ? "success" : "secondary"} className="mt-1">
+                    {a.achieved ? "Unlocked" : "Locked"}
+                  </Badge>
+                </div>
               </div>
-            </div>
-          ))}
-        </CardContent>
-      </Card>
+            ))}
+          </CardContent>
+        </Card>
+      )}
 
-      {/* Rewards Catalog */}
-      <Card className="mb-6">
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <Gift className="h-5 w-5" /> Rewards Catalog
-          </CardTitle>
-        </CardHeader>
-        <CardContent className="grid gap-3 sm:grid-cols-3">
-          {rewards.map((r) => (
-            <div key={r.id} className="flex flex-col rounded-lg border p-3">
-              <p className="font-semibold">{r.title}</p>
-              <p className="text-sm text-muted-foreground">Requires: {r.cost}</p>
-              <Badge variant={r.status === "available" ? "success" : "secondary"} className="mt-2">
-                {r.status === "available" ? "Available" : "Locked"}
-              </Badge>
-              <Button className="mt-3" size="sm" disabled={r.status !== "available"}>
-                Redeem
-              </Button>
-            </div>
-          ))}
-        </CardContent>
-      </Card>
+      {rewards.length > 0 && (
+        <Card className="mb-6">
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <Gift className="h-5 w-5" /> Rewards Catalog
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="grid gap-3 sm:grid-cols-3">
+            {rewards.map((r) => (
+              <div key={r.id} className="flex flex-col rounded-lg border p-3">
+                <p className="font-semibold">{r.title}</p>
+                <p className="text-sm text-muted-foreground">Requires: {r.cost}</p>
+                <Badge variant={r.status === "available" ? "success" : "secondary"} className="mt-2">
+                  {r.status === "available" ? "Available" : "Locked"}
+                </Badge>
+                <Button className="mt-3" size="sm" disabled={r.status !== "available"}>
+                  Redeem
+                </Button>
+              </div>
+            ))}
+          </CardContent>
+        </Card>
+      )}
 
-      {/* Referrals Table */}
       <Card>
         <CardHeader>
           <CardTitle>Your Referrals</CardTitle>
         </CardHeader>
         <CardContent>
-          {mockReferrals.length === 0 ? (
+          {referrals.length === 0 ? (
             <div className="py-12 text-center text-muted-foreground">
               <Users className="mx-auto h-12 w-12 opacity-50" />
               <p className="mt-4">No referrals yet</p>
@@ -314,7 +326,7 @@ export default function ReferralsPage() {
             </div>
           ) : (
             <div className="divide-y">
-              {mockReferrals.map((referral) => (
+              {referrals.map((referral) => (
                 <div
                   key={referral.id}
                   className="flex items-center justify-between py-4"
@@ -344,7 +356,7 @@ export default function ReferralsPage() {
                         ? "Awaiting Purchase"
                         : "Pending"}
                     </Badge>
-                    {referral.earned_amount > 0 && (
+                    {referral.earned_amount && referral.earned_amount > 0 && (
                       <p className="mt-1 text-sm font-medium text-green-600">
                         +{formatCurrency(referral.earned_amount)}
                       </p>
