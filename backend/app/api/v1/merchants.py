@@ -2,14 +2,16 @@ from fastapi import APIRouter, Depends, HTTPException, Query
 from sqlalchemy.orm import Session
 from sqlalchemy import select, func, or_
 from typing import Optional
+from datetime import datetime
 
 from ...database import get_db
-from ...models import Merchant, Offer, User
+from ...models import Merchant, Offer, User, MerchantVerificationStatus, MerchantStatus
 from ...redis_client import cache_get, cache_set, cache_invalidate, cache_invalidate_prefix, rk
 from ...dependencies import rate_limit_dependency, get_current_user, require_admin
-from pydantic import BaseModel
+from pydantic import BaseModel, EmailStr
 from math import ceil
 import json, hashlib
+import re
 
 router = APIRouter(prefix="/merchants", tags=["Merchants"])
 
@@ -19,6 +21,25 @@ class MerchantFilters(BaseModel):
     category_id: int | None = None
     is_featured: bool | None = None
     search: str | None = None
+
+
+class MerchantApplicationRequest(BaseModel):
+    business_name: str
+    business_email: str
+    business_phone: str
+    business_address: str
+    business_city: str
+    business_state: str
+    business_pincode: str
+    gst_number: str | None = None
+    pan_number: str | None = None
+    website_url: str | None = None
+    description: str | None = None
+
+
+class MerchantVerificationAction(BaseModel):
+    action: str
+    notes: str | None = None
 
 
 @router.get("/")
@@ -226,3 +247,226 @@ def delete_merchant(
 
 
     return {"success": True, "message": "Merchant deleted successfully"}
+
+
+def generate_slug(name: str) -> str:
+    slug = name.lower().strip()
+    slug = re.sub(r'[^a-z0-9\s-]', '', slug)
+    slug = re.sub(r'[\s_]+', '-', slug)
+    slug = re.sub(r'-+', '-', slug)
+    return slug.strip('-')
+
+
+@router.post("/apply")
+def apply_as_merchant(
+    application: MerchantApplicationRequest,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user)
+):
+    """User applies to become a merchant"""
+    if current_user.merchant_verification_status == MerchantVerificationStatus.PENDING.value:
+        raise HTTPException(status_code=400, detail="You already have a pending merchant application")
+    
+    if current_user.merchant_verified:
+        raise HTTPException(status_code=400, detail="You are already a verified merchant")
+    
+    slug = generate_slug(application.business_name)
+    existing_slug = db.scalar(select(Merchant).where(Merchant.slug == slug))
+    if existing_slug:
+        slug = f"{slug}-{current_user.id}"
+    
+    merchant = Merchant(
+        user_id=current_user.id,
+        name=application.business_name,
+        slug=slug,
+        business_name=application.business_name,
+        business_email=application.business_email,
+        business_phone=application.business_phone,
+        business_address=application.business_address,
+        business_city=application.business_city,
+        business_state=application.business_state,
+        business_pincode=application.business_pincode,
+        gst_number=application.gst_number,
+        pan_number=application.pan_number,
+        website_url=application.website_url,
+        description=application.description,
+        status=MerchantStatus.PENDING.value,
+        verification_status="pending",
+        is_active=False,
+        is_verified=False
+    )
+    db.add(merchant)
+    
+    current_user.merchant_verification_status = MerchantVerificationStatus.PENDING.value
+    current_user.is_merchant = True
+    current_user.merchant_id = None
+    
+    db.commit()
+    db.refresh(merchant)
+    db.refresh(current_user)
+    
+    current_user.merchant_id = merchant.id
+    db.commit()
+    
+    return {
+        "success": True,
+        "message": "Merchant application submitted successfully. Please wait for admin approval.",
+        "data": {
+            "merchant_id": merchant.id,
+            "status": merchant.status,
+            "verification_status": current_user.merchant_verification_status
+        }
+    }
+
+
+@router.get("/my-application")
+def get_my_merchant_application(
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user)
+):
+    """Get current user's merchant application status"""
+    if not current_user.merchant_id:
+        return {
+            "success": True,
+            "data": {
+                "has_application": False,
+                "is_merchant": current_user.is_merchant,
+                "merchant_verified": current_user.merchant_verified,
+                "verification_status": current_user.merchant_verification_status
+            }
+        }
+    
+    merchant = db.get(Merchant, current_user.merchant_id)
+    if not merchant:
+        return {
+            "success": True,
+            "data": {
+                "has_application": False,
+                "is_merchant": current_user.is_merchant,
+                "merchant_verified": current_user.merchant_verified,
+                "verification_status": current_user.merchant_verification_status
+            }
+        }
+    
+    return {
+        "success": True,
+        "data": {
+            "has_application": True,
+            "merchant": merchant.to_dict(),
+            "is_merchant": current_user.is_merchant,
+            "merchant_verified": current_user.merchant_verified,
+            "verification_status": current_user.merchant_verification_status,
+            "verification_notes": merchant.verification_notes
+        }
+    }
+
+
+@router.get("/admin/pending-applications")
+def get_pending_merchant_applications(
+    page: int = 1,
+    limit: int = 20,
+    status: str = "pending",
+    db: Session = Depends(get_db),
+    admin_user: User = Depends(require_admin)
+):
+    """Admin: Get list of pending merchant applications"""
+    query = select(Merchant).where(Merchant.verification_status == status)
+    
+    total = db.scalar(select(func.count()).select_from(query.subquery()))
+    offset = (page - 1) * limit
+    merchants = db.scalars(query.order_by(Merchant.created_at.desc()).offset(offset).limit(limit)).all()
+    
+    applications = []
+    for m in merchants:
+        user = db.get(User, m.user_id) if m.user_id else None
+        applications.append({
+            "id": m.id,
+            "merchant": m.to_dict(),
+            "business_name": m.business_name,
+            "business_email": m.business_email,
+            "business_phone": m.business_phone,
+            "business_address": m.business_address,
+            "business_city": m.business_city,
+            "business_state": m.business_state,
+            "business_pincode": m.business_pincode,
+            "gst_number": m.gst_number,
+            "pan_number": m.pan_number,
+            "website_url": m.website_url,
+            "user": user.to_dict() if user else None,
+            "created_at": m.created_at.isoformat() if m.created_at else None
+        })
+    
+    return {
+        "success": True,
+        "data": {
+            "applications": applications,
+            "pagination": {
+                "current_page": page,
+                "total_pages": ceil(total / limit) if total else 0,
+                "total_items": total,
+                "per_page": limit
+            }
+        }
+    }
+
+
+@router.post("/admin/verify/{merchant_id}")
+def verify_merchant_application(
+    merchant_id: int,
+    action_data: MerchantVerificationAction,
+    db: Session = Depends(get_db),
+    admin_user: User = Depends(require_admin)
+):
+    """Admin: Approve or reject a merchant application"""
+    merchant = db.get(Merchant, merchant_id)
+    if not merchant:
+        raise HTTPException(status_code=404, detail="Merchant application not found")
+    
+    if action_data.action not in ["approve", "reject"]:
+        raise HTTPException(status_code=400, detail="Invalid action. Use 'approve' or 'reject'")
+    
+    user = db.get(User, merchant.user_id) if merchant.user_id else None
+    
+    if action_data.action == "approve":
+        merchant.status = MerchantStatus.APPROVED.value
+        merchant.verification_status = "approved"
+        merchant.is_verified = True
+        merchant.is_active = True
+        merchant.verified_at = datetime.utcnow()
+        merchant.verified_by = admin_user.id
+        merchant.verification_notes = action_data.notes
+        
+        if user:
+            user.merchant_verified = True
+            user.merchant_verification_status = MerchantVerificationStatus.APPROVED.value
+            user.role = "merchant"
+        
+        message = "Merchant application approved successfully"
+    else:
+        merchant.status = MerchantStatus.REJECTED.value
+        merchant.verification_status = "rejected"
+        merchant.is_verified = False
+        merchant.is_active = False
+        merchant.verification_notes = action_data.notes
+        
+        if user:
+            user.merchant_verified = False
+            user.merchant_verification_status = MerchantVerificationStatus.REJECTED.value
+        
+        message = "Merchant application rejected"
+    
+    db.commit()
+    db.refresh(merchant)
+    if user:
+        db.refresh(user)
+    
+    cache_invalidate_prefix(rk("cache", "merchants"))
+    
+    return {
+        "success": True,
+        "message": message,
+        "data": {
+            "merchant": merchant.to_dict(),
+            "user": user.to_dict() if user else None
+        }
+    }

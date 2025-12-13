@@ -4,7 +4,7 @@
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { useForm } from "react-hook-form";
-import { Loader2, User, Shield, Bell, Save, Link2, Unlink, CheckCircle, AlertCircle } from "lucide-react";
+import { Loader2, User, Shield, Bell, Save, Link2, Unlink, CheckCircle, AlertCircle, Store, Building2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -88,6 +88,24 @@ function ProfileContent() {
     cashback: true
   });
 
+  // Merchant Application State
+  const [merchantData, setMerchantData] = useState<any>(null);
+  const [loadingMerchant, setLoadingMerchant] = useState(false);
+  const [submittingMerchant, setSubmittingMerchant] = useState(false);
+  const [merchantForm, setMerchantForm] = useState({
+    business_name: "",
+    business_email: "",
+    business_phone: "",
+    business_address: "",
+    business_city: "",
+    business_state: "",
+    business_pincode: "",
+    gst_number: "",
+    pan_number: "",
+    website_url: "",
+    description: ""
+  });
+
   type ProfileForm = {
     first_name: string;
     last_name: string;
@@ -154,7 +172,57 @@ function ProfileContent() {
     if (activeTab === "kyc") {
       fetchKycData();
     }
+    if (activeTab === "merchant") {
+      fetchMerchantData();
+    }
   }, [activeTab]);
+
+  const fetchMerchantData = async () => {
+    setLoadingMerchant(true);
+    try {
+      const response = await apiClient.get('/merchants/my-application');
+      if (response.data.success) {
+        setMerchantData(response.data.data);
+      }
+    } catch (error) {
+      console.error("Failed to fetch merchant data:", error);
+    } finally {
+      setLoadingMerchant(false);
+    }
+  };
+
+  const handleMerchantSubmit = async () => {
+    if (!merchantForm.business_name || !merchantForm.business_email || !merchantForm.business_phone) {
+      toast.error("Please fill all required fields");
+      return;
+    }
+    
+    setSubmittingMerchant(true);
+    try {
+      const response = await apiClient.post('/merchants/apply', merchantForm);
+      if (response.data.success) {
+        toast.success("Merchant application submitted successfully!");
+        fetchMerchantData();
+      }
+    } catch (error: any) {
+      toast.error(error?.response?.data?.detail || "Failed to submit application");
+    } finally {
+      setSubmittingMerchant(false);
+    }
+  };
+
+  const getMerchantStatusBadge = (status: string) => {
+    switch (status) {
+      case "approved":
+        return <Badge className="bg-green-500">Approved</Badge>;
+      case "pending":
+        return <Badge className="bg-yellow-500">Pending Review</Badge>;
+      case "rejected":
+        return <Badge className="bg-red-500">Rejected</Badge>;
+      default:
+        return <Badge variant="secondary">Not Applied</Badge>;
+    }
+  };
 
   const onSubmit = async (data: ProfileForm) => {
     setIsSaving(true);
@@ -489,6 +557,10 @@ function ProfileContent() {
           <TabsTrigger value="linked" className="gap-2">
             <Link2 className="h-4 w-4" />
             Linked Accounts
+          </TabsTrigger>
+          <TabsTrigger value="merchant" className="gap-2">
+            <Store className="h-4 w-4" />
+            Become Merchant
           </TabsTrigger>
         </TabsList>
 
@@ -1047,6 +1119,200 @@ function ProfileContent() {
                     </div>
                   )}
                 </>
+              )}
+            </CardContent>
+          </Card>
+        </TabsContent>
+
+        {/* Merchant Application */}
+        <TabsContent value="merchant">
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <Building2 className="h-5 w-5" />
+                Become a Merchant
+              </CardTitle>
+              <CardDescription>
+                Apply to become a merchant and list your coupons on our platform
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              {loadingMerchant ? (
+                <div className="flex items-center justify-center py-8">
+                  <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
+                </div>
+              ) : merchantData?.has_application ? (
+                <div className="space-y-4">
+                  <div className="flex items-center justify-between p-4 border rounded-lg">
+                    <div>
+                      <p className="font-medium">Application Status</p>
+                      <p className="text-sm text-muted-foreground">
+                        {merchantData.merchant?.business_name || "Your business"}
+                      </p>
+                    </div>
+                    {getMerchantStatusBadge(merchantData.verification_status)}
+                  </div>
+                  
+                  {merchantData.verification_status === "pending" && (
+                    <div className="rounded-lg bg-yellow-50 border border-yellow-200 p-4 text-sm text-yellow-800">
+                      <p className="font-medium">Application Under Review</p>
+                      <p className="mt-1">
+                        Your merchant application is being reviewed by our team. We will notify you once it is approved.
+                      </p>
+                    </div>
+                  )}
+                  
+                  {merchantData.verification_status === "approved" && (
+                    <div className="rounded-lg bg-green-50 border border-green-200 p-4 text-sm text-green-800">
+                      <p className="font-medium flex items-center gap-2">
+                        <CheckCircle className="h-4 w-4" />
+                        Congratulations! You are now a verified merchant.
+                      </p>
+                      <p className="mt-1">
+                        You can now add your coupons and offers to our platform.
+                      </p>
+                    </div>
+                  )}
+                  
+                  {merchantData.verification_status === "rejected" && (
+                    <div className="rounded-lg bg-red-50 border border-red-200 p-4 text-sm text-red-800">
+                      <p className="font-medium flex items-center gap-2">
+                        <AlertCircle className="h-4 w-4" />
+                        Application Rejected
+                      </p>
+                      {merchantData.verification_notes && (
+                        <p className="mt-1">Reason: {merchantData.verification_notes}</p>
+                      )}
+                    </div>
+                  )}
+                </div>
+              ) : (
+                <div className="space-y-4">
+                  <div className="rounded-lg bg-blue-50 border border-blue-200 p-4 text-sm text-blue-800 mb-4">
+                    <p className="font-medium">Want to list your coupons?</p>
+                    <p className="mt-1">
+                      Fill in your business details below to apply as a merchant. Once approved, you can add your coupons and offers.
+                    </p>
+                  </div>
+                  
+                  <div className="grid gap-4 sm:grid-cols-2">
+                    <div className="space-y-2">
+                      <Label>Business Name *</Label>
+                      <Input
+                        value={merchantForm.business_name}
+                        onChange={(e) => setMerchantForm({...merchantForm, business_name: e.target.value})}
+                        placeholder="Your company name"
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <Label>Business Email *</Label>
+                      <Input
+                        type="email"
+                        value={merchantForm.business_email}
+                        onChange={(e) => setMerchantForm({...merchantForm, business_email: e.target.value})}
+                        placeholder="business@example.com"
+                      />
+                    </div>
+                  </div>
+                  
+                  <div className="grid gap-4 sm:grid-cols-2">
+                    <div className="space-y-2">
+                      <Label>Business Phone *</Label>
+                      <Input
+                        value={merchantForm.business_phone}
+                        onChange={(e) => setMerchantForm({...merchantForm, business_phone: e.target.value})}
+                        placeholder="+91 9876543210"
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <Label>Website URL</Label>
+                      <Input
+                        value={merchantForm.website_url}
+                        onChange={(e) => setMerchantForm({...merchantForm, website_url: e.target.value})}
+                        placeholder="https://yourwebsite.com"
+                      />
+                    </div>
+                  </div>
+                  
+                  <div className="space-y-2">
+                    <Label>Business Address *</Label>
+                    <Input
+                      value={merchantForm.business_address}
+                      onChange={(e) => setMerchantForm({...merchantForm, business_address: e.target.value})}
+                      placeholder="Street address"
+                    />
+                  </div>
+                  
+                  <div className="grid gap-4 sm:grid-cols-3">
+                    <div className="space-y-2">
+                      <Label>City *</Label>
+                      <Input
+                        value={merchantForm.business_city}
+                        onChange={(e) => setMerchantForm({...merchantForm, business_city: e.target.value})}
+                        placeholder="City"
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <Label>State *</Label>
+                      <Input
+                        value={merchantForm.business_state}
+                        onChange={(e) => setMerchantForm({...merchantForm, business_state: e.target.value})}
+                        placeholder="State"
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <Label>Pincode *</Label>
+                      <Input
+                        value={merchantForm.business_pincode}
+                        onChange={(e) => setMerchantForm({...merchantForm, business_pincode: e.target.value})}
+                        placeholder="110001"
+                      />
+                    </div>
+                  </div>
+                  
+                  <div className="grid gap-4 sm:grid-cols-2">
+                    <div className="space-y-2">
+                      <Label>GST Number (Optional)</Label>
+                      <Input
+                        value={merchantForm.gst_number}
+                        onChange={(e) => setMerchantForm({...merchantForm, gst_number: e.target.value})}
+                        placeholder="22AAAAA0000A1Z5"
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <Label>PAN Number (Optional)</Label>
+                      <Input
+                        value={merchantForm.pan_number}
+                        onChange={(e) => setMerchantForm({...merchantForm, pan_number: e.target.value})}
+                        placeholder="AAAAA0000A"
+                      />
+                    </div>
+                  </div>
+                  
+                  <div className="space-y-2">
+                    <Label>Business Description</Label>
+                    <textarea
+                      className="w-full min-h-[100px] px-3 py-2 border rounded-md"
+                      value={merchantForm.description}
+                      onChange={(e) => setMerchantForm({...merchantForm, description: e.target.value})}
+                      placeholder="Tell us about your business..."
+                    />
+                  </div>
+                  
+                  <Button onClick={handleMerchantSubmit} disabled={submittingMerchant}>
+                    {submittingMerchant ? (
+                      <>
+                        <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                        Submitting...
+                      </>
+                    ) : (
+                      <>
+                        <Store className="mr-2 h-4 w-4" />
+                        Submit Application
+                      </>
+                    )}
+                  </Button>
+                </div>
               )}
             </CardContent>
           </Card>
