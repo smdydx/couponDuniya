@@ -89,7 +89,6 @@ class User(Base):
     deleted_at: Mapped[datetime | None] = mapped_column(DateTime, nullable=True)
 
     orders = relationship("Order", back_populates="user")
-    two_factor_auth = relationship("User2FA", back_populates="user", uselist=False, cascade="all, delete-orphan")
     social_accounts = relationship("SocialAccount", back_populates="user", cascade="all, delete-orphan")
     refresh_tokens = relationship("RefreshToken", back_populates="user", cascade="all, delete-orphan")
     referrals_made = relationship("Referral", foreign_keys="[Referral.referrer_id]", back_populates="referrer")

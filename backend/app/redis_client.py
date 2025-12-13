@@ -22,12 +22,9 @@ class MockRedis:
     def zincrby(self, key, amount, member) -> float: return float(amount)
     def zrevrange(self, key, start, end, withscores=False) -> list: return []
     def sadd(self, key, *members) -> int: return 0
-    def scard(self, key) -> int: return 0
     def scan_iter(self, match=None): return iter([])
     def lpush(self, key, *values) -> int: return 0
-    def rpush(self, key, *values) -> int: return 0
     def llen(self, key) -> int: return 0
-    def lrange(self, key, start, end) -> list: return []
     def publish(self, channel, message) -> int: return 0
     def info(self) -> dict: return {}
     def ping(self) -> bool: return True

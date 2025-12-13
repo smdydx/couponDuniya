@@ -1,229 +1,264 @@
-from fastapi import APIRouter, Depends, HTTPException, Query
-from sqlalchemy.orm import Session, joinedload
-from sqlalchemy import select, func, or_
-from typing import Optional, List
-from pydantic import BaseModel
-from datetime import datetime
-from math import ceil
+from fastapi import APIRouter, Depends, Query, HTTPException
+from sqlalchemy.orm import Session
+from sqlalchemy import select, func, or_, and_, desc
+from typing import Optional
 
 from ...database import get_db
-from ...models import Product, ProductVariant, Category, Merchant
-from ...dependencies import get_current_user, require_admin
+from ...models.product import Product
+from ...models.product_variant import ProductVariant
+from ...models.merchant import Merchant
+from ...models.user import User
+from ...dependencies import rate_limit_dependency, get_current_user, require_admin
 
 router = APIRouter(prefix="/products", tags=["Products"])
 
 
-class VariantResponse(BaseModel):
-    id: int
-    product_id: int
-    denomination: float
-    selling_price: float
-    cost_price: float
-    discount_percentage: float
-    is_available: bool
-    stock_quantity: Optional[int] = None
-
-    class Config:
-        from_attributes = True
-
-
-class ProductResponse(BaseModel):
-    id: int
-    name: str
-    slug: str
-    sku: str
-    description: Optional[str] = None
-    image_url: Optional[str] = None
-    merchant_id: Optional[int] = None
-    category_id: Optional[int] = None
-    is_bestseller: bool
-    is_active: bool
-    is_featured: bool
-    terms_conditions: Optional[str] = None
-    how_to_redeem: Optional[str] = None
-    validity_info: Optional[str] = None
-    variants: List[VariantResponse] = []
-    created_at: datetime
-    updated_at: datetime
-
-    class Config:
-        from_attributes = True
-
-
-class ProductsListResponse(BaseModel):
-    data: List[ProductResponse]
-    pagination: dict
-
-
-@router.get("/", response_model=ProductsListResponse)
+@router.get("/", response_model=dict)
 def list_products(
-    page: int = Query(1, ge=1),
-    limit: int = Query(24, ge=1, le=100),
-    search: Optional[str] = None,
-    sort_by: Optional[str] = "popular",
-    category_id: Optional[int] = None,
-    db: Session = Depends(get_db)
+    page: int = 1,
+    limit: int = 20,
+    category_id: int | None = None,
+    merchant_id: int | None = None,
+    is_featured: bool | None = None,
+    search: str | None = None,
+    sort_by: str | None = None,
+    db: Session = Depends(get_db),
+    _: dict = Depends(rate_limit_dependency("products:list", limit=100, window_seconds=60)),
 ):
-    query = db.query(Product).options(joinedload(Product.variants)).filter(Product.is_active == True)
-    
+    """List all active products with variants"""
+    # Base query with joins
+    query = select(Product, Merchant).outerjoin(Merchant, Product.merchant_id == Merchant.id)
+    query = query.where(Product.is_active == True)
+
+    # Apply filters
     if category_id:
-        query = query.filter(Product.category_id == category_id)
-    
+        query = query.where(Product.category_id == category_id)
+    if merchant_id:
+        query = query.where(Product.merchant_id == merchant_id)
+    if is_featured:
+        query = query.where(Product.is_featured == True)
     if search:
-        search_term = f"%{search}%"
-        query = query.filter(
-            or_(
-                Product.name.ilike(search_term),
-                Product.description.ilike(search_term)
-            )
-        )
-    
-    if sort_by == "popular":
-        query = query.order_by(Product.is_bestseller.desc(), Product.display_order.asc())
-    elif sort_by == "newest":
-        query = query.order_by(Product.created_at.desc())
-    elif sort_by == "price_low":
-        query = query.order_by(Product.display_order.asc())
+        query = query.where(or_(
+            Product.name.ilike(f"%{search}%"),
+            Product.slug.ilike(f"%{search}%")
+        ))
+
+    # Count total items
+    count_query = select(func.count()).select_from(Product).where(Product.is_active == True)
+    if category_id:
+        count_query = count_query.where(Product.category_id == category_id)
+    if merchant_id:
+        count_query = count_query.where(Product.merchant_id == merchant_id)
+    if is_featured:
+        count_query = count_query.where(Product.is_featured == True)
+    if search:
+        count_query = count_query.where(or_(
+            Product.name.ilike(f"%{search}%"),
+            Product.slug.ilike(f"%{search}%")
+        ))
+
+    total = db.scalar(count_query) or 0
+
+    # Apply sorting
+    if sort_by == "price_low":
+        query = query.order_by(Product.price.asc())
     elif sort_by == "price_high":
-        query = query.order_by(Product.display_order.desc())
+        query = query.order_by(Product.price.desc())
     elif sort_by == "discount":
-        query = query.order_by(Product.is_bestseller.desc())
+        query = query.order_by(desc(Product.is_featured))
+    elif sort_by == "popular":
+        query = query.order_by(desc(Product.is_bestseller))
     else:
-        query = query.order_by(Product.display_order.asc())
-    
-    total = query.count()
-    total_pages = ceil(total / limit)
-    offset = (page - 1) * limit
-    
-    products = query.offset(offset).limit(limit).all()
-    
+        query = query.order_by(desc(Product.created_at))
+
+    # Pagination
+    query = query.offset((page - 1) * limit).limit(limit)
+
+    # Execute query
+    results = db.execute(query).all()
+
+    # Format products with variants
+    products = []
+    for product, merchant in results:
+        # Get variants
+        variants_query = select(ProductVariant).where(
+            ProductVariant.product_id == product.id,
+            ProductVariant.is_available == True
+        )
+        variants = db.execute(variants_query).scalars().all()
+
+        products.append({
+            "id": product.id,
+            "name": product.name,
+            "slug": product.slug,
+            "image_url": product.image_url,
+            "is_featured": product.is_featured,
+            "is_bestseller": product.is_bestseller,
+            "sales_count": 0,  # You can add this field to Product model later
+            "merchant": {
+                "id": merchant.id,
+                "name": merchant.name,
+                "slug": merchant.slug,
+                "logo_url": merchant.logo_url
+            } if merchant else None,
+            "variants": [{
+                "id": v.id,
+                "product_id": v.product_id,
+                "sku": v.sku,
+                "denomination": float(v.price),
+                "selling_price": float(v.price),
+                "discount_percentage": 0,
+                "is_available": v.is_available
+            } for v in variants]
+        })
+
     return {
+        "success": True,
         "data": products,
         "pagination": {
             "current_page": page,
-            "total_pages": total_pages,
+            "total_pages": max(1, (total + limit - 1) // limit),
             "total_items": total,
-            "items_per_page": limit
-        }
+            "per_page": limit,
+        },
     }
 
 
-@router.get("/{product_id}", response_model=ProductResponse)
-def get_product(product_id: int, db: Session = Depends(get_db)):
-    product = db.query(Product).options(joinedload(Product.variants)).filter(
-        Product.id == product_id,
-        Product.is_active == True
-    ).first()
-    
-    if not product:
+@router.get("/featured", response_model=dict)
+def featured_products(limit: int = 8, db: Session = Depends(get_db)):
+    """Get featured products"""
+    query = select(Product, Merchant).outerjoin(Merchant, Product.merchant_id == Merchant.id)
+    query = query.where(Product.is_active == True, Product.is_featured == True)
+    query = query.order_by(desc(Product.created_at)).limit(limit)
+
+    results = db.execute(query).all()
+
+    products = []
+    for product, merchant in results:
+        variants_query = select(ProductVariant).where(
+            ProductVariant.product_id == product.id,
+            ProductVariant.is_available == True
+        )
+        variants = db.execute(variants_query).scalars().all()
+
+        products.append({
+            "id": product.id,
+            "name": product.name,
+            "slug": product.slug,
+            "image_url": product.image_url,
+            "is_featured": product.is_featured,
+            "is_bestseller": product.is_bestseller,
+            "merchant": {
+                "id": merchant.id,
+                "name": merchant.name,
+                "slug": merchant.slug,
+                "logo_url": merchant.logo_url
+            } if merchant else None,
+            "variants": [{
+                "id": v.id,
+                "product_id": v.product_id,
+                "sku": v.sku,
+                "denomination": float(v.price),
+                "selling_price": float(v.price),
+                "discount_percentage": 0,
+                "is_available": v.is_available
+            } for v in variants]
+        })
+
+    return {"success": True, "data": products}
+
+
+@router.get("/bestsellers", response_model=dict)
+def bestseller_products(limit: int = 8, db: Session = Depends(get_db)):
+    """Get bestseller products"""
+    query = select(Product, Merchant).outerjoin(Merchant, Product.merchant_id == Merchant.id)
+    query = query.where(Product.is_active == True, Product.is_bestseller == True)
+    query = query.order_by(desc(Product.created_at)).limit(limit)
+
+    results = db.execute(query).all()
+
+    products = []
+    for product, merchant in results:
+        variants_query = select(ProductVariant).where(
+            ProductVariant.product_id == product.id,
+            ProductVariant.is_available == True
+        )
+        variants = db.execute(variants_query).scalars().all()
+
+        products.append({
+            "id": product.id,
+            "name": product.name,
+            "slug": product.slug,
+            "image_url": product.image_url,
+            "is_featured": product.is_featured,
+            "is_bestseller": product.is_bestseller,
+            "merchant": {
+                "id": merchant.id,
+                "name": merchant.name,
+                "slug": merchant.slug,
+                "logo_url": merchant.logo_url
+            } if merchant else None,
+            "variants": [{
+                "id": v.id,
+                "product_id": v.product_id,
+                "sku": v.sku,
+                "denomination": float(v.price),
+                "selling_price": float(v.price),
+                "discount_percentage": 0,
+                "is_available": v.is_available
+            } for v in variants]
+        })
+
+    return {"success": True, "data": products}
+
+
+@router.get("/{slug}", response_model=dict)
+def get_product(slug: str, db: Session = Depends(get_db)):
+    """Get product by slug with all details"""
+    query = select(Product, Merchant).outerjoin(Merchant, Product.merchant_id == Merchant.id)
+    query = query.where(Product.slug == slug, Product.is_active == True)
+
+    result = db.execute(query).first()
+    if not result:
         raise HTTPException(status_code=404, detail="Product not found")
-    
-    return product
 
+    product, merchant = result
 
-@router.get("/slug/{slug}", response_model=ProductResponse)
-def get_product_by_slug(slug: str, db: Session = Depends(get_db)):
-    product = db.query(Product).options(joinedload(Product.variants)).filter(
-        Product.slug == slug,
-        Product.is_active == True
-    ).first()
-    
-    if not product:
-        raise HTTPException(status_code=404, detail="Product not found")
-    
-    return product
+    # Get variants
+    variants_query = select(ProductVariant).where(
+        ProductVariant.product_id == product.id,
+        ProductVariant.is_available == True
+    )
+    variants = db.execute(variants_query).scalars().all()
 
+    product_data = {
+        "id": product.id,
+        "name": product.name,
+        "slug": product.slug,
+        "description": f"Instant {product.name} - Digital delivery",
+        "image_url": product.image_url,
+        "is_featured": product.is_featured,
+        "is_bestseller": product.is_bestseller,
+        "card_type": "e-gift",
+        "delivery_method": "email",
+        "validity_days": 365,
+        "is_in_stock": product.stock > 0,
+        "merchant": {
+            "id": merchant.id,
+            "name": merchant.name,
+            "slug": merchant.slug,
+            "logo_url": merchant.logo_url
+        } if merchant else None,
+        "variants": [{
+            "id": v.id,
+            "product_id": v.product_id,
+            "sku": v.sku,
+            "denomination": float(v.price),
+            "selling_price": float(v.price),
+            "cost_price": float(v.price) * 0.97,
+            "discount_percentage": 0,
+            "is_available": v.is_available
+        } for v in variants]
+    }
 
-class ProductCreate(BaseModel):
-    name: str
-    slug: str
-    sku: str
-    description: Optional[str] = None
-    image_url: Optional[str] = None
-    merchant_id: Optional[int] = None
-    category_id: Optional[int] = None
-    is_bestseller: bool = False
-    is_featured: bool = False
-    terms_conditions: Optional[str] = None
-    how_to_redeem: Optional[str] = None
-    validity_info: Optional[str] = None
-
-
-class VariantCreate(BaseModel):
-    denomination: float
-    selling_price: float
-    cost_price: float = 0
-    discount_percentage: float = 0
-    is_available: bool = True
-    stock_quantity: Optional[int] = None
-
-
-@router.post("/", response_model=ProductResponse)
-def create_product(
-    payload: ProductCreate,
-    db: Session = Depends(get_db),
-    _: object = Depends(require_admin)
-):
-    existing = db.query(Product).filter(
-        or_(Product.slug == payload.slug, Product.sku == payload.sku)
-    ).first()
-    if existing:
-        raise HTTPException(status_code=400, detail="Slug or SKU already exists")
-    
-    product = Product(**payload.dict())
-    db.add(product)
-    db.commit()
-    db.refresh(product)
-    return product
-
-
-@router.post("/{product_id}/variants", response_model=VariantResponse)
-def add_variant(
-    product_id: int,
-    payload: VariantCreate,
-    db: Session = Depends(get_db),
-    _: object = Depends(require_admin)
-):
-    product = db.query(Product).filter(Product.id == product_id).first()
-    if not product:
-        raise HTTPException(status_code=404, detail="Product not found")
-    
-    variant = ProductVariant(product_id=product_id, **payload.dict())
-    db.add(variant)
-    db.commit()
-    db.refresh(variant)
-    return variant
-
-
-@router.put("/{product_id}", response_model=ProductResponse)
-def update_product(
-    product_id: int,
-    payload: ProductCreate,
-    db: Session = Depends(get_db),
-    _: object = Depends(require_admin)
-):
-    product = db.query(Product).filter(Product.id == product_id).first()
-    if not product:
-        raise HTTPException(status_code=404, detail="Product not found")
-    
-    for key, value in payload.dict().items():
-        setattr(product, key, value)
-    
-    db.commit()
-    db.refresh(product)
-    return product
-
-
-@router.delete("/{product_id}")
-def delete_product(
-    product_id: int,
-    db: Session = Depends(get_db),
-    _: object = Depends(require_admin)
-):
-    product = db.query(Product).filter(Product.id == product_id).first()
-    if not product:
-        raise HTTPException(status_code=404, detail="Product not found")
-    
-    db.delete(product)
-    db.commit()
-    return {"message": "Product deleted"}
+    return {"success": True, "data": product_data}

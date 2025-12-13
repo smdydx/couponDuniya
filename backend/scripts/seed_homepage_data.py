@@ -8,7 +8,7 @@ sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..')
 
 from sqlalchemy.orm import Session
 from app.database import SessionLocal, engine, Base
-from app.models import Merchant, Offer, Banner, Category
+from app.models import Merchant, Offer, Product, ProductVariant, Banner, Category
 from datetime import datetime, timedelta
 import random
 
@@ -24,6 +24,8 @@ def seed_database():
     try:
         # Clear existing data
         print("🧹 Cleaning existing data...")
+        db.query(ProductVariant).delete()
+        db.query(Product).delete()
         db.query(Offer).delete()
         db.query(Merchant).delete()
         db.query(Banner).delete()
@@ -105,6 +107,48 @@ def seed_database():
         db.add_all(offers)
         db.commit()
 
+        # Create Products (Gift Cards)
+        print("💳 Creating gift cards...")
+        products = []
+        for merchant in merchants[:8]:
+            product = Product(
+                merchant_id=merchant.id,
+                name=f"{merchant.name} Gift Card",
+                slug=f"{merchant.slug}-gift-card",
+                description=f"Buy {merchant.name} gift cards at discounted prices. Instant delivery!",
+                image_url=f"/images/gift-cards/{merchant.slug}.png",
+                price=500.00,
+                stock=1000,
+                category_id=categories[random.randint(0, len(categories)-1)].id,
+                is_bestseller=random.choice([True, False]),
+                is_featured=merchant.is_featured,
+                is_active=True
+            )
+            products.append(product)
+
+        db.add_all(products)
+        db.commit()
+
+        # Create Product Variants
+        print("📦 Creating product variants...")
+        variants = []
+        denominations = [100, 250, 500, 1000, 2000, 5000]
+        for product in products:
+            for denom in denominations:
+                discount = random.randint(3, 8)
+                selling_price = denom * (1 - discount/100)
+                variants.append(ProductVariant(
+                    product_id=product.id,
+                    sku=f"{product.slug}-{denom}",
+                    name=f"₹{denom}",
+                    price=selling_price,
+                    stock=random.randint(50, 200),
+                    is_available=True
+                ))
+
+        db.add_all(variants)
+        db.commit()
+
         # Create Banners
         print("🎨 Creating banners...")
         hero_banners = [
@@ -164,6 +208,8 @@ def seed_database():
         print(f"   - {len(categories)} categories")
         print(f"   - {len(merchants)} merchants")
         print(f"   - {len(offers)} offers")
+        print(f"   - {len(products)} products")
+        print(f"   - {len(variants)} product variants")
         print(f"   - {len(hero_banners) + len(promo_banners)} banners")
         print("\n🎉 Your homepage should now be populated with data!")
 

@@ -15,19 +15,15 @@ from app.config import get_settings
 # Import all models so they're registered with Base.metadata
 from app.models import (  # noqa
     User, SocialAccount, Merchant, Category, Offer, OfferClick, OfferView,
-    Product, ProductVariant, Order, PromoCode,
+    Product, ProductVariant, Order, OrderItem, PromoCode,
     WalletTransaction, WalletBalance, Withdrawal, WithdrawalRequest,
-    Payout, MerchantCommission,
+    Payout, MerchantCommission, Payment,
     GiftCard, Referral, CashbackEvent,
     SupportTicket, Notification,
     Role, Permission, RolePermission, Department, UserRole, UserDepartment,
-    AuditLog, UserSession, UserKYC,
-    CashbackRule, Banner, RefreshToken, User2FA,
-    MerchantDocument, AffiliateClick, AffiliateTransaction, AffiliateMerchantMap,
-    NewsletterSubscriber, NewsletterCampaign, PushSubscription, PushNotification,
-    AnalyticsEvent, UserMetric, ABTestExperiment, ABTestVariant
+    AuditLog, UserSession, UserKYC, Inventory, CMSPage, SEORedirect,
+    CashbackRule, BlogPost, Banner
 )
-
 
 settings = get_settings()
 

@@ -110,16 +110,7 @@ function PromoSlider({ promoOffers }: { promoOffers: any[] }) {
             style={{ scrollbarWidth: "none", msOverflowStyle: "none" }}
           >
             {promoOffers.map((offer, index) => {
-              let metadata: any = {};
-              try {
-                if (typeof offer.metadata === 'string' && offer.metadata) {
-                  metadata = JSON.parse(offer.metadata);
-                } else if (offer.metadata && typeof offer.metadata === 'object') {
-                  metadata = offer.metadata;
-                }
-              } catch (e) {
-                metadata = {};
-              }
+              const metadata = offer.metadata ? JSON.parse(offer.metadata) : {};
               const gradient =
                 metadata.gradient || "from-purple-500 to-blue-600";
               const emoji = metadata.emoji || "🎁";
@@ -237,9 +228,9 @@ export default function HomePage() {
     queryKey: ["homepage"],
     queryFn: async () => {
       try {
-        // Use proxy path for client-side requests
-        const apiUrl = '/backend-api/api/v1/homepage/?limit_merchants=12&limit_featured_offers=8&limit_exclusive_offers=6&limit_gift_cards=12&limit_banners=5';
-        const response = await fetch(apiUrl, {
+        // Call backend directly - homepage is public data
+        const backendUrl = process.env.NEXT_PUBLIC_API_URL || 'http://0.0.0.0:8000';
+        const response = await fetch(`${backendUrl}/api/v1/homepage/?limit_merchants=12&limit_featured_offers=8&limit_exclusive_offers=6&limit_products=12&limit_banners=5`, {
           method: 'GET',
           headers: {
             'Content-Type': 'application/json',
@@ -347,6 +338,11 @@ export default function HomePage() {
             <Button onClick={() => router.push("/products")} variant="outline">
               Browse Gift Cards
             </Button>
+          </div>
+          <div className="mt-8 p-4 bg-yellow-50 border border-yellow-200 rounded-lg">
+            <p className="text-xs text-yellow-800">
+              <strong>Developers:</strong> Run <code className="bg-yellow-100 px-2 py-1 rounded">python backend/scripts/seed_homepage_data.py</code> to populate sample data
+            </p>
           </div>
         </div>
       </div>

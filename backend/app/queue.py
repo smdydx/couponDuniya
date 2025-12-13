@@ -70,52 +70,40 @@ def remove_item(user_id: int, variant_id: int):
 # ---------------- Job Queue Helpers ----------------
 
 def push_email_job(email_type: str, to_email: str, data: dict):
-    try:
-        job = {
-            "type": email_type,
-            "to": to_email,
-            "data": data,
-            "enqueued_at": _now_iso(),
-            "attempts": 0,
-        }
-        redis_client.rpush(EMAIL_QUEUE, json.dumps(job))
-    except Exception:
-        pass
+    job = {
+        "type": email_type,
+        "to": to_email,
+        "data": data,
+        "enqueued_at": _now_iso(),
+        "attempts": 0,
+    }
+    redis_client.rpush(EMAIL_QUEUE, json.dumps(job))
 
 
 def push_sms_job(sms_type: str, mobile: str, data: dict):
-    try:
-        job = {
-            "type": sms_type,
-            "mobile": mobile,
-            "data": data,
-            "enqueued_at": _now_iso(),
-            "attempts": 0,
-        }
-        redis_client.rpush(SMS_QUEUE, json.dumps(job))
-    except Exception:
-        pass
+    job = {
+        "type": sms_type,
+        "mobile": mobile,
+        "data": data,
+        "enqueued_at": _now_iso(),
+        "attempts": 0,
+    }
+    redis_client.rpush(SMS_QUEUE, json.dumps(job))
 
 
 def get_queue_stats() -> dict:
-    try:
-        return {
-            "email": {
-                "pending": redis_client.llen(EMAIL_QUEUE) or 0,
-                "processing": redis_client.scard(EMAIL_PROCESSING) or 0,
-                "dead_letter": redis_client.llen(EMAIL_DLQ) or 0,
-            },
-            "sms": {
-                "pending": redis_client.llen(SMS_QUEUE) or 0,
-                "processing": redis_client.scard(SMS_PROCESSING) or 0,
-                "dead_letter": redis_client.llen(SMS_DLQ) or 0,
-            },
-        }
-    except Exception:
-        return {
-            "email": {"pending": 0, "processing": 0, "dead_letter": 0},
-            "sms": {"pending": 0, "processing": 0, "dead_letter": 0},
-        }
+    return {
+        "email": {
+            "pending": redis_client.llen(EMAIL_QUEUE),
+            "processing": redis_client.scard(EMAIL_PROCESSING),
+            "dlq": redis_client.llen(EMAIL_DLQ),
+        },
+        "sms": {
+            "pending": redis_client.llen(SMS_QUEUE),
+            "processing": redis_client.scard(SMS_PROCESSING),
+            "dlq": redis_client.llen(SMS_DLQ),
+        },
+    }
 
 
 def _dlq_key(queue_name: str) -> str:

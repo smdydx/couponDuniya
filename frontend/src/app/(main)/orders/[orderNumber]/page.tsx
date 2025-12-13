@@ -1,18 +1,85 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import Link from "next/link";
-import { Copy, Check, Download, MessageCircle, Package, CreditCard, Mail, Clock, Loader2, AlertCircle, Truck } from "lucide-react";
+import { Copy, Check, Download, MessageCircle, Package, CreditCard, Mail, Clock } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
-import { Skeleton } from "@/components/ui/skeleton";
 import { Breadcrumbs } from "@/components/common/Breadcrumbs";
 import { formatCurrency, formatDate, formatDateTime } from "@/lib/utils";
 import { ORDER_STATUSES, PAYMENT_STATUSES, ROUTES } from "@/lib/constants";
-import apiClient from "@/lib/api/client";
 import type { Order, OrderItem, GiftCard } from "@/types";
+
+// Mock data
+const mockOrder: Order = {
+  id: 1,
+  order_number: "ORD-ABC123",
+  user_id: 1,
+  status: "fulfilled",
+  payment_status: "paid",
+  payment_method: "Razorpay",
+  subtotal: 1900,
+  discount_amount: 0,
+  wallet_amount_used: 0,
+  final_amount: 1900,
+  currency: "INR",
+  razorpay_payment_id: "pay_XXXXXXXXXX",
+  delivery_email: "user@example.com",
+  delivery_mobile: "+91 98765 43210",
+  items: [
+    {
+      id: 1,
+      order_id: 1,
+      product_variant_id: 1,
+      product_name: "Amazon Pay Gift Card",
+      denomination: 1000,
+      quantity: 1,
+      unit_price: 950,
+      total_price: 950,
+      gift_cards: [
+        {
+          id: 1,
+          order_item_id: 1,
+          card_number: "AMZN-XXXX-YYYY-ZZZZ",
+          pin: "1234",
+          status: "active",
+        },
+      ],
+    },
+    {
+      id: 2,
+      order_id: 1,
+      product_variant_id: 2,
+      product_name: "Amazon Pay Gift Card",
+      denomination: 500,
+      quantity: 2,
+      unit_price: 475,
+      total_price: 950,
+      gift_cards: [
+        {
+          id: 2,
+          order_item_id: 2,
+          card_number: "AMZN-AAAA-BBBB-CCCC",
+          pin: "5678",
+          status: "active",
+        },
+        {
+          id: 3,
+          order_item_id: 2,
+          card_number: "AMZN-DDDD-EEEE-FFFF",
+          pin: "9012",
+          status: "active",
+        },
+      ],
+    },
+  ],
+  created_at: new Date(Date.now() - 86400000).toISOString(),
+  updated_at: new Date(Date.now() - 86400000).toISOString(),
+  paid_at: new Date(Date.now() - 86400000).toISOString(),
+  fulfilled_at: new Date(Date.now() - 43200000).toISOString(),
+};
 
 function VoucherCode({ giftCard }: { giftCard: GiftCard }) {
   const [copied, setCopied] = useState<"code" | "pin" | null>(null);
@@ -79,67 +146,9 @@ export default function OrderDetailPage({
 }: {
   params: { orderNumber: string };
 }) {
-  const [order, setOrder] = useState<Order | null>(null);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
-
-  useEffect(() => {
-    const fetchOrder = async () => {
-      try {
-        setLoading(true);
-        const response = await apiClient.get(`/orders/${params.orderNumber}`);
-        const data = response.data?.data || response.data;
-        setOrder(data);
-      } catch (err: any) {
-        console.error("Failed to fetch order:", err);
-        setError(err.response?.data?.detail || "Failed to load order");
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    fetchOrder();
-  }, [params.orderNumber]);
-
-  if (loading) {
-    return (
-      <div className="container py-6">
-        <Breadcrumbs items={[{ label: "My Orders", href: ROUTES.orders }, { label: "Loading..." }]} />
-        <div className="space-y-6">
-          <Skeleton className="h-10 w-48" />
-          <div className="grid gap-6 lg:grid-cols-3">
-            <div className="space-y-6 lg:col-span-2">
-              <Card><CardContent className="p-6"><Skeleton className="h-32 w-full" /></CardContent></Card>
-            </div>
-            <div className="space-y-6">
-              <Card><CardContent className="p-6"><Skeleton className="h-48 w-full" /></CardContent></Card>
-            </div>
-          </div>
-        </div>
-      </div>
-    );
-  }
-
-  if (error || !order) {
-    return (
-      <div className="container py-6">
-        <Breadcrumbs items={[{ label: "My Orders", href: ROUTES.orders }, { label: "Error" }]} />
-        <Card className="mt-6">
-          <CardContent className="flex flex-col items-center justify-center py-12">
-            <AlertCircle className="h-12 w-12 text-destructive mb-4" />
-            <h2 className="text-xl font-semibold mb-2">Order Not Found</h2>
-            <p className="text-muted-foreground mb-4">{error || "Unable to load this order"}</p>
-            <Button asChild>
-              <Link href={ROUTES.orders}>Back to Orders</Link>
-            </Button>
-          </CardContent>
-        </Card>
-      </div>
-    );
-  }
-
-  const status = ORDER_STATUSES[order.status as keyof typeof ORDER_STATUSES] || { label: order.status, color: "bg-gray-100 text-gray-800" };
-  const paymentStatus = PAYMENT_STATUSES[order.payment_status as keyof typeof PAYMENT_STATUSES] || { label: order.payment_status, color: "bg-gray-100 text-gray-800" };
+  const order = mockOrder; // Replace with API call
+  const status = ORDER_STATUSES[order.status];
+  const paymentStatus = PAYMENT_STATUSES[order.payment_status];
 
   return (
     <div className="container py-6">
