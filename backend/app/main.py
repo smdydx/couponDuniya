@@ -25,7 +25,7 @@ from .api.v1 import (
     notifications, audit_logs, payments, cms_pages, sessions, kyc, inventory,
     commissions, redirects, offer_views, categories, search, cms, checkout,
     cart, health, affiliate, queue, flags, realtime, blog, blog_uploads,
-    homepage, uploads, admin_referrals,
+    homepage, uploads, admin_referrals, social_auth,
 )
 
 from .database import Base, engine
@@ -299,6 +299,7 @@ app.include_router(blog.router, prefix="/api/v1")
 app.include_router(blog_uploads.router, prefix="/api/v1")
 app.include_router(homepage.router, prefix="/api/v1")
 app.include_router(uploads.router, prefix="/api/v1")
+app.include_router(social_auth.router, prefix="/api/v1")
 app.add_middleware(GZipMiddleware, minimum_size=500)
 GROUP_ORDER = [
     ("Auth", ["Auth"]),
