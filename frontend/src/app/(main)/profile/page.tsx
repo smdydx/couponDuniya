@@ -192,7 +192,9 @@ function ProfileContent() {
   };
 
   const handleMerchantSubmit = async () => {
-    if (!merchantForm.business_name || !merchantForm.business_email || !merchantForm.business_phone) {
+    if (!merchantForm.business_name || !merchantForm.business_email || !merchantForm.business_phone || 
+        !merchantForm.business_address || !merchantForm.business_city || !merchantForm.business_state || 
+        !merchantForm.business_pincode) {
       toast.error("Please fill all required fields");
       return;
     }
