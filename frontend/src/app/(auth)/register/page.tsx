@@ -17,8 +17,8 @@ function RegisterRedirect() {
 
   return (
     <div className="w-full max-w-md mx-auto">
-      <div className="bg-white rounded-2xl shadow-xl p-8 flex items-center justify-center">
-        <Loader2 className="h-8 w-8 animate-spin text-gray-400" />
+      <div className="bg-white/95 backdrop-blur-sm rounded-2xl shadow-2xl p-8 flex items-center justify-center">
+        <Loader2 className="h-8 w-8 animate-spin text-purple-600" />
       </div>
     </div>
   );
@@ -28,8 +28,8 @@ export default function RegisterPage() {
   return (
     <Suspense fallback={
       <div className="w-full max-w-md mx-auto">
-        <div className="bg-white rounded-2xl shadow-xl p-8 flex items-center justify-center">
-          <Loader2 className="h-8 w-8 animate-spin text-gray-400" />
+        <div className="bg-white/95 backdrop-blur-sm rounded-2xl shadow-2xl p-8 flex items-center justify-center">
+          <Loader2 className="h-8 w-8 animate-spin text-purple-600" />
         </div>
       </div>
     }>

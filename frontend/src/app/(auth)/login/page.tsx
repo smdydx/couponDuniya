@@ -96,15 +96,15 @@ function AuthForm() {
 
   return (
     <div className="w-full max-w-md mx-auto">
-      <div className="bg-white rounded-2xl shadow-xl overflow-hidden">
-        <div className="flex bg-gray-100 p-1 m-4 rounded-xl">
+      <div className="bg-white/95 backdrop-blur-sm rounded-2xl shadow-2xl overflow-hidden border border-purple-100">
+        <div className="flex bg-purple-50 p-1 m-4 rounded-xl">
           <button
             type="button"
             onClick={() => { setActiveTab("login"); clearError(); }}
             className={`flex-1 py-2.5 text-sm font-medium rounded-lg transition-all duration-200 ${
               activeTab === "login"
-                ? "bg-white text-orange-500 shadow-sm"
-                : "text-gray-500 hover:text-gray-700"
+                ? "bg-white text-purple-600 shadow-sm"
+                : "text-gray-500 hover:text-purple-600"
             }`}
           >
             Login
@@ -114,8 +114,8 @@ function AuthForm() {
             onClick={() => { setActiveTab("signup"); clearError(); setRegisterError(null); }}
             className={`flex-1 py-2.5 text-sm font-medium rounded-lg transition-all duration-200 ${
               activeTab === "signup"
-                ? "bg-white text-orange-500 shadow-sm"
-                : "text-gray-500 hover:text-gray-700"
+                ? "bg-white text-purple-600 shadow-sm"
+                : "text-gray-500 hover:text-purple-600"
             }`}
           >
             Sign Up
@@ -142,7 +142,7 @@ function AuthForm() {
                   id="login-email"
                   type="email"
                   placeholder="you@example.com"
-                  className="h-11"
+                  className="h-11 border-purple-200 focus:border-purple-500 focus:ring-purple-500"
                   {...loginForm.register("email", {
                     required: "Email is required",
                     pattern: { value: /^[^\s@]+@[^\s@]+\.[^\s@]+$/, message: "Invalid email address" },
@@ -157,7 +157,7 @@ function AuthForm() {
               <div className="space-y-1.5">
                 <div className="flex items-center justify-between">
                   <Label htmlFor="login-password" className="text-gray-700">Password</Label>
-                  <Link href={ROUTES.forgotPassword || "/forgot-password"} className="text-xs text-orange-500 hover:underline">
+                  <Link href={ROUTES.forgotPassword || "/forgot-password"} className="text-xs text-purple-600 hover:underline">
                     Forgot password?
                   </Link>
                 </div>
@@ -166,7 +166,7 @@ function AuthForm() {
                     id="login-password"
                     type={showPassword ? "text" : "password"}
                     placeholder="Enter your password"
-                    className="h-11 pr-10"
+                    className="h-11 pr-10 border-purple-200 focus:border-purple-500 focus:ring-purple-500"
                     {...loginForm.register("password", {
                       required: "Password is required",
                       minLength: { value: 6, message: "Password must be at least 6 characters" },
@@ -175,7 +175,7 @@ function AuthForm() {
                   />
                   <button
                     type="button"
-                    className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600"
+                    className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-purple-600"
                     onClick={() => setShowPassword(!showPassword)}
                   >
                     {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
@@ -186,7 +186,7 @@ function AuthForm() {
                 )}
               </div>
 
-              <Button type="submit" className="w-full h-11 bg-orange-500 hover:bg-orange-600 text-white" disabled={isLoading}>
+              <Button type="submit" className="w-full h-11 bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-700 hover:to-indigo-700 text-white shadow-lg shadow-purple-500/30" disabled={isLoading}>
                 {isLoading ? (
                   <><Loader2 className="mr-2 h-4 w-4 animate-spin" />Signing in...</>
                 ) : (
@@ -196,14 +196,14 @@ function AuthForm() {
 
               <div className="relative my-4">
                 <div className="absolute inset-0 flex items-center">
-                  <span className="w-full border-t border-gray-200" />
+                  <span className="w-full border-t border-purple-100" />
                 </div>
                 <div className="relative flex justify-center text-xs uppercase">
                   <span className="bg-white px-2 text-gray-400">Or</span>
                 </div>
               </div>
 
-              <Button type="button" variant="outline" className="w-full h-11 border-gray-200" onClick={handleGoogleLogin}>
+              <Button type="button" variant="outline" className="w-full h-11 border-purple-200 hover:bg-purple-50 hover:border-purple-300" onClick={handleGoogleLogin}>
                 <img src="/images/icons/google.png" alt="Google" className="w-5 h-5 mr-2" />
                 Continue with Google
               </Button>
@@ -226,7 +226,7 @@ function AuthForm() {
                 <Input
                   id="full_name"
                   placeholder="John Doe"
-                  className="h-10"
+                  className="h-10 border-purple-200 focus:border-purple-500 focus:ring-purple-500"
                   {...registerForm.register("full_name", { required: "Full name is required" })}
                 />
                 {registerForm.formState.errors.full_name && (
@@ -240,7 +240,7 @@ function AuthForm() {
                   id="reg-email"
                   type="email"
                   placeholder="you@example.com"
-                  className="h-10"
+                  className="h-10 border-purple-200 focus:border-purple-500 focus:ring-purple-500"
                   {...registerForm.register("email", {
                     required: "Email is required",
                     pattern: { value: /^[^\s@]+@[^\s@]+\.[^\s@]+$/, message: "Invalid email address" },
@@ -254,7 +254,7 @@ function AuthForm() {
 
               <div className="space-y-1">
                 <Label htmlFor="mobile" className="text-gray-700 text-sm">Mobile (Optional)</Label>
-                <Input id="mobile" type="tel" placeholder="+91 98765 43210" className="h-10" {...registerForm.register("mobile")} />
+                <Input id="mobile" type="tel" placeholder="+91 98765 43210" className="h-10 border-purple-200 focus:border-purple-500 focus:ring-purple-500" {...registerForm.register("mobile")} />
               </div>
 
               <div className="space-y-1">
@@ -264,7 +264,7 @@ function AuthForm() {
                     id="reg-password"
                     type={showPassword ? "text" : "password"}
                     placeholder="Create a strong password"
-                    className="h-10 pr-10"
+                    className="h-10 pr-10 border-purple-200 focus:border-purple-500 focus:ring-purple-500"
                     {...registerForm.register("password", {
                       required: "Password is required",
                       minLength: { value: 8, message: "Password must be at least 8 characters" },
@@ -272,7 +272,7 @@ function AuthForm() {
                   />
                   <button
                     type="button"
-                    className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600"
+                    className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-purple-600"
                     onClick={() => setShowPassword(!showPassword)}
                   >
                     {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
@@ -289,7 +289,7 @@ function AuthForm() {
                   id="confirm_password"
                   type="password"
                   placeholder="Confirm your password"
-                  className="h-10"
+                  className="h-10 border-purple-200 focus:border-purple-500 focus:ring-purple-500"
                   {...registerForm.register("confirm_password", {
                     required: "Please confirm your password",
                     validate: (value) => value === password || "Passwords don't match",
@@ -302,7 +302,7 @@ function AuthForm() {
 
               <div className="space-y-1">
                 <Label htmlFor="referral_code" className="text-gray-700 text-sm">Referral Code (Optional)</Label>
-                <Input id="referral_code" placeholder="Enter referral code" className="h-10" {...registerForm.register("referral_code")} />
+                <Input id="referral_code" placeholder="Enter referral code" className="h-10 border-purple-200 focus:border-purple-500 focus:ring-purple-500" {...registerForm.register("referral_code")} />
               </div>
 
               <div className="flex items-start gap-2 pt-1">
@@ -310,17 +310,17 @@ function AuthForm() {
                   id="terms"
                   checked={acceptTerms}
                   onCheckedChange={(checked) => setAcceptTerms(checked === true)}
-                  className="mt-0.5"
+                  className="mt-0.5 border-purple-300 data-[state=checked]:bg-purple-600 data-[state=checked]:border-purple-600"
                 />
                 <Label htmlFor="terms" className="text-xs font-normal leading-tight text-gray-600">
                   I agree to the{" "}
-                  <Link href={ROUTES.terms} className="text-orange-500 hover:underline">Terms of Service</Link>
+                  <Link href={ROUTES.terms} className="text-purple-600 hover:underline">Terms of Service</Link>
                   {" "}and{" "}
-                  <Link href={ROUTES.privacy} className="text-orange-500 hover:underline">Privacy Policy</Link>
+                  <Link href={ROUTES.privacy} className="text-purple-600 hover:underline">Privacy Policy</Link>
                 </Label>
               </div>
 
-              <Button type="submit" className="w-full h-10 bg-orange-500 hover:bg-orange-600 text-white" disabled={registerLoading || !acceptTerms}>
+              <Button type="submit" className="w-full h-10 bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-700 hover:to-indigo-700 text-white shadow-lg shadow-purple-500/30" disabled={registerLoading || !acceptTerms}>
                 {registerLoading ? (
                   <><Loader2 className="mr-2 h-4 w-4 animate-spin" />Creating account...</>
                 ) : (
@@ -330,14 +330,14 @@ function AuthForm() {
 
               <div className="relative my-3">
                 <div className="absolute inset-0 flex items-center">
-                  <span className="w-full border-t border-gray-200" />
+                  <span className="w-full border-t border-purple-100" />
                 </div>
                 <div className="relative flex justify-center text-xs uppercase">
                   <span className="bg-white px-2 text-gray-400">Or</span>
                 </div>
               </div>
 
-              <Button type="button" variant="outline" className="w-full h-10 border-gray-200" onClick={handleGoogleLogin}>
+              <Button type="button" variant="outline" className="w-full h-10 border-purple-200 hover:bg-purple-50 hover:border-purple-300" onClick={handleGoogleLogin}>
                 <img src="/images/icons/google.png" alt="Google" className="w-5 h-5 mr-2" />
                 Continue with Google
               </Button>
@@ -353,8 +353,8 @@ export default function LoginPage() {
   return (
     <Suspense fallback={
       <div className="w-full max-w-md mx-auto">
-        <div className="bg-white rounded-2xl shadow-xl p-8 flex items-center justify-center">
-          <Loader2 className="h-8 w-8 animate-spin text-gray-400" />
+        <div className="bg-white/95 backdrop-blur-sm rounded-2xl shadow-2xl p-8 flex items-center justify-center">
+          <Loader2 className="h-8 w-8 animate-spin text-purple-600" />
         </div>
       </div>
     }>
