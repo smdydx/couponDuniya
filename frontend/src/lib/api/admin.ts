@@ -15,8 +15,30 @@ export interface Merchant {
   slug: string;
   description?: string;
   logo_url?: string;
+  banner_url?: string;
   is_active: boolean;
   is_featured?: boolean;
+  is_verified?: boolean;
+  business_name?: string;
+  business_email?: string;
+  business_phone?: string;
+  business_address?: string;
+  business_city?: string;
+  business_state?: string;
+  business_pincode?: string;
+  business_country?: string;
+  gst_number?: string;
+  pan_number?: string;
+  bank_account_name?: string;
+  bank_account_number?: string;
+  bank_ifsc_code?: string;
+  bank_name?: string;
+  website_url?: string;
+  affiliate_url?: string;
+  tracking_url?: string;
+  commission_rate?: number;
+  cashback_rate?: number;
+  platform_commission?: number;
   created_at?: string;
 }
 

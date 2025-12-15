@@ -69,8 +69,30 @@ export default function AdminMerchantsPage() {
     slug: "",
     description: "",
     logo_url: "",
+    banner_url: "",
     is_active: true,
     is_featured: false,
+    is_verified: false,
+    business_name: "",
+    business_email: "",
+    business_phone: "",
+    business_address: "",
+    business_city: "",
+    business_state: "",
+    business_pincode: "",
+    business_country: "India",
+    gst_number: "",
+    pan_number: "",
+    bank_account_name: "",
+    bank_account_number: "",
+    bank_ifsc_code: "",
+    bank_name: "",
+    website_url: "",
+    affiliate_url: "",
+    tracking_url: "",
+    commission_rate: 0,
+    cashback_rate: 0,
+    platform_commission: 10,
   });
 
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
@@ -140,8 +162,30 @@ export default function AdminMerchantsPage() {
       slug: "",
       description: "",
       logo_url: "",
+      banner_url: "",
       is_active: true,
       is_featured: false,
+      is_verified: false,
+      business_name: "",
+      business_email: "",
+      business_phone: "",
+      business_address: "",
+      business_city: "",
+      business_state: "",
+      business_pincode: "",
+      business_country: "India",
+      gst_number: "",
+      pan_number: "",
+      bank_account_name: "",
+      bank_account_number: "",
+      bank_ifsc_code: "",
+      bank_name: "",
+      website_url: "",
+      affiliate_url: "",
+      tracking_url: "",
+      commission_rate: 0,
+      cashback_rate: 0,
+      platform_commission: 10,
     });
     setDialogOpen(true);
   };
@@ -153,8 +197,30 @@ export default function AdminMerchantsPage() {
       slug: merchant.slug,
       description: merchant.description || "",
       logo_url: merchant.logo_url || "",
+      banner_url: merchant.banner_url || "",
       is_active: merchant.is_active,
       is_featured: merchant.is_featured || false,
+      is_verified: merchant.is_verified || false,
+      business_name: merchant.business_name || "",
+      business_email: merchant.business_email || "",
+      business_phone: merchant.business_phone || "",
+      business_address: merchant.business_address || "",
+      business_city: merchant.business_city || "",
+      business_state: merchant.business_state || "",
+      business_pincode: merchant.business_pincode || "",
+      business_country: merchant.business_country || "India",
+      gst_number: merchant.gst_number || "",
+      pan_number: merchant.pan_number || "",
+      bank_account_name: merchant.bank_account_name || "",
+      bank_account_number: merchant.bank_account_number || "",
+      bank_ifsc_code: merchant.bank_ifsc_code || "",
+      bank_name: merchant.bank_name || "",
+      website_url: merchant.website_url || "",
+      affiliate_url: merchant.affiliate_url || "",
+      tracking_url: merchant.tracking_url || "",
+      commission_rate: merchant.commission_rate || 0,
+      cashback_rate: merchant.cashback_rate || 0,
+      platform_commission: merchant.platform_commission || 10,
     });
     setDialogOpen(true);
   };
@@ -641,83 +707,400 @@ export default function AdminMerchantsPage() {
               {editingMerchant ? "Edit Merchant" : "Add New Merchant"}
             </DialogTitle>
           </DialogHeader>
-          <div className="grid gap-5 py-4 max-h-[60vh] overflow-y-auto pr-1">
-            <div className="grid gap-2">
-              <Label htmlFor="name" className="text-sm font-medium">Name *</Label>
-              <Input
-                id="name"
-                value={formData.name}
-                onChange={(e) => {
-                  const name = e.target.value;
-                  setFormData((prev) => ({
-                    ...prev,
-                    name,
-                    slug: prev.slug || generateSlug(name),
-                  }));
-                }}
-                placeholder="Enter merchant name"
-                className="h-11"
-              />
-            </div>
-            <div className="grid gap-2">
-              <Label htmlFor="slug" className="text-sm font-medium">Slug *</Label>
-              <Input
-                id="slug"
-                value={formData.slug}
-                onChange={(e) =>
-                  setFormData((prev) => ({ ...prev, slug: e.target.value }))
-                }
-                placeholder="merchant-url-slug"
-                className="h-11"
-              />
-            </div>
-            <div className="grid gap-2">
-              <Label htmlFor="description" className="text-sm font-medium">Description</Label>
-              <Textarea
-                id="description"
-                value={formData.description}
-                onChange={(e) =>
-                  setFormData((prev) => ({ ...prev, description: e.target.value }))
-                }
-                placeholder="Brief description about the merchant"
-                rows={3}
-                className="resize-none"
-              />
-            </div>
-            <ImageUploader
-              label="Logo"
-              value={formData.logo_url}
-              onChange={(url) => setFormData((prev) => ({ ...prev, logo_url: url }))}
-              category="merchants"
-              aspectRatio="square"
-            />
-            <div className="flex items-center justify-between rounded-xl border border-gray-200 p-4 bg-gray-50/50">
-              <div className="space-y-0.5">
-                <Label className="text-sm font-medium">Active</Label>
-                <p className="text-xs text-gray-500">
-                  Show this merchant on the website
-                </p>
+          <div className="grid gap-5 py-4 max-h-[65vh] overflow-y-auto pr-1">
+            {/* Basic Info Section */}
+            <div>
+              <h3 className="text-sm font-semibold mb-3 text-gray-700">Basic Information</h3>
+              <div className="grid gap-3">
+                <div className="grid gap-2">
+                  <Label htmlFor="name" className="text-sm font-medium">Name *</Label>
+                  <Input
+                    id="name"
+                    value={formData.name}
+                    onChange={(e) => {
+                      const name = e.target.value;
+                      setFormData((prev) => ({
+                        ...prev,
+                        name,
+                        slug: prev.slug || generateSlug(name),
+                      }));
+                    }}
+                    placeholder="Enter merchant name"
+                    className="h-10"
+                  />
+                </div>
+                <div className="grid gap-2">
+                  <Label htmlFor="slug" className="text-sm font-medium">Slug *</Label>
+                  <Input
+                    id="slug"
+                    value={formData.slug}
+                    onChange={(e) =>
+                      setFormData((prev) => ({ ...prev, slug: e.target.value }))
+                    }
+                    placeholder="merchant-url-slug"
+                    className="h-10"
+                  />
+                </div>
+                <div className="grid gap-2">
+                  <Label htmlFor="description" className="text-sm font-medium">Description</Label>
+                  <Textarea
+                    id="description"
+                    value={formData.description}
+                    onChange={(e) =>
+                      setFormData((prev) => ({ ...prev, description: e.target.value }))
+                    }
+                    placeholder="Brief description about the merchant"
+                    rows={2}
+                    className="resize-none text-sm"
+                  />
+                </div>
+                <div className="grid gap-2">
+                  <Label htmlFor="website" className="text-sm font-medium">Website URL</Label>
+                  <Input
+                    id="website"
+                    value={formData.website_url}
+                    onChange={(e) =>
+                      setFormData((prev) => ({ ...prev, website_url: e.target.value }))
+                    }
+                    placeholder="https://example.com"
+                    className="h-10"
+                  />
+                </div>
+                <ImageUploader
+                  label="Logo (Square)"
+                  value={formData.logo_url}
+                  onChange={(url) => setFormData((prev) => ({ ...prev, logo_url: url }))}
+                  category="merchants"
+                  aspectRatio="square"
+                />
+                <ImageUploader
+                  label="Banner (Wide)"
+                  value={formData.banner_url}
+                  onChange={(url) => setFormData((prev) => ({ ...prev, banner_url: url }))}
+                  category="merchants"
+                  aspectRatio="16:9"
+                />
               </div>
-              <Switch
-                checked={formData.is_active}
-                onCheckedChange={(checked) =>
-                  setFormData((prev) => ({ ...prev, is_active: checked }))
-                }
-              />
             </div>
-            <div className="flex items-center justify-between rounded-xl border border-gray-200 p-4 bg-gray-50/50">
-              <div className="space-y-0.5">
-                <Label className="text-sm font-medium">Featured</Label>
-                <p className="text-xs text-gray-500">
-                  Display on homepage and featured sections
-                </p>
+
+            {/* Business Info */}
+            <div className="border-t pt-4">
+              <h3 className="text-sm font-semibold mb-3 text-gray-700">Business Information</h3>
+              <div className="grid gap-3">
+                <div className="grid gap-2">
+                  <Label htmlFor="business_name" className="text-sm font-medium">Business Name</Label>
+                  <Input
+                    id="business_name"
+                    value={formData.business_name}
+                    onChange={(e) =>
+                      setFormData((prev) => ({ ...prev, business_name: e.target.value }))
+                    }
+                    placeholder="Official business name"
+                    className="h-10"
+                  />
+                </div>
+                <div className="grid grid-cols-2 gap-3">
+                  <div className="grid gap-2">
+                    <Label htmlFor="business_email" className="text-sm font-medium">Email</Label>
+                    <Input
+                      id="business_email"
+                      type="email"
+                      value={formData.business_email}
+                      onChange={(e) =>
+                        setFormData((prev) => ({ ...prev, business_email: e.target.value }))
+                      }
+                      placeholder="business@example.com"
+                      className="h-10"
+                    />
+                  </div>
+                  <div className="grid gap-2">
+                    <Label htmlFor="business_phone" className="text-sm font-medium">Phone</Label>
+                    <Input
+                      id="business_phone"
+                      value={formData.business_phone}
+                      onChange={(e) =>
+                        setFormData((prev) => ({ ...prev, business_phone: e.target.value }))
+                      }
+                      placeholder="+91-98765-43210"
+                      className="h-10"
+                    />
+                  </div>
+                </div>
+                <div className="grid gap-2">
+                  <Label htmlFor="business_address" className="text-sm font-medium">Address</Label>
+                  <Textarea
+                    id="business_address"
+                    value={formData.business_address}
+                    onChange={(e) =>
+                      setFormData((prev) => ({ ...prev, business_address: e.target.value }))
+                    }
+                    placeholder="Street address"
+                    rows={2}
+                    className="resize-none text-sm"
+                  />
+                </div>
+                <div className="grid grid-cols-2 gap-3">
+                  <div className="grid gap-2">
+                    <Label htmlFor="business_city" className="text-sm font-medium">City</Label>
+                    <Input
+                      id="business_city"
+                      value={formData.business_city}
+                      onChange={(e) =>
+                        setFormData((prev) => ({ ...prev, business_city: e.target.value }))
+                      }
+                      placeholder="City"
+                      className="h-10"
+                    />
+                  </div>
+                  <div className="grid gap-2">
+                    <Label htmlFor="business_state" className="text-sm font-medium">State</Label>
+                    <Input
+                      id="business_state"
+                      value={formData.business_state}
+                      onChange={(e) =>
+                        setFormData((prev) => ({ ...prev, business_state: e.target.value }))
+                      }
+                      placeholder="State"
+                      className="h-10"
+                    />
+                  </div>
+                </div>
+                <div className="grid grid-cols-2 gap-3">
+                  <div className="grid gap-2">
+                    <Label htmlFor="business_pincode" className="text-sm font-medium">Pincode</Label>
+                    <Input
+                      id="business_pincode"
+                      value={formData.business_pincode}
+                      onChange={(e) =>
+                        setFormData((prev) => ({ ...prev, business_pincode: e.target.value }))
+                      }
+                      placeholder="PIN Code"
+                      className="h-10"
+                    />
+                  </div>
+                  <div className="grid gap-2">
+                    <Label htmlFor="business_country" className="text-sm font-medium">Country</Label>
+                    <Input
+                      id="business_country"
+                      value={formData.business_country}
+                      onChange={(e) =>
+                        setFormData((prev) => ({ ...prev, business_country: e.target.value }))
+                      }
+                      placeholder="Country"
+                      className="h-10"
+                    />
+                  </div>
+                </div>
               </div>
-              <Switch
-                checked={formData.is_featured}
-                onCheckedChange={(checked) =>
-                  setFormData((prev) => ({ ...prev, is_featured: checked }))
-                }
-              />
+            </div>
+
+            {/* Tax & Compliance */}
+            <div className="border-t pt-4">
+              <h3 className="text-sm font-semibold mb-3 text-gray-700">Tax & Compliance</h3>
+              <div className="grid grid-cols-2 gap-3">
+                <div className="grid gap-2">
+                  <Label htmlFor="gst" className="text-sm font-medium">GST Number</Label>
+                  <Input
+                    id="gst"
+                    value={formData.gst_number}
+                    onChange={(e) =>
+                      setFormData((prev) => ({ ...prev, gst_number: e.target.value }))
+                    }
+                    placeholder="GST Number"
+                    className="h-10"
+                  />
+                </div>
+                <div className="grid gap-2">
+                  <Label htmlFor="pan" className="text-sm font-medium">PAN Number</Label>
+                  <Input
+                    id="pan"
+                    value={formData.pan_number}
+                    onChange={(e) =>
+                      setFormData((prev) => ({ ...prev, pan_number: e.target.value }))
+                    }
+                    placeholder="PAN Number"
+                    className="h-10"
+                  />
+                </div>
+              </div>
+            </div>
+
+            {/* Bank Details */}
+            <div className="border-t pt-4">
+              <h3 className="text-sm font-semibold mb-3 text-gray-700">Bank Details</h3>
+              <div className="grid gap-3">
+                <div className="grid gap-2">
+                  <Label htmlFor="bank_name" className="text-sm font-medium">Bank Name</Label>
+                  <Input
+                    id="bank_name"
+                    value={formData.bank_name}
+                    onChange={(e) =>
+                      setFormData((prev) => ({ ...prev, bank_name: e.target.value }))
+                    }
+                    placeholder="Bank Name"
+                    className="h-10"
+                  />
+                </div>
+                <div className="grid gap-2">
+                  <Label htmlFor="account_name" className="text-sm font-medium">Account Holder Name</Label>
+                  <Input
+                    id="account_name"
+                    value={formData.bank_account_name}
+                    onChange={(e) =>
+                      setFormData((prev) => ({ ...prev, bank_account_name: e.target.value }))
+                    }
+                    placeholder="Account holder name"
+                    className="h-10"
+                  />
+                </div>
+                <div className="grid grid-cols-2 gap-3">
+                  <div className="grid gap-2">
+                    <Label htmlFor="account_number" className="text-sm font-medium">Account Number</Label>
+                    <Input
+                      id="account_number"
+                      value={formData.bank_account_number}
+                      onChange={(e) =>
+                        setFormData((prev) => ({ ...prev, bank_account_number: e.target.value }))
+                      }
+                      placeholder="Account number"
+                      className="h-10"
+                    />
+                  </div>
+                  <div className="grid gap-2">
+                    <Label htmlFor="ifsc" className="text-sm font-medium">IFSC Code</Label>
+                    <Input
+                      id="ifsc"
+                      value={formData.bank_ifsc_code}
+                      onChange={(e) =>
+                        setFormData((prev) => ({ ...prev, bank_ifsc_code: e.target.value }))
+                      }
+                      placeholder="IFSC Code"
+                      className="h-10"
+                    />
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* Commission & Rates */}
+            <div className="border-t pt-4">
+              <h3 className="text-sm font-semibold mb-3 text-gray-700">Commission & Rates (%)</h3>
+              <div className="grid grid-cols-3 gap-3">
+                <div className="grid gap-2">
+                  <Label htmlFor="commission" className="text-sm font-medium">Commission Rate</Label>
+                  <Input
+                    id="commission"
+                    type="number"
+                    step="0.01"
+                    value={formData.commission_rate}
+                    onChange={(e) =>
+                      setFormData((prev) => ({ ...prev, commission_rate: parseFloat(e.target.value) || 0 }))
+                    }
+                    placeholder="0.00"
+                    className="h-10"
+                  />
+                </div>
+                <div className="grid gap-2">
+                  <Label htmlFor="cashback" className="text-sm font-medium">Cashback Rate</Label>
+                  <Input
+                    id="cashback"
+                    type="number"
+                    step="0.01"
+                    value={formData.cashback_rate}
+                    onChange={(e) =>
+                      setFormData((prev) => ({ ...prev, cashback_rate: parseFloat(e.target.value) || 0 }))
+                    }
+                    placeholder="0.00"
+                    className="h-10"
+                  />
+                </div>
+                <div className="grid gap-2">
+                  <Label htmlFor="platform" className="text-sm font-medium">Platform Commission</Label>
+                  <Input
+                    id="platform"
+                    type="number"
+                    step="0.01"
+                    value={formData.platform_commission}
+                    onChange={(e) =>
+                      setFormData((prev) => ({ ...prev, platform_commission: parseFloat(e.target.value) || 0 }))
+                    }
+                    placeholder="10.00"
+                    className="h-10"
+                  />
+                </div>
+              </div>
+            </div>
+
+            {/* Affiliate URLs */}
+            <div className="border-t pt-4">
+              <h3 className="text-sm font-semibold mb-3 text-gray-700">Affiliate & Tracking</h3>
+              <div className="grid gap-3">
+                <div className="grid gap-2">
+                  <Label htmlFor="affiliate_url" className="text-sm font-medium">Affiliate URL</Label>
+                  <Input
+                    id="affiliate_url"
+                    value={formData.affiliate_url}
+                    onChange={(e) =>
+                      setFormData((prev) => ({ ...prev, affiliate_url: e.target.value }))
+                    }
+                    placeholder="https://affiliate.example.com"
+                    className="h-10"
+                  />
+                </div>
+                <div className="grid gap-2">
+                  <Label htmlFor="tracking_url" className="text-sm font-medium">Tracking URL</Label>
+                  <Input
+                    id="tracking_url"
+                    value={formData.tracking_url}
+                    onChange={(e) =>
+                      setFormData((prev) => ({ ...prev, tracking_url: e.target.value }))
+                    }
+                    placeholder="https://tracking.example.com"
+                    className="h-10"
+                  />
+                </div>
+              </div>
+            </div>
+
+            {/* Status */}
+            <div className="border-t pt-4 space-y-3">
+              <h3 className="text-sm font-semibold text-gray-700">Status</h3>
+              <div className="flex items-center justify-between rounded-lg border border-gray-200 p-3 bg-gray-50/50">
+                <div className="space-y-0.5">
+                  <Label className="text-sm font-medium">Active</Label>
+                  <p className="text-xs text-gray-500">Show on website</p>
+                </div>
+                <Switch
+                  checked={formData.is_active}
+                  onCheckedChange={(checked) =>
+                    setFormData((prev) => ({ ...prev, is_active: checked }))
+                  }
+                />
+              </div>
+              <div className="flex items-center justify-between rounded-lg border border-gray-200 p-3 bg-gray-50/50">
+                <div className="space-y-0.5">
+                  <Label className="text-sm font-medium">Featured</Label>
+                  <p className="text-xs text-gray-500">Homepage & featured sections</p>
+                </div>
+                <Switch
+                  checked={formData.is_featured}
+                  onCheckedChange={(checked) =>
+                    setFormData((prev) => ({ ...prev, is_featured: checked }))
+                  }
+                />
+              </div>
+              <div className="flex items-center justify-between rounded-lg border border-gray-200 p-3 bg-gray-50/50">
+                <div className="space-y-0.5">
+                  <Label className="text-sm font-medium">Verified</Label>
+                  <p className="text-xs text-gray-500">Merchant verified status</p>
+                </div>
+                <Switch
+                  checked={formData.is_verified}
+                  onCheckedChange={(checked) =>
+                    setFormData((prev) => ({ ...prev, is_verified: checked }))
+                  }
+                />
+              </div>
             </div>
           </div>
           <DialogFooter className="pt-4 border-t gap-2 sm:gap-0">
