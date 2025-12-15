@@ -228,14 +228,38 @@ export default function BecomeSellerPage() {
     <div className="min-h-screen">
       {!showForm ? (
         <>
-          <section className="relative overflow-hidden bg-gradient-to-br from-purple-600 via-purple-700 to-purple-800 py-20 text-white">
-            <div className="absolute inset-0 bg-black/10" />
+          <section className="relative overflow-hidden bg-gradient-to-br from-purple-900 via-purple-800 to-indigo-900 py-24 text-white">
+            {/* Animated Background Elements */}
+            <div className="absolute inset-0 overflow-hidden pointer-events-none">
+              <div className="absolute top-10 left-10 w-32 h-20 bg-purple-500/20 rounded-lg rotate-12 animate-blob blur-sm"></div>
+              <div className="absolute top-1/4 right-20 w-40 h-24 bg-purple-400/15 rounded-xl -rotate-6 animate-blob animation-delay-2000 blur-sm"></div>
+              <div className="absolute bottom-20 left-1/4 w-36 h-22 bg-indigo-500/20 rounded-lg rotate-3 animate-float blur-sm"></div>
+              <div className="absolute top-1/2 left-1/3 w-28 h-16 bg-purple-300/10 rounded-xl -rotate-12 animate-blob animation-delay-4000 blur-sm"></div>
+              <div className="absolute bottom-1/3 right-1/4 w-44 h-28 bg-purple-600/15 rounded-lg rotate-6 animate-float animation-delay-2000 blur-sm"></div>
+              <div className="absolute top-20 right-1/3 w-24 h-14 bg-indigo-400/20 rounded-xl rotate-12 animate-blob blur-sm"></div>
+              
+              {/* Floating Coupon Shapes */}
+              <div className="absolute top-1/3 left-20 w-20 h-12 bg-gradient-to-r from-purple-400/20 to-indigo-400/20 rounded-lg rotate-45 animate-float">
+                <div className="absolute left-0 top-1/2 -translate-y-1/2 w-3 h-3 bg-purple-900 rounded-full -ml-1.5"></div>
+                <div className="absolute right-0 top-1/2 -translate-y-1/2 w-3 h-3 bg-purple-900 rounded-full -mr-1.5"></div>
+              </div>
+              <div className="absolute bottom-1/4 right-20 w-24 h-14 bg-gradient-to-r from-indigo-400/20 to-purple-400/20 rounded-lg -rotate-12 animate-float animation-delay-2000">
+                <div className="absolute left-0 top-1/2 -translate-y-1/2 w-3 h-3 bg-purple-900 rounded-full -ml-1.5"></div>
+                <div className="absolute right-0 top-1/2 -translate-y-1/2 w-3 h-3 bg-purple-900 rounded-full -mr-1.5"></div>
+              </div>
+
+              {/* Sparkles */}
+              <div className="absolute top-16 right-16 w-4 h-4 bg-purple-300/40 rounded-full animate-shimmer"></div>
+              <div className="absolute top-1/3 left-16 w-3 h-3 bg-indigo-300/40 rounded-full animate-shimmer animation-delay-1000"></div>
+              <div className="absolute bottom-1/4 left-1/2 w-5 h-5 bg-purple-400/30 rounded-full animate-shimmer animation-delay-2000"></div>
+            </div>
+
             <div className="container relative z-10">
               <div className="mx-auto max-w-3xl text-center">
-                <Badge className="mb-4 bg-white/20 text-white hover:bg-white/30">
+                <Badge className="mb-4 bg-white/20 text-white hover:bg-white/30 backdrop-blur-sm">
                   Join 500+ Sellers
                 </Badge>
-                <h1 className="text-4xl font-bold tracking-tight sm:text-5xl md:text-6xl">
+                <h1 className="text-4xl font-bold tracking-tight sm:text-5xl md:text-6xl drop-shadow-lg">
                   Sell on BIDUA
                 </h1>
                 <p className="mt-6 text-lg text-white/90 sm:text-xl">
@@ -245,7 +269,7 @@ export default function BecomeSellerPage() {
                   {isAuthenticated ? (
                     <Button 
                       size="lg" 
-                      className="bg-white text-purple-700 hover:bg-white/90 font-semibold"
+                      className="bg-white text-purple-700 hover:bg-white/90 font-semibold shadow-lg shadow-purple-500/30"
                       onClick={() => setShowForm(true)}
                     >
                       Start Selling
@@ -253,7 +277,7 @@ export default function BecomeSellerPage() {
                     </Button>
                   ) : (
                     <Link href={ROUTES.register}>
-                      <Button size="lg" className="bg-white text-purple-700 hover:bg-white/90 font-semibold">
+                      <Button size="lg" className="bg-white text-purple-700 hover:bg-white/90 font-semibold shadow-lg shadow-purple-500/30">
                         Register to Sell
                         <ArrowRight className="ml-2 h-5 w-5" />
                       </Button>
@@ -301,7 +325,7 @@ export default function BecomeSellerPage() {
                 {isAuthenticated ? (
                   <Button 
                     size="lg" 
-                    className="bg-purple-600 hover:bg-purple-700 text-white"
+                    className="bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-700 hover:to-indigo-700 text-white shadow-lg shadow-purple-500/30"
                     onClick={() => setShowForm(true)}
                   >
                     Get Started Now
@@ -309,7 +333,7 @@ export default function BecomeSellerPage() {
                   </Button>
                 ) : (
                   <Link href={ROUTES.login}>
-                    <Button size="lg" className="bg-purple-600 hover:bg-purple-700 text-white">
+                    <Button size="lg" className="bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-700 hover:to-indigo-700 text-white shadow-lg shadow-purple-500/30">
                       Login to Get Started
                       <ArrowRight className="ml-2 h-5 w-5" />
                     </Button>
@@ -498,7 +522,7 @@ export default function BecomeSellerPage() {
 
                 <Button 
                   type="submit" 
-                  className="w-full bg-purple-600 hover:bg-purple-700 text-white"
+                  className="w-full bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-700 hover:to-indigo-700 text-white shadow-lg shadow-purple-500/30"
                   disabled={loading}
                 >
                   {loading ? (
