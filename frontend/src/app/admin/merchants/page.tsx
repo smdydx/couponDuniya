@@ -778,7 +778,7 @@ export default function AdminMerchantsPage() {
                   value={formData.banner_url}
                   onChange={(url) => setFormData((prev) => ({ ...prev, banner_url: url }))}
                   category="merchants"
-                  aspectRatio="16:9"
+                  aspectRatio="banner"
                 />
               </div>
             </div>
