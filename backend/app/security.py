@@ -6,14 +6,27 @@ from fastapi import HTTPException
 from .config import get_settings
 from .redis_client import redis_client, rk
 
-pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
+pwd_context = CryptContext(schemes=["bcrypt", "pbkdf2_sha256"], deprecated=["pbkdf2_sha256"])
 settings = get_settings()
 
 def get_password_hash(password: str) -> str:
     return pwd_context.hash(password)
 
 def verify_password(plain_password: str, hashed_password: str) -> bool:
-    return pwd_context.verify(plain_password, hashed_password)
+    try:
+        return pwd_context.verify(plain_password, hashed_password)
+    except Exception:
+        return False
+
+def verify_and_update_password(plain_password: str, hashed_password: str) -> tuple[bool, str | None]:
+    """Verify password and return new hash if rehash is needed (for legacy PBKDF2 passwords).
+    Returns (is_valid, new_hash_or_none)
+    """
+    try:
+        is_valid, new_hash = pwd_context.verify_and_update(plain_password, hashed_password)
+        return is_valid, new_hash
+    except Exception:
+        return False, None
 
 def create_access_token(subject: str) -> str:
     """Create a JWT access token with a unique jti claim."""

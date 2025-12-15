@@ -10,7 +10,7 @@ import time
 import uuid
 import urllib.parse
 
-from ...security import create_access_token, get_password_hash, verify_password, revoke_token, decode_token
+from ...security import create_access_token, get_password_hash, verify_password, verify_and_update_password, revoke_token, decode_token
 from ...redis_client import rk, cache_set, cache_get, cache_invalidate, rate_limit
 from ...queue import push_email_job, push_sms_job
 from ...otp import request_otp as create_otp, verify_and_consume_otp
@@ -286,8 +286,15 @@ def login(payload: LoginRequest, db: Session = Depends(get_db)):
     if not user.password_hash:
         raise HTTPException(status_code=401, detail="Password not set. Please use OTP or social login.")
 
-    if not verify_password(payload.password, user.password_hash):
+    # Use verify_and_update to support legacy PBKDF2 hashes and auto-migrate to bcrypt
+    is_valid, new_hash = verify_and_update_password(payload.password, user.password_hash)
+    if not is_valid:
         raise HTTPException(status_code=401, detail="Invalid email/mobile or password")
+    
+    # If password needs rehashing (legacy PBKDF2 -> bcrypt), update it
+    if new_hash:
+        user.password_hash = new_hash
+        db.commit()
 
     if not user.is_active:
         raise HTTPException(status_code=403, detail="Your account has been disabled. Please contact support.")
