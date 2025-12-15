@@ -72,6 +72,7 @@ export default function AdminDashboard() {
   const [mounted, setMounted] = useState(false);
   const [recentMerchants, setRecentMerchants] = useState<RecentMerchant[]>([]);
   const [recentOffers, setRecentOffers] = useState<RecentOffer[]>([]);
+  const [pendingApplicationsCount, setPendingApplicationsCount] = useState(0);
 
   const { user, accessToken, isAuthenticated } = useAuthStore();
 
@@ -85,10 +86,11 @@ export default function AdminDashboard() {
       }
 
       // Silently fetch data without verification checks
-      const [statsResponse, merchantsResponse, offersResponse] = await Promise.allSettled([
+      const [statsResponse, merchantsResponse, offersResponse, pendingAppsResponse] = await Promise.allSettled([
         adminApiClient.get("/analytics/dashboard"),
         adminApiClient.get("/merchants", { params: { limit: 5 } }),
         adminApiClient.get("/offers", { params: { limit: 5 } }),
+        adminApiClient.get("/merchants/admin/pending-applications", { params: { limit: 1 } }),
       ]);
 
       // Handle 403 errors silently - redirect to login
@@ -133,6 +135,16 @@ export default function AdminDashboard() {
           })));
         } catch (error) {
           setRecentOffers([]);
+        }
+      }
+
+      if (pendingAppsResponse.status === "fulfilled") {
+        try {
+          const pendingData = pendingAppsResponse.value.data;
+          const totalPending = pendingData?.data?.pagination?.total_items || pendingData?.pagination?.total_items || 0;
+          setPendingApplicationsCount(totalPending);
+        } catch (error) {
+          setPendingApplicationsCount(0);
         }
       }
     } catch (error) {
@@ -435,7 +447,29 @@ export default function AdminDashboard() {
         </Card>
       </div>
 
-      <div className="grid gap-3 sm:gap-4 lg:grid-cols-3">
+      <div className="grid gap-3 sm:gap-4 lg:grid-cols-4">
+        <Card className="border-0 shadow-xl overflow-hidden">
+          <CardHeader className="bg-gradient-to-r from-rose-500 to-red-500 text-white">
+            <CardTitle className="flex items-center gap-2 text-lg">
+              <Store className="h-5 w-5" />
+              Seller Applications
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="p-6 bg-gradient-to-br from-rose-50 to-red-50">
+            <div className="space-y-4">
+              <div className="flex items-center justify-between p-3 bg-white rounded-lg shadow-sm">
+                <span className="text-gray-600 font-medium">Pending Review</span>
+                <span className="text-2xl font-bold text-rose-600">{pendingApplicationsCount}</span>
+              </div>
+              <Link href="/admin/merchants?tab=verification">
+                <Button className="w-full bg-gradient-to-r from-rose-500 to-red-500 hover:from-rose-600 hover:to-red-600 shadow-lg">
+                  Review Applications <ArrowRight className="h-4 w-4 ml-2" />
+                </Button>
+              </Link>
+            </div>
+          </CardContent>
+        </Card>
+
         <Card className="border-0 shadow-xl overflow-hidden">
           <CardHeader className="bg-gradient-to-r from-orange-500 to-amber-500 text-white">
             <CardTitle className="flex items-center gap-2 text-lg">
