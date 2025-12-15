@@ -1189,131 +1189,22 @@ function ProfileContent() {
                   )}
                 </div>
               ) : (
-                <div className="space-y-4">
-                  <div className="rounded-lg bg-blue-50 border border-blue-200 p-4 text-sm text-blue-800 mb-4">
-                    <p className="font-medium">Want to list your coupons?</p>
-                    <p className="mt-1">
-                      Fill in your business details below to apply as a merchant. Once approved, you can add your coupons and offers.
+                <div className="space-y-6 text-center py-8">
+                  <div className="mx-auto flex h-20 w-20 items-center justify-center rounded-full bg-gradient-to-br from-orange-500 to-pink-500">
+                    <Store className="h-10 w-10 text-white" />
+                  </div>
+                  <div>
+                    <h3 className="text-xl font-semibold">Start Selling on BIDUA</h3>
+                    <p className="text-muted-foreground mt-2">
+                      Join our growing community of sellers and reach millions of customers
                     </p>
                   </div>
-                  
-                  <div className="grid gap-4 sm:grid-cols-2">
-                    <div className="space-y-2">
-                      <Label>Business Name *</Label>
-                      <Input
-                        value={merchantForm.business_name}
-                        onChange={(e) => setMerchantForm({...merchantForm, business_name: e.target.value})}
-                        placeholder="Your company name"
-                      />
-                    </div>
-                    <div className="space-y-2">
-                      <Label>Business Email *</Label>
-                      <Input
-                        type="email"
-                        value={merchantForm.business_email}
-                        onChange={(e) => setMerchantForm({...merchantForm, business_email: e.target.value})}
-                        placeholder="business@example.com"
-                      />
-                    </div>
-                  </div>
-                  
-                  <div className="grid gap-4 sm:grid-cols-2">
-                    <div className="space-y-2">
-                      <Label>Business Phone *</Label>
-                      <Input
-                        value={merchantForm.business_phone}
-                        onChange={(e) => setMerchantForm({...merchantForm, business_phone: e.target.value})}
-                        placeholder="+91 9876543210"
-                      />
-                    </div>
-                    <div className="space-y-2">
-                      <Label>Website URL</Label>
-                      <Input
-                        value={merchantForm.website_url}
-                        onChange={(e) => setMerchantForm({...merchantForm, website_url: e.target.value})}
-                        placeholder="https://yourwebsite.com"
-                      />
-                    </div>
-                  </div>
-                  
-                  <div className="space-y-2">
-                    <Label>Business Address *</Label>
-                    <Input
-                      value={merchantForm.business_address}
-                      onChange={(e) => setMerchantForm({...merchantForm, business_address: e.target.value})}
-                      placeholder="Street address"
-                    />
-                  </div>
-                  
-                  <div className="grid gap-4 sm:grid-cols-3">
-                    <div className="space-y-2">
-                      <Label>City *</Label>
-                      <Input
-                        value={merchantForm.business_city}
-                        onChange={(e) => setMerchantForm({...merchantForm, business_city: e.target.value})}
-                        placeholder="City"
-                      />
-                    </div>
-                    <div className="space-y-2">
-                      <Label>State *</Label>
-                      <Input
-                        value={merchantForm.business_state}
-                        onChange={(e) => setMerchantForm({...merchantForm, business_state: e.target.value})}
-                        placeholder="State"
-                      />
-                    </div>
-                    <div className="space-y-2">
-                      <Label>Pincode *</Label>
-                      <Input
-                        value={merchantForm.business_pincode}
-                        onChange={(e) => setMerchantForm({...merchantForm, business_pincode: e.target.value})}
-                        placeholder="110001"
-                      />
-                    </div>
-                  </div>
-                  
-                  <div className="grid gap-4 sm:grid-cols-2">
-                    <div className="space-y-2">
-                      <Label>GST Number (Optional)</Label>
-                      <Input
-                        value={merchantForm.gst_number}
-                        onChange={(e) => setMerchantForm({...merchantForm, gst_number: e.target.value})}
-                        placeholder="22AAAAA0000A1Z5"
-                      />
-                    </div>
-                    <div className="space-y-2">
-                      <Label>PAN Number (Optional)</Label>
-                      <Input
-                        value={merchantForm.pan_number}
-                        onChange={(e) => setMerchantForm({...merchantForm, pan_number: e.target.value})}
-                        placeholder="AAAAA0000A"
-                      />
-                    </div>
-                  </div>
-                  
-                  <div className="space-y-2">
-                    <Label>Business Description</Label>
-                    <textarea
-                      className="w-full min-h-[100px] px-3 py-2 border rounded-md"
-                      value={merchantForm.description}
-                      onChange={(e) => setMerchantForm({...merchantForm, description: e.target.value})}
-                      placeholder="Tell us about your business..."
-                    />
-                  </div>
-                  
-                  <Button onClick={handleMerchantSubmit} disabled={submittingMerchant}>
-                    {submittingMerchant ? (
-                      <>
-                        <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                        Submitting...
-                      </>
-                    ) : (
-                      <>
-                        <Store className="mr-2 h-4 w-4" />
-                        Submit Application
-                      </>
-                    )}
-                  </Button>
+                  <a href="/become-seller">
+                    <Button className="bg-gradient-to-r from-orange-500 to-pink-500">
+                      <Store className="mr-2 h-4 w-4" />
+                      Become a Seller
+                    </Button>
+                  </a>
                 </div>
               )}
             </CardContent>

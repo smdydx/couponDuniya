@@ -15,6 +15,7 @@ const primaryItems = [
 ];
 
 const baseMoreItems = [
+  { title: "Become a Seller", href: ROUTES.becomeSeller, icon: Store },
   { title: "Gift Cards", href: ROUTES.products, icon: Gift },
   { title: "Earn Cashback", href: ROUTES.wallet, icon: Wallet },
   { title: "About", href: ROUTES.about, icon: Info },

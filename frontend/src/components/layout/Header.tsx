@@ -242,13 +242,20 @@ export function Header() {
               Gift Cards
             </Link>
 
-            <div className="ml-auto">
+            <div className="ml-auto flex items-center gap-4">
               <Link
                 href={ROUTES.wallet}
                 className="flex items-center gap-1 text-sm font-medium text-green-600 hover:text-green-700"
               >
                 <Wallet className="h-4 w-4" />
                 Earn Cashback
+              </Link>
+              <Link
+                href={ROUTES.becomeSeller}
+                className="flex items-center gap-1 text-sm font-medium bg-gradient-to-r from-orange-500 to-pink-500 text-white px-4 py-1.5 rounded-full hover:opacity-90 transition-opacity"
+              >
+                <Store className="h-4 w-4" />
+                Become a Seller
               </Link>
             </div>
           </div>
