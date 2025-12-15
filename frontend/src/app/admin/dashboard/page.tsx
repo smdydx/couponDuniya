@@ -90,7 +90,9 @@ export default function AdminDashboard() {
         adminApiClient.get("/analytics/dashboard"),
         adminApiClient.get("/merchants", { params: { limit: 5 } }),
         adminApiClient.get("/offers", { params: { limit: 5 } }),
-        adminApiClient.get("/merchants/admin/pending-applications", { params: { limit: 1 } }),
+        fetch(`${process.env.NEXT_PUBLIC_API_URL || '/backend-api'}/api/v1/merchants/admin/pending-applications?limit=1`, {
+          headers: { 'Authorization': `Bearer ${currentToken}`, 'Content-Type': 'application/json' }
+        }).then(r => r.json()).then(data => ({ data })),
       ]);
 
       // Handle 403 errors silently - redirect to login

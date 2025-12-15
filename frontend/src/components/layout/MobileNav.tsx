@@ -15,7 +15,6 @@ const primaryItems = [
 ];
 
 const baseMoreItems = [
-  { title: "Become a Seller", href: ROUTES.becomeSeller, icon: Store },
   { title: "Gift Cards", href: ROUTES.products, icon: Gift },
   { title: "Earn Cashback", href: ROUTES.wallet, icon: Wallet },
   { title: "About", href: ROUTES.about, icon: Info },
@@ -24,6 +23,8 @@ const baseMoreItems = [
   { title: "Terms", href: ROUTES.terms, icon: FileText },
   { title: "Privacy", href: ROUTES.privacy, icon: Shield },
 ] as const;
+
+const sellerItem = { title: "Become a Seller", href: ROUTES.becomeSeller, icon: Store, highlight: true } as const;
 
 export function MobileNav() {
   const [mounted, setMounted] = useState(false);
@@ -103,6 +104,21 @@ export function MobileNav() {
                 Close
               </button>
             </div>
+            {/* Become a Seller - Highlighted */}
+            <Link
+              href={sellerItem.href}
+              onClick={() => setMoreOpen(false)}
+              className="mb-4 flex items-center gap-3 rounded-xl p-4 text-sm bg-gradient-to-r from-purple-600 via-purple-700 to-indigo-600 text-white shadow-lg shadow-purple-500/30"
+            >
+              <div className="flex h-10 w-10 items-center justify-center rounded-full bg-white/20">
+                <Store className="h-5 w-5" />
+              </div>
+              <div>
+                <span className="font-semibold">Become a Seller</span>
+                <p className="text-xs text-white/80">Partner with us & grow your business</p>
+              </div>
+            </Link>
+
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
               {(
                 isAuthenticated
