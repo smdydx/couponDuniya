@@ -252,7 +252,7 @@ export function Header() {
               </Link>
               <Link
                 href={ROUTES.becomeSeller}
-                className="flex items-center gap-1 text-sm font-medium bg-gradient-to-r from-orange-500 to-pink-500 text-white px-4 py-1.5 rounded-full hover:opacity-90 transition-opacity"
+                className="flex items-center gap-1 text-sm font-medium bg-purple-600 hover:bg-purple-700 text-white px-4 py-1.5 rounded-full transition-colors"
               >
                 <Store className="h-4 w-4" />
                 Become a Seller

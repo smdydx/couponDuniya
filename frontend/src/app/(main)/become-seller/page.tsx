@@ -228,8 +228,8 @@ export default function BecomeSellerPage() {
     <div className="min-h-screen">
       {!showForm ? (
         <>
-          <section className="relative overflow-hidden bg-gradient-to-br from-orange-500 via-pink-500 to-purple-600 py-20 text-white">
-            <div className="absolute inset-0 bg-black/20" />
+          <section className="relative overflow-hidden bg-gradient-to-br from-purple-600 via-purple-700 to-purple-800 py-20 text-white">
+            <div className="absolute inset-0 bg-black/10" />
             <div className="container relative z-10">
               <div className="mx-auto max-w-3xl text-center">
                 <Badge className="mb-4 bg-white/20 text-white hover:bg-white/30">
@@ -245,7 +245,7 @@ export default function BecomeSellerPage() {
                   {isAuthenticated ? (
                     <Button 
                       size="lg" 
-                      className="bg-white text-orange-600 hover:bg-white/90"
+                      className="bg-white text-purple-700 hover:bg-white/90 font-semibold"
                       onClick={() => setShowForm(true)}
                     >
                       Start Selling
@@ -253,7 +253,7 @@ export default function BecomeSellerPage() {
                     </Button>
                   ) : (
                     <Link href={ROUTES.register}>
-                      <Button size="lg" className="bg-white text-orange-600 hover:bg-white/90">
+                      <Button size="lg" className="bg-white text-purple-700 hover:bg-white/90 font-semibold">
                         Register to Sell
                         <ArrowRight className="ml-2 h-5 w-5" />
                       </Button>
@@ -264,17 +264,17 @@ export default function BecomeSellerPage() {
             </div>
           </section>
 
-          <section className="py-16 bg-muted/30">
+          <section className="py-16 bg-purple-50">
             <div className="container">
-              <h2 className="text-3xl font-bold text-center mb-12">Why Sell With Us?</h2>
+              <h2 className="text-3xl font-bold text-center mb-12 text-purple-900">Why Sell With Us?</h2>
               <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-4">
                 {benefits.map((benefit, index) => (
-                  <Card key={index} className="text-center hover:shadow-lg transition-shadow">
+                  <Card key={index} className="text-center hover:shadow-lg transition-shadow border-purple-100">
                     <CardContent className="pt-6">
-                      <div className="mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-full bg-primary/10">
-                        <benefit.icon className="h-7 w-7 text-primary" />
+                      <div className="mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-full bg-purple-100">
+                        <benefit.icon className="h-7 w-7 text-purple-600" />
                       </div>
-                      <h3 className="font-semibold text-lg mb-2">{benefit.title}</h3>
+                      <h3 className="font-semibold text-lg mb-2 text-purple-900">{benefit.title}</h3>
                       <p className="text-muted-foreground text-sm">{benefit.description}</p>
                     </CardContent>
                   </Card>
@@ -285,14 +285,14 @@ export default function BecomeSellerPage() {
 
           <section className="py-16">
             <div className="container">
-              <h2 className="text-3xl font-bold text-center mb-12">How It Works</h2>
+              <h2 className="text-3xl font-bold text-center mb-12 text-purple-900">How It Works</h2>
               <div className="grid gap-8 md:grid-cols-3">
                 {steps.map((item) => (
                   <div key={item.step} className="text-center">
-                    <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-gradient-to-br from-orange-500 to-pink-500 text-white text-2xl font-bold">
+                    <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-purple-600 text-white text-2xl font-bold">
                       {item.step}
                     </div>
-                    <h3 className="font-semibold text-xl mb-2">{item.title}</h3>
+                    <h3 className="font-semibold text-xl mb-2 text-purple-900">{item.title}</h3>
                     <p className="text-muted-foreground">{item.description}</p>
                   </div>
                 ))}
@@ -301,7 +301,7 @@ export default function BecomeSellerPage() {
                 {isAuthenticated ? (
                   <Button 
                     size="lg" 
-                    className="bg-gradient-to-r from-orange-500 to-pink-500"
+                    className="bg-purple-600 hover:bg-purple-700 text-white"
                     onClick={() => setShowForm(true)}
                   >
                     Get Started Now
@@ -309,7 +309,7 @@ export default function BecomeSellerPage() {
                   </Button>
                 ) : (
                   <Link href={ROUTES.login}>
-                    <Button size="lg" className="bg-gradient-to-r from-orange-500 to-pink-500">
+                    <Button size="lg" className="bg-purple-600 hover:bg-purple-700 text-white">
                       Login to Get Started
                       <ArrowRight className="ml-2 h-5 w-5" />
                     </Button>
@@ -498,7 +498,7 @@ export default function BecomeSellerPage() {
 
                 <Button 
                   type="submit" 
-                  className="w-full bg-gradient-to-r from-orange-500 to-pink-500"
+                  className="w-full bg-purple-600 hover:bg-purple-700 text-white"
                   disabled={loading}
                 >
                   {loading ? (

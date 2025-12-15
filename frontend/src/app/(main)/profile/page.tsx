@@ -4,7 +4,7 @@
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { useForm } from "react-hook-form";
-import { Loader2, User, Shield, Bell, Save, Link2, Unlink, CheckCircle, AlertCircle, Store, Building2 } from "lucide-react";
+import { Loader2, User, Shield, Bell, Save, Link2, Unlink, CheckCircle, AlertCircle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -88,24 +88,6 @@ function ProfileContent() {
     cashback: true
   });
 
-  // Merchant Application State
-  const [merchantData, setMerchantData] = useState<any>(null);
-  const [loadingMerchant, setLoadingMerchant] = useState(false);
-  const [submittingMerchant, setSubmittingMerchant] = useState(false);
-  const [merchantForm, setMerchantForm] = useState({
-    business_name: "",
-    business_email: "",
-    business_phone: "",
-    business_address: "",
-    business_city: "",
-    business_state: "",
-    business_pincode: "",
-    gst_number: "",
-    pan_number: "",
-    website_url: "",
-    description: ""
-  });
-
   type ProfileForm = {
     first_name: string;
     last_name: string;
@@ -172,59 +154,7 @@ function ProfileContent() {
     if (activeTab === "kyc") {
       fetchKycData();
     }
-    if (activeTab === "merchant") {
-      fetchMerchantData();
-    }
   }, [activeTab]);
-
-  const fetchMerchantData = async () => {
-    setLoadingMerchant(true);
-    try {
-      const response = await apiClient.get('/merchants/my-application');
-      if (response.data.success) {
-        setMerchantData(response.data.data);
-      }
-    } catch (error) {
-      console.error("Failed to fetch merchant data:", error);
-    } finally {
-      setLoadingMerchant(false);
-    }
-  };
-
-  const handleMerchantSubmit = async () => {
-    if (!merchantForm.business_name || !merchantForm.business_email || !merchantForm.business_phone || 
-        !merchantForm.business_address || !merchantForm.business_city || !merchantForm.business_state || 
-        !merchantForm.business_pincode) {
-      toast.error("Please fill all required fields");
-      return;
-    }
-    
-    setSubmittingMerchant(true);
-    try {
-      const response = await apiClient.post('/merchants/apply', merchantForm);
-      if (response.data.success) {
-        toast.success("Merchant application submitted successfully!");
-        fetchMerchantData();
-      }
-    } catch (error: any) {
-      toast.error(error?.response?.data?.detail || "Failed to submit application");
-    } finally {
-      setSubmittingMerchant(false);
-    }
-  };
-
-  const getMerchantStatusBadge = (status: string) => {
-    switch (status) {
-      case "approved":
-        return <Badge className="bg-green-500">Approved</Badge>;
-      case "pending":
-        return <Badge className="bg-yellow-500">Pending Review</Badge>;
-      case "rejected":
-        return <Badge className="bg-red-500">Rejected</Badge>;
-      default:
-        return <Badge variant="secondary">Not Applied</Badge>;
-    }
-  };
 
   const onSubmit = async (data: ProfileForm) => {
     setIsSaving(true);
@@ -559,10 +489,6 @@ function ProfileContent() {
           <TabsTrigger value="linked" className="gap-2">
             <Link2 className="h-4 w-4" />
             Linked Accounts
-          </TabsTrigger>
-          <TabsTrigger value="merchant" className="gap-2">
-            <Store className="h-4 w-4" />
-            Become Merchant
           </TabsTrigger>
         </TabsList>
 
@@ -1126,90 +1052,6 @@ function ProfileContent() {
           </Card>
         </TabsContent>
 
-        {/* Merchant Application */}
-        <TabsContent value="merchant">
-          <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <Building2 className="h-5 w-5" />
-                Become a Merchant
-              </CardTitle>
-              <CardDescription>
-                Apply to become a merchant and list your coupons on our platform
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
-              {loadingMerchant ? (
-                <div className="flex items-center justify-center py-8">
-                  <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
-                </div>
-              ) : merchantData?.has_application ? (
-                <div className="space-y-4">
-                  <div className="flex items-center justify-between p-4 border rounded-lg">
-                    <div>
-                      <p className="font-medium">Application Status</p>
-                      <p className="text-sm text-muted-foreground">
-                        {merchantData.merchant?.business_name || "Your business"}
-                      </p>
-                    </div>
-                    {getMerchantStatusBadge(merchantData.verification_status)}
-                  </div>
-                  
-                  {merchantData.verification_status === "pending" && (
-                    <div className="rounded-lg bg-yellow-50 border border-yellow-200 p-4 text-sm text-yellow-800">
-                      <p className="font-medium">Application Under Review</p>
-                      <p className="mt-1">
-                        Your merchant application is being reviewed by our team. We will notify you once it is approved.
-                      </p>
-                    </div>
-                  )}
-                  
-                  {merchantData.verification_status === "approved" && (
-                    <div className="rounded-lg bg-green-50 border border-green-200 p-4 text-sm text-green-800">
-                      <p className="font-medium flex items-center gap-2">
-                        <CheckCircle className="h-4 w-4" />
-                        Congratulations! You are now a verified merchant.
-                      </p>
-                      <p className="mt-1">
-                        You can now add your coupons and offers to our platform.
-                      </p>
-                    </div>
-                  )}
-                  
-                  {merchantData.verification_status === "rejected" && (
-                    <div className="rounded-lg bg-red-50 border border-red-200 p-4 text-sm text-red-800">
-                      <p className="font-medium flex items-center gap-2">
-                        <AlertCircle className="h-4 w-4" />
-                        Application Rejected
-                      </p>
-                      {merchantData.verification_notes && (
-                        <p className="mt-1">Reason: {merchantData.verification_notes}</p>
-                      )}
-                    </div>
-                  )}
-                </div>
-              ) : (
-                <div className="space-y-6 text-center py-8">
-                  <div className="mx-auto flex h-20 w-20 items-center justify-center rounded-full bg-gradient-to-br from-orange-500 to-pink-500">
-                    <Store className="h-10 w-10 text-white" />
-                  </div>
-                  <div>
-                    <h3 className="text-xl font-semibold">Start Selling on BIDUA</h3>
-                    <p className="text-muted-foreground mt-2">
-                      Join our growing community of sellers and reach millions of customers
-                    </p>
-                  </div>
-                  <a href="/become-seller">
-                    <Button className="bg-gradient-to-r from-orange-500 to-pink-500">
-                      <Store className="mr-2 h-4 w-4" />
-                      Become a Seller
-                    </Button>
-                  </a>
-                </div>
-              )}
-            </CardContent>
-          </Card>
-        </TabsContent>
       </Tabs>
     </div>
   );
