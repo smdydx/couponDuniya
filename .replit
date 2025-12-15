@@ -1,11 +1,11 @@
-modules = ["nodejs-20", "python-3.11", "web"]
+modules = ["nodejs-20", "python-3.11", "web", "postgresql-16"]
 [agent]
 expertMode = true
 integrations = ["twilio:1.0.0"]
 
 [nix]
 channel = "stable-25_05"
-packages = ["cargo", "freetype", "gcc", "glibc", "lcms2", "libiconv", "libimagequant", "libjpeg", "libpq", "libtiff", "libwebp", "libxcrypt", "openjpeg", "postgresql", "rustc", "tcl", "tk", "zlib"]
+packages = ["cargo", "freetype", "gcc", "glibc", "lcms2", "libiconv", "libimagequant", "libjpeg", "libpq", "libtiff", "libwebp", "libxcrypt", "openjpeg", "postgresql", "rustc", "tcl", "tk", "zlib", "jq"]
 
 [userenv]
 

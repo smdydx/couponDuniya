@@ -6,7 +6,7 @@ from fastapi import HTTPException
 from .config import get_settings
 from .redis_client import redis_client, rk
 
-pwd_context = CryptContext(schemes=["pbkdf2_sha256"], deprecated="auto")
+pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 settings = get_settings()
 
 def get_password_hash(password: str) -> str:

@@ -1,3 +1,5 @@
+"use client";
+
 import Link from "next/link";
 import { SITE_NAME, ROUTES } from "@/lib/constants";
 import { Providers } from "../providers";
