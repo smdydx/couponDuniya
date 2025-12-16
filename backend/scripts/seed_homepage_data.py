@@ -116,7 +116,7 @@ def seed_database():
                 name=f"{merchant.name} Gift Card",
                 slug=f"{merchant.slug}-gift-card",
                 description=f"Buy {merchant.name} gift cards at discounted prices. Instant delivery!",
-                image_url=f"/images/gift-cards/{merchant.slug}.png",
+                image_url=f"/images/products/{merchant.slug}.png",
                 price=500.00,
                 stock=1000,
                 category_id=categories[random.randint(0, len(categories)-1)].id,
@@ -136,12 +136,14 @@ def seed_database():
         for product in products:
             for denom in denominations:
                 discount = random.randint(3, 8)
-                selling_price = denom * (1 - discount/100)
+                selling_price_calc = denom * (1 - discount/100)
                 variants.append(ProductVariant(
                     product_id=product.id,
                     sku=f"{product.slug}-{denom}",
                     name=f"₹{denom}",
-                    price=selling_price,
+                    price=selling_price_calc,
+                    denomination=denom,
+                    selling_price=selling_price_calc,
                     stock=random.randint(50, 200),
                     is_available=True
                 ))
