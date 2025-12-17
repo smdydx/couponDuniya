@@ -10,6 +10,7 @@ import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Switch } from "@/components/ui/switch";
 import { Textarea } from "@/components/ui/textarea";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import {
   Dialog,
   DialogContent,
@@ -369,107 +370,128 @@ export default function AdminOffersPage() {
               {editingOffer ? "Edit Offer" : "Add New Offer"}
             </DialogTitle>
           </DialogHeader>
-          <div className="grid gap-5 py-4 max-h-[60vh] overflow-y-auto pr-1">
-            <div className="grid gap-2">
-              <Label htmlFor="merchant" className="text-sm font-medium">Merchant *</Label>
-              <Select
-                value={String(formData.merchant_id)}
-                onValueChange={(value) =>
-                  setFormData((prev) => ({ ...prev, merchant_id: parseInt(value) }))
-                }
-              >
-                <SelectTrigger className="h-11">
-                  <SelectValue placeholder="Select merchant" />
-                </SelectTrigger>
-                <SelectContent>
-                  {merchants.map((merchant) => (
-                    <SelectItem key={merchant.id} value={String(merchant.id)}>
-                      {merchant.name}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+          <Tabs defaultValue="general" className="w-full">
+            <TabsList className="grid w-full grid-cols-2 bg-muted/50 p-1">
+              <TabsTrigger value="general">General</TabsTrigger>
+              <TabsTrigger value="settings">Settings</TabsTrigger>
+            </TabsList>
+
+            <div className="py-4 max-h-[60vh] overflow-y-auto pr-1">
+              <TabsContent value="general" className="space-y-4 mt-0">
+                <div className="grid gap-4">
+                  <div className="grid gap-2">
+                    <Label htmlFor="merchant" className="text-sm font-medium">Merchant *</Label>
+                    <Select
+                      value={String(formData.merchant_id)}
+                      onValueChange={(value) =>
+                        setFormData((prev) => ({ ...prev, merchant_id: parseInt(value) }))
+                      }
+                    >
+                      <SelectTrigger className="h-10">
+                        <SelectValue placeholder="Select merchant" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {merchants.map((merchant) => (
+                          <SelectItem key={merchant.id} value={String(merchant.id)}>
+                            {merchant.name}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+
+                  <div className="grid gap-2">
+                    <Label htmlFor="title" className="text-sm font-medium">Title *</Label>
+                    <Input
+                      id="title"
+                      value={formData.title}
+                      onChange={(e) =>
+                        setFormData((prev) => ({ ...prev, title: e.target.value }))
+                      }
+                      placeholder="Enter offer title"
+                      className="h-10"
+                    />
+                  </div>
+
+                  <div className="grid gap-2">
+                    <Label htmlFor="description" className="text-sm font-medium">Description</Label>
+                    <Textarea
+                      id="description"
+                      value={formData.description}
+                      onChange={(e) =>
+                        setFormData((prev) => ({ ...prev, description: e.target.value }))
+                      }
+                      placeholder="Offer description"
+                      rows={3}
+                      className="resize-none text-sm"
+                    />
+                  </div>
+
+                  <div className="grid gap-2">
+                    <Label htmlFor="code" className="text-sm font-medium">Coupon Code</Label>
+                    <Input
+                      id="code"
+                      value={formData.code}
+                      onChange={(e) =>
+                        setFormData((prev) => ({ ...prev, code: e.target.value.toUpperCase() }))
+                      }
+                      placeholder="SAVE20"
+                      className="h-10 font-mono"
+                    />
+                  </div>
+
+                  <ImageUploader
+                    label="Offer Image"
+                    value={formData.image_url}
+                    onChange={(url) => setFormData((prev) => ({ ...prev, image_url: url }))}
+                    category="offers"
+                    aspectRatio="video"
+                  />
+                </div>
+              </TabsContent>
+
+              <TabsContent value="settings" className="space-y-4 mt-0">
+                <div className="space-y-4">
+                  <div className="grid gap-2">
+                    <Label htmlFor="priority" className="text-sm font-medium">Priority</Label>
+                    <Input
+                      id="priority"
+                      type="number"
+                      min="0"
+                      value={formData.priority}
+                      onChange={(e) =>
+                        setFormData((prev) => ({ ...prev, priority: parseInt(e.target.value) || 0 }))
+                      }
+                      placeholder="0"
+                      className="h-10"
+                    />
+                    <p className="text-xs text-gray-500">Higher priority offers appear first</p>
+                  </div>
+
+                  <div className="flex items-center justify-between rounded-xl border border-gray-200 p-4 bg-white shadow-sm">
+                    <div className="space-y-0.5">
+                      <Label className="text-base font-medium text-gray-900">Active Status</Label>
+                      <p className="text-xs text-gray-500">
+                        Show this offer on the website
+                      </p>
+                    </div>
+                    <Switch
+                      checked={formData.is_active}
+                      onCheckedChange={(checked) =>
+                        setFormData((prev) => ({ ...prev, is_active: checked }))
+                      }
+                    />
+                  </div>
+                </div>
+              </TabsContent>
             </div>
-            <div className="grid gap-2">
-              <Label htmlFor="title" className="text-sm font-medium">Title *</Label>
-              <Input
-                id="title"
-                value={formData.title}
-                onChange={(e) =>
-                  setFormData((prev) => ({ ...prev, title: e.target.value }))
-                }
-                placeholder="Enter offer title"
-                className="h-11"
-              />
-            </div>
-            <div className="grid gap-2">
-              <Label htmlFor="description" className="text-sm font-medium">Description</Label>
-              <Textarea
-                id="description"
-                value={formData.description}
-                onChange={(e) =>
-                  setFormData((prev) => ({ ...prev, description: e.target.value }))
-                }
-                placeholder="Offer description"
-                rows={3}
-                className="resize-none"
-              />
-            </div>
-            <div className="grid gap-2">
-              <Label htmlFor="code" className="text-sm font-medium">Coupon Code</Label>
-              <Input
-                id="code"
-                value={formData.code}
-                onChange={(e) =>
-                  setFormData((prev) => ({ ...prev, code: e.target.value.toUpperCase() }))
-                }
-                placeholder="SAVE20"
-                className="h-11 font-mono"
-              />
-            </div>
-            <ImageUploader
-              label="Offer Image"
-              value={formData.image_url}
-              onChange={(url) => setFormData((prev) => ({ ...prev, image_url: url }))}
-              category="offers"
-              aspectRatio="video"
-            />
-            <div className="grid gap-2">
-              <Label htmlFor="priority" className="text-sm font-medium">Priority</Label>
-              <Input
-                id="priority"
-                type="number"
-                min="0"
-                value={formData.priority}
-                onChange={(e) =>
-                  setFormData((prev) => ({ ...prev, priority: parseInt(e.target.value) || 0 }))
-                }
-                placeholder="0"
-                className="h-11"
-              />
-              <p className="text-xs text-gray-500">Higher priority offers appear first</p>
-            </div>
-            <div className="flex items-center justify-between rounded-xl border border-gray-200 p-4 bg-gray-50/50">
-              <div className="space-y-0.5">
-                <Label className="text-sm font-medium">Active</Label>
-                <p className="text-xs text-gray-500">
-                  Show this offer on the website
-                </p>
-              </div>
-              <Switch
-                checked={formData.is_active}
-                onCheckedChange={(checked) =>
-                  setFormData((prev) => ({ ...prev, is_active: checked }))
-                }
-              />
-            </div>
-          </div>
+          </Tabs>
           <DialogFooter className="pt-4 border-t gap-2 sm:gap-0">
             <Button variant="outline" onClick={() => setDialogOpen(false)} className="w-full sm:w-auto">
               Cancel
             </Button>
-            <Button 
-              onClick={handleSave} 
+            <Button
+              onClick={handleSave}
               disabled={saving || !formData.title || !formData.merchant_id}
               className="w-full sm:w-auto bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700"
             >

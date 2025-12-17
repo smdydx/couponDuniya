@@ -27,6 +27,7 @@ class MerchantPayload(BaseModel):
     logo_url: str | None = None
     is_active: bool = True
     is_featured: bool = False
+    is_verified: bool = False
 
 
 class OfferPayload(BaseModel):
@@ -78,7 +79,8 @@ def create_merchant(
         description=payload.description,
         logo_url=payload.logo_url,
         is_active=payload.is_active,
-        is_featured=payload.is_featured
+        is_featured=payload.is_featured,
+        is_verified=payload.is_verified
     )
     db.add(merchant)
     db.commit()
@@ -198,6 +200,8 @@ def update_merchant(
     merchant.description = payload.description
     merchant.logo_url = payload.logo_url
     merchant.is_active = payload.is_active
+    merchant.is_featured = payload.is_featured
+    merchant.is_verified = payload.is_verified
 
     db.commit()
     db.refresh(merchant)
@@ -339,6 +343,8 @@ def create_admin_product(
     price: float = Form(...),
     stock: int = Form(0),
     is_active: bool = Form(True),
+    is_featured: bool = Form(False),
+    is_bestseller: bool = Form(False),
     db: Session = Depends(get_db)
 ):
     """Create a new product"""
@@ -355,7 +361,9 @@ def create_admin_product(
         image_url=image_url,
         price=price,
         stock=stock,
-        is_active=is_active
+        is_active=is_active,
+        is_featured=is_featured,
+        is_bestseller=is_bestseller
     )
     db.add(product)
     db.commit()
@@ -382,6 +390,8 @@ def update_admin_product(
     price: float = Form(None),
     stock: int = Form(None),
     is_active: bool = Form(None),
+    is_featured: bool = Form(None),
+    is_bestseller: bool = Form(None),
     db: Session = Depends(get_db)
 ):
     """Update a product"""
@@ -412,6 +422,10 @@ def update_admin_product(
         product.stock = stock
     if is_active is not None:
         product.is_active = is_active
+    if is_featured is not None:
+        product.is_featured = is_featured
+    if is_bestseller is not None:
+        product.is_bestseller = is_bestseller
 
     db.commit()
     db.refresh(product)

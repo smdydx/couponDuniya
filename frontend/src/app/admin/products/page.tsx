@@ -10,6 +10,7 @@ import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Switch } from "@/components/ui/switch";
 import { Textarea } from "@/components/ui/textarea";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import {
   Dialog,
   DialogContent,
@@ -60,7 +61,7 @@ export default function AdminProductsPage() {
   const [saving, setSaving] = useState(false);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [deletingProduct, setDeletingProduct] = useState<Product | null>(null);
-  
+
   const [formData, setFormData] = useState({
     merchant_id: 0,
     category_id: 0,
@@ -71,6 +72,8 @@ export default function AdminProductsPage() {
     price: 0,
     stock: 0,
     is_active: true,
+    is_featured: false,
+    is_bestseller: false,
   });
 
   const fetchProducts = async () => {
@@ -84,13 +87,13 @@ export default function AdminProductsPage() {
       setProducts(productsData.products || []);
       setPagination(productsData.pagination);
       setMerchants(merchantsData.merchants || []);
-      
+
       // Handle categories response safely
       let catData = [];
       if (categoriesResponse?.data) {
-        catData = categoriesResponse.data.data?.categories || 
-                  categoriesResponse.data.categories || 
-                  (Array.isArray(categoriesResponse.data) ? categoriesResponse.data : []);
+        catData = categoriesResponse.data.data?.categories ||
+          categoriesResponse.data.categories ||
+          (Array.isArray(categoriesResponse.data) ? categoriesResponse.data : []);
       }
       setCategories(catData);
     } catch (error: any) {
@@ -129,6 +132,8 @@ export default function AdminProductsPage() {
       price: 0,
       stock: 0,
       is_active: true,
+      is_featured: false,
+      is_bestseller: false,
     });
     setDialogOpen(true);
   };
@@ -145,6 +150,8 @@ export default function AdminProductsPage() {
       price: product.price,
       stock: product.stock,
       is_active: product.is_active,
+      is_featured: (product as any).is_featured || false,
+      is_bestseller: (product as any).is_bestseller || false,
     });
     setDialogOpen(true);
   };
@@ -197,8 +204,8 @@ export default function AdminProductsPage() {
     return category?.name || "-";
   };
 
-  const filteredProducts = categoryFilter === "all" 
-    ? products 
+  const filteredProducts = categoryFilter === "all"
+    ? products
     : products.filter(p => String((p as any).category_id) === categoryFilter);
 
   const totalStock = filteredProducts.reduce((sum, p) => sum + p.stock, 0);
@@ -217,7 +224,7 @@ export default function AdminProductsPage() {
             Manage gift cards and product inventory
           </p>
         </div>
-        <Button 
+        <Button
           onClick={handleOpenCreate}
           className="bg-gradient-to-r from-blue-500 to-purple-500 hover:from-blue-600 hover:to-purple-600"
         >
@@ -238,7 +245,7 @@ export default function AdminProductsPage() {
             </div>
           </CardContent>
         </Card>
-        
+
         <Card className="border-0 shadow-lg bg-gradient-to-br from-emerald-500 to-teal-500 text-white">
           <CardContent className="p-6">
             <div className="flex items-center justify-between">
@@ -250,7 +257,7 @@ export default function AdminProductsPage() {
             </div>
           </CardContent>
         </Card>
-        
+
         <Card className="border-0 shadow-lg bg-gradient-to-br from-orange-500 to-amber-500 text-white">
           <CardContent className="p-6">
             <div className="flex items-center justify-between">
@@ -262,7 +269,7 @@ export default function AdminProductsPage() {
             </div>
           </CardContent>
         </Card>
-        
+
         <Card className="border-0 shadow-lg bg-gradient-to-br from-purple-500 to-pink-500 text-white">
           <CardContent className="p-6">
             <div className="flex items-center justify-between">
@@ -413,8 +420,8 @@ export default function AdminProductsPage() {
                             >
                               <Edit className="h-4 w-4" />
                             </Button>
-                            <Button 
-                              variant="ghost" 
+                            <Button
+                              variant="ghost"
                               size="sm"
                               onClick={() => {
                                 setDeletingProduct(product);
@@ -476,150 +483,205 @@ export default function AdminProductsPage() {
               {editingProduct ? "Edit Product" : "Add New Product"}
             </DialogTitle>
           </DialogHeader>
-          <div className="grid gap-5 py-4 max-h-[60vh] overflow-y-auto pr-1">
-            <div className="grid grid-cols-2 gap-4">
-              <div className="grid gap-2">
-                <Label htmlFor="merchant" className="text-sm font-medium">Merchant *</Label>
-                <Select
-                  value={String(formData.merchant_id)}
-                  onValueChange={(value) =>
-                    setFormData((prev) => ({ ...prev, merchant_id: parseInt(value) }))
-                  }
-                >
-                  <SelectTrigger className="h-11">
-                    <SelectValue placeholder="Select merchant" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {merchants.map((merchant) => (
-                      <SelectItem key={merchant.id} value={String(merchant.id)}>
-                        {merchant.name}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-              <div className="grid gap-2">
-                <Label htmlFor="category" className="text-sm font-medium">Category *</Label>
-                <Select
-                  value={String(formData.category_id)}
-                  onValueChange={(value) =>
-                    setFormData((prev) => ({ ...prev, category_id: parseInt(value) }))
-                  }
-                >
-                  <SelectTrigger className="h-11">
-                    <SelectValue placeholder="Select category" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {categories.map((category) => (
-                      <SelectItem key={category.id} value={String(category.id)}>
-                        {category.name}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-            </div>
-            <div className="grid gap-2">
-              <Label htmlFor="name" className="text-sm font-medium">Name *</Label>
-              <Input
-                id="name"
-                value={formData.name}
-                onChange={(e) => {
-                  const name = e.target.value;
-                  setFormData((prev) => ({
-                    ...prev,
-                    name,
-                    slug: prev.slug || generateSlug(name),
-                  }));
-                }}
-                placeholder="Product name"
-                className="h-11"
-              />
-            </div>
-            <div className="grid gap-2">
-              <Label htmlFor="slug" className="text-sm font-medium">Slug *</Label>
-              <Input
-                id="slug"
-                value={formData.slug}
-                onChange={(e) =>
-                  setFormData((prev) => ({ ...prev, slug: e.target.value }))
-                }
-                placeholder="product-url-slug"
-                className="h-11"
-              />
-            </div>
-            <div className="grid gap-2">
-              <Label htmlFor="description" className="text-sm font-medium">Description</Label>
-              <Textarea
-                id="description"
-                value={formData.description}
-                onChange={(e) =>
-                  setFormData((prev) => ({ ...prev, description: e.target.value }))
-                }
-                placeholder="Product description"
-                rows={3}
-                className="resize-none"
-              />
-            </div>
-            <div className="grid grid-cols-2 gap-4">
-              <div className="grid gap-2">
-                <Label htmlFor="price" className="text-sm font-medium">Price *</Label>
-                <Input
-                  id="price"
-                  type="number"
-                  min="0"
-                  step="0.01"
-                  value={formData.price}
-                  onChange={(e) =>
-                    setFormData((prev) => ({ ...prev, price: parseFloat(e.target.value) || 0 }))
-                  }
-                  placeholder="0.00"
-                  className="h-11"
+          <Tabs defaultValue="details" className="w-full">
+            <TabsList className="grid w-full grid-cols-3 bg-muted/50 p-1">
+              <TabsTrigger value="details">Details</TabsTrigger>
+              <TabsTrigger value="inventory">Pricing & Inventory</TabsTrigger>
+              <TabsTrigger value="settings">Settings</TabsTrigger>
+            </TabsList>
+
+            <div className="py-4 max-h-[60vh] overflow-y-auto pr-1">
+              <TabsContent value="details" className="space-y-4 mt-0">
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="grid gap-2">
+                    <Label htmlFor="merchant" className="text-sm font-medium">Merchant *</Label>
+                    <Select
+                      value={String(formData.merchant_id)}
+                      onValueChange={(value) =>
+                        setFormData((prev) => ({ ...prev, merchant_id: parseInt(value) }))
+                      }
+                    >
+                      <SelectTrigger className="h-10">
+                        <SelectValue placeholder="Select merchant" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {merchants.map((merchant) => (
+                          <SelectItem key={merchant.id} value={String(merchant.id)}>
+                            {merchant.name}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  <div className="grid gap-2">
+                    <Label htmlFor="category" className="text-sm font-medium">Category *</Label>
+                    <Select
+                      value={String(formData.category_id)}
+                      onValueChange={(value) =>
+                        setFormData((prev) => ({ ...prev, category_id: parseInt(value) }))
+                      }
+                    >
+                      <SelectTrigger className="h-10">
+                        <SelectValue placeholder="Select category" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {categories.map((category) => (
+                          <SelectItem key={category.id} value={String(category.id)}>
+                            {category.name}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                </div>
+
+                <div className="grid gap-2">
+                  <Label htmlFor="name" className="text-sm font-medium">Name *</Label>
+                  <Input
+                    id="name"
+                    value={formData.name}
+                    onChange={(e) => {
+                      const name = e.target.value;
+                      setFormData((prev) => ({
+                        ...prev,
+                        name,
+                        slug: prev.slug || generateSlug(name),
+                      }));
+                    }}
+                    placeholder="Product name"
+                    className="h-10"
+                  />
+                </div>
+
+                <div className="grid gap-2">
+                  <Label htmlFor="slug" className="text-sm font-medium">Slug *</Label>
+                  <Input
+                    id="slug"
+                    value={formData.slug}
+                    onChange={(e) =>
+                      setFormData((prev) => ({ ...prev, slug: e.target.value }))
+                    }
+                    placeholder="product-url-slug"
+                    className="h-10"
+                  />
+                </div>
+
+                <div className="grid gap-2">
+                  <Label htmlFor="description" className="text-sm font-medium">Description</Label>
+                  <Textarea
+                    id="description"
+                    value={formData.description}
+                    onChange={(e) =>
+                      setFormData((prev) => ({ ...prev, description: e.target.value }))
+                    }
+                    placeholder="Product description"
+                    rows={3}
+                    className="resize-none"
+                  />
+                </div>
+
+                <ImageUploader
+                  label="Product Image"
+                  value={formData.image_url}
+                  onChange={(url) => setFormData((prev) => ({ ...prev, image_url: url }))}
+                  category="products"
+                  aspectRatio="square"
                 />
-              </div>
-              <div className="grid gap-2">
-                <Label htmlFor="stock" className="text-sm font-medium">Stock</Label>
-                <Input
-                  id="stock"
-                  type="number"
-                  min="0"
-                  value={formData.stock}
-                  onChange={(e) =>
-                    setFormData((prev) => ({ ...prev, stock: parseInt(e.target.value) || 0 }))
-                  }
-                  placeholder="0"
-                  className="h-11"
-                />
-              </div>
+              </TabsContent>
+
+              <TabsContent value="inventory" className="space-y-4 mt-0">
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="grid gap-2">
+                    <Label htmlFor="price" className="text-sm font-medium">Price *</Label>
+                    <div className="relative">
+                      <span className="absolute left-3 top-2.5 text-gray-500">₹</span>
+                      <Input
+                        id="price"
+                        type="number"
+                        min="0"
+                        step="0.01"
+                        value={formData.price}
+                        onChange={(e) =>
+                          setFormData((prev) => ({ ...prev, price: parseFloat(e.target.value) || 0 }))
+                        }
+                        placeholder="0.00"
+                        className="h-10 pl-7"
+                      />
+                    </div>
+                  </div>
+                  <div className="grid gap-2">
+                    <Label htmlFor="stock" className="text-sm font-medium">Stock</Label>
+                    <Input
+                      id="stock"
+                      type="number"
+                      min="0"
+                      value={formData.stock}
+                      onChange={(e) =>
+                        setFormData((prev) => ({ ...prev, stock: parseInt(e.target.value) || 0 }))
+                      }
+                      placeholder="0"
+                      className="h-10"
+                    />
+                  </div>
+                </div>
+              </TabsContent>
+
+              <TabsContent value="settings" className="space-y-4 mt-0">
+                <div className="space-y-3">
+                  <div className="flex items-center justify-between rounded-xl border border-gray-200 p-4 bg-white shadow-sm">
+                    <div className="space-y-0.5">
+                      <Label className="text-base font-medium text-gray-900">Active Status</Label>
+                      <p className="text-xs text-gray-500">
+                        Show this product on the website
+                      </p>
+                    </div>
+                    <Switch
+                      checked={formData.is_active}
+                      onCheckedChange={(checked) =>
+                        setFormData((prev) => ({ ...prev, is_active: checked }))
+                      }
+                    />
+                  </div>
+
+                  <div className="flex items-center justify-between rounded-xl border border-gray-200 p-4 bg-white shadow-sm">
+                    <div className="space-y-0.5">
+                      <Label className="text-base font-medium text-gray-900">Featured</Label>
+                      <p className="text-xs text-gray-500">
+                        Show in featured sections
+                      </p>
+                    </div>
+                    <Switch
+                      checked={formData.is_featured}
+                      onCheckedChange={(checked) =>
+                        setFormData((prev) => ({ ...prev, is_featured: checked }))
+                      }
+                    />
+                  </div>
+
+                  <div className="flex items-center justify-between rounded-xl border border-gray-200 p-4 bg-white shadow-sm">
+                    <div className="space-y-0.5">
+                      <Label className="text-base font-medium text-gray-900">Bestseller</Label>
+                      <p className="text-xs text-gray-500">
+                        Mark as a bestseller
+                      </p>
+                    </div>
+                    <Switch
+                      checked={formData.is_bestseller}
+                      onCheckedChange={(checked) =>
+                        setFormData((prev) => ({ ...prev, is_bestseller: checked }))
+                      }
+                    />
+                  </div>
+                </div>
+              </TabsContent>
             </div>
-            <ImageUploader
-              label="Product Image"
-              value={formData.image_url}
-              onChange={(url) => setFormData((prev) => ({ ...prev, image_url: url }))}
-              category="products"
-              aspectRatio="square"
-            />
-            <div className="flex items-center justify-between rounded-xl border border-gray-200 p-4 bg-gradient-to-r from-gray-50 to-blue-50">
-              <div className="space-y-0.5">
-                <Label className="text-sm font-medium">Active</Label>
-                <p className="text-xs text-gray-500">
-                  Show this product on the website
-                </p>
-              </div>
-              <Switch
-                checked={formData.is_active}
-                onCheckedChange={(checked) =>
-                  setFormData((prev) => ({ ...prev, is_active: checked }))
-                }
-              />
-            </div>
-          </div>
+          </Tabs>
           <DialogFooter className="pt-4 border-t gap-2 sm:gap-0">
             <Button variant="outline" onClick={() => setDialogOpen(false)} className="w-full sm:w-auto">
               Cancel
             </Button>
-            <Button 
-              onClick={handleSave} 
+            <Button
+              onClick={handleSave}
               disabled={saving || !formData.name || !formData.slug || !formData.merchant_id}
               className="w-full sm:w-auto bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700"
             >

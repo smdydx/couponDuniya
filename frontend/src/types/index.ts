@@ -134,6 +134,7 @@ export interface Product {
   category_id?: number;
   category?: Category;
   is_bestseller: boolean;
+  is_featured: boolean;
   is_active: boolean;
   variants: ProductVariant[];
   terms_conditions?: string;
