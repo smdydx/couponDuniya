@@ -158,8 +158,8 @@ def get_homepage_data(
             len(result["featured_products"]) == 0
         ])
 
-        # Cache for 2 minutes (shorter for fresh content)
-        cache_set(cache_key, result, ttl=120)
+        # Cache for 30 seconds (shorter for fresh content)
+        cache_set(cache_key, result, ttl=30)
 
         return {
             "success": True,

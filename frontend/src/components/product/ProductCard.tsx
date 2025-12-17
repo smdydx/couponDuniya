@@ -32,35 +32,47 @@ export function ProductCard({ product, compact = false }: ProductCardProps) {
       productId: product.id,
       productName: product.name,
       productSlug: product.slug,
-      denomination: selectedVariant.denomination,
-      sellingPrice: selectedVariant.selling_price,
+      denomination: selectedVariant.denomination ?? selectedVariant.price ?? 0,
+      sellingPrice: selectedVariant.selling_price ?? selectedVariant.price ?? 0,
       quantity: 1,
       imageUrl: product.image_url,
       merchantName: product.merchant?.name,
     });
 
-    toast.success("Added to cart", `${product.name} - ${formatCurrency(selectedVariant.denomination)}`);
+    toast.success("Added to cart", `${product.name} - ${formatCurrency(selectedVariant.denomination ?? selectedVariant.price ?? 0)}`);
   };
 
   const discount = selectedVariant
-    ? calculateDiscount(selectedVariant.denomination, selectedVariant.selling_price)
+    ? calculateDiscount(
+      selectedVariant.denomination ?? selectedVariant.price ?? 0,
+      selectedVariant.selling_price ?? selectedVariant.price ?? 0
+    )
     : 0;
 
   // Determine min and max prices for display, considering variants
-  const validVariants = product.variants?.filter(v => v && v.selling_price && v.denomination && (Number(v.selling_price) > 0 || Number(v.denomination) > 0)) || [];
+  // Use price as fallback if denomination and selling_price are null
+  const validVariants = product.variants?.filter(v => {
+    if (!v) return false;
+    const hasSellingPrice = v.selling_price && Number(v.selling_price) > 0;
+    const hasDenomination = v.denomination && Number(v.denomination) > 0;
+    const hasPrice = v.price && Number(v.price) > 0;
+    return hasSellingPrice || hasDenomination || hasPrice;
+  }) || [];
+
   const availableVariants = validVariants.filter(v => v.is_available);
 
   const variantPrices = availableVariants.length > 0 ? availableVariants : validVariants;
-  
+
   // If no valid variants with prices, don't render the card
   if (variantPrices.length === 0) {
     return null;
   }
 
-  const minSellingPrice = Math.min(...variantPrices.map(v => Number(v.selling_price) || 0));
-  const maxSellingPrice = Math.max(...variantPrices.map(v => Number(v.selling_price) || 0));
-  const minDenomination = Math.min(...variantPrices.map(v => Number(v.denomination) || 0));
-  const maxDenomination = Math.max(...variantPrices.map(v => Number(v.denomination) || 0));
+  // Use selling_price if available, otherwise fall back to price, then denomination
+  const minSellingPrice = Math.min(...variantPrices.map(v => Number(v.selling_price) || Number(v.price) || Number(v.denomination) || 0));
+  const maxSellingPrice = Math.max(...variantPrices.map(v => Number(v.selling_price) || Number(v.price) || Number(v.denomination) || 0));
+  const minDenomination = Math.min(...variantPrices.map(v => Number(v.denomination) || Number(v.price) || 0));
+  const maxDenomination = Math.max(...variantPrices.map(v => Number(v.denomination) || Number(v.price) || 0));
 
   // Set final prices - guaranteed to be valid at this point
   const minPrice = minSellingPrice || 0;
@@ -181,7 +193,7 @@ export function ProductCard({ product, compact = false }: ProductCardProps) {
                   disabled={!variant.is_available}
                   className="h-5 px-1.5 text-[9px]"
                 >
-                  {formatCurrency(variant.denomination)}
+                  {formatCurrency(variant.denomination ?? variant.price ?? 0)}
                 </Button>
               ))}
               {product.variants.length > 2 && (

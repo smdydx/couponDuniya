@@ -68,6 +68,11 @@ const adminNavItems = [
     icon: Wallet,
   },
   {
+    title: "KYC Verification",
+    href: "/admin/kyc",
+    icon: Shield,
+  },
+  {
     title: "Queues",
     href: ROUTES.admin.queues,
     icon: Layers,

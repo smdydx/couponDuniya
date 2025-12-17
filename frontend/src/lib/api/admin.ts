@@ -515,8 +515,62 @@ const adminApi = {
   rejectMerchantApplication: async (merchantId: number, notes?: string): Promise<void> => {
     await apiClient.post(`/merchants/admin/verify/${merchantId}`, { action: 'reject', notes });
   },
+
+  // KYC APIs
+  getKYCRequests: async (params: { page?: number; limit?: number; status?: string } = {}): Promise<{ kyc_requests: KYCRequest[]; pagination: Pagination }> => {
+    const queryParams = new URLSearchParams();
+    if (params.page) queryParams.append('page', String(params.page));
+    if (params.limit) queryParams.append('limit', String(params.limit));
+    if (params.status) queryParams.append('status', params.status || 'pending');
+
+    const response = await apiClient.get(`/admin/kyc/pending?${queryParams.toString()}`);
+    const data = response.data;
+    if (data?.data?.kyc_requests && data?.data?.pagination) {
+      return { kyc_requests: data.data.kyc_requests, pagination: data.data.pagination };
+    }
+    return { kyc_requests: [], pagination: { current_page: 1, total_pages: 1, total_items: 0, per_page: 20 } };
+  },
+
+  verifyKYCRequest: async (kycId: number, action: 'approve' | 'reject', notes?: string): Promise<void> => {
+    await apiClient.post(`/admin/kyc/verify/${kycId}`, { action, notes });
+  },
+
+  getKYCStats: async (): Promise<KYCStats> => {
+    const response = await apiClient.get('/admin/kyc/stats');
+    return response.data?.data || { pending: 0, approved: 0, rejected: 0, total: 0 };
+  },
 };
 
+
+export interface KYCRequest {
+  id: number;
+  user_id: number;
+  user?: {
+    id: number;
+    email: string;
+    full_name?: string;
+    mobile?: string;
+  };
+  pan_number?: string;
+  pan_verified: boolean;
+  aadhaar_number?: string;
+  aadhaar_verified: boolean;
+  account_holder_name?: string;
+  account_number?: string;
+  ifsc_code?: string;
+  bank_name?: string;
+  upi_id?: string;
+  status: string;
+  submitted_at?: string;
+  verified_at?: string;
+}
+
+export interface KYCStats {
+  pending: number;
+  approved: number;
+  rejected: number;
+  total: number;
+}
 export interface CashbackEvent {
   id: number;
   user_id: number;

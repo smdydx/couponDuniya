@@ -90,9 +90,7 @@ export default function AdminDashboard() {
         adminApiClient.get("/analytics/dashboard"),
         adminApiClient.get("/merchants", { params: { limit: 5 } }),
         adminApiClient.get("/offers", { params: { limit: 5 } }),
-        fetch(`${process.env.NEXT_PUBLIC_API_URL || '/backend-api'}/api/v1/merchants/admin/pending-applications?limit=1`, {
-          headers: { 'Authorization': `Bearer ${currentToken}`, 'Content-Type': 'application/json' }
-        }).then(r => r.json()).then(data => ({ data })),
+        adminApiClient.get("/merchants/admin/pending-applications", { params: { limit: 100, status: 'pending' } }),
       ]);
 
       // Handle 403 errors silently - redirect to login
@@ -143,9 +141,14 @@ export default function AdminDashboard() {
       if (pendingAppsResponse.status === "fulfilled") {
         try {
           const pendingData = pendingAppsResponse.value.data;
-          const totalPending = pendingData?.data?.pagination?.total_items || pendingData?.pagination?.total_items || 0;
+          // Extract total from the correct path in response
+          const totalPending = pendingData?.data?.pagination?.total_items ||
+            pendingData?.pagination?.total_items ||
+            pendingData?.data?.applications?.length ||
+            0;
           setPendingApplicationsCount(totalPending);
         } catch (error) {
+          console.error("Error parsing pending applications:", error);
           setPendingApplicationsCount(0);
         }
       }
@@ -296,13 +299,27 @@ export default function AdminDashboard() {
 
   return (
     <div className="space-y-8 p-4 sm:p-6 lg:p-8">
-      <div className="flex flex-col gap-2">
-        <h1 className="text-3xl sm:text-4xl font-bold bg-gradient-to-r from-purple-600 via-blue-600 to-indigo-600 bg-clip-text text-transparent">
-          Admin Dashboard
-        </h1>
-        <p className="text-gray-500">
-          Welcome back! Here&apos;s your platform overview for today
-        </p>
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+        <div className="flex flex-col gap-2">
+          <h1 className="text-3xl sm:text-4xl font-bold bg-gradient-to-r from-purple-600 via-blue-600 to-indigo-600 bg-clip-text text-transparent">
+            Admin Dashboard
+          </h1>
+          <p className="text-gray-500">
+            Welcome back! Here&apos;s your platform overview for today
+          </p>
+        </div>
+        <Button
+          variant="outline"
+          onClick={() => {
+            setLoading(true);
+            fetchDashboardData();
+          }}
+          className="gap-2 self-start sm:self-auto"
+          disabled={loading}
+        >
+          <RefreshCw className={`h-4 w-4 ${loading ? 'animate-spin' : ''}`} />
+          Refresh Data
+        </Button>
       </div>
 
       <div className="grid gap-3 sm:gap-4 grid-cols-1 sm:grid-cols-2 lg:grid-cols-4">
@@ -570,8 +587,8 @@ export default function AdminDashboard() {
                   {recentMerchants.map((merchant) => (
                     <div key={merchant.id} className="flex items-center gap-3 p-3 bg-white rounded-lg shadow-sm hover:shadow-md transition-shadow">
                       {merchant.logo_url ? (
-                        <img 
-                          src={merchant.logo_url} 
+                        <img
+                          src={merchant.logo_url}
                           alt={merchant.name}
                           className="w-12 h-12 rounded-lg object-contain border bg-white"
                           onError={(e) => {
@@ -614,8 +631,8 @@ export default function AdminDashboard() {
                   {recentOffers.map((offer) => (
                     <div key={offer.id} className="flex items-center gap-3 p-3 bg-white rounded-lg shadow-sm hover:shadow-md transition-shadow">
                       {offer.image_url ? (
-                        <img 
-                          src={offer.image_url} 
+                        <img
+                          src={offer.image_url}
                           alt={offer.title}
                           className="w-12 h-12 rounded-lg object-cover border"
                           onError={(e) => {

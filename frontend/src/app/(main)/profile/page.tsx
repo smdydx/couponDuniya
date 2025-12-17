@@ -412,8 +412,9 @@ function ProfileContent() {
 
   const getKycStatusBadge = () => {
     if (!kycData) return <Badge variant="secondary">Not Submitted</Badge>;
-    
+
     switch (kycData.status) {
+      case "approved":
       case "verified":
         return <Badge className="bg-green-500">Verified</Badge>;
       case "pending":
@@ -686,7 +687,7 @@ function ProfileContent() {
                         id="pan_number"
                         placeholder="ABCDE1234F"
                         value={kycFormData.pan_number}
-                        onChange={(e) => setKycFormData({...kycFormData, pan_number: e.target.value.toUpperCase()})}
+                        onChange={(e) => setKycFormData({ ...kycFormData, pan_number: e.target.value.toUpperCase() })}
                         maxLength={10}
                         disabled={kycData?.pan_verified}
                       />
@@ -704,7 +705,7 @@ function ProfileContent() {
                         id="aadhaar_number"
                         placeholder="XXXX-XXXX-XXXX"
                         value={kycFormData.aadhaar_number}
-                        onChange={(e) => setKycFormData({...kycFormData, aadhaar_number: e.target.value})}
+                        onChange={(e) => setKycFormData({ ...kycFormData, aadhaar_number: e.target.value })}
                         maxLength={12}
                         disabled={kycData?.aadhaar_verified}
                       />
@@ -717,7 +718,7 @@ function ProfileContent() {
                         id="account_holder_name"
                         placeholder="As per bank account"
                         value={kycFormData.account_holder_name}
-                        onChange={(e) => setKycFormData({...kycFormData, account_holder_name: e.target.value})}
+                        onChange={(e) => setKycFormData({ ...kycFormData, account_holder_name: e.target.value })}
                       />
                     </div>
 
@@ -728,7 +729,7 @@ function ProfileContent() {
                         id="account_number"
                         placeholder="Enter account number"
                         value={kycFormData.account_number}
-                        onChange={(e) => setKycFormData({...kycFormData, account_number: e.target.value})}
+                        onChange={(e) => setKycFormData({ ...kycFormData, account_number: e.target.value })}
                       />
                     </div>
 
@@ -740,7 +741,7 @@ function ProfileContent() {
                           id="ifsc_code"
                           placeholder="SBIN0001234"
                           value={kycFormData.ifsc_code}
-                          onChange={(e) => setKycFormData({...kycFormData, ifsc_code: e.target.value.toUpperCase()})}
+                          onChange={(e) => setKycFormData({ ...kycFormData, ifsc_code: e.target.value.toUpperCase() })}
                           maxLength={11}
                         />
                       </div>
@@ -752,7 +753,7 @@ function ProfileContent() {
                           id="bank_name"
                           placeholder="State Bank of India"
                           value={kycFormData.bank_name}
-                          onChange={(e) => setKycFormData({...kycFormData, bank_name: e.target.value})}
+                          onChange={(e) => setKycFormData({ ...kycFormData, bank_name: e.target.value })}
                         />
                       </div>
                     </div>
@@ -764,12 +765,12 @@ function ProfileContent() {
                         id="upi_id"
                         placeholder="yourname@upi"
                         value={kycFormData.upi_id}
-                        onChange={(e) => setKycFormData({...kycFormData, upi_id: e.target.value})}
+                        onChange={(e) => setKycFormData({ ...kycFormData, upi_id: e.target.value })}
                       />
                     </div>
                   </div>
 
-                  {kycData?.status === "verified" ? (
+                  {(kycData?.status === "verified" || kycData?.status === "approved") ? (
                     <div className="rounded-lg bg-green-50 border border-green-200 p-4 text-sm text-green-700">
                       <CheckCircle className="inline-block mr-2 h-5 w-5" />
                       Your KYC has been verified successfully!
@@ -928,7 +929,7 @@ function ProfileContent() {
                 </div>
                 <Switch
                   checked={notifications.email}
-                  onCheckedChange={(checked) => setNotifications({...notifications, email: checked})}
+                  onCheckedChange={(checked) => setNotifications({ ...notifications, email: checked })}
                 />
               </div>
 
@@ -941,7 +942,7 @@ function ProfileContent() {
                 </div>
                 <Switch
                   checked={notifications.sms}
-                  onCheckedChange={(checked) => setNotifications({...notifications, sms: checked})}
+                  onCheckedChange={(checked) => setNotifications({ ...notifications, sms: checked })}
                 />
               </div>
 
@@ -954,7 +955,7 @@ function ProfileContent() {
                 </div>
                 <Switch
                   checked={notifications.promotional}
-                  onCheckedChange={(checked) => setNotifications({...notifications, promotional: checked})}
+                  onCheckedChange={(checked) => setNotifications({ ...notifications, promotional: checked })}
                 />
               </div>
 
@@ -967,7 +968,7 @@ function ProfileContent() {
                 </div>
                 <Switch
                   checked={notifications.cashback}
-                  onCheckedChange={(checked) => setNotifications({...notifications, cashback: checked})}
+                  onCheckedChange={(checked) => setNotifications({ ...notifications, cashback: checked })}
                 />
               </div>
 

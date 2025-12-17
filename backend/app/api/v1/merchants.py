@@ -190,6 +190,7 @@ def create_merchant(
     # Invalidate cache for merchant list and featured merchants
     cache_invalidate_prefix(rk("cache", "merchants"))
     cache_invalidate(rk("cache", "merchants", "featured"))
+    cache_invalidate_prefix(rk("cache", "homepage"))  # Clear homepage cache
 
 
     return {"success": True, "data": new_merchant}
@@ -217,10 +218,11 @@ def update_merchant(
     db.commit()
     db.refresh(merchant)
 
-    # Invalidate cache
+    # Invalidate cache - Enhanced to include homepage
     cache_invalidate(rk("cache", "merchant", merchant.slug))
     cache_invalidate_prefix(rk("cache", "merchants"))
     cache_invalidate(rk("cache", "merchants", "featured"))
+    cache_invalidate_prefix(rk("cache", "homepage"))  # Clear homepage cache
 
 
     return {"success": True, "data": merchant}
@@ -244,6 +246,7 @@ def delete_merchant(
     cache_invalidate(rk("cache", "merchant", merchant.slug))
     cache_invalidate_prefix(rk("cache", "merchants"))
     cache_invalidate(rk("cache", "merchants", "featured"))
+    cache_invalidate_prefix(rk("cache", "homepage"))  # Clear homepage cache
 
 
     return {"success": True, "message": "Merchant deleted successfully"}
@@ -264,11 +267,28 @@ def apply_as_merchant(
     current_user: User = Depends(get_current_user)
 ):
     """User applies to become a merchant"""
-    if current_user.merchant_verification_status == MerchantVerificationStatus.PENDING.value:
-        raise HTTPException(status_code=400, detail="You already have a pending merchant application")
+    import logging
+    log = logging.getLogger(__name__)
     
+    log.info(f"Merchant application received from user {current_user.id}")
+    log.info(f"Current merchant_verification_status: {current_user.merchant_verification_status}")
+    log.info(f"Current merchant_verified: {current_user.merchant_verified}")
+    
+    # Check if user already has pending application
+    if current_user.merchant_verification_status == MerchantVerificationStatus.PENDING.value:
+        log.warning(f"User {current_user.id} already has pending application")
+        raise HTTPException(
+            status_code=400, 
+            detail="You already have a pending merchant application. Please wait for admin review."
+        )
+    
+    # Check if user is already verified merchant
     if current_user.merchant_verified:
-        raise HTTPException(status_code=400, detail="You are already a verified merchant")
+        log.warning(f"User {current_user.id} is already a verified merchant")
+        raise HTTPException(
+            status_code=400, 
+            detail="You are already a verified merchant"
+        )
     
     slug = generate_slug(application.business_name)
     existing_slug = db.scalar(select(Merchant).where(Merchant.slug == slug))
@@ -307,6 +327,8 @@ def apply_as_merchant(
     
     current_user.merchant_id = merchant.id
     db.commit()
+    
+    log.info(f"Merchant application created successfully: merchant_id={merchant.id}, user_id={current_user.id}")
     
     return {
         "success": True,

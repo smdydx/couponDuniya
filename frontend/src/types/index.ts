@@ -146,12 +146,16 @@ export interface Product {
 export interface ProductVariant {
   id: number;
   product_id: number;
-  denomination: number;
-  selling_price: number;
-  cost_price: number;
-  discount_percentage: number;
+  sku: string;
+  name: string;
+  price: number;  // Base price field
+  denomination?: number | null;  // Original price (for gift cards)
+  selling_price?: number | null;  // Actual selling price
+  stock: number;
   is_available: boolean;
-  stock_quantity?: number;
+  cost_price?: number;  // Optional, for backward compatibility
+  discount_percentage?: number;  // Optional, for backward compatibility
+  stock_quantity?: number;  // Optional, for backward compatibility
 }
 
 // Cart Types
