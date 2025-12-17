@@ -57,9 +57,9 @@ export function OfferCard({ offer, onClickTrack }: OfferCardProps) {
         {/* Offer/Merchant Image - Full Display without Cropping */}
         <div className="relative w-full aspect-video overflow-hidden bg-gradient-to-br from-gray-50 via-white to-gray-50 rounded-t-xl">
           <div className="w-full h-full p-2 sm:p-2.5 flex items-center justify-center">
-            {offer.merchant?.logo_url ? (
+            {offer.image_url || offer.merchant?.logo_url ? (
               <img
-                src={offer.merchant.logo_url}
+                src={offer.image_url || offer.merchant?.logo_url || ""}
                 alt={offer.merchant.name}
                 className="max-w-full max-h-full object-contain transition-transform duration-300 group-hover:scale-110 rounded-lg"
                 onError={(e) => {

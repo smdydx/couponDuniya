@@ -99,7 +99,8 @@ def list_offers(
                 "name": merchant.name,
                 "slug": merchant.slug,
                 "logo_url": merchant.logo_url
-            }
+            },
+            "affiliate_url": merchant.tracking_url or merchant.affiliate_url or merchant.website_url
         })
 
     total_count = total or 0
@@ -137,7 +138,8 @@ def featured_offers(limit: int = 12, db: Session = Depends(get_db), current_user
             "merchant_id": o.merchant_id,
             "priority": o.priority,
             "created_at": o.created_at.isoformat(),
-            "merchant": {"id": m.id, "name": m.name, "slug": m.slug, "logo_url": m.logo_url},
+        "merchant": {"id": m.id, "name": m.name, "slug": m.slug, "logo_url": m.logo_url},
+            "affiliate_url": m.tracking_url or m.affiliate_url or m.website_url,
         }
         for o, m in results
     ]
@@ -164,7 +166,8 @@ def exclusive_offers(limit: int = 12, db: Session = Depends(get_db), current_use
             "merchant_id": o.merchant_id,
             "priority": o.priority,
             "created_at": o.created_at.isoformat(),
-            "merchant": {"id": m.id, "name": m.name, "slug": m.slug, "logo_url": m.logo_url},
+        "merchant": {"id": m.id, "name": m.name, "slug": m.slug, "logo_url": m.logo_url},
+            "affiliate_url": m.tracking_url or m.affiliate_url or m.website_url,
         }
         for o, m in results
     ]
@@ -203,6 +206,7 @@ def get_offer(offer_id: int, db: Session = Depends(get_db), current_user: User =
                 "slug": merchant.slug,
                 "description": merchant.description,
                 "logo_url": merchant.logo_url
-            }
+            },
+            "affiliate_url": merchant.tracking_url or merchant.affiliate_url or merchant.website_url
         }
     }
