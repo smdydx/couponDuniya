@@ -67,6 +67,11 @@ export function Footer() {
                   Refer & Earn
                 </Link>
               </li>
+              <li>
+                <Link href="/become-seller" className="text-muted-foreground hover:text-primary font-medium text-purple-600">
+                  Become a Seller
+                </Link>
+              </li>
             </ul>
           </div>
 

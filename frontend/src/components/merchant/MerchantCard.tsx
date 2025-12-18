@@ -22,23 +22,30 @@ export function MerchantCard({ merchant }: MerchantCardProps) {
         <CardContent className="p-1.5 sm:p-2">
           <div className="aspect-square w-full mb-1.5 rounded-xl bg-gradient-to-br from-gray-50 to-gray-100 dark:from-gray-800 dark:to-gray-900 flex items-center justify-center overflow-hidden">
             <div className="w-full h-full p-1.5 sm:p-2 flex items-center justify-center">
-              <img
-                src={merchant.logo_url}
-                alt={merchant.name}
-                className="max-w-full max-h-full object-contain transition-transform group-hover:scale-105 rounded-lg"
-                loading="lazy"
-                onError={(e) => {
-                  const target = e.currentTarget;
-                  target.style.display = 'none';
-                  if (target.parentElement) {
-                    target.parentElement.innerHTML = `
-                      <div class="w-8 h-8 sm:w-10 sm:h-10 rounded-full bg-gradient-to-br from-purple-100 to-pink-100 dark:from-purple-900 dark:to-pink-900 flex items-center justify-center">
-                        <span class="text-sm sm:text-base font-bold text-purple-600 dark:text-purple-300">${merchant.name.charAt(0)}</span>
-                      </div>
-                    `;
-                  }
-                }}
-              />
+              {merchant.logo_url ? (
+                <img
+                  src={merchant.logo_url}
+                  alt={merchant.name}
+                  className="max-w-full max-h-full object-contain transition-transform group-hover:scale-105 rounded-lg"
+                  loading="lazy"
+                  onError={(e) => {
+                    const target = e.currentTarget;
+                    target.style.display = 'none';
+                    if (target.parentElement) {
+                      const fallback = document.createElement('div');
+                      fallback.className = 'w-8 h-8 sm:w-10 sm:h-10 rounded-full bg-gradient-to-br from-purple-100 to-pink-100 dark:from-purple-900 dark:to-pink-900 flex items-center justify-center';
+                      fallback.innerHTML = `<span class="text-sm sm:text-base font-bold text-purple-600 dark:text-purple-300">${merchant.name.charAt(0)}</span>`;
+                      target.parentElement.appendChild(fallback);
+                    }
+                  }}
+                />
+              ) : (
+                <div className="w-8 h-8 sm:w-10 sm:h-10 rounded-full bg-gradient-to-br from-purple-100 to-pink-100 dark:from-purple-900 dark:to-pink-900 flex items-center justify-center">
+                  <span className="text-sm sm:text-base font-bold text-purple-600 dark:text-purple-300">
+                    {merchant.name.charAt(0)}
+                  </span>
+                </div>
+              )}
             </div>
           </div>
           <div className="text-center space-y-0.5">

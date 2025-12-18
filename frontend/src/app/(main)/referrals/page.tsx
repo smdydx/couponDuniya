@@ -164,10 +164,10 @@ export default function ReferralsPage() {
                 </div>
               </div>
 
-              <div className="mt-4 flex gap-2">
+              <div className="mt-4 flex flex-col sm:flex-row gap-2">
                 <Button
                   variant="outline"
-                  className="flex-1 gap-2 bg-green-600 text-white hover:bg-green-700"
+                  className="w-full sm:flex-1 gap-2 bg-green-600 text-white hover:bg-green-700"
                   onClick={() => handleShare("whatsapp")}
                 >
                   <MessageCircle className="h-4 w-4" />
@@ -175,7 +175,7 @@ export default function ReferralsPage() {
                 </Button>
                 <Button
                   variant="outline"
-                  className="flex-1 gap-2"
+                  className="w-full sm:flex-1 gap-2"
                   onClick={() => handleShare("twitter")}
                 >
                   <Twitter className="h-4 w-4" />
@@ -183,7 +183,7 @@ export default function ReferralsPage() {
                 </Button>
                 <Button
                   variant="outline"
-                  className="flex-1 gap-2"
+                  className="w-full sm:flex-1 gap-2"
                   onClick={() => handleShare("facebook")}
                 >
                   <Facebook className="h-4 w-4" />
@@ -329,7 +329,7 @@ export default function ReferralsPage() {
               {referrals.map((referral) => (
                 <div
                   key={referral.id}
-                  className="flex items-center justify-between py-4"
+                  className="flex flex-col gap-4 py-4 sm:flex-row sm:items-center sm:justify-between sm:gap-0"
                 >
                   <div>
                     <p className="font-medium">
@@ -340,24 +340,24 @@ export default function ReferralsPage() {
                       Joined {formatDate(referral.created_at)}
                     </p>
                   </div>
-                  <div className="text-right">
+                  <div className="flex w-full items-center justify-between sm:w-auto sm:flex-col sm:items-end sm:justify-center">
                     <Badge
                       variant={
                         referral.status === "earned"
                           ? "success"
                           : referral.status === "active"
-                          ? "info"
-                          : "secondary"
+                            ? "info"
+                            : "secondary"
                       }
                     >
                       {referral.status === "earned"
                         ? "Earned"
                         : referral.status === "active"
-                        ? "Awaiting Purchase"
-                        : "Pending"}
+                          ? "Awaiting Purchase"
+                          : "Pending"}
                     </Badge>
                     {referral.earned_amount && referral.earned_amount > 0 && (
-                      <p className="mt-1 text-sm font-medium text-green-600">
+                      <p className="text-sm font-medium text-green-600 sm:mt-1">
                         +{formatCurrency(referral.earned_amount)}
                       </p>
                     )}

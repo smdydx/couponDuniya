@@ -86,11 +86,11 @@ export function ProductCard({ product, compact = false }: ProductCardProps) {
       <Link href={`/products/${product.slug}`}>
         <Card className="group overflow-hidden hover:shadow-xl hover:shadow-purple-100 transition-all duration-300 h-full flex flex-col border border-gray-100 hover:border-purple-300 rounded-xl bg-white">
           <div className="relative w-full aspect-square bg-gradient-to-br from-gray-50 via-white to-gray-50 overflow-hidden rounded-t-xl">
-            <div className="w-full h-full p-2 sm:p-3 flex items-center justify-center">
+            <div className="w-full h-full flex items-center justify-center">
               <img
                 src={product.image_url || "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='200' height='200' viewBox='0 0 200 200'%3E%3Crect fill='%23f1f5f9' width='200' height='200'/%3E%3Ctext x='50%25' y='50%25' dominant-baseline='middle' text-anchor='middle' fill='%23475569' font-family='system-ui' font-size='14'%3EGift Card%3C/text%3E%3C/svg%3E"}
                 alt={product.name}
-                className="max-w-full max-h-full object-contain group-hover:scale-110 transition-transform duration-300 rounded-lg"
+                className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-300"
                 onError={(e) => {
                   const target = e.currentTarget;
                   target.style.display = 'none';

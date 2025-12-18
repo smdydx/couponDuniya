@@ -43,27 +43,27 @@ export function FeaturedMerchantSection({ merchants }: FeaturedMerchantSectionPr
 
             {/* Image Container - Fixed Aspect Ratio */}
             <div className="relative w-full bg-gradient-to-br from-gray-50 to-white dark:from-gray-800 dark:to-gray-900">
-              <div className="aspect-square w-full p-4 sm:p-6 flex items-center justify-center">
+              <div className="aspect-square w-full flex items-center justify-center overflow-hidden">
                 {merchant.logo_url ? (
                   <img
                     src={merchant.logo_url}
                     alt={merchant.name}
-                    className="w-full h-full object-contain transition-transform duration-300 group-hover:scale-110 rounded-lg"
+                    className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-110"
                     loading="lazy"
                     onError={(e) => {
                       const target = e.currentTarget;
                       target.style.display = 'none';
                       if (target.parentElement) {
                         const fallback = document.createElement('div');
-                        fallback.className = 'w-16 h-16 sm:w-20 sm:h-20 rounded-2xl bg-gradient-to-br from-purple-100 to-indigo-100 dark:from-purple-900 dark:to-indigo-900 flex items-center justify-center shadow-inner';
-                        fallback.innerHTML = `<span class="text-2xl sm:text-3xl font-bold text-purple-600 dark:text-purple-300">${merchant.name.charAt(0)}</span>`;
+                        fallback.className = 'w-full h-full flex items-center justify-center bg-gradient-to-br from-purple-100 to-indigo-100 dark:from-purple-900 dark:to-indigo-900';
+                        fallback.innerHTML = `<span class="text-3xl font-bold text-purple-600 dark:text-purple-300">${merchant.name.charAt(0)}</span>`;
                         target.parentElement.appendChild(fallback);
                       }
                     }}
                   />
                 ) : (
-                  <div className="w-16 h-16 sm:w-20 sm:h-20 rounded-2xl bg-gradient-to-br from-purple-100 to-indigo-100 dark:from-purple-900 dark:to-indigo-900 flex items-center justify-center shadow-inner">
-                    <span className="text-2xl sm:text-3xl font-bold text-purple-600 dark:text-purple-300">
+                  <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-purple-100 to-indigo-100 dark:from-purple-900 dark:to-indigo-900">
+                    <span className="text-3xl font-bold text-purple-600 dark:text-purple-300">
                       {merchant.name.charAt(0)}
                     </span>
                   </div>

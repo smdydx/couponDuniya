@@ -127,7 +127,7 @@ export function AdminSidebar({ isOpen, onToggle }: AdminSidebarProps) {
   return (
     <aside
       className={cn(
-        "fixed left-0 top-0 z-40 h-screen border-r bg-background transition-all duration-300",
+        "fixed left-0 top-0 z-[60] h-screen border-r bg-background transition-all duration-300",
         "w-64 lg:w-64",
         isOpen ? "translate-x-0" : "-translate-x-full",
         "lg:translate-x-0",
@@ -145,7 +145,7 @@ export function AdminSidebar({ isOpen, onToggle }: AdminSidebarProps) {
           <Button
             variant="ghost"
             size="icon"
-            className="h-8 w-8 hidden lg:flex"
+            className="h-8 w-8 flex"
             onClick={onToggle}
             aria-label="Toggle sidebar"
           >

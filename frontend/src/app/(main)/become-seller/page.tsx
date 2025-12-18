@@ -3,12 +3,12 @@
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
-import { 
-  Store, 
-  TrendingUp, 
-  Users, 
-  Shield, 
-  Wallet, 
+import {
+  Store,
+  TrendingUp,
+  Users,
+  Shield,
+  Wallet,
   CheckCircle,
   ArrowRight,
   Loader2,
@@ -67,7 +67,8 @@ export default function BecomeSellerPage() {
   const [loading, setLoading] = useState(false);
   const [merchantData, setMerchantData] = useState<any>(null);
   const [checkingStatus, setCheckingStatus] = useState(true);
-  
+  const [currentStep, setCurrentStep] = useState(1);
+
   const [formData, setFormData] = useState({
     business_name: "",
     business_email: "",
@@ -105,10 +106,10 @@ export default function BecomeSellerPage() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    
-    if (!formData.business_name || !formData.business_email || !formData.business_phone || 
-        !formData.business_address || !formData.business_city || !formData.business_state || 
-        !formData.business_pincode) {
+
+    if (!formData.business_name || !formData.business_email || !formData.business_phone ||
+      !formData.business_address || !formData.business_city || !formData.business_state ||
+      !formData.business_pincode) {
       toast.error("Please fill all required fields");
       return;
     }
@@ -170,7 +171,7 @@ export default function BecomeSellerPage() {
             <div className="flex items-center justify-center gap-2">
               {getStatusBadge(merchantData.verification_status)}
             </div>
-            
+
             {merchantData.verification_status === "pending" && (
               <div className="rounded-lg bg-yellow-50 p-4 text-center">
                 <AlertCircle className="mx-auto h-8 w-8 text-yellow-600 mb-2" />
@@ -225,7 +226,7 @@ export default function BecomeSellerPage() {
   }
 
   return (
-    <div className="min-h-screen">
+    <div className="min-h-screen bg-gray-50/30">
       {!showForm ? (
         <>
           <section className="relative overflow-hidden bg-gradient-to-br from-purple-900 via-purple-800 to-indigo-900 py-24 text-white">
@@ -237,7 +238,7 @@ export default function BecomeSellerPage() {
               <div className="absolute top-1/2 left-1/3 w-28 h-16 bg-purple-300/10 rounded-xl -rotate-12 animate-blob animation-delay-4000 blur-sm"></div>
               <div className="absolute bottom-1/3 right-1/4 w-44 h-28 bg-purple-600/15 rounded-lg rotate-6 animate-float animation-delay-2000 blur-sm"></div>
               <div className="absolute top-20 right-1/3 w-24 h-14 bg-indigo-400/20 rounded-xl rotate-12 animate-blob blur-sm"></div>
-              
+
               {/* Floating Coupon Shapes */}
               <div className="absolute top-1/3 left-20 w-20 h-12 bg-gradient-to-r from-purple-400/20 to-indigo-400/20 rounded-lg rotate-45 animate-float">
                 <div className="absolute left-0 top-1/2 -translate-y-1/2 w-3 h-3 bg-purple-900 rounded-full -ml-1.5"></div>
@@ -267,8 +268,8 @@ export default function BecomeSellerPage() {
                 </p>
                 <div className="mt-8 flex flex-col sm:flex-row gap-4 justify-center">
                   {isAuthenticated ? (
-                    <Button 
-                      size="lg" 
+                    <Button
+                      size="lg"
                       className="bg-white text-purple-700 hover:bg-white/90 font-semibold shadow-lg shadow-purple-500/30"
                       onClick={() => setShowForm(true)}
                     >
@@ -323,8 +324,8 @@ export default function BecomeSellerPage() {
               </div>
               <div className="mt-12 text-center">
                 {isAuthenticated ? (
-                  <Button 
-                    size="lg" 
+                  <Button
+                    size="lg"
                     className="bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-700 hover:to-indigo-700 text-white shadow-lg shadow-purple-500/30"
                     onClick={() => setShowForm(true)}
                   >
@@ -344,199 +345,287 @@ export default function BecomeSellerPage() {
           </section>
         </>
       ) : (
-        <div className="container py-8 max-w-2xl">
-          <Button 
-            variant="ghost" 
-            className="mb-4"
+        <div className="container py-8 max-w-2xl animate-in fade-in slide-in-from-bottom-4 duration-500">
+          <Button
+            variant="ghost"
+            className="mb-4 hover:bg-purple-50 text-purple-700"
             onClick={() => setShowForm(false)}
           >
-            ← Back
+            ← Back to Info
           </Button>
-          
-          <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <Store className="h-6 w-6" />
-                Seller Registration
-              </CardTitle>
-              <CardDescription>
-                Fill in your business details to register as a seller
+
+          <Card className="border-purple-100 shadow-xl overflow-hidden">
+            <div className="bg-purple-600 p-6 text-white text-center">
+              <div className="flex justify-center mb-4">
+                <div className="bg-white/20 p-3 rounded-full backdrop-blur-sm">
+                  <Store className="h-8 w-8 text-white" />
+                </div>
+              </div>
+              <CardTitle className="text-2xl font-bold">Seller Registration</CardTitle>
+              <CardDescription className="text-purple-100">
+                Complete 3 steps to start selling on BIDUA
               </CardDescription>
-            </CardHeader>
-            <CardContent>
+            </div>
+
+            {/* Stepper */}
+            <div className="px-6 py-8 border-b border-purple-50">
+              <div className="flex items-center justify-between relative max-w-md mx-auto">
+                <div className="absolute top-1/2 left-0 w-full h-0.5 bg-gray-200 -translate-y-1/2 z-0"></div>
+                <div
+                  className="absolute top-1/2 left-0 h-0.5 bg-purple-600 -translate-y-1/2 z-0 transition-all duration-500"
+                  style={{ width: `${((currentStep - 1) / 2) * 100}%` }}
+                ></div>
+
+                {[1, 2, 3].map((step) => (
+                  <div key={step} className="relative z-10 flex flex-col items-center">
+                    <div
+                      className={`w-10 h-10 rounded-full flex items-center justify-center font-bold transition-all duration-300 ${currentStep >= step
+                          ? "bg-purple-600 text-white shadow-lg shadow-purple-200"
+                          : "bg-white border-2 border-gray-200 text-gray-400"
+                        }`}
+                    >
+                      {currentStep > step ? <CheckCircle className="h-6 w-6" /> : step}
+                    </div>
+                    <span className={`text-xs mt-2 font-medium ${currentStep >= step ? "text-purple-600" : "text-gray-400"}`}>
+                      {step === 1 ? "Contact" : step === 2 ? "Location" : "Business"}
+                    </span>
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            <CardContent className="pt-8">
               <form onSubmit={handleSubmit} className="space-y-6">
-                <div className="space-y-4">
-                  <h3 className="font-semibold flex items-center gap-2">
-                    <Building2 className="h-5 w-5" />
-                    Business Information
-                  </h3>
-                  
-                  <div className="space-y-2">
-                    <Label htmlFor="business_name">Business Name *</Label>
-                    <Input
-                      id="business_name"
-                      name="business_name"
-                      value={formData.business_name}
-                      onChange={handleChange}
-                      placeholder="Your business name"
-                      required
-                    />
-                  </div>
-
-                  <div className="grid gap-4 sm:grid-cols-2">
+                {/* Step 1: Business Information */}
+                {currentStep === 1 && (
+                  <div className="space-y-6 animate-in fade-in slide-in-from-right-4 duration-300">
                     <div className="space-y-2">
-                      <Label htmlFor="business_email">Business Email *</Label>
-                      <Input
-                        id="business_email"
-                        name="business_email"
-                        type="email"
-                        value={formData.business_email}
-                        onChange={handleChange}
-                        placeholder="business@example.com"
-                        required
-                      />
+                      <Label htmlFor="business_name" className="text-gray-700 font-semibold text-sm">Business Name *</Label>
+                      <div className="relative">
+                        <Building2 className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
+                        <Input
+                          id="business_name"
+                          name="business_name"
+                          className="pl-10 h-11 border-purple-100 focus:border-purple-300 focus:ring-purple-200"
+                          value={formData.business_name}
+                          onChange={handleChange}
+                          placeholder="Your business name"
+                          required
+                        />
+                      </div>
                     </div>
-                    <div className="space-y-2">
-                      <Label htmlFor="business_phone">Business Phone *</Label>
-                      <Input
-                        id="business_phone"
-                        name="business_phone"
-                        type="tel"
-                        value={formData.business_phone}
-                        onChange={handleChange}
-                        placeholder="+91 9876543210"
-                        required
-                      />
-                    </div>
-                  </div>
 
-                  <div className="space-y-2">
-                    <Label htmlFor="website_url">Website URL</Label>
-                    <Input
-                      id="website_url"
-                      name="website_url"
-                      value={formData.website_url}
-                      onChange={handleChange}
-                      placeholder="https://yourwebsite.com"
-                    />
-                  </div>
-
-                  <div className="space-y-2">
-                    <Label htmlFor="description">Business Description</Label>
-                    <Textarea
-                      id="description"
-                      name="description"
-                      value={formData.description}
-                      onChange={handleChange}
-                      placeholder="Tell us about your business..."
-                      rows={3}
-                    />
-                  </div>
-                </div>
-
-                <div className="space-y-4">
-                  <h3 className="font-semibold flex items-center gap-2">
-                    <MapPin className="h-5 w-5" />
-                    Business Address
-                  </h3>
-                  
-                  <div className="space-y-2">
-                    <Label htmlFor="business_address">Address *</Label>
-                    <Textarea
-                      id="business_address"
-                      name="business_address"
-                      value={formData.business_address}
-                      onChange={handleChange}
-                      placeholder="Full business address"
-                      required
-                      rows={2}
-                    />
-                  </div>
-
-                  <div className="grid gap-4 sm:grid-cols-3">
-                    <div className="space-y-2">
-                      <Label htmlFor="business_city">City *</Label>
-                      <Input
-                        id="business_city"
-                        name="business_city"
-                        value={formData.business_city}
-                        onChange={handleChange}
-                        placeholder="City"
-                        required
-                      />
-                    </div>
-                    <div className="space-y-2">
-                      <Label htmlFor="business_state">State *</Label>
-                      <Input
-                        id="business_state"
-                        name="business_state"
-                        value={formData.business_state}
-                        onChange={handleChange}
-                        placeholder="State"
-                        required
-                      />
-                    </div>
-                    <div className="space-y-2">
-                      <Label htmlFor="business_pincode">Pincode *</Label>
-                      <Input
-                        id="business_pincode"
-                        name="business_pincode"
-                        value={formData.business_pincode}
-                        onChange={handleChange}
-                        placeholder="Pincode"
-                        required
-                      />
+                    <div className="grid gap-6 sm:grid-cols-2">
+                      <div className="space-y-2">
+                        <Label htmlFor="business_email" className="text-gray-700 font-semibold text-sm">Business Email *</Label>
+                        <div className="relative">
+                          <Mail className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
+                          <Input
+                            id="business_email"
+                            name="business_email"
+                            type="email"
+                            className="pl-10 h-11 border-purple-100 focus:border-purple-300 focus:ring-purple-200"
+                            value={formData.business_email}
+                            onChange={handleChange}
+                            placeholder="business@example.com"
+                            required
+                          />
+                        </div>
+                      </div>
+                      <div className="space-y-2">
+                        <Label htmlFor="business_phone" className="text-gray-700 font-semibold text-sm">Business Phone *</Label>
+                        <div className="relative">
+                          <Phone className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
+                          <Input
+                            id="business_phone"
+                            name="business_phone"
+                            type="tel"
+                            className="pl-10 h-11 border-purple-100 focus:border-purple-300 focus:ring-purple-200"
+                            value={formData.business_phone}
+                            onChange={handleChange}
+                            placeholder="+91 9876543210"
+                            required
+                          />
+                        </div>
+                      </div>
                     </div>
                   </div>
-                </div>
+                )}
 
-                <div className="space-y-4">
-                  <h3 className="font-semibold flex items-center gap-2">
-                    <FileText className="h-5 w-5" />
-                    Tax Information (Optional)
-                  </h3>
-                  
-                  <div className="grid gap-4 sm:grid-cols-2">
+                {/* Step 2: Business Address */}
+                {currentStep === 2 && (
+                  <div className="space-y-6 animate-in fade-in slide-in-from-right-4 duration-300">
                     <div className="space-y-2">
-                      <Label htmlFor="gst_number">GST Number</Label>
-                      <Input
-                        id="gst_number"
-                        name="gst_number"
-                        value={formData.gst_number}
-                        onChange={handleChange}
-                        placeholder="22AAAAA0000A1Z5"
-                      />
+                      <Label htmlFor="business_address" className="text-gray-700 font-semibold text-sm">Full Address *</Label>
+                      <div className="relative">
+                        <MapPin className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
+                        <Textarea
+                          id="business_address"
+                          name="business_address"
+                          className="pl-10 border-purple-100 focus:border-purple-300 focus:ring-purple-200"
+                          value={formData.business_address}
+                          onChange={handleChange}
+                          placeholder="Full business address"
+                          required
+                          rows={3}
+                        />
+                      </div>
                     </div>
+
+                    <div className="grid gap-4 sm:grid-cols-3">
+                      <div className="space-y-2">
+                        <Label htmlFor="business_city" className="text-gray-700 font-semibold text-sm">City *</Label>
+                        <Input
+                          id="business_city"
+                          name="business_city"
+                          className="h-11 border-purple-100 focus:border-purple-300 focus:ring-purple-200"
+                          value={formData.business_city}
+                          onChange={handleChange}
+                          placeholder="City"
+                          required
+                        />
+                      </div>
+                      <div className="space-y-2">
+                        <Label htmlFor="business_state" className="text-gray-700 font-semibold text-sm">State *</Label>
+                        <Input
+                          id="business_state"
+                          name="business_state"
+                          className="h-11 border-purple-100 focus:border-purple-300 focus:ring-purple-200"
+                          value={formData.business_state}
+                          onChange={handleChange}
+                          placeholder="State"
+                          required
+                        />
+                      </div>
+                      <div className="space-y-2">
+                        <Label htmlFor="business_pincode" className="text-gray-700 font-semibold text-sm">Pincode *</Label>
+                        <Input
+                          id="business_pincode"
+                          name="business_pincode"
+                          className="h-11 border-purple-100 focus:border-purple-300 focus:ring-purple-200"
+                          value={formData.business_pincode}
+                          onChange={handleChange}
+                          placeholder="Pincode"
+                          required
+                        />
+                      </div>
+                    </div>
+                  </div>
+                )}
+
+                {/* Step 3: Tax & Identity */}
+                {currentStep === 3 && (
+                  <div className="space-y-6 animate-in fade-in slide-in-from-right-4 duration-300">
+                    <div className="grid gap-6 sm:grid-cols-2">
+                      <div className="space-y-2">
+                        <Label htmlFor="gst_number" className="text-gray-700 font-semibold text-sm">GST Number</Label>
+                        <Input
+                          id="gst_number"
+                          name="gst_number"
+                          className="h-11 border-purple-100 focus:border-purple-300 focus:ring-purple-200"
+                          value={formData.gst_number}
+                          onChange={handleChange}
+                          placeholder="22AAAAA0000A1Z5"
+                        />
+                      </div>
+                      <div className="space-y-2">
+                        <Label htmlFor="pan_number" className="text-gray-700 font-semibold text-sm">PAN Number</Label>
+                        <Input
+                          id="pan_number"
+                          name="pan_number"
+                          className="h-11 border-purple-100 focus:border-purple-300 focus:ring-purple-200"
+                          value={formData.pan_number}
+                          onChange={handleChange}
+                          placeholder="ABCDE1234F"
+                        />
+                      </div>
+                    </div>
+
                     <div className="space-y-2">
-                      <Label htmlFor="pan_number">PAN Number</Label>
-                      <Input
-                        id="pan_number"
-                        name="pan_number"
-                        value={formData.pan_number}
+                      <Label htmlFor="website_url" className="text-gray-700 font-semibold text-sm">Website URL</Label>
+                      <div className="relative">
+                        <Globe className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
+                        <Input
+                          id="website_url"
+                          name="website_url"
+                          className="pl-10 h-11 border-purple-100 focus:border-purple-300 focus:ring-purple-200"
+                          value={formData.website_url}
+                          onChange={handleChange}
+                          placeholder="https://yourwebsite.com"
+                        />
+                      </div>
+                    </div>
+
+                    <div className="space-y-2">
+                      <Label htmlFor="description" className="text-gray-700 font-semibold text-sm">About Your Business</Label>
+                      <Textarea
+                        id="description"
+                        name="description"
+                        className="border-purple-100 focus:border-purple-300 focus:ring-purple-200"
+                        value={formData.description}
                         onChange={handleChange}
-                        placeholder="ABCDE1234F"
+                        placeholder="What do you sell? (Brands, Categories etc.)"
+                        rows={3}
                       />
                     </div>
                   </div>
-                </div>
+                )}
 
-                <Button 
-                  type="submit" 
-                  className="w-full bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-700 hover:to-indigo-700 text-white shadow-lg shadow-purple-500/30"
-                  disabled={loading}
-                >
-                  {loading ? (
-                    <>
-                      <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                      Submitting...
-                    </>
-                  ) : (
-                    <>
-                      Submit Application
-                      <ArrowRight className="ml-2 h-4 w-4" />
-                    </>
+                <div className="flex gap-4 pt-4">
+                  {currentStep > 1 && (
+                    <Button
+                      type="button"
+                      variant="outline"
+                      className="flex-1 h-12 border-purple-200 text-purple-700 hover:bg-purple-50"
+                      onClick={() => setCurrentStep(prev => prev - 1)}
+                    >
+                      Previous
+                    </Button>
                   )}
-                </Button>
+
+                  {currentStep < 3 ? (
+                    <Button
+                      type="button"
+                      className="flex-1 h-12 bg-purple-600 hover:bg-purple-700 text-white shadow-lg"
+                      onClick={(e) => {
+                        // Validate current step fields
+                        if (currentStep === 1) {
+                          if (!formData.business_name || !formData.business_email || !formData.business_phone) {
+                            toast.error("Please fill all contact details");
+                            return;
+                          }
+                        } else if (currentStep === 2) {
+                          if (!formData.business_address || !formData.business_city || !formData.business_state || !formData.business_pincode) {
+                            toast.error("Please fill address details");
+                            return;
+                          }
+                        }
+                        setCurrentStep(prev => prev + 1);
+                      }}
+                    >
+                      Continue
+                      <ArrowRight className="ml-2 h-4 w-4" />
+                    </Button>
+                  ) : (
+                    <Button
+                      type="submit"
+                      className="flex-1 h-12 bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-700 hover:to-indigo-700 text-white shadow-lg shadow-purple-500/30"
+                      disabled={loading}
+                    >
+                      {loading ? (
+                        <>
+                          <Loader2 className="mr-2 h-5 w-5 animate-spin" />
+                          Submitting...
+                        </>
+                      ) : (
+                        <>
+                          Submit Application
+                          <CheckCircle className="ml-2 h-5 w-5" />
+                        </>
+                      )}
+                    </Button>
+                  )}
+                </div>
               </form>
             </CardContent>
           </Card>

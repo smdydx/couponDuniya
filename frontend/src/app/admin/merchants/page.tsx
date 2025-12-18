@@ -43,8 +43,11 @@ import {
   MapPin,
   Globe,
   FileText,
+  FileUp,
+  Download,
 } from "lucide-react";
 import adminApi, { Merchant, Pagination, MerchantApplication } from "@/lib/api/admin";
+import apiClient from "@/lib/api/client";
 import { ImageUploader } from "@/components/admin";
 
 export default function AdminMerchantsPage() {
@@ -154,6 +157,41 @@ export default function AdminMerchantsPage() {
     }, 300);
     return () => clearTimeout(timer);
   }, [search]);
+
+  const [bulkOpen, setBulkOpen] = useState(false);
+  const [bulkFile, setBulkFile] = useState<File | null>(null);
+  const [bulkUploading, setBulkUploading] = useState(false);
+
+  const handleBulkUpload = async () => {
+    if (!bulkFile) return;
+    setBulkUploading(true);
+    try {
+      const formData = new FormData();
+      formData.append('file', bulkFile);
+      await apiClient.post('/admin/merchants/bulk', formData, {
+        headers: { 'Content-Type': 'multipart/form-data' }
+      });
+      setBulkOpen(false);
+      setBulkFile(null);
+      fetchMerchants();
+      alert("Merchants uploaded successfully!");
+    } catch (error: any) {
+      console.error("Bulk upload failed:", error);
+      alert(error.response?.data?.detail || "Upload failed");
+    } finally {
+      setBulkUploading(false);
+    }
+  };
+
+  const downloadTemplate = () => {
+    const headers = "name,website_url,affiliate_url,description,is_active,is_featured,is_verified";
+    const blob = new Blob([headers], { type: "text/csv" });
+    const url = window.URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = "merchants_template.csv";
+    a.click();
+  };
 
   const handleOpenCreate = () => {
     setEditingMerchant(null);
@@ -304,10 +342,16 @@ export default function AdminMerchantsPage() {
             Manage your partner stores and verification requests
           </p>
         </div>
-        <Button onClick={handleOpenCreate}>
-          <Plus className="mr-2 h-4 w-4" />
-          Add Merchant
-        </Button>
+        <div className="flex gap-2">
+          <Button variant="outline" onClick={() => setBulkOpen(true)}>
+            <FileUp className="mr-2 h-4 w-4" />
+            Bulk Upload
+          </Button>
+          <Button onClick={handleOpenCreate}>
+            <Plus className="mr-2 h-4 w-4" />
+            Add Merchant
+          </Button>
+        </div>
       </div>
 
       <Tabs value={activeTab} onValueChange={setActiveTab}>
@@ -1204,6 +1248,37 @@ export default function AdminMerchantsPage() {
               variant={verifyAction === "reject" ? "destructive" : "default"}
             >
               {verifying ? "Processing..." : verifyAction === "approve" ? "Approve" : "Reject"}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+      <Dialog open={bulkOpen} onOpenChange={setBulkOpen}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle>Bulk Upload Merchants</DialogTitle>
+          </DialogHeader>
+          <div className="grid gap-4 py-4">
+            <div className="flex items-center justify-between">
+              <p className="text-sm text-muted-foreground">Upload CSV file</p>
+              <Button variant="ghost" size="sm" onClick={downloadTemplate}>
+                <Download className="mr-2 h-4 w-4" />
+                Template
+              </Button>
+            </div>
+            <Input
+              type="file"
+              accept=".csv"
+              onChange={(e) => setBulkFile(e.target.files?.[0] || null)}
+            />
+            <p className="text-xs text-muted-foreground">
+              Required columns: name. <br />
+              Optional: website_url, affiliate_url, description.
+            </p>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setBulkOpen(false)}>Cancel</Button>
+            <Button onClick={handleBulkUpload} disabled={!bulkFile || bulkUploading}>
+              {bulkUploading ? "Uploading..." : "Upload"}
             </Button>
           </DialogFooter>
         </DialogContent>
