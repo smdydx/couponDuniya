@@ -19,7 +19,7 @@ export function ProductGrid({ products, isLoading, columns = 4, showTwoRows = fa
   // Filter out products with no valid variants or pricing
   const validProducts = products.filter(product => {
     if (!product.variants || product.variants.length === 0) return false;
-    const hasValidPrice = product.variants.some(v => v && (v.selling_price || v.denomination) && (v.selling_price > 0 || v.denomination > 0));
+    const hasValidPrice = product.variants.some(v => v && ((v.selling_price || 0) > 0 || (v.denomination || 0) > 0));
     return hasValidPrice;
   });
 
@@ -68,9 +68,9 @@ export function ProductGrid({ products, isLoading, columns = 4, showTwoRows = fa
     );
   }
 
-  const finalGridClass = compact 
+  const finalGridClass = compact
     ? "grid gap-3 grid-cols-3 sm:grid-cols-4 md:grid-cols-5 lg:grid-cols-6 xl:grid-cols-7"
-    : "grid gap-3 grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6";
+    : "grid gap-3 grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-7";
 
   return (
     <div className={finalGridClass}>

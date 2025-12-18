@@ -53,14 +53,14 @@ function ProductsPageContent() {
       try {
         const response = await api.get(`/products/?${params.toString()}`);
         const products = response.data?.data || response.data || [];
-        
+
         return {
           data: Array.isArray(products) ? products : [],
-          pagination: { 
-            current_page: currentPage, 
-            total_pages: Math.ceil((products?.length || 0) / 24), 
-            total_items: products?.length || 0, 
-            items_per_page: 24 
+          pagination: {
+            current_page: currentPage,
+            total_pages: Math.ceil((products?.length || 0) / 24),
+            total_items: products?.length || 0,
+            items_per_page: 24
           }
         };
       } catch (err) {
@@ -138,7 +138,7 @@ function ProductsPageContent() {
             {products.length > 0 ? (
               <>
                 <ProductGrid products={products} compact={false} />
-                
+
                 {/* Pagination */}
                 {pagination && pagination.total_pages > 1 && (
                   <div className="mt-8 pb-6">

@@ -64,24 +64,21 @@ export function Header() {
 
           {/* Logo */}
           <Link href={ROUTES.home} className="flex items-center gap-2">
-            <img 
-              src="/images/logos/logo.png" 
+            <img
+              src="/images/logos/logo.png"
               alt={SITE_NAME}
               className="h-8 w-auto"
             />
           </Link>
 
-          {/* Search Bar - Desktop */}
+          {/* Search Bar - Removed */}
           <div className="hidden flex-1 max-w-xl md:block">
-            <SearchBar />
+            {/* SearchBar removed */}
           </div>
 
           {/* Right Side Actions */}
           <div className="flex items-center gap-2">
-            {/* Search - Mobile */}
-            <Button variant="ghost" size="icon" className="md:hidden" aria-label="Search">
-              <Search className="h-5 w-5" />
-            </Button>
+            {/* Search - Mobile Removed */}
 
             {/* Cart Button */}
             <Button

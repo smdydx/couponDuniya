@@ -8,7 +8,7 @@ import { Card, CardContent, CardFooter, CardHeader } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import type { Product, ProductVariant } from "@/types";
-import { formatCurrency, calculateDiscount } from "@/lib/utils";
+import { formatCurrency, calculateDiscount, cn } from "@/lib/utils";
 import { ROUTES } from "@/lib/constants";
 import { useCartStore } from "@/store/cartStore";
 import { toast } from "@/store/uiStore";
@@ -145,23 +145,15 @@ export function ProductCard({ product, compact = false }: ProductCardProps) {
   }
 
   return (
-    <Card className="group relative overflow-hidden transition-all hover:shadow-md hover:border-primary/50 border h-[280px] flex flex-col bg-white">
-      {/* Bestseller Badge */}
-      {product.is_bestseller && (
-        <Badge className="absolute right-1 top-1 z-10 gap-0.5 text-[8px] px-1.5 py-0.5" variant="warning">
-          <Star className="h-2.5 w-2.5" />
-          Bestseller
-        </Badge>
-      )}
-
-      <CardHeader className="p-0">
-        <Link href={ROUTES.productDetail(product.slug)}>
-          <div className="relative h-[120px] overflow-hidden bg-gradient-to-br from-gray-50 to-white">
+    <Card className="group overflow-hidden hover:shadow-xl hover:shadow-purple-100 transition-all duration-300 flex flex-col border border-gray-100 hover:border-purple-300 rounded-xl bg-white h-full max-h-[250px]">
+      <div className="relative w-full aspect-square bg-gradient-to-br from-gray-50 via-white to-gray-50 overflow-hidden">
+        <Link href={ROUTES.productDetail(product.slug)} className="w-full h-full block">
+          <div className="w-full h-full flex items-center justify-center">
             {product.image_url ? (
               <img
                 src={product.image_url}
                 alt={product.name}
-                className="w-full h-full object-contain transition-transform duration-300 group-hover:scale-105 p-2"
+                className="w-full h-full object-contain transition-transform duration-300 group-hover:scale-105 p-1.5"
               />
             ) : (
               <div className="flex h-full w-full items-center justify-center bg-muted text-lg font-bold text-muted-foreground">
@@ -170,62 +162,87 @@ export function ProductCard({ product, compact = false }: ProductCardProps) {
             )}
           </div>
         </Link>
-      </CardHeader>
 
-      <CardContent className="p-2 flex-1 flex flex-col">
-        <Link href={ROUTES.productDetail(product.slug)}>
-          <h3 className="font-semibold text-xs line-clamp-2 transition-colors group-hover:text-primary leading-tight mb-1">{product.name}</h3>
-        </Link>
-        {product.merchant && (
-          <p className="text-[10px] text-muted-foreground mb-1">{product.merchant.name}</p>
-        )}
-
-        {/* Variant Selection */}
-        {product.variants.length > 1 && (
-          <div className="mt-1">
-            <div className="flex flex-wrap gap-0.5">
-              {product.variants.slice(0, 2).map((variant) => (
-                <Button
-                  key={variant.id}
-                  variant={selectedVariant?.id === variant.id ? "default" : "outline"}
-                  size="sm"
-                  onClick={() => setSelectedVariant(variant)}
-                  disabled={!variant.is_available}
-                  className="h-5 px-1.5 text-[9px]"
-                >
-                  {formatCurrency(variant.denomination ?? variant.price ?? 0)}
-                </Button>
-              ))}
-              {product.variants.length > 2 && (
-                <Link
-                  href={ROUTES.productDetail(product.slug)}
-                  className="flex h-5 items-center px-1 text-[9px] text-primary hover:underline"
-                >
-                  +{product.variants.length - 2}
-                </Link>
-              )}
-            </div>
+        {/* Merchant Logo Overlay */}
+        {product.merchant?.logo_url && (
+          <div className="absolute top-1.5 left-1.5 bg-white rounded-full p-0.5 shadow-sm border border-gray-100 z-10">
+            <img
+              src={product.merchant.logo_url}
+              alt={product.merchant.name}
+              className="w-3.5 h-3.5 object-contain rounded-full"
+            />
           </div>
         )}
 
-        {/* Pricing */}
-        <div className="mt-auto flex items-baseline gap-1">
-          <span className="text-sm font-bold text-primary">{formatCurrency(minPrice)}</span>
-          {minPrice !== maxPrice && (
-            <span className="text-[10px] text-muted-foreground">- {formatCurrency(maxPrice)}</span>
+        {/* Bestseller Badge */}
+        {product.is_bestseller && (
+          <Badge className="absolute right-1.5 top-1.5 z-10 gap-0.5 text-[7px] px-1 py-0.5 bg-yellow-400 text-yellow-950 border-0" variant="warning">
+            <Star className="h-2 w-2 fill-current" />
+            Bestseller
+          </Badge>
+        )}
+      </div>
+
+      <CardContent className="p-2 flex-1 flex flex-col justify-between border-t border-gray-50 bg-white">
+        <div className="space-y-1">
+          <Link href={ROUTES.productDetail(product.slug)}>
+            <h3 className="font-semibold text-[10px] sm:text-[11px] line-clamp-2 leading-tight group-hover:text-primary transition-colors min-h-[24px]">
+              {product.name}
+            </h3>
+          </Link>
+
+          {/* Variant Selection */}
+          {product.variants.length > 1 && (
+            <div className="flex flex-wrap gap-0.5">
+              {product.variants.slice(0, 2).map((variant) => (
+                <button
+                  key={variant.id}
+                  onClick={(e) => {
+                    e.preventDefault();
+                    setSelectedVariant(variant);
+                  }}
+                  disabled={!variant.is_available}
+                  className={cn(
+                    "h-4 px-1 rounded text-[8px] font-medium border transition-colors",
+                    selectedVariant?.id === variant.id
+                      ? "bg-primary text-white border-primary"
+                      : "bg-white text-gray-600 border-gray-200 hover:border-primary/50",
+                    !variant.is_available && "opacity-50 cursor-not-allowed"
+                  )}
+                >
+                  {formatCurrency(variant.denomination ?? variant.price ?? 0)}
+                </button>
+              ))}
+              {product.variants.length > 2 && (
+                <span className="text-[8px] text-primary flex items-center">+ {product.variants.length - 2}</span>
+              )}
+            </div>
           )}
         </div>
-      </CardContent>
 
-      <CardFooter className="p-2 pt-0 border-t">
-        <Button
-          className="w-full h-7 text-[10px] font-semibold"
-          onClick={handleAddToCart}
-          disabled={!selectedVariant?.is_available}
-        >
-          {selectedVariant?.is_available ? "Get Deal" : "Out of Stock"}
-        </Button>
-      </CardFooter>
+        {/* Pricing and Action row */}
+        <div className="flex items-center justify-between gap-1 mt-1">
+          <div className="flex flex-col">
+            <span className="text-[11px] font-bold text-primary leading-none">
+              {formatCurrency(minPrice)}
+            </span>
+            {minPrice !== maxPrice && (
+              <span className="text-[8px] text-muted-foreground mt-0.5">
+                {formatCurrency(maxPrice)}
+              </span>
+            )}
+          </div>
+          <Button
+            size="icon"
+            variant="ghost"
+            className="h-6 w-6 rounded-full bg-primary/5 hover:bg-primary hover:text-white transition-all shadow-sm"
+            onClick={handleAddToCart}
+            disabled={!selectedVariant?.is_available}
+          >
+            <ShoppingCart className="h-3 w-3" />
+          </Button>
+        </div>
+      </CardContent>
     </Card>
   );
 }

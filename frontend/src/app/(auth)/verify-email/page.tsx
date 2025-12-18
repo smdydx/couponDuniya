@@ -9,6 +9,7 @@ import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle }
 import { authAPI } from "@/lib/api/auth";
 import { ROUTES } from "@/lib/constants";
 import { broadcastVerification, useVerificationSync } from "@/hooks/useVerificationSync";
+import { useAuthStore } from "@/store/authStore";
 
 type VerificationStatus = "loading" | "success" | "error" | "waiting";
 
@@ -17,12 +18,14 @@ function VerifyEmailForm() {
   const searchParams = useSearchParams();
   const token = searchParams.get("token");
   const email = searchParams.get("email");
-  
+
   const [status, setStatus] = useState<VerificationStatus>(token ? "loading" : "waiting");
   const [message, setMessage] = useState<string>("");
   const [timer, setTimer] = useState(300);
   const [isResending, setIsResending] = useState(false);
   const [resendCooldown, setResendCooldown] = useState(0);
+  const updateUser = useAuthStore((state) => state.updateUser);
+  const user = useAuthStore((state) => state.user);
 
   useEffect(() => {
     if (token) {
@@ -54,15 +57,12 @@ function VerifyEmailForm() {
     }
   }, [resendCooldown]);
 
-  // Auto-redirect to login after successful verification
+  // No auto-redirect as per user request
   useEffect(() => {
     if (status === "success") {
-      const timer = setTimeout(() => {
-        router.replace(ROUTES.login);
-      }, 5000);
-      return () => clearTimeout(timer);
+      // We just stay on the success page
     }
-  }, [status, router]);
+  }, [status]);
 
   const verifyEmail = async (verificationToken: string) => {
     setStatus("loading");
@@ -70,7 +70,7 @@ function VerifyEmailForm() {
 
     try {
       const response = await authAPI.verifyEmail(verificationToken);
-      
+
       // Broadcast to other tabs IMMEDIATELY before any state changes
       const verifiedEmail = response?.data?.email || email;
       if (verifiedEmail) {
@@ -80,14 +80,14 @@ function VerifyEmailForm() {
         setTimeout(() => broadcastVerification(verifiedEmail), 200);
         setTimeout(() => broadcastVerification(verifiedEmail), 500);
       }
-      
+
       setStatus("success");
       setMessage("Your email has been verified successfully!");
-      
-      // Redirect to login after 5 seconds
-      setTimeout(() => {
-        router.push(ROUTES.login);
-      }, 5000);
+
+      // Update global auth state if user is logged in
+      if (user) {
+        updateUser({ is_verified: true });
+      }
     } catch (err: any) {
       setStatus("error");
       const errorMessage = err?.response?.data?.detail || err?.message || "Failed to verify email. The link may have expired.";
@@ -100,18 +100,20 @@ function VerifyEmailForm() {
     enabled: status === "waiting" && !!email,
     onVerified: () => {
       setStatus("success");
-      setMessage("Your email has been verified! Redirecting to login...");
+      setMessage("Your email has been verified! You can now continue in your original tab.");
       // Clear the timer
       setTimer(0);
-      setTimeout(() => {
-        router.push(ROUTES.login);
-      }, 5000);
+
+      // Update global auth state if user is logged in
+      if (user) {
+        updateUser({ is_verified: true });
+      }
     },
   });
 
   const handleResendEmail = async () => {
     if (!email || isResending || resendCooldown > 0) return;
-    
+
     setIsResending(true);
     try {
       await authAPI.resendVerificationEmail(email);
@@ -235,7 +237,7 @@ function VerifyEmailForm() {
             </p>
           </div>
 
-          <Button 
+          <Button
             onClick={handleResendEmail}
             variant="outline"
             className="w-full h-12 border-2 border-purple-200 hover:border-purple-400 hover:bg-purple-50 transition-all"
@@ -317,10 +319,10 @@ function VerifyEmailForm() {
       <CardContent className="px-6 pb-6">
         {status === "success" && (
           <>
-            <p className="text-sm text-gray-600 mb-4">Redirecting to login in 5 seconds...</p>
-            <Button 
-              onClick={() => router.replace(ROUTES.login)} 
-              className="w-full h-12 bg-gradient-to-r from-green-500 to-emerald-500 hover:from-green-600 hover:to-emerald-600"
+            <p className="text-sm text-gray-600 mb-4">You can now close this tab and return to your original window, or go to login below.</p>
+            <Button
+              onClick={() => router.replace(ROUTES.login)}
+              className="w-full h-12 bg-gradient-to-r from-green-500 to-emerald-500 hover:from-green-600 hover:to-emerald-600 shadow-lg shadow-green-100"
             >
               Go to Login
             </Button>
@@ -334,8 +336,8 @@ function VerifyEmailForm() {
                 Try Again
               </Button>
             )}
-            <Button 
-              onClick={() => router.push(ROUTES.login)} 
+            <Button
+              onClick={() => router.push(ROUTES.login)}
               className="w-full h-12 bg-gradient-to-r from-purple-500 to-blue-500"
             >
               Back to Login

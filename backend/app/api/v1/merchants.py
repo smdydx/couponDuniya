@@ -284,27 +284,31 @@ async def apply_as_merchant(
     log.info(f"Current merchant_verification_status: {current_user.merchant_verification_status}")
     log.info(f"Current merchant_verified: {current_user.merchant_verified}")
     
-    # Check if user already has pending application
-    if current_user.merchant_verification_status == MerchantVerificationStatus.PENDING.value:
-        log.warning(f"User {current_user.id} already has pending application")
-        raise HTTPException(
-            status_code=400, 
-            detail="You already have a pending merchant application. Please wait for admin review."
-        )
+    # Logic fix: Instead of blocking with 400, we cleanup any existing pending/previous application 
+    # to allow the user to re-submit. This avoids the need for manual 'status reset'.
     
-    # Check if user is already verified merchant
-    if current_user.merchant_verified:
-        log.warning(f"User {current_user.id} is already a verified merchant")
-        raise HTTPException(
-            status_code=400, 
-            detail="You are already a verified merchant"
-        )
+    # 1. Cleanup existing merchant associated with this user (if not already a fully verified/active merchant)
+    existing_merchants = db.scalars(select(Merchant).where(Merchant.user_id == current_user.id)).all()
+    for em in existing_merchants:
+        if not em.is_active or em.status != MerchantStatus.APPROVED.value:
+            # Delete unfinished/pending/rejected merchant data to allow fresh start
+            db.delete(em)
+    
+    # 2. Reset user's merchant state for fresh application
+    current_user.merchant_verification_status = MerchantVerificationStatus.NOT_APPLIED.value
+    current_user.merchant_verified = False
+    current_user.is_merchant = False
+    current_user.merchant_id = None
+    db.flush() # Sync state before new object creation
     
     try:
-        slug = generate_slug(application.business_name)
-        existing_slug = db.scalar(select(Merchant).where(Merchant.slug == slug))
-        if existing_slug:
-            slug = f"{slug}-{current_user.id}"
+        # Generate slug and handle collisions
+        slug_base = generate_slug(application.business_name)
+        slug = slug_base
+        counter = 1
+        while db.scalar(select(Merchant).where(Merchant.slug == slug)):
+            slug = f"{slug_base}-{current_user.id}-{counter}"
+            counter += 1
         
         merchant = Merchant(
             user_id=current_user.id,
@@ -327,18 +331,19 @@ async def apply_as_merchant(
             is_verified=False
         )
         db.add(merchant)
+        db.flush() # Get the merchant ID
         
+        # Update user state
         current_user.merchant_verification_status = MerchantVerificationStatus.PENDING.value
         current_user.is_merchant = True
-        current_user.merchant_id = None
+        current_user.merchant_id = merchant.id
         current_user.updated_at = datetime.utcnow()
         
         db.commit()
         db.refresh(merchant)
         db.refresh(current_user)
         
-        current_user.merchant_id = merchant.id
-        db.commit()
+        log.info(f"Merchant application created successfully: merchant_id={merchant.id}, user_id={current_user.id}")
         
         log.info(f"Merchant application created successfully: merchant_id={merchant.id}, user_id={current_user.id}")
         
