@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Depends, HTTPException, Query
+from fastapi import APIRouter, Depends, HTTPException, Query, Request
 from sqlalchemy.orm import Session
 from sqlalchemy import select, func, or_
 from typing import Optional
@@ -7,8 +7,8 @@ from datetime import datetime
 from ...database import get_db
 from ...models import Merchant, Offer, User, MerchantVerificationStatus, MerchantStatus
 from ...redis_client import cache_get, cache_set, cache_invalidate, cache_invalidate_prefix, rk
-from ...dependencies import rate_limit_dependency, get_current_user, require_admin
-from pydantic import BaseModel, EmailStr
+from ...dependencies import rate_limit_dependency, get_current_user, get_current_user_unverified, require_admin
+from pydantic import BaseModel, EmailStr, ValidationError
 from math import ceil
 import json, hashlib
 import re
@@ -261,16 +261,26 @@ def generate_slug(name: str) -> str:
 
 
 @router.post("/apply")
-def apply_as_merchant(
+async def apply_as_merchant(
+    request: Request,
     application: MerchantApplicationRequest,
     db: Session = Depends(get_db),
-    current_user: User = Depends(get_current_user)
+    current_user: User = Depends(get_current_user_unverified)
 ):
     """User applies to become a merchant"""
     import logging
+    from sqlalchemy.exc import IntegrityError
     log = logging.getLogger(__name__)
     
+    # Log the raw request body for debugging
+    try:
+        body = await request.body()
+        log.info(f"Raw request body: {body.decode('utf-8')}")
+    except Exception as e:
+        log.warning(f"Could not log request body: {e}")
+    
     log.info(f"Merchant application received from user {current_user.id}")
+    log.info(f"Application data: {application.model_dump()}")
     log.info(f"Current merchant_verification_status: {current_user.merchant_verification_status}")
     log.info(f"Current merchant_verified: {current_user.merchant_verified}")
     
@@ -290,61 +300,83 @@ def apply_as_merchant(
             detail="You are already a verified merchant"
         )
     
-    slug = generate_slug(application.business_name)
-    existing_slug = db.scalar(select(Merchant).where(Merchant.slug == slug))
-    if existing_slug:
-        slug = f"{slug}-{current_user.id}"
-    
-    merchant = Merchant(
-        user_id=current_user.id,
-        name=application.business_name,
-        slug=slug,
-        business_name=application.business_name,
-        business_email=application.business_email,
-        business_phone=application.business_phone,
-        business_address=application.business_address,
-        business_city=application.business_city,
-        business_state=application.business_state,
-        business_pincode=application.business_pincode,
-        gst_number=application.gst_number,
-        pan_number=application.pan_number,
-        website_url=application.website_url,
-        description=application.description,
-        status=MerchantStatus.PENDING.value,
-        verification_status="pending",
-        is_active=False,
-        is_verified=False
-    )
-    db.add(merchant)
-    
-    current_user.merchant_verification_status = MerchantVerificationStatus.PENDING.value
-    current_user.is_merchant = True
-    current_user.merchant_id = None
-    
-    db.commit()
-    db.refresh(merchant)
-    db.refresh(current_user)
-    
-    current_user.merchant_id = merchant.id
-    db.commit()
-    
-    log.info(f"Merchant application created successfully: merchant_id={merchant.id}, user_id={current_user.id}")
-    
-    return {
-        "success": True,
-        "message": "Merchant application submitted successfully. Please wait for admin approval.",
-        "data": {
-            "merchant_id": merchant.id,
-            "status": merchant.status,
-            "verification_status": current_user.merchant_verification_status
+    try:
+        slug = generate_slug(application.business_name)
+        existing_slug = db.scalar(select(Merchant).where(Merchant.slug == slug))
+        if existing_slug:
+            slug = f"{slug}-{current_user.id}"
+        
+        merchant = Merchant(
+            user_id=current_user.id,
+            name=application.business_name,
+            slug=slug,
+            business_name=application.business_name,
+            business_email=application.business_email,
+            business_phone=application.business_phone,
+            business_address=application.business_address,
+            business_city=application.business_city,
+            business_state=application.business_state,
+            business_pincode=application.business_pincode,
+            gst_number=application.gst_number,
+            pan_number=application.pan_number,
+            website_url=application.website_url,
+            description=application.description,
+            status=MerchantStatus.PENDING.value,
+            verification_status="pending",
+            is_active=False,
+            is_verified=False
+        )
+        db.add(merchant)
+        
+        current_user.merchant_verification_status = MerchantVerificationStatus.PENDING.value
+        current_user.is_merchant = True
+        current_user.merchant_id = None
+        current_user.updated_at = datetime.utcnow()
+        
+        db.commit()
+        db.refresh(merchant)
+        db.refresh(current_user)
+        
+        current_user.merchant_id = merchant.id
+        db.commit()
+        
+        log.info(f"Merchant application created successfully: merchant_id={merchant.id}, user_id={current_user.id}")
+        
+        return {
+            "success": True,
+            "message": "Merchant application submitted successfully. Please wait for admin approval.",
+            "data": {
+                "merchant_id": merchant.id,
+                "status": merchant.status,
+                "verification_status": current_user.merchant_verification_status
+            }
         }
-    }
+    except IntegrityError as e:
+        db.rollback()
+        log.error(f"Database integrity error: {str(e)}")
+        # Check if it's a duplicate slug error
+        if "slug" in str(e).lower():
+            raise HTTPException(
+                status_code=400,
+                detail="A merchant with similar name already exists. Please try a different business name."
+            )
+        raise HTTPException(
+            status_code=400,
+            detail="Failed to create merchant application. Please check your data and try again."
+        )
+    except Exception as e:
+        db.rollback()
+        log.error(f"Unexpected error creating merchant application: {str(e)}")
+        raise HTTPException(
+            status_code=500,
+            detail=f"An error occurred while processing your application: {str(e)}"
+        )
 
 
 @router.get("/my-application")
 def get_my_merchant_application(
     db: Session = Depends(get_db),
-    current_user: User = Depends(get_current_user)
+    current_user: User = Depends(get_current_user_unverified)
 ):
     """Get current user's merchant application status"""
     if not current_user.merchant_id:

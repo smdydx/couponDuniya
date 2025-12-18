@@ -13,7 +13,7 @@ from ...models import User
 from ...models.social_account import SocialAccount
 from ...security import create_access_token, get_password_hash
 from ...config import get_settings
-from ...dependencies import get_current_user
+from ...dependencies import get_current_user, get_current_user_unverified
 
 router = APIRouter(prefix="/auth/social", tags=["Social Authentication"])
 settings = get_settings()
@@ -296,7 +296,7 @@ async def login_with_facebook(
 
 @router.get("/accounts", response_model=dict)
 def get_linked_accounts(
-    current_user: User = Depends(get_current_user),
+    current_user: User = Depends(get_current_user_unverified),
     db: Session = Depends(get_db)
 ):
     """Get all linked social accounts"""
@@ -323,7 +323,7 @@ def get_linked_accounts(
 @router.delete("/unlink/{provider}", response_model=dict)
 def unlink_social_account(
     provider: str,
-    current_user: User = Depends(get_current_user),
+    current_user: User = Depends(get_current_user_unverified),
     db: Session = Depends(get_db)
 ):
     """Unlink a social account"""

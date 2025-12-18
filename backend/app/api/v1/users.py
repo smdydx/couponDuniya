@@ -47,7 +47,7 @@ class KYCUpdateRequest(BaseModel):
 
 
 @router.get("/me", response_model=dict)
-def get_current_user_profile(current_user: User = Depends(get_current_user)):
+def get_current_user_profile(current_user: User = Depends(get_current_user_unverified)):
     """Get current user profile - Protected route"""
     name_parts = (current_user.full_name or "").split(' ', 1)
     first_name = name_parts[0] if len(name_parts) > 0 else ''
@@ -156,7 +156,7 @@ def update_profile(
 @router.post("/change-password", response_model=dict)
 def change_password(
     payload: PasswordChangeRequest,
-    current_user: User = Depends(get_current_user),
+    current_user: User = Depends(get_current_user_unverified),
     db: Session = Depends(get_db)
 ):
     """Change user password - Protected route"""
@@ -187,7 +187,7 @@ def change_password(
 @router.put("/kyc", response_model=dict)
 def update_kyc(
     payload: KYCUpdateRequest,
-    current_user: User = Depends(get_current_user),
+    current_user: User = Depends(get_current_user_unverified),
     db: Session = Depends(get_db)
 ):
     """Update KYC details - Protected route"""
@@ -255,7 +255,7 @@ def update_kyc(
 
 @router.get("/kyc", response_model=dict)
 def get_kyc_status(
-    current_user: User = Depends(get_current_user),
+    current_user: User = Depends(get_current_user_unverified),
     db: Session = Depends(get_db)
 ):
     """Get KYC status - Protected route"""
@@ -304,7 +304,7 @@ def get_kyc_status(
 @router.post("/upload-avatar")
 async def upload_avatar(
     file: UploadFile = File(...),
-    current_user: User = Depends(get_current_user),
+    current_user: User = Depends(get_current_user_unverified),
     db: Session = Depends(get_db)
 ):
     """Upload user profile picture"""

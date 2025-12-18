@@ -3,9 +3,11 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.middleware.trustedhost import TrustedHostMiddleware
 from starlette.middleware.gzip import GZipMiddleware
 from fastapi.staticfiles import StaticFiles
-from fastapi.responses import HTMLResponse
+from fastapi.responses import HTMLResponse, JSONResponse
 from fastapi.openapi.docs import get_swagger_ui_html
 from fastapi.openapi.utils import get_openapi
+from fastapi.exceptions import RequestValidationError
+from fastapi.encoders import jsonable_encoder
 
 import logging
 import time
@@ -25,7 +27,7 @@ from .api.v1 import (
     notifications, audit_logs, payments, cms_pages, sessions, kyc, inventory,
     commissions, redirects, offer_views, categories, search, cms, checkout,
     cart, health, affiliate, queue, flags, realtime, blog, blog_uploads,
-    homepage, uploads, admin_referrals, social_auth, admin_kyc,
+    homepage, uploads, admin_referrals, social_auth, admin_kyc, seller,
 )
 
 from .database import Base, engine
@@ -60,6 +62,36 @@ app = FastAPI(
         "displayRequestDuration": True,
     },
 )
+
+# Custom validation error handler to log detailed validation errors
+@app.exception_handler(RequestValidationError)
+async def validation_exception_handler(request: Request, exc: RequestValidationError):
+    """Log detailed validation errors for debugging"""
+    logger = logging.getLogger(__name__)
+    
+    # Log the request details
+    logger.error(f"Validation error at {request.method} {request.url.path}")
+    logger.error(f"Client: {request.client.host if request.client else 'unknown'}")
+    
+    # Try to log the request body
+    try:
+        body = await request.body()
+        logger.error(f"Request body: {body.decode('utf-8')}")
+    except:
+        logger.error("Could not read request body")
+    
+    # Log the validation errors
+    errors = exc.errors()
+    logger.error(f"Validation errors: {errors}")
+    
+    # Return formatted error response
+    return JSONResponse(
+        status_code=422,
+        content={
+            "detail": errors,
+            "body": jsonable_encoder(exc.body) if hasattr(exc, 'body') else None
+        }
+    )
 # Ensure tables exist in development (no-op if already migrated)
 try:
     if settings.APP_ENV != 'production':
@@ -398,6 +430,7 @@ app.include_router(homepage.router, prefix="/api/v1")
 app.include_router(uploads.router, prefix="/api/v1")
 app.include_router(social_auth.router, prefix="/api/v1")
 app.include_router(admin_kyc.router, prefix="/api/v1")
+app.include_router(seller.router, prefix="/api/v1")
 app.add_middleware(GZipMiddleware, minimum_size=500)
 GROUP_ORDER = [
     ("Auth", ["Auth"]),
@@ -427,6 +460,7 @@ GROUP_ORDER = [
     ("Redirects", ["Redirects"]),
     ("Offer Views", ["OfferViews"]),
     ("CMS", ["CMS"]),
+    ("Seller", ["Seller"]),
 ]
 
 

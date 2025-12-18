@@ -1050,7 +1050,7 @@ async def login_with_facebook(
 
 @router.get("/social/accounts", response_model=dict)
 def get_linked_accounts(
-    current_user: User = Depends(get_current_user),
+    current_user: User = Depends(get_current_user_unverified),
     db: Session = Depends(get_db)
 ):
     """Get all linked social accounts"""
@@ -1077,7 +1077,7 @@ def get_linked_accounts(
 @router.delete("/social/unlink/{provider}", response_model=dict)
 def unlink_social_account(
     provider: str,
-    current_user: User = Depends(get_current_user),
+    current_user: User = Depends(get_current_user_unverified),
     db: Session = Depends(get_db)
 ):
     """Unlink a social account"""
@@ -1326,7 +1326,7 @@ async def verify_mobile_otp_endpoint(
 @router.put("/profile", response_model=dict)
 async def update_profile(
     payload: dict, # Using dict for flexibility, Pydantic model recommended
-    current_user: User = Depends(get_current_user),
+    current_user: User = Depends(get_current_user_unverified),
     db: Session = Depends(get_db)
 ):
     """Update user profile information"""
@@ -1381,7 +1381,7 @@ async def update_profile(
 # Endpoint for profile picture upload
 @router.post("/profile/avatar")
 async def upload_avatar(
-    current_user: User = Depends(get_current_user),
+    current_user: User = Depends(get_current_user_unverified),
     db: Session = Depends(get_db),
     file: UploadFile = File(...)
 ):
