@@ -4,7 +4,7 @@ from typing import Optional, List
 from datetime import datetime
 
 from ...database import get_db
-from ...dependencies import get_current_user
+from ...dependencies import get_current_user_unverified
 from ...models import User, Order, OrderItem
 from ...schemas.order import (
     OrderSummary,
@@ -26,7 +26,7 @@ def list_orders(
     limit: int = Query(20, ge=1, le=100),
     status: Optional[str] = None,
     db: Session = Depends(get_db),
-    current_user: User = Depends(get_current_user)
+    current_user: User = Depends(get_current_user_unverified)
 ):
     """Get user's orders with pagination and filtering."""
     # Build query
@@ -78,7 +78,7 @@ def list_orders(
 def get_order(
     order_number: str,
     db: Session = Depends(get_db),
-    current_user: User = Depends(get_current_user)
+    current_user: User = Depends(get_current_user_unverified)
 ):
     """Get complete order details."""
     order = db.query(Order).options(
@@ -137,7 +137,7 @@ def fulfill_order(
     order_id: int,
     vouchers: List[VoucherDelivery],
     db: Session = Depends(get_db),
-    current_user: User = Depends(get_current_user)
+    current_user: User = Depends(get_current_user_unverified)
 ):
     """
     Fulfill order by adding voucher codes to items (Admin only).
@@ -218,7 +218,7 @@ def update_order_status(
     order_id: int,
     status_update: OrderStatusUpdate,
     db: Session = Depends(get_db),
-    current_user: User = Depends(get_current_user)
+    current_user: User = Depends(get_current_user_unverified)
 ):
     """Update order status (Admin only - for now any user for testing)."""
     order = db.query(Order).filter(Order.id == order_id).first()

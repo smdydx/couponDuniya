@@ -10,6 +10,8 @@ class ProductVariant(Base):
     sku: Mapped[str] = mapped_column(String(120), unique=True, index=True)
     name: Mapped[str] = mapped_column(String(255))
     price: Mapped[float] = mapped_column(Numeric(10,2))
+    denomination: Mapped[float] = mapped_column(Numeric(10,2), nullable=True)  # Original price (for gift cards)
+    selling_price: Mapped[float] = mapped_column(Numeric(10,2), nullable=True)  # Actual selling price
     stock: Mapped[int] = mapped_column(Integer, default=0)
     product = relationship("Product", back_populates="variants")
     is_available: Mapped[bool] = mapped_column(Boolean, default=True)

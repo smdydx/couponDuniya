@@ -1,13 +1,14 @@
-
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, Depends, Query, HTTPException
 from sqlalchemy.orm import Session
-from sqlalchemy import select, or_, func, desc
+from sqlalchemy import select, func, or_, and_, desc
 from typing import Optional
+
 from ...database import get_db
 from ...models.product import Product
 from ...models.product_variant import ProductVariant
 from ...models.merchant import Merchant
-from ...dependencies import rate_limit_dependency
+from ...models.user import User
+from ...dependencies import rate_limit_dependency, get_current_user, require_admin
 
 router = APIRouter(prefix="/products", tags=["Products"])
 
@@ -28,7 +29,7 @@ def list_products(
     # Base query with joins
     query = select(Product, Merchant).outerjoin(Merchant, Product.merchant_id == Merchant.id)
     query = query.where(Product.is_active == True)
-    
+
     # Apply filters
     if category_id:
         query = query.where(Product.category_id == category_id)
@@ -41,7 +42,7 @@ def list_products(
             Product.name.ilike(f"%{search}%"),
             Product.slug.ilike(f"%{search}%")
         ))
-    
+
     # Count total items
     count_query = select(func.count()).select_from(Product).where(Product.is_active == True)
     if category_id:
@@ -55,9 +56,9 @@ def list_products(
             Product.name.ilike(f"%{search}%"),
             Product.slug.ilike(f"%{search}%")
         ))
-    
+
     total = db.scalar(count_query) or 0
-    
+
     # Apply sorting
     if sort_by == "price_low":
         query = query.order_by(Product.price.asc())
@@ -69,13 +70,13 @@ def list_products(
         query = query.order_by(desc(Product.is_bestseller))
     else:
         query = query.order_by(desc(Product.created_at))
-    
+
     # Pagination
     query = query.offset((page - 1) * limit).limit(limit)
-    
+
     # Execute query
     results = db.execute(query).all()
-    
+
     # Format products with variants
     products = []
     for product, merchant in results:
@@ -85,7 +86,7 @@ def list_products(
             ProductVariant.is_available == True
         )
         variants = db.execute(variants_query).scalars().all()
-        
+
         products.append({
             "id": product.id,
             "name": product.name,
@@ -110,7 +111,7 @@ def list_products(
                 "is_available": v.is_available
             } for v in variants]
         })
-    
+
     return {
         "success": True,
         "data": products,
@@ -129,9 +130,9 @@ def featured_products(limit: int = 8, db: Session = Depends(get_db)):
     query = select(Product, Merchant).outerjoin(Merchant, Product.merchant_id == Merchant.id)
     query = query.where(Product.is_active == True, Product.is_featured == True)
     query = query.order_by(desc(Product.created_at)).limit(limit)
-    
+
     results = db.execute(query).all()
-    
+
     products = []
     for product, merchant in results:
         variants_query = select(ProductVariant).where(
@@ -139,7 +140,7 @@ def featured_products(limit: int = 8, db: Session = Depends(get_db)):
             ProductVariant.is_available == True
         )
         variants = db.execute(variants_query).scalars().all()
-        
+
         products.append({
             "id": product.id,
             "name": product.name,
@@ -163,7 +164,7 @@ def featured_products(limit: int = 8, db: Session = Depends(get_db)):
                 "is_available": v.is_available
             } for v in variants]
         })
-    
+
     return {"success": True, "data": products}
 
 
@@ -173,9 +174,9 @@ def bestseller_products(limit: int = 8, db: Session = Depends(get_db)):
     query = select(Product, Merchant).outerjoin(Merchant, Product.merchant_id == Merchant.id)
     query = query.where(Product.is_active == True, Product.is_bestseller == True)
     query = query.order_by(desc(Product.created_at)).limit(limit)
-    
+
     results = db.execute(query).all()
-    
+
     products = []
     for product, merchant in results:
         variants_query = select(ProductVariant).where(
@@ -183,7 +184,7 @@ def bestseller_products(limit: int = 8, db: Session = Depends(get_db)):
             ProductVariant.is_available == True
         )
         variants = db.execute(variants_query).scalars().all()
-        
+
         products.append({
             "id": product.id,
             "name": product.name,
@@ -207,7 +208,7 @@ def bestseller_products(limit: int = 8, db: Session = Depends(get_db)):
                 "is_available": v.is_available
             } for v in variants]
         })
-    
+
     return {"success": True, "data": products}
 
 
@@ -216,20 +217,20 @@ def get_product(slug: str, db: Session = Depends(get_db)):
     """Get product by slug with all details"""
     query = select(Product, Merchant).outerjoin(Merchant, Product.merchant_id == Merchant.id)
     query = query.where(Product.slug == slug, Product.is_active == True)
-    
+
     result = db.execute(query).first()
     if not result:
         raise HTTPException(status_code=404, detail="Product not found")
-    
+
     product, merchant = result
-    
+
     # Get variants
     variants_query = select(ProductVariant).where(
         ProductVariant.product_id == product.id,
         ProductVariant.is_available == True
     )
     variants = db.execute(variants_query).scalars().all()
-    
+
     product_data = {
         "id": product.id,
         "name": product.name,
@@ -259,5 +260,5 @@ def get_product(slug: str, db: Session = Depends(get_db)):
             "is_available": v.is_available
         } for v in variants]
     }
-    
+
     return {"success": True, "data": product_data}

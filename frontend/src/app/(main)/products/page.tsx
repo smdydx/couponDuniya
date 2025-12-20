@@ -1,7 +1,8 @@
 
 "use client";
 
-import { useState } from "react";
+import { useState, Suspense } from "react";
+import { useSearchParams } from "next/navigation";
 import { ProductGrid } from "@/components/product/ProductGrid";
 import { CategoryNav } from "@/components/common/CategoryNav";
 import { Breadcrumbs } from "@/components/common/Breadcrumbs";
@@ -32,23 +33,42 @@ interface ProductsResponse {
   };
 }
 
-export default function ProductsPage() {
+function ProductsPageContent() {
+  const searchParams = useSearchParams();
+  const categoryId = searchParams.get("category");
   const [searchQuery, setSearchQuery] = useState("");
   const [sortBy, setSortBy] = useState("popular");
   const [currentPage, setCurrentPage] = useState(1);
 
   const { data, isLoading, error } = useQuery<ProductsResponse>({
-    queryKey: ["products", currentPage, searchQuery, sortBy],
+    queryKey: ["products", currentPage, searchQuery, sortBy, categoryId],
     queryFn: async () => {
       const params = new URLSearchParams();
       params.append("page", currentPage.toString());
       params.append("limit", "24");
       if (searchQuery) params.append("search", searchQuery);
       if (sortBy) params.append("sort_by", sortBy);
+      if (categoryId) params.append("category_id", categoryId);
 
-      const response = await api.get(`/products/?${params.toString()}`);
-      return response.data;
+      try {
+        const response = await api.get(`/products/?${params.toString()}`);
+        const products = response.data?.data || response.data || [];
+
+        return {
+          data: Array.isArray(products) ? products : [],
+          pagination: {
+            current_page: currentPage,
+            total_pages: Math.ceil((products?.length || 0) / 24),
+            total_items: products?.length || 0,
+            items_per_page: 24
+          }
+        };
+      } catch (err) {
+        console.error("Products fetch error:", err);
+        return { data: [], pagination: { current_page: 1, total_pages: 0, total_items: 0, items_per_page: 24 } };
+      }
     },
+    retry: 1,
   });
 
   const products = data?.data || [];
@@ -118,7 +138,7 @@ export default function ProductsPage() {
             {products.length > 0 ? (
               <>
                 <ProductGrid products={products} compact={false} />
-                
+
                 {/* Pagination */}
                 {pagination && pagination.total_pages > 1 && (
                   <div className="mt-8 pb-6">
@@ -141,5 +161,13 @@ export default function ProductsPage() {
         )}
       </div>
     </div>
+  );
+}
+
+export default function ProductsPage() {
+  return (
+    <Suspense fallback={<LoadingSpinner />}>
+      <ProductsPageContent />
+    </Suspense>
   );
 }

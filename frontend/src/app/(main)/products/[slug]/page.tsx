@@ -27,14 +27,15 @@ const mockProduct: Product = {
   how_to_redeem: "1. Visit Amazon.in and add items to cart\n2. During checkout, select 'Add a gift card'\n3. Enter your gift card code and PIN\n4. Your balance will be applied to eligible items",
   validity_info: "This gift card does not expire. Balance can be used for multiple purchases until exhausted.",
   is_bestseller: true,
+  is_featured: false,
   is_active: true,
   variants: [
-    { id: 1, product_id: 1, denomination: 100, selling_price: 95, cost_price: 92, discount_percentage: 5, is_available: true },
-    { id: 2, product_id: 1, denomination: 250, selling_price: 237, cost_price: 230, discount_percentage: 5, is_available: true },
-    { id: 3, product_id: 1, denomination: 500, selling_price: 475, cost_price: 460, discount_percentage: 5, is_available: true },
-    { id: 4, product_id: 1, denomination: 1000, selling_price: 950, cost_price: 920, discount_percentage: 5, is_available: true },
-    { id: 5, product_id: 1, denomination: 2000, selling_price: 1900, cost_price: 1840, discount_percentage: 5, is_available: true },
-    { id: 6, product_id: 1, denomination: 5000, selling_price: 4750, cost_price: 4600, discount_percentage: 5, is_available: true },
+    { id: 1, product_id: 1, denomination: 100, selling_price: 95, cost_price: 92, discount_percentage: 5, is_available: true, sku: "VAR-001", name: "₹100", price: 100, stock: 100 },
+    { id: 2, product_id: 1, denomination: 250, selling_price: 237, cost_price: 230, discount_percentage: 5, is_available: true, sku: "VAR-002", name: "₹250", price: 250, stock: 100 },
+    { id: 3, product_id: 1, denomination: 500, selling_price: 475, cost_price: 460, discount_percentage: 5, is_available: true, sku: "VAR-003", name: "₹500", price: 500, stock: 100 },
+    { id: 4, product_id: 1, denomination: 1000, selling_price: 950, cost_price: 920, discount_percentage: 5, is_available: true, sku: "VAR-004", name: "₹1000", price: 1000, stock: 100 },
+    { id: 5, product_id: 1, denomination: 2000, selling_price: 1900, cost_price: 1840, discount_percentage: 5, is_available: true, sku: "VAR-005", name: "₹2000", price: 2000, stock: 100 },
+    { id: 6, product_id: 1, denomination: 5000, selling_price: 4750, cost_price: 4600, discount_percentage: 5, is_available: true, sku: "VAR-006", name: "₹5000", price: 5000, stock: 100 },
   ],
   created_at: new Date().toISOString(),
   updated_at: new Date().toISOString(),
@@ -47,9 +48,10 @@ const relatedProducts: Product[] = [
     slug: "flipkart-gift-card",
     sku: "FK-GC-001",
     is_bestseller: true,
+    is_featured: false,
     is_active: true,
     variants: [
-      { id: 5, product_id: 2, denomination: 500, selling_price: 480, cost_price: 465, discount_percentage: 4, is_available: true },
+      { id: 5, product_id: 2, denomination: 500, selling_price: 480, cost_price: 465, discount_percentage: 4, is_available: true, sku: "FK-VAR-001", name: "₹500", price: 500, stock: 50 },
     ],
     created_at: new Date().toISOString(),
     updated_at: new Date().toISOString(),
@@ -60,9 +62,10 @@ const relatedProducts: Product[] = [
     slug: "myntra-gift-card",
     sku: "MYN-GC-001",
     is_bestseller: false,
+    is_featured: false,
     is_active: true,
     variants: [
-      { id: 12, product_id: 5, denomination: 500, selling_price: 470, cost_price: 455, discount_percentage: 6, is_available: true },
+      { id: 12, product_id: 5, denomination: 500, selling_price: 470, cost_price: 455, discount_percentage: 6, is_available: true, sku: "MYN-VAR-001", name: "₹500", price: 500, stock: 50 },
     ],
     created_at: new Date().toISOString(),
     updated_at: new Date().toISOString(),
@@ -87,132 +90,163 @@ export default function ProductDetailPage({
       productId: product.id,
       productName: product.name,
       productSlug: product.slug,
-      denomination: selectedVariant.denomination,
-      sellingPrice: selectedVariant.selling_price,
+      denomination: selectedVariant.denomination ?? 0,
+      sellingPrice: selectedVariant.selling_price ?? 0,
       quantity,
       imageUrl: product.image_url,
     });
 
     toast.success(
       "Added to cart",
-      `${product.name} - ${formatCurrency(selectedVariant.denomination)} x ${quantity}`
+      `${product.name} - ${formatCurrency(selectedVariant.denomination ?? 0)} x ${quantity}`
     );
   };
 
   return (
-    <div className="container py-6">
-      <Breadcrumbs
-        items={[
-          { label: "Gift Cards", href: ROUTES.products },
-          { label: product.name },
-        ]}
-      />
+    <div className="min-h-screen bg-gray-50/50 pb-12">
+      <div className="container py-6">
+        <Breadcrumbs
+          items={[
+            { label: "Gift Cards", href: ROUTES.products },
+            { label: product.name },
+          ]}
+        />
 
-      <div className="grid gap-6 lg:gap-8 lg:grid-cols-2">
-        {/* Product Image */}
-        <div className="relative">
-          <div className="sticky top-24">
-            <div className="relative aspect-square w-full overflow-hidden rounded-lg border bg-white shadow-sm">
-              {product.image_url ? (
-                <img
-                  src={product.image_url}
-                  alt={product.name}
-                  className="w-full h-full object-cover object-center"
-                />
-              ) : (
-                <div className="flex h-full w-full items-center justify-center text-4xl sm:text-6xl font-bold text-primary/20">
-                  {product.name.charAt(0)}
+        <div className="mt-6 grid gap-8 lg:grid-cols-12">
+          {/* Left Column: Image & Highlights - Span 5 */}
+          <div className="lg:col-span-5 space-y-6">
+            <div className="sticky top-24 space-y-6">
+              {/* Main Image Card */}
+              <div className="relative overflow-hidden rounded-2xl bg-white border border-gray-100 shadow-sm p-8">
+                <div className="relative aspect-square w-full flex items-center justify-center bg-gradient-to-br from-gray-50 to-white rounded-xl overflow-hidden">
+                  {/* Decorative circle background */}
+                  <div className="absolute inset-0 bg-radial-gradient from-purple-50/50 to-transparent opacity-50" />
+
+                  {product.image_url ? (
+                    <img
+                      src={product.image_url}
+                      alt={product.name}
+                      className="relative w-full h-full object-contain p-4 transition-transform duration-500 hover:scale-105"
+                    />
+                  ) : (
+                    <div className="flex h-full w-full items-center justify-center text-6xl font-bold text-gray-200">
+                      {product.name.charAt(0)}
+                    </div>
+                  )}
+
+                  {product.is_bestseller && (
+                    <Badge className="absolute left-4 top-4 gap-1.5 shadow-md px-3 py-1 bg-yellow-400 text-yellow-950 hover:bg-yellow-500 border-0" variant="secondary">
+                      <Star className="h-3.5 w-3.5 fill-current" />
+                      Bestseller
+                    </Badge>
+                  )}
                 </div>
-              )}
-              {product.is_bestseller && (
-                <Badge className="absolute left-3 top-3 gap-1 shadow-sm" variant="warning">
-                  <Star className="h-3 w-3" />
-                  Bestseller
-                </Badge>
-              )}
+              </div>
+
+              {/* Trust Features Grid */}
+              <div className="grid grid-cols-2 gap-3">
+                <div className="flex items-center gap-3 rounded-xl bg-white p-4 border border-gray-100 shadow-sm text-sm font-medium text-gray-700">
+                  <div className="p-2 bg-green-50 text-green-600 rounded-lg">
+                    <Shield className="h-5 w-5" />
+                  </div>
+                  <div>
+                    <p className="font-semibold text-gray-900">100% Genuine</p>
+                    <p className="text-xs text-muted-foreground">Brand Verified</p>
+                  </div>
+                </div>
+                <div className="flex items-center gap-3 rounded-xl bg-white p-4 border border-gray-100 shadow-sm text-sm font-medium text-gray-700">
+                  <div className="p-2 bg-blue-50 text-blue-600 rounded-lg">
+                    <Truck className="h-5 w-5" />
+                  </div>
+                  <div>
+                    <p className="font-semibold text-gray-900">Instant Delivery</p>
+                    <p className="text-xs text-muted-foreground">Via Email/SMS</p>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* Right Column: Details & Actions - Span 7 */}
+          <div className="lg:col-span-7 space-y-8">
+            <div className="space-y-4">
+              <h1 className="text-3xl sm:text-4xl font-bold text-gray-900 tracking-tight">{product.name}</h1>
+              <p className="text-base sm:text-lg text-muted-foreground leading-relaxed max-w-2xl">
+                {product.description}
+              </p>
             </div>
 
-            {/* Trust Badges */}
-            <div className="mt-4 flex flex-wrap gap-3 sm:gap-4">
-              <div className="flex items-center gap-2 text-xs sm:text-sm text-muted-foreground">
-                <Shield className="h-4 w-4 text-green-600" />
-                100% Genuine
-              </div>
-              <div className="flex items-center gap-2 text-xs sm:text-sm text-muted-foreground">
-                <Truck className="h-4 w-4 text-blue-600" />
-                Instant Delivery
-              </div>
+            <div className="rounded-2xl border border-gray-100 bg-white p-6 shadow-sm">
+              <VariantSelector
+                variants={product.variants}
+                selectedVariant={selectedVariant}
+                onVariantChange={setSelectedVariant}
+                quantity={quantity}
+                onQuantityChange={setQuantity}
+                onAddToCart={handleAddToCart}
+              />
+            </div>
+
+            {/* Informational Accordion */}
+            <div className="rounded-2xl border border-gray-100 bg-white overflow-hidden shadow-sm">
+              <Accordion type="single" collapsible className="w-full">
+                <AccordionItem value="how-to-redeem" className="border-b px-6">
+                  <AccordionTrigger className="text-base font-semibold py-4 hover:no-underline hover:text-purple-600">
+                    How to Redeem
+                  </AccordionTrigger>
+                  <AccordionContent className="pb-4">
+                    <div className="whitespace-pre-line text-sm text-gray-600 leading-relaxed bg-gray-50 p-4 rounded-lg border border-gray-100">
+                      {product.how_to_redeem || "Instructions will be provided with the gift card."}
+                    </div>
+                  </AccordionContent>
+                </AccordionItem>
+                <AccordionItem value="terms" className="border-b px-6">
+                  <AccordionTrigger className="text-base font-semibold py-4 hover:no-underline hover:text-purple-600">
+                    Terms & Conditions
+                  </AccordionTrigger>
+                  <AccordionContent className="pb-4">
+                    <div className="text-sm text-gray-600 leading-relaxed bg-gray-50 p-4 rounded-lg border border-gray-100">
+                      {product.terms_conditions || "Standard gift card terms apply."}
+                    </div>
+                  </AccordionContent>
+                </AccordionItem>
+                <AccordionItem value="validity" className="px-6 border-b-0">
+                  <AccordionTrigger className="text-base font-semibold py-4 hover:no-underline hover:text-purple-600">
+                    Validity
+                  </AccordionTrigger>
+                  <AccordionContent className="pb-4">
+                    <div className="text-sm text-gray-600 leading-relaxed bg-gray-50 p-4 rounded-lg border border-gray-100">
+                      {product.validity_info || "Please check the gift card for validity details."}
+                    </div>
+                  </AccordionContent>
+                </AccordionItem>
+              </Accordion>
             </div>
           </div>
         </div>
 
-        {/* Product Info */}
-        <div className="space-y-6">
-          <div>
-            <h1 className="text-2xl sm:text-3xl font-bold">{product.name}</h1>
-            <p className="mt-3 text-sm sm:text-base text-muted-foreground leading-relaxed">{product.description}</p>
+        {/* Related Products Section */}
+        <section className="mt-16 border-t pt-12">
+          <div className="flex items-center justify-between mb-8">
+            <div>
+              <h2 className="text-2xl font-bold text-gray-900">You May Also Like</h2>
+              <p className="text-sm text-muted-foreground mt-1">Similar gift cards you might be interested in</p>
+            </div>
+            <Link
+              href={ROUTES.products}
+              className="group flex items-center gap-1 text-sm font-semibold text-purple-600 hover:text-purple-700"
+            >
+              View All
+              <ChevronRight className="h-4 w-4 transition-transform group-hover:translate-x-1" />
+            </Link>
           </div>
-
-          <div>
-            <VariantSelector
-              variants={product.variants}
-              selectedVariant={selectedVariant}
-              onVariantChange={setSelectedVariant}
-              quantity={quantity}
-              onQuantityChange={setQuantity}
-              onAddToCart={handleAddToCart}
-            />
+          <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-4">
+            {relatedProducts.map((p) => (
+              <ProductCard key={p.id} product={p} />
+            ))}
           </div>
-
-          {/* Product Details Tabs */}
-          <div>
-            <Accordion type="single" collapsible className="w-full">
-              <AccordionItem value="how-to-redeem">
-                <AccordionTrigger className="text-sm sm:text-base">How to Redeem</AccordionTrigger>
-                <AccordionContent>
-                  <div className="whitespace-pre-line text-xs sm:text-sm text-muted-foreground leading-relaxed pt-2">
-                    {product.how_to_redeem || "Instructions will be provided with the gift card."}
-                  </div>
-                </AccordionContent>
-              </AccordionItem>
-              <AccordionItem value="terms">
-                <AccordionTrigger className="text-sm sm:text-base">Terms & Conditions</AccordionTrigger>
-                <AccordionContent>
-                  <div className="text-xs sm:text-sm text-muted-foreground leading-relaxed pt-2">
-                    {product.terms_conditions || "Standard gift card terms apply."}
-                  </div>
-                </AccordionContent>
-              </AccordionItem>
-              <AccordionItem value="validity">
-                <AccordionTrigger className="text-sm sm:text-base">Validity</AccordionTrigger>
-                <AccordionContent>
-                  <div className="text-xs sm:text-sm text-muted-foreground leading-relaxed pt-2">
-                    {product.validity_info || "Please check the gift card for validity details."}
-                  </div>
-                </AccordionContent>
-              </AccordionItem>
-            </Accordion>
-          </div>
-        </div>
+        </section>
       </div>
-
-      {/* Related Products */}
-      <section className="mt-12">
-        <div className="flex items-center justify-between">
-          <h2 className="text-2xl font-bold">You May Also Like</h2>
-          <Link
-            href={ROUTES.products}
-            className="flex items-center gap-1 text-sm text-primary hover:underline"
-          >
-            View All <ChevronRight className="h-4 w-4" />
-          </Link>
-        </div>
-        <div className="mt-6 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-          {relatedProducts.map((p) => (
-            <ProductCard key={p.id} product={p} />
-          ))}
-        </div>
-      </section>
     </div>
   );
 }

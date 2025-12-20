@@ -63,25 +63,25 @@ export function Header() {
           {/* Mobile Menu removed in favor of bottom More tab */}
 
           {/* Logo */}
-          <Link href={ROUTES.home} className="flex items-center gap-2">
-            <img 
-              src="/images/logos/logo.png" 
-              alt={SITE_NAME}
-              className="h-8 w-auto"
-            />
+          <Link href={ROUTES.home} className="flex items-center gap-2 shrink-0">
+            <div className="relative h-10 w-auto">
+              <img
+                src="/images/logos/logo.png"
+                alt={SITE_NAME}
+                className="h-full w-auto object-contain"
+                style={{ maxHeight: '60px', maxWidth: '180px' }}
+              />
+            </div>
           </Link>
 
-          {/* Search Bar - Desktop */}
+          {/* Search Bar - Removed */}
           <div className="hidden flex-1 max-w-xl md:block">
-            <SearchBar />
+            {/* SearchBar removed */}
           </div>
 
           {/* Right Side Actions */}
           <div className="flex items-center gap-2">
-            {/* Search - Mobile */}
-            <Button variant="ghost" size="icon" className="md:hidden" aria-label="Search">
-              <Search className="h-5 w-5" />
-            </Button>
+            {/* Search - Mobile Removed */}
 
             {/* Cart Button */}
             <Button
@@ -242,13 +242,20 @@ export function Header() {
               Gift Cards
             </Link>
 
-            <div className="ml-auto">
+            <div className="ml-auto flex items-center gap-4">
               <Link
                 href={ROUTES.wallet}
                 className="flex items-center gap-1 text-sm font-medium text-green-600 hover:text-green-700"
               >
                 <Wallet className="h-4 w-4" />
                 Earn Cashback
+              </Link>
+              <Link
+                href={ROUTES.becomeSeller}
+                className="flex items-center gap-1.5 text-sm font-semibold bg-gradient-to-r from-purple-600 via-purple-700 to-indigo-600 hover:from-purple-700 hover:via-purple-800 hover:to-indigo-700 text-white px-5 py-2 rounded-full transition-all shadow-lg shadow-purple-500/30 hover:shadow-purple-500/50 hover:scale-105"
+              >
+                <Store className="h-4 w-4" />
+                Become a Seller
               </Link>
             </div>
           </div>

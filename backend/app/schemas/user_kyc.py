@@ -11,7 +11,11 @@ class UserKYCRead(BaseModel):
     upi_id: str | None
     pan_number: str | None
     pan_verified: bool
+    aadhaar_number: str | None
+    aadhaar_verified: bool
     status: str
+    submitted_at: datetime | None
+    verified_at: datetime | None
     created_at: datetime
     updated_at: datetime | None
     class Config:
@@ -25,3 +29,4 @@ class UserKCCreate(BaseModel):
     bank_name: str | None = None
     upi_id: str | None = None
     pan_number: str | None = None
+    aadhaar_number: str | None = None

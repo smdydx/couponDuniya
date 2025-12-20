@@ -54,11 +54,22 @@ export default function AdminCategoriesPage() {
     is_active: true,
   });
 
+  const [validationError, setValidationError] = useState("");
+
   const fetchCategories = async () => {
     setLoading(true);
     try {
       const response = await apiClient.get('/categories');
-      setCategories(response.data?.data?.categories || []);
+      const data = response.data;
+      if (data?.data?.categories) {
+        setCategories(data.data.categories);
+      } else if (Array.isArray(data?.data)) {
+        setCategories(data.data);
+      } else if (data?.categories) {
+        setCategories(data.categories);
+      } else {
+        setCategories([]);
+      }
     } catch (error) {
       console.error("Failed to fetch categories:", error);
       setCategories([]);
@@ -73,6 +84,7 @@ export default function AdminCategoriesPage() {
 
   const handleOpenCreate = () => {
     setEditingCategory(null);
+    setValidationError("");
     setFormData({
       name: "",
       slug: "",
@@ -84,6 +96,7 @@ export default function AdminCategoriesPage() {
 
   const handleOpenEdit = (category: Category) => {
     setEditingCategory(category);
+    setValidationError("");
     setFormData({
       name: category.name,
       slug: category.slug,
@@ -94,19 +107,29 @@ export default function AdminCategoriesPage() {
   };
 
   const handleSave = async () => {
-    if (!formData.name || !formData.slug) return;
+    // Validate inputs
+    if (!formData.name || formData.name.trim() === "") {
+      setValidationError("Category name is required");
+      return;
+    }
+    if (!formData.slug || formData.slug.trim() === "") {
+      setValidationError("Category slug is required");
+      return;
+    }
+    setValidationError("");
 
     setSaving(true);
     try {
       if (editingCategory) {
-        await apiClient.put(`/categories/${editingCategory.id}`, formData);
+        await apiClient.put(`/admin/categories/${editingCategory.id}`, formData);
       } else {
-        await apiClient.post('/categories/', formData);
+        await apiClient.post('/admin/categories', formData);
       }
       setDialogOpen(false);
       fetchCategories();
     } catch (error) {
       console.error("Failed to save category:", error);
+      setValidationError("Failed to save category. Please try again.");
     } finally {
       setSaving(false);
     }
@@ -115,7 +138,7 @@ export default function AdminCategoriesPage() {
   const handleDelete = async () => {
     if (!deletingCategory) return;
     try {
-      await apiClient.delete(`/categories/${deletingCategory.id}`);
+      await apiClient.delete(`/admin/categories/${deletingCategory.id}`);
       setDeleteDialogOpen(false);
       setDeletingCategory(null);
       fetchCategories();
@@ -345,6 +368,11 @@ export default function AdminCategoriesPage() {
               {editingCategory ? "Edit Category" : "Add New Category"}
             </DialogTitle>
           </DialogHeader>
+          {validationError && (
+            <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg text-sm">
+              {validationError}
+            </div>
+          )}
           <div className="grid gap-5 py-4">
             <div className="grid gap-2">
               <Label htmlFor="name" className="text-sm font-medium">Name *</Label>

@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { usePathname } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import {
   LayoutDashboard,
   Store,
@@ -15,14 +15,16 @@ import {
   ChevronRight,
   Wallet,
   FileText,
+  Image,
   Shield,
   Network,
+  Layers,
+  LogOut,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { ROUTES } from "@/lib/constants";
-import { useRouter } from "next/navigation";
-import { LogOut } from "lucide-react";
+import { useAuthStore } from "@/store/authStore";
 
 const adminNavItems = [
   {
@@ -66,9 +68,19 @@ const adminNavItems = [
     icon: Wallet,
   },
   {
+    title: "KYC Verification",
+    href: "/admin/kyc",
+    icon: Shield,
+  },
+  {
     title: "Queues",
     href: ROUTES.admin.queues,
-    icon: FileText,
+    icon: Layers,
+  },
+  {
+    title: "Banners",
+    href: ROUTES.admin.banners,
+    icon: Image,
   },
   {
     title: "Gift Cards",
@@ -105,17 +117,17 @@ interface AdminSidebarProps {
 export function AdminSidebar({ isOpen, onToggle }: AdminSidebarProps) {
   const pathname = usePathname();
   const router = useRouter();
+  const { logout } = useAuthStore();
 
   const handleLogout = () => {
-    localStorage.removeItem('admin_token');
-    localStorage.removeItem('admin_user');
-    router.push('/login');
+    logout();
+    router.push("/login");
   };
 
   return (
     <aside
       className={cn(
-        "fixed left-0 top-0 z-40 h-screen border-r bg-background transition-all duration-300",
+        "fixed left-0 top-0 z-[60] h-screen border-r bg-background transition-all duration-300",
         "w-64 lg:w-64",
         isOpen ? "translate-x-0" : "-translate-x-full",
         "lg:translate-x-0",
@@ -125,7 +137,7 @@ export function AdminSidebar({ isOpen, onToggle }: AdminSidebarProps) {
       <div className="flex h-16 items-center justify-between border-b px-4">
         <Link href={ROUTES.admin.dashboard} className="flex items-center gap-2">
           <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary text-primary-foreground text-sm font-bold">
-            BC
+            LC
           </div>
           <span className={cn("font-bold transition-opacity", !isOpen && "lg:hidden")}>Admin</span>
         </Link>
@@ -133,7 +145,7 @@ export function AdminSidebar({ isOpen, onToggle }: AdminSidebarProps) {
           <Button
             variant="ghost"
             size="icon"
-            className="h-8 w-8 hidden lg:flex"
+            className="h-8 w-8 flex"
             onClick={onToggle}
             aria-label="Toggle sidebar"
           >
@@ -171,26 +183,18 @@ export function AdminSidebar({ isOpen, onToggle }: AdminSidebarProps) {
         })}
       </nav>
 
-      <div className={cn("absolute bottom-4 left-0 right-0 px-4 space-y-2", !isOpen && "lg:px-2")}>
+      <div className={cn("absolute bottom-4 left-0 right-0 px-4", !isOpen && "lg:px-2")}>
         <Button
           variant="ghost"
           className={cn(
-            "w-full justify-start text-red-600 hover:text-red-700 hover:bg-red-50 dark:hover:bg-red-950",
+            "w-full justify-start gap-3 text-muted-foreground hover:text-destructive hover:bg-destructive/10",
             !isOpen && "lg:justify-center lg:px-2"
           )}
           onClick={handleLogout}
         >
-          <LogOut className={cn("h-5 w-5", isOpen ? "mr-3" : "lg:mr-0 mr-3")} />
+          <LogOut className="h-5 w-5 shrink-0" />
           <span className={cn("transition-opacity", !isOpen && "lg:hidden")}>Logout</span>
         </Button>
-        <div className={cn("rounded-lg border bg-muted/50 p-4", !isOpen && "lg:hidden")}>
-          <p className="text-xs text-muted-foreground">
-            Need help? Check the{" "}
-            <Link href="/admin/docs" className="text-primary hover:underline">
-              documentation
-            </Link>
-          </p>
-        </div>
       </div>
     </aside>
   );

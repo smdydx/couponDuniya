@@ -198,7 +198,7 @@ export default function HowItWorksPage() {
             <Link href="/faq">View FAQ</Link>
           </Button>
           <Button asChild variant="outline">
-            <Link href="mailto:support@biduacoupon.com">Contact Support</Link>
+            <Link href="mailto:support@Leliance coupon.com">Contact Support</Link>
           </Button>
         </div>
       </div>

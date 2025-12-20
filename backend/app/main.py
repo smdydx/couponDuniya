@@ -3,9 +3,11 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.middleware.trustedhost import TrustedHostMiddleware
 from starlette.middleware.gzip import GZipMiddleware
 from fastapi.staticfiles import StaticFiles
-from fastapi.responses import HTMLResponse
+from fastapi.responses import HTMLResponse, JSONResponse
 from fastapi.openapi.docs import get_swagger_ui_html
 from fastapi.openapi.utils import get_openapi
+from fastapi.exceptions import RequestValidationError
+from fastapi.encoders import jsonable_encoder
 
 import logging
 import time
@@ -25,7 +27,7 @@ from .api.v1 import (
     notifications, audit_logs, payments, cms_pages, sessions, kyc, inventory,
     commissions, redirects, offer_views, categories, search, cms, checkout,
     cart, health, affiliate, queue, flags, realtime, blog, blog_uploads,
-    homepage, uploads, admin_referrals,
+    homepage, uploads, admin_referrals, social_auth, admin_kyc, seller,
 )
 
 from .database import Base, engine
@@ -38,48 +40,205 @@ from .metrics import observe_request
 settings = get_settings()
 
 # Validate production settings
-if settings.APP_ENV == 'production':
+app_env = getattr(settings, 'APP_ENV', getattr(settings, 'ENVIRONMENT', 'development'))
+if app_env == 'production':
     validation_errors = validate_production_settings(settings)
     if validation_errors:
         for error in validation_errors:
             logging.error(f"Production configuration error: {error}")
         raise RuntimeError("Production configuration validation failed")
 
-# Create FastAPI app
+# Create FastAPI app with security scheme for Swagger UI lock icons
 app = FastAPI(
     title=settings.APP_NAME,
     version="1.0.0",
-    description="Production-grade API for coupon commerce platform",
+    description="Production-grade API for coupon commerce platform. All endpoints require Bearer token authentication unless explicitly marked as public.",
     docs_url="/api/docs" if settings.DEBUG else None,
     redoc_url="/api/redoc" if settings.DEBUG else None,
     openapi_url="/api/openapi.json" if settings.DEBUG else None,
+    redirect_slashes=False,
+    swagger_ui_parameters={
+        "persistAuthorization": True,
+        "displayRequestDuration": True,
+    },
 )
+
+# Custom validation error handler to log detailed validation errors
+@app.exception_handler(RequestValidationError)
+async def validation_exception_handler(request: Request, exc: RequestValidationError):
+    """Log detailed validation errors for debugging"""
+    logger = logging.getLogger(__name__)
+    
+    # Log the request details
+    logger.error(f"Validation error at {request.method} {request.url.path}")
+    logger.error(f"Client: {request.client.host if request.client else 'unknown'}")
+    
+    # Try to log the request body
+    try:
+        body = await request.body()
+        logger.error(f"Request body: {body.decode('utf-8')}")
+    except:
+        logger.error("Could not read request body")
+    
+    # Log the validation errors
+    errors = exc.errors()
+    logger.error(f"Validation errors: {errors}")
+    
+    # Return formatted error response
+    return JSONResponse(
+        status_code=422,
+        content={
+            "detail": errors,
+            "body": jsonable_encoder(exc.body) if hasattr(exc, 'body') else None
+        }
+    )
 # Ensure tables exist in development (no-op if already migrated)
 try:
-
-    @app.on_event("startup")
-    async def ensure_database_schema():
-        if engine is not None:
-            Base.metadata.create_all(bind=engine)
+    if settings.APP_ENV != 'production':
+        @app.on_event("startup")
+        async def ensure_database_schema():
+            if engine is not None:
+                Base.metadata.create_all(bind=engine)
+                
+                # Create Stored Procedure
+                from sqlalchemy import text
+                CREATE_REFERRAL_PROC_SQL = """
+                CREATE OR REPLACE FUNCTION get_admin_referrals(
+                    p_limit INTEGER,
+                    p_offset INTEGER,
+                    p_search TEXT,
+                    p_level TEXT
+                )
+                RETURNS TABLE (
+                    id INTEGER,
+                    email VARCHAR,
+                    full_name VARCHAR,
+                    referral_code VARCHAR,
+                    referred_by_id INTEGER,
+                    referred_by_name VARCHAR,
+                    total_referrals BIGINT,
+                    active_referrals BIGINT,
+                    total_earnings NUMERIC,
+                    left_child_id INTEGER,
+                    right_child_id INTEGER,
+                    left_child_name VARCHAR,
+                    right_child_name VARCHAR,
+                    created_at TIMESTAMP,
+                    items_total BIGINT
+                ) AS $$
+                BEGIN
+                    RETURN QUERY
+                    WITH referral_counts AS (
+                        SELECT 
+                            referrer_user_id,
+                            COUNT(*) as total_refs
+                        FROM referrals
+                        GROUP BY referrer_user_id
+                    ),
+                    children_info AS (
+                        SELECT 
+                            referrer_user_id,
+                            MAX(CASE WHEN child_rank = 1 THEN referred_user_id END) as left_id,
+                            MAX(CASE WHEN child_rank = 2 THEN referred_user_id END) as right_id
+                        FROM (
+                            SELECT 
+                                referrer_user_id,
+                                referred_user_id,
+                                ROW_NUMBER() OVER (PARTITION BY referrer_user_id ORDER BY created_at) as child_rank
+                            FROM referrals
+                        ) ranked
+                        WHERE child_rank <= 2
+                        GROUP BY referrer_user_id
+                    ),
+                    filtered_users AS (
+                        SELECT u.*, r_ref.referrer_user_id as parent_id
+                        FROM users u
+                        LEFT JOIN referrals r_ref ON u.id = r_ref.referred_user_id
+                        WHERE 
+                            (p_search IS NULL OR p_search = '' OR 
+                             u.email ILIKE '%' || p_search || '%' OR 
+                             u.full_name ILIKE '%' || p_search || '%' OR
+                             u.referral_code ILIKE '%' || p_search || '%')
+                    ),
+                    total_count AS (
+                        SELECT COUNT(*) as cnt FROM filtered_users
+                    )
+                    SELECT 
+                        u.id,
+                        u.email,
+                        u.full_name,
+                        u.referral_code,
+                        u.parent_id,
+                        u_parent.full_name as referred_by_name,
+                        COALESCE(rc.total_refs, 0) as total_referrals,
+                        COALESCE(rc.total_refs, 0) as active_referrals,
+                        COALESCE(u.total_earnings, 0) as total_earnings,
+                        ci.left_id,
+                        ci.right_id,
+                        u_left.full_name as left_child_name,
+                        u_right.full_name as right_child_name,
+                        u.created_at,
+                        tc.cnt
+                    FROM filtered_users u
+                    LEFT JOIN users u_parent ON u.parent_id = u_parent.id
+                    LEFT JOIN referral_counts rc ON u.id = rc.referrer_user_id
+                    LEFT JOIN children_info ci ON u.id = ci.referrer_user_id
+                    LEFT JOIN users u_left ON ci.left_id = u_left.id
+                    LEFT JOIN users u_right ON ci.right_id = u_right.id
+                    CROSS JOIN total_count tc
+                    ORDER BY u.created_at DESC
+                    LIMIT p_limit
+                    OFFSET p_offset;
+                END;
+                $$ LANGUAGE plpgsql;
+                """
+                with engine.connect() as conn:
+                    conn.execute(text(CREATE_REFERRAL_PROC_SQL))
+                    conn.commit()
+                    log.info("✅ Stored procedure 'get_admin_referrals' created/updated")
 except Exception:
     pass
 
-# CORS - Allow all origins for Replit development
+# Production health check
+@app.on_event("startup")
+async def startup_health_check():
+    """Verify critical services on startup"""
+    app_env = getattr(settings, 'APP_ENV', getattr(settings, 'ENVIRONMENT', 'development'))
+    if app_env == 'production':
+        # Test database connection
+        if engine is not None:
+            with engine.connect() as conn:
+                conn.execute("SELECT 1")
+                log.info("✅ Database connection verified")
+
+        # Test Redis connection
+        redis_client.ping()
+        log.info("✅ Redis connection verified")
+
+        log.info(f"🚀 {settings.APP_NAME} started successfully in {app_env} mode")
+    else:
+        log.info(f"🚀 {settings.APP_NAME} started in {app_env} mode (development)")
+
+
+# CORS - Allow development and production origins
 app.add_middleware(
     CORSMiddleware,
     allow_origins=[
-        "*",
-        "https://b9df0ce0-80cb-4d8d-83a2-e12bcc6f831c-00-7l6kkbk0zswa.kirk.replit.dev",
         "http://localhost:5000",
         "http://localhost:3000",
         "http://127.0.0.1:5000",
         "http://127.0.0.1:3000",
-        "http://0.0.0.0:5000"
+        "http://127.0.0.1:8000",
+        "http://localhost:8000",
+        "http://0.0.0.0:5000",
+        "http://0.0.0.0:3000",
+        "https://b9df0ce0-80cb-4d8d-83a2-e12bcc6f831c-00-7l6kkbk0zswa.kirk.replit.dev",
     ],
-    allow_credentials=False,
+    allow_credentials=True,
     allow_methods=["*"],
-    allow_headers=["*"],
+    allow_headers=["*", "Authorization", "Content-Type"],
     expose_headers=["*"],
+    max_age=3600,
 )
 
 # Rate limiting middleware using Redis
@@ -269,6 +428,9 @@ app.include_router(blog.router, prefix="/api/v1")
 app.include_router(blog_uploads.router, prefix="/api/v1")
 app.include_router(homepage.router, prefix="/api/v1")
 app.include_router(uploads.router, prefix="/api/v1")
+app.include_router(social_auth.router, prefix="/api/v1")
+app.include_router(admin_kyc.router, prefix="/api/v1")
+app.include_router(seller.router, prefix="/api/v1")
 app.add_middleware(GZipMiddleware, minimum_size=500)
 GROUP_ORDER = [
     ("Auth", ["Auth"]),
@@ -298,6 +460,7 @@ GROUP_ORDER = [
     ("Redirects", ["Redirects"]),
     ("Offer Views", ["OfferViews"]),
     ("CMS", ["CMS"]),
+    ("Seller", ["Seller"]),
 ]
 
 
@@ -306,15 +469,32 @@ def custom_openapi():
         return app.openapi_schema
     openapi_schema = get_openapi(
         title=settings.APP_NAME,
-        version="0.1.0",
-        description="Hybrid coupon + commerce API",
+        version="1.0.0",
+        description="Secured API for coupon commerce platform. All endpoints require Bearer token authentication (lock icon indicates protected endpoints).",
         routes=app.routes,
     )
+
+    # Add security scheme for Bearer token authentication (shows lock icon in Swagger)
+    openapi_schema["components"] = openapi_schema.get("components", {})
+    openapi_schema["components"]["securitySchemes"] = {
+        "BearerAuth": {
+            "type": "http",
+            "scheme": "bearer",
+            "bearerFormat": "JWT",
+            "description": "Enter your JWT access token to authenticate. Get token from /api/v1/auth/login endpoint."
+        }
+    }
+
+    # Apply security globally to all endpoints (shows lock icon on all routes)
+    openapi_schema["security"] = [{"BearerAuth": []}]
+
+    # Group tags for organized documentation
     grouped_tags = []
     for group_name, tag_list in GROUP_ORDER:
         for tag in tag_list:
             grouped_tags.append({"name": tag, "x-group": group_name})
     openapi_schema["tags"] = grouped_tags
+
     app.openapi_schema = openapi_schema
     return app.openapi_schema
 

@@ -40,12 +40,12 @@ export const authAPI = {
 
   register: async (data: RegisterData): Promise<AuthResponse> => {
     const response = await apiClient.post('/auth/register', data);
-    const payload = response.data?.data ?? response.data;
+    const responseData = response.data?.data ?? response.data;
     return {
-      user: normalizeUser(payload.user),
-      access_token: payload.access_token,
-      refresh_token: payload.refresh_token,
-      token_type: payload.token_type ?? 'bearer',
+      user: normalizeUser(responseData.user),
+      access_token: responseData.access_token,
+      refresh_token: responseData.refresh_token,
+      token_type: responseData.token_type ?? 'bearer',
     };
   },
 
@@ -95,7 +95,35 @@ export const authAPI = {
     await apiClient.post('/auth/reset-password', { token, password });
   },
 
-  verifyEmail: async (token: string): Promise<void> => {
-    await apiClient.post('/auth/verify-email', { token });
+  verifyEmail: async (token: string): Promise<any> => {
+    const response = await apiClient.post('/auth/verify-email', { token });
+    return response.data?.data ?? response.data;
+  },
+
+  sendVerificationEmail: async (): Promise<void> => {
+    await apiClient.post('/auth/send-verification-email');
+  },
+
+  resendVerificationEmail: async (email: string): Promise<void> => {
+    await apiClient.post('/auth/send-verification-email', { email });
+  },
+
+  setPassword: async (password: string): Promise<void> => {
+    await apiClient.post('/auth/set-password', { new_password: password });
+  },
+
+  getSocialAccounts: async (): Promise<{ provider: string; email: string; linked_at: string }[]> => {
+    const response = await apiClient.get('/auth/social/accounts');
+    const data = response.data?.data ?? response.data;
+    return data.accounts || [];
+  },
+
+  unlinkSocialAccount: async (provider: string): Promise<void> => {
+    await apiClient.delete(`/auth/social/unlink/${provider}`);
+  },
+
+  checkVerificationStatus: async (email: string): Promise<{ data: { is_verified: boolean; exists?: boolean } }> => {
+    const response = await apiClient.post('/auth/verification-status', { email });
+    return response.data;
   },
 };

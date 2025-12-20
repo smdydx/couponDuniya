@@ -18,6 +18,7 @@ import { formatCurrency } from "@/lib/utils";
 import { ROUTES } from "@/lib/constants";
 import { checkout, verifyPayment } from "@/lib/api/cart";
 import { toast } from "sonner";
+import { ProtectedRoute } from "@/components/auth/ProtectedRoute";
 
 // Declare Razorpay type
 declare global {
@@ -31,10 +32,10 @@ interface CheckoutForm {
   delivery_mobile: string;
 }
 
-export default function CheckoutPage() {
+function CheckoutContent() {
   const router = useRouter();
   const { items, promoCode, promoDiscount, walletAmountToUse, clearCart } = useCartStore();
-  const { user, isAuthenticated } = useAuthStore();
+  const { user } = useAuthStore();
   const [isProcessing, setIsProcessing] = useState(false);
   const [scriptLoaded, setScriptLoaded] = useState(false);
 
@@ -65,17 +66,14 @@ export default function CheckoutPage() {
     };
   }, []);
 
-  // Redirect if cart is empty or not authenticated
+  // Redirect if cart is empty
   useEffect(() => {
     if (items.length === 0) {
       router.push(ROUTES.cart);
     }
-    if (!isAuthenticated) {
-      router.push(`${ROUTES.login}?redirect=${ROUTES.checkout}`);
-    }
-  }, [items.length, isAuthenticated, router]);
+  }, [items.length, router]);
 
-  if (items.length === 0 || !isAuthenticated) {
+  if (items.length === 0) {
     return null;
   }
 
@@ -346,5 +344,13 @@ export default function CheckoutPage() {
         </div>
       </form>
     </div>
+  );
+}
+
+export default function CheckoutPage() {
+  return (
+    <ProtectedRoute>
+      <CheckoutContent />
+    </ProtectedRoute>
   );
 }

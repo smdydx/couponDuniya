@@ -13,8 +13,8 @@ export function FeaturedMerchantSection({ merchants }: FeaturedMerchantSectionPr
     return null;
   }
 
-  // Take first 11 merchants for the grid
-  const displayMerchants = merchants.slice(0, 11);
+  // Take first 14 merchants for the grid (7 items per row × 2 rows)
+  const displayMerchants = merchants.slice(0, 14);
 
   return (
     <div className="w-full">
@@ -24,8 +24,8 @@ export function FeaturedMerchantSection({ merchants }: FeaturedMerchantSectionPr
         </h2>
       </div>
 
-      {/* Grid Container - Responsive */}
-      <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-3 sm:gap-4">
+      {/* Grid Container - Responsive: 3 cols mobile, 5 cols tablet, 7 cols desktop */}
+      <div className="grid grid-cols-3 sm:grid-cols-5 md:grid-cols-6 lg:grid-cols-7 gap-2 sm:gap-3">
         {displayMerchants.map((merchant) => (
           <Link
             key={merchant.id}
@@ -43,27 +43,27 @@ export function FeaturedMerchantSection({ merchants }: FeaturedMerchantSectionPr
 
             {/* Image Container - Fixed Aspect Ratio */}
             <div className="relative w-full bg-gradient-to-br from-gray-50 to-white dark:from-gray-800 dark:to-gray-900">
-              <div className="aspect-square w-full p-4 sm:p-6 flex items-center justify-center">
+              <div className="aspect-square w-full flex items-center justify-center overflow-hidden">
                 {merchant.logo_url ? (
                   <img
                     src={merchant.logo_url}
                     alt={merchant.name}
-                    className="w-full h-full object-contain transition-transform duration-300 group-hover:scale-110"
+                    className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-110"
                     loading="lazy"
                     onError={(e) => {
                       const target = e.currentTarget;
                       target.style.display = 'none';
                       if (target.parentElement) {
                         const fallback = document.createElement('div');
-                        fallback.className = 'w-16 h-16 sm:w-20 sm:h-20 rounded-full bg-gradient-to-br from-purple-100 to-indigo-100 dark:from-purple-900 dark:to-indigo-900 flex items-center justify-center shadow-inner';
-                        fallback.innerHTML = `<span class="text-2xl sm:text-3xl font-bold text-purple-600 dark:text-purple-300">${merchant.name.charAt(0)}</span>`;
+                        fallback.className = 'w-full h-full flex items-center justify-center bg-gradient-to-br from-purple-100 to-indigo-100 dark:from-purple-900 dark:to-indigo-900';
+                        fallback.innerHTML = `<span class="text-3xl font-bold text-purple-600 dark:text-purple-300">${merchant.name.charAt(0)}</span>`;
                         target.parentElement.appendChild(fallback);
                       }
                     }}
                   />
                 ) : (
-                  <div className="w-16 h-16 sm:w-20 sm:h-20 rounded-full bg-gradient-to-br from-purple-100 to-indigo-100 dark:from-purple-900 dark:to-indigo-900 flex items-center justify-center shadow-inner">
-                    <span className="text-2xl sm:text-3xl font-bold text-purple-600 dark:text-purple-300">
+                  <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-purple-100 to-indigo-100 dark:from-purple-900 dark:to-indigo-900">
+                    <span className="text-3xl font-bold text-purple-600 dark:text-purple-300">
                       {merchant.name.charAt(0)}
                     </span>
                   </div>
@@ -76,9 +76,9 @@ export function FeaturedMerchantSection({ merchants }: FeaturedMerchantSectionPr
               <h3 className="text-center font-medium text-xs sm:text-sm text-gray-900 dark:text-white line-clamp-1 group-hover:text-purple-600 dark:group-hover:text-purple-400 transition-colors">
                 {merchant.name}
               </h3>
-              {merchant.offers_count !== undefined && merchant.offers_count > 0 && (
+              {(merchant.total_offers ?? merchant.offers_count ?? 0) > 0 && (
                 <p className="text-center text-[10px] sm:text-xs text-purple-600 dark:text-purple-400 font-medium mt-0.5">
-                  {merchant.offers_count} {merchant.offers_count === 1 ? 'Offer' : 'Offers'}
+                  {merchant.total_offers ?? merchant.offers_count ?? 0} {(merchant.total_offers ?? merchant.offers_count ?? 0) === 1 ? 'Offer' : 'Offers'}
                 </p>
               )}
             </div>

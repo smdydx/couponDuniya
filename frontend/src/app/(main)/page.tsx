@@ -2,6 +2,7 @@
 
 import React, { useEffect, useState, useRef } from "react";
 import Link from "next/link";
+import { useRouter } from 'next/navigation'; // Import useRouter
 import {
   ArrowRight,
   TrendingUp,
@@ -23,6 +24,8 @@ import { OfferGrid } from "@/components/offer/OfferGrid";
 import { OfferCard } from "@/components/offer/OfferCard";
 import { ProductCard } from "@/components/product/ProductCard";
 import { ROUTES } from "@/lib/constants";
+import { useQuery } from '@tanstack/react-query';
+import apiClient from '@/lib/api/client';
 
 interface SectionHeaderProps {
   title: string;
@@ -195,11 +198,10 @@ function PromoSlider({ promoOffers }: { promoOffers: any[] }) {
                 setPromoIndex(index);
                 scrollToIndex(index);
               }}
-              className={`h-2 rounded-full transition-all ${
-                index === promoIndex
-                  ? "w-6 bg-purple-600 dark:bg-purple-400"
-                  : "w-2 bg-gray-300 dark:bg-gray-600"
-              }`}
+              className={`h-2 rounded-full transition-all ${index === promoIndex
+                ? "w-6 bg-purple-600 dark:bg-purple-400"
+                : "w-2 bg-gray-300 dark:bg-gray-600"
+                }`}
               aria-label={`Go to slide ${index + 1}`}
             />
           ))}
@@ -218,59 +220,211 @@ function PromoSlider({ promoOffers }: { promoOffers: any[] }) {
 }
 
 export default function HomePage() {
-  const [data, setData] = useState<any>(null);
+  const router = useRouter();
   const [currentSlide, setCurrentSlide] = useState(0);
-  const [isLoading, setIsLoading] = useState(true);
 
-  useEffect(() => {
-    async function fetchData() {
-      setIsLoading(true);
+  const { data: homepageData, isLoading, error, refetch } = useQuery({
+    queryKey: ["homepage"],
+    queryFn: async () => {
       try {
-        const API_URL =
-          process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000/api/v1";
-        const res = await fetch(
-          `${API_URL}/homepage/?limit_merchants=12&limit_featured_offers=8&limit_exclusive_offers=6&limit_products=12&limit_banners=5`,
-          {
-            method: "GET",
-            headers: {
-              "Content-Type": "application/json",
-            },
+        // Call backend directly - homepage is public data
+        const backendUrl = process.env.NEXT_PUBLIC_API_URL || 'https://api.leliance.com';
+        const response = await fetch(`${backendUrl}/api/v1/homepage/?limit_merchants=12&limit_featured_offers=8&limit_exclusive_offers=6&limit_products=12&limit_banners=5`, {
+          method: 'GET',
+          headers: {
+            'Content-Type': 'application/json',
+            'Accept': 'application/json',
           },
-        );
+          cache: 'no-store',
+        });
 
-        if (res.ok) {
-          const json = await res.json();
-          console.log("Homepage data:", json);
-          setData(json.data || json || null);
-        } else {
-          console.error("Homepage API error:", res.status, res.statusText);
-          const errorText = await res.text();
-          console.error("Error response:", errorText);
+        if (!response.ok) {
+          throw new Error(`HTTP ${response.status}`);
         }
-      } catch (error) {
-        console.error("Failed to fetch homepage data:", error);
-      } finally {
-        setIsLoading(false);
-      }
-    }
-    fetchData();
-  }, []);
 
-  // Auto-advance slider
+        const data = await response.json();
+        console.log("Homepage data:", data);
+
+        if (data.empty) {
+          console.warn("⚠️ Homepage is empty. Run: python backend/scripts/seed_homepage_data.py");
+        }
+
+        return data.data;
+      } catch (err: any) {
+        // Return empty data structure instead of throwing
+        return {
+          banners: [],
+          promo_banners: [],
+          featured_merchants: [],
+          featured_offers: [],
+          exclusive_offers: [],
+          featured_products: [],
+          stats: {
+            total_merchants: 0,
+            total_offers: 0,
+            total_products: 0,
+            total_banners: 0
+          }
+        };
+      }
+    },
+    staleTime: 2 * 60 * 1000,
+    retry: 1,
+    refetchOnMount: false,
+    refetchOnWindowFocus: false,
+  });
+
+  // ALL HOOKS MUST BE CALLED BEFORE ANY CONDITIONAL RETURNS
+  // Auto-advance slider effect
   useEffect(() => {
-    if (!data?.banners || data.banners.length === 0) return;
+    if (!homepageData?.banners || homepageData.banners.length === 0) return;
     const timer = setInterval(() => {
-      setCurrentSlide((prev) => (prev + 1) % data.banners.length);
+      setCurrentSlide((prev) => (prev + 1) % homepageData.banners.length);
     }, 5000);
     return () => clearInterval(timer);
-  }, [data?.banners]);
+  }, [homepageData?.banners]);
 
-  const banners = data?.banners || [];
-  const promo_banners = data?.promo_banners || [];
-  const featured_merchants = data?.featured_merchants || [];
-  const featured_offers = data?.featured_offers || [];
-  const exclusive_offers = data?.exclusive_offers || [];
-  const featured_products = data?.featured_products || [];
+  // NOW we can do conditional returns
+  if (error) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-purple-50 to-indigo-50">
+        <div className="text-center max-w-md mx-auto p-8">
+          <div className="w-16 h-16 bg-red-100 rounded-full flex items-center justify-center mx-auto mb-4">
+            <svg className="w-8 h-8 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+            </svg>
+          </div>
+          <h2 className="text-2xl font-bold text-gray-900 mb-2">Failed to Load Homepage</h2>
+          <p className="text-gray-600 mb-6">We couldn't load the homepage data. Please try again.</p>
+          <div className="flex gap-3 justify-center">
+            <Button onClick={() => refetch()} variant="default">
+              Retry
+            </Button>
+            <Button onClick={() => router.push("/merchants")} variant="outline">
+              Browse Merchants
+            </Button>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  // Check if homepage is completely empty
+  const isEmpty = homepageData && (
+    (!homepageData.featured_merchants || homepageData.featured_merchants.length === 0) &&
+    (!homepageData.featured_offers || homepageData.featured_offers.length === 0) &&
+    (!homepageData.exclusive_offers || homepageData.exclusive_offers.length === 0) &&
+    (!homepageData.featured_products || homepageData.featured_products.length === 0) &&
+    (!homepageData.banners || homepageData.banners.length === 0)
+  );
+
+  if (!isLoading && isEmpty) {
+    return (
+
+      <div className="min-h-screen bg-gradient-to-br from-purple-900 via-purple-800 to-indigo-900 relative overflow-hidden flex items-center justify-center">
+        {/* Background Elements */}
+        <div className="absolute inset-0 overflow-hidden pointer-events-none">
+          <div className="absolute top-10 left-10 w-32 h-20 bg-purple-500/20 rounded-lg rotate-12 animate-float-slow blur-sm"></div>
+          <div className="absolute top-1/4 right-20 w-40 h-24 bg-purple-400/15 rounded-xl -rotate-6 animate-float-medium blur-sm"></div>
+          <div className="absolute bottom-20 left-1/4 w-36 h-22 bg-indigo-500/20 rounded-lg rotate-3 animate-float-fast blur-sm"></div>
+          <div className="absolute top-1/2 left-1/3 w-28 h-16 bg-purple-300/10 rounded-xl -rotate-12 animate-float-slow blur-sm"></div>
+          <div className="absolute bottom-1/3 right-1/4 w-44 h-28 bg-purple-600/15 rounded-lg rotate-6 animate-float-medium blur-sm"></div>
+          <div className="absolute top-20 right-1/3 w-24 h-14 bg-indigo-400/20 rounded-xl rotate-12 animate-float-fast blur-sm"></div>
+
+          <div className="absolute top-1/3 left-20 w-20 h-12 bg-gradient-to-r from-purple-400/20 to-indigo-400/20 rounded-lg rotate-45 animate-coupon-1">
+            <div className="absolute left-0 top-1/2 -translate-y-1/2 w-3 h-3 bg-purple-900 rounded-full -ml-1.5"></div>
+            <div className="absolute right-0 top-1/2 -translate-y-1/2 w-3 h-3 bg-purple-900 rounded-full -mr-1.5"></div>
+          </div>
+          <div className="absolute bottom-1/4 right-20 w-24 h-14 bg-gradient-to-r from-indigo-400/20 to-purple-400/20 rounded-lg -rotate-12 animate-coupon-2">
+            <div className="absolute left-0 top-1/2 -translate-y-1/2 w-3 h-3 bg-purple-900 rounded-full -ml-1.5"></div>
+            <div className="absolute right-0 top-1/2 -translate-y-1/2 w-3 h-3 bg-purple-900 rounded-full -mr-1.5"></div>
+          </div>
+          <div className="absolute top-2/3 left-1/2 w-22 h-13 bg-gradient-to-r from-purple-500/15 to-pink-400/15 rounded-lg rotate-6 animate-coupon-3">
+            <div className="absolute left-0 top-1/2 -translate-y-1/2 w-3 h-3 bg-purple-900 rounded-full -ml-1.5"></div>
+            <div className="absolute right-0 top-1/2 -translate-y-1/2 w-3 h-3 bg-purple-900 rounded-full -mr-1.5"></div>
+          </div>
+
+          <div className="absolute top-16 right-16 w-4 h-4 bg-purple-300/40 rounded-full animate-sparkle-1"></div>
+          <div className="absolute top-1/3 left-16 w-3 h-3 bg-indigo-300/40 rounded-full animate-sparkle-2"></div>
+          <div className="absolute bottom-1/4 left-1/2 w-5 h-5 bg-purple-400/30 rounded-full animate-sparkle-3"></div>
+          <div className="absolute top-1/2 right-1/3 w-3 h-3 bg-pink-300/40 rounded-full animate-sparkle-1"></div>
+          <div className="absolute bottom-16 right-1/4 w-4 h-4 bg-indigo-400/30 rounded-full animate-sparkle-2"></div>
+        </div>
+
+        <div className="text-center max-w-2xl mx-auto p-8 relative z-10">
+          <div className="w-24 h-24 bg-white/10 backdrop-blur-sm rounded-full flex items-center justify-center mx-auto mb-6 shadow-xl shadow-purple-900/20">
+            <Store className="w-12 h-12 text-white" />
+          </div>
+          <h2 className="text-4xl font-bold text-white mb-4 drop-shadow-md">Welcome to Leliance Coupons!</h2>
+          <p className="text-purple-100 text-lg mb-2">We're setting up amazing deals for you.</p>
+          <p className="text-purple-200/80 mb-8 max-w-lg mx-auto">Our team is adding merchants, offers, and gift cards. Check back soon!</p>
+          <div className="flex flex-col sm:flex-row gap-4 justify-center">
+            <Button onClick={() => router.push("/merchants")} size="lg" className="bg-white text-purple-700 hover:bg-white/90 font-semibold shadow-lg shadow-purple-900/20">
+              Explore Merchants
+            </Button>
+            <Button onClick={() => router.push("/products")} size="lg" variant="outline" className="border-purple-300/30 bg-white/5 text-purple-100 hover:bg-white/10 hover:text-white backdrop-blur-sm">
+              Browse Gift Cards
+            </Button>
+          </div>
+        </div>
+
+        <style jsx>{`
+          @keyframes float-slow {
+            0%, 100% { transform: translateY(0) rotate(12deg); }
+            50% { transform: translateY(-20px) rotate(15deg); }
+          }
+          @keyframes float-medium {
+            0%, 100% { transform: translateY(0) rotate(-6deg); }
+            50% { transform: translateY(-15px) rotate(-3deg); }
+          }
+          @keyframes float-fast {
+            0%, 100% { transform: translateY(0) rotate(3deg); }
+            50% { transform: translateY(-10px) rotate(6deg); }
+          }
+          @keyframes coupon-1 {
+            0%, 100% { transform: translateY(0) rotate(45deg) scale(1); opacity: 0.8; }
+            50% { transform: translateY(-25px) rotate(50deg) scale(1.05); opacity: 1; }
+          }
+          @keyframes coupon-2 {
+            0%, 100% { transform: translateY(0) rotate(-12deg) scale(1); opacity: 0.8; }
+            50% { transform: translateY(-20px) rotate(-8deg) scale(1.05); opacity: 1; }
+          }
+          @keyframes coupon-3 {
+            0%, 100% { transform: translateY(0) rotate(6deg) scale(1); opacity: 0.7; }
+            50% { transform: translateY(-30px) rotate(10deg) scale(1.08); opacity: 0.95; }
+          }
+          @keyframes sparkle-1 {
+            0%, 100% { opacity: 0.4; transform: scale(1); }
+            50% { opacity: 1; transform: scale(1.5); }
+          }
+          @keyframes sparkle-2 {
+            0%, 100% { opacity: 0.3; transform: scale(1.2); }
+            50% { opacity: 0.9; transform: scale(0.8); }
+          }
+          @keyframes sparkle-3 {
+            0%, 100% { opacity: 0.5; transform: scale(1); }
+            50% { opacity: 0.8; transform: scale(1.3); }
+          }
+          .animate-float-slow { animation: float-slow 8s ease-in-out infinite; }
+          .animate-float-medium { animation: float-medium 6s ease-in-out infinite; }
+          .animate-float-fast { animation: float-fast 4s ease-in-out infinite; }
+          .animate-coupon-1 { animation: coupon-1 7s ease-in-out infinite; }
+          .animate-coupon-2 { animation: coupon-2 9s ease-in-out infinite; }
+          .animate-coupon-3 { animation: coupon-3 11s ease-in-out infinite; }
+          .animate-sparkle-1 { animation: sparkle-1 3s ease-in-out infinite; }
+          .animate-sparkle-2 { animation: sparkle-2 4s ease-in-out infinite 0.5s; }
+          .animate-sparkle-3 { animation: sparkle-3 5s ease-in-out infinite 1s; }
+        `}</style>
+      </div>
+    );
+  }
+
+  const banners = homepageData?.banners || [];
+  const promo_banners = homepageData?.promo_banners || [];
+  const featured_merchants = homepageData?.featured_merchants || [];
+  const featured_offers = homepageData?.featured_offers || [];
+  const exclusive_offers = homepageData?.exclusive_offers || [];
+  const featured_products = homepageData?.featured_products || [];
 
   const nextSlide = () => {
     setCurrentSlide((prev) => (prev + 1) % banners.length);
@@ -280,6 +434,7 @@ export default function HomePage() {
     setCurrentSlide((prev) => (prev - 1 + banners.length) % banners.length);
   };
 
+  // Early return for loading state
   if (isLoading) {
     return (
       <div className="flex items-center justify-center min-h-screen">
@@ -362,11 +517,10 @@ export default function HomePage() {
                 {banners.map((banner: any, index: number) => (
                   <div
                     key={banner.id}
-                    className={`absolute inset-0 transition-opacity duration-700 ${
-                      index === currentSlide
-                        ? "opacity-100 z-10"
-                        : "opacity-0 z-0"
-                    }`}
+                    className={`absolute inset-0 transition-opacity duration-700 ${index === currentSlide
+                      ? "opacity-100 z-10"
+                      : "opacity-0 z-0"
+                      }`}
                   >
                     {banner.link_url ? (
                       <a
@@ -424,11 +578,10 @@ export default function HomePage() {
                     <button
                       key={index}
                       onClick={() => setCurrentSlide(index)}
-                      className={`h-1.5 sm:h-2 rounded-full transition-all ${
-                        index === currentSlide
-                          ? "w-6 sm:w-8 bg-white"
-                          : "w-1.5 sm:w-2 bg-white/50"
-                      }`}
+                      className={`h-1.5 sm:h-2 rounded-full transition-all ${index === currentSlide
+                        ? "w-6 sm:w-8 bg-white"
+                        : "w-1.5 sm:w-2 bg-white/50"
+                        }`}
                       aria-label={`Go to slide ${index + 1}`}
                     />
                   ))}

@@ -1,16 +1,16 @@
-from fastapi import APIRouter, HTTPException, status, Header, Depends
+from fastapi import APIRouter, HTTPException, status, Header, Depends, UploadFile, File, BackgroundTasks
 from fastapi.responses import RedirectResponse
 from sqlalchemy.orm import Session
 from sqlalchemy import select
 from pydantic import BaseModel, EmailStr, Field
-from datetime import datetime
+from datetime import datetime, timedelta
 import httpx
 import json
 import time
 import uuid
 import urllib.parse
 
-from ...security import create_access_token, get_password_hash, verify_password, revoke_token, decode_token
+from ...security import create_access_token, get_password_hash, verify_password, verify_and_update_password, revoke_token, decode_token
 from ...redis_client import rk, cache_set, cache_get, cache_invalidate, rate_limit
 from ...queue import push_email_job, push_sms_job
 from ...otp import request_otp as create_otp, verify_and_consume_otp
@@ -20,7 +20,7 @@ from ...models import User
 from ...models.social_account import SocialAccount
 from ...models.refresh_token import RefreshToken
 from ...config import get_settings
-from ...dependencies import get_current_user
+from ...dependencies import get_current_user, get_current_user_unverified
 import hashlib
 import secrets
 
@@ -45,14 +45,12 @@ def create_refresh_token_for_user(
     token_family: str | None = None
 ) -> str:
     """Create a new refresh token and store it in the database"""
-    from datetime import timedelta
-    
     raw_token = secrets.token_urlsafe(64)
     token_hash = _hash_token(raw_token)
-    
+
     if not token_family:
         token_family = str(uuid.uuid4())
-    
+
     refresh_token = RefreshToken(
         user_id=user_id,
         token_hash=token_hash,
@@ -62,10 +60,10 @@ def create_refresh_token_for_user(
         device_info=device_info,
         expires_at=datetime.utcnow() + timedelta(days=REFRESH_TOKEN_EXPIRE_DAYS)
     )
-    
+
     db.add(refresh_token)
     db.commit()
-    
+
     return raw_token
 
 
@@ -79,34 +77,32 @@ def validate_and_rotate_refresh_token(
     Validate a refresh token, revoke it, and return a new one (rotation).
     Returns (user, new_refresh_token, error_message)
     """
-    from datetime import timedelta
-    
     token_hash = _hash_token(raw_token)
-    
+
     stored_token = db.scalar(
         select(RefreshToken).where(RefreshToken.token_hash == token_hash)
     )
-    
+
     if not stored_token:
         return None, None, "Invalid refresh token"
-    
+
     if stored_token.is_revoked:
         db.query(RefreshToken).filter(
             RefreshToken.token_family == stored_token.token_family
         ).update({"is_revoked": True, "revoked_at": datetime.utcnow(), "revoked_reason": "family_revoked"})
         db.commit()
         return None, None, "Token was already used (possible theft detected)"
-    
+
     if stored_token.is_expired():
         return None, None, "Refresh token has expired"
-    
+
     stored_token.revoke(reason="rotated")
     stored_token.last_used_at = datetime.utcnow()
-    
+
     user = db.query(User).filter(User.id == stored_token.user_id).first()
     if not user or not user.is_active:
         return None, None, "User not found or inactive"
-    
+
     new_token = create_refresh_token_for_user(
         db=db,
         user_id=user.id,
@@ -114,7 +110,7 @@ def validate_and_rotate_refresh_token(
         user_agent=user_agent,
         token_family=stored_token.token_family
     )
-    
+
     return user, new_token, None
 
 
@@ -135,6 +131,8 @@ class RegisterRequest(BaseModel):
     email: EmailStr | None = None
     mobile: str | None = None
     password: str
+    first_name: str | None = None
+    last_name: str | None = None
     full_name: str | None = None
     referral_code: str | None = None
 
@@ -167,6 +165,9 @@ class VerifyOTPRequest(BaseModel):
     otp: str
     otp_id: str | None = None
 
+class OTPVerifyRequest(BaseModel):
+    mobile: str
+    otp: str
 
 class SocialLoginRequest(BaseModel):
     provider: str
@@ -176,14 +177,20 @@ class SocialLoginRequest(BaseModel):
 class RefreshRequest(BaseModel):
     refresh_token: str
 
+def success_response(data: dict = {}, message: str = "Success"):
+    return {"success": True, "message": message, "data": data}
+
+def error_response(message: str, status_code: int = 400):
+    raise HTTPException(status_code=status_code, detail=message)
+
 
 @router.post("/register", status_code=status.HTTP_201_CREATED, response_model=RegisterResponse)
-def register(payload: RegisterRequest, db: Session = Depends(get_db)):
+def register(payload: RegisterRequest, background_tasks: BackgroundTasks, db: Session = Depends(get_db)):
     """Register new user with email/mobile and password."""
     from ...verification import generate_verification_token
     from ...email import email_service
     from ...models.referral import Referral
-    
+
     # Validate that at least email or mobile is provided
     if not payload.email and not payload.mobile:
         raise HTTPException(status_code=400, detail="Email or mobile is required")
@@ -203,11 +210,15 @@ def register(payload: RegisterRequest, db: Session = Depends(get_db)):
         email=payload.email,
         mobile=payload.mobile,
         password_hash=get_password_hash(payload.password),
-        full_name=payload.full_name or "User",
+        first_name=payload.first_name,
+        last_name=payload.last_name,
+        full_name=payload.full_name or f"{payload.first_name or ''} {payload.last_name or ''}".strip() or "User",
         is_active=True,
-        is_verified=False,
+        is_verified=False,  # Email needs verification
+        status="active",  # But account is active for login
         role="customer",
         auth_provider="email",
+        mobile_verified_at=None # Initialize mobile_verified_at to None
     )
 
     db.add(user)
@@ -219,9 +230,9 @@ def register(payload: RegisterRequest, db: Session = Depends(get_db)):
         referrer = db.query(User).filter(User.referral_code == payload.referral_code).first()
         if referrer and referrer.id != user.id:
             user.referred_by_id = referrer.id
-            
+
             referral_bonus = getattr(settings, 'REFERRAL_BONUS_AMOUNT', 50.0)
-            
+
             referral = Referral(
                 referrer_id=referrer.id,
                 referred_id=user.id,
@@ -238,10 +249,11 @@ def register(payload: RegisterRequest, db: Session = Depends(get_db)):
     verification_token = None
     if user.email:
         verification_token = generate_verification_token(user.email)
-        frontend_url = settings.FRONTEND_BASE_URL or "http://localhost:5000"
-        verification_url = f"{frontend_url}/auth/verify-email?token={verification_token}"
-        
-        email_service.send_welcome_email(user.email, verification_url)
+        frontend_url = settings.FRONTEND_URL or settings.FRONTEND_BASE_URL or "http://localhost:5000"
+        verification_url = f"{frontend_url}/verify-email?token={verification_token}"
+
+        # Send email in background to prevent timeout
+        background_tasks.add_task(email_service.send_welcome_email, user.email, verification_url)
 
     return RegisterResponse(
         message="Registration successful! Please check your email to verify your account before logging in.",
@@ -260,8 +272,6 @@ def register(payload: RegisterRequest, db: Session = Depends(get_db)):
 @router.post("/login", response_model=dict)
 def login(payload: LoginRequest, db: Session = Depends(get_db)):
     """Login with email/mobile and password. Email must be verified first."""
-    from datetime import datetime
-    
     if not payload.identifier or not payload.password:
         raise HTTPException(status_code=400, detail="Missing credentials")
 
@@ -281,17 +291,36 @@ def login(payload: LoginRequest, db: Session = Depends(get_db)):
     if not user.password_hash:
         raise HTTPException(status_code=401, detail="Password not set. Please use OTP or social login.")
 
-    if not verify_password(payload.password, user.password_hash):
+    # Use verify_and_update to support legacy PBKDF2 hashes and auto-migrate to bcrypt
+    is_valid, new_hash = verify_and_update_password(payload.password, user.password_hash)
+    if not is_valid:
         raise HTTPException(status_code=401, detail="Invalid email/mobile or password")
+    
+    # If password needs rehashing (legacy PBKDF2 -> bcrypt), update it
+    if new_hash:
+        user.password_hash = new_hash
+        db.commit()
 
     if not user.is_active:
         raise HTTPException(status_code=403, detail="Your account has been disabled. Please contact support.")
 
-    # Check email verification for email-based login
-    if user.email == payload.identifier and not user.is_verified:
+    # Check email verification for email-based login - MUST verify before login
+    if user.email and user.email == payload.identifier and not user.is_verified:
+        # Generate new verification token if needed
+        from ...verification import generate_verification_token
+        from ...email import email_service
+
+        token = generate_verification_token(user.email)
+        frontend_url = settings.FRONTEND_URL or settings.FRONTEND_BASE_URL or "http://localhost:5000"
+        verification_url = f"{frontend_url}/verify-email?token={token}&email={user.email}"
+
+        # Try to send email again
+        if settings.EMAIL_ENABLED:
+            email_service.send_welcome_email(user.email, verification_url)
+
         raise HTTPException(
-            status_code=403, 
-            detail="Please verify your email before logging in. Check your inbox for the verification link."
+            status_code=403,
+            detail=f"Please verify your email before logging in. We've sent a new verification link to {user.email}. Check your inbox."
         )
 
     # Update last login timestamp
@@ -315,6 +344,7 @@ def login(payload: LoginRequest, db: Session = Depends(get_db)):
         "role": user.role,
         "is_admin": user.is_admin,
         "is_verified": user.is_verified,
+        "mobile_verified": user.mobile_verified_at is not None, # Check if mobile_verified_at is set
     }
 
     session_payload = {"user": user_data, "login_at": int(time.time())}
@@ -334,8 +364,10 @@ def login(payload: LoginRequest, db: Session = Depends(get_db)):
 
 
 @router.post("/request-otp", response_model=dict)
-def request_otp_endpoint(payload: OTPRequest, db: Session = Depends(get_db)):
+async def request_otp_endpoint(payload: OTPRequest, db: Session = Depends(get_db)):
     """Request OTP for mobile login/registration."""
+    from ...twilio_service import send_verification_sms
+
     # Validate mobile format
     mobile = payload.mobile.strip()
     if not mobile.startswith("+"):
@@ -351,16 +383,15 @@ def request_otp_endpoint(payload: OTPRequest, db: Session = Depends(get_db)):
     if not otp_code:
         raise HTTPException(status_code=429, detail=message)
 
-    # Send SMS
-    sms_success, sms_message = send_otp_sms(mobile, otp_code)
+    # Send SMS via Twilio
+    sms_success, sms_message = await send_verification_sms(mobile, otp_code)
 
-    if not sms_success:
-        # Still return success in dev mode
-        pass
+    if not sms_success and not settings.DEBUG:
+        raise HTTPException(status_code=500, detail=f"Failed to send OTP: {sms_message}")
 
     return {
         "success": True,
-        "message": sms_message if not sms_success else message,
+        "message": "OTP sent successfully" if sms_success else f"[DEV MODE] {sms_message}",
         "data": {
             "otp_id": str(uuid.uuid4()),
             "expires_in": 300,
@@ -392,12 +423,23 @@ def verify_otp_endpoint(payload: VerifyOTPRequest, db: Session = Depends(get_db)
             full_name=f"User {mobile[-4:]}",
             is_active=True,
             is_verified=True,  # Mobile verified via OTP
+            status="active",  # Set status to active
             referral_code=f"USER{str(uuid.uuid4())[:8].upper()}",
             role="customer", # Default role
+            mobile_verified_at=datetime.utcnow() # Mark mobile as verified upon auto-registration
         )
         db.add(user)
         db.commit()
         db.refresh(user)
+
+    else:
+        # If user exists, update their mobile_verified status and mark as verified
+        user.mobile_verified_at = datetime.utcnow()
+        user.is_verified = True
+        user.is_active = True
+        user.status = "active"
+        db.commit()
+
 
     # Create access token and proper refresh token
     access_token = create_access_token(str(user.id))
@@ -416,6 +458,7 @@ def verify_otp_endpoint(payload: VerifyOTPRequest, db: Session = Depends(get_db)
         "role": user.role,
         "is_admin": user.is_admin,
         "is_verified": user.is_verified,
+        "mobile_verified": user.mobile_verified_at is not None, # Check if mobile_verified_at is set
     }
 
     session_payload = {"user": user_data, "login_at": int(time.time())}
@@ -441,13 +484,13 @@ def refresh_token_endpoint(payload: RefreshRequest, db: Session = Depends(get_db
         db=db,
         raw_token=payload.refresh_token
     )
-    
+
     if error:
         raise HTTPException(status_code=401, detail=error)
-    
+
     access_token = create_access_token(str(user.id))
     session_key = rk("session", access_token)
-    
+
     user_data = {
         "id": user.id,
         "uuid": str(user.uuid),
@@ -460,11 +503,12 @@ def refresh_token_endpoint(payload: RefreshRequest, db: Session = Depends(get_db
         "role": user.role,
         "is_admin": user.is_admin,
         "is_verified": user.is_verified,
+        "mobile_verified": user.mobile_verified_at is not None, # Check if mobile_verified_at is set
     }
-    
+
     session_payload = {"user": user_data, "login_at": int(time.time())}
     cache_set(session_key, session_payload, ACCESS_TOKEN_EXPIRE_SECONDS)
-    
+
     return {
         "success": True,
         "message": "Token refreshed successfully",
@@ -483,13 +527,13 @@ def logout(authorization: str | None = Header(None), db: Session = Depends(get_d
     if not authorization:
         raise HTTPException(status_code=401, detail="Missing token")
     token = authorization.split()[1]
-    
+
     # Invalidate session cache
     cache_invalidate(rk("session", token))
-    
+
     # Revoke access token
     revoke_token(token)
-    
+
     # Revoke all refresh tokens for this user
     try:
         payload = decode_token(token)
@@ -498,7 +542,7 @@ def logout(authorization: str | None = Header(None), db: Session = Depends(get_d
             revoke_user_refresh_tokens(db, int(user_id), reason="logout")
     except Exception:
         pass
-    
+
     return
 
 
@@ -509,6 +553,7 @@ class EmailVerificationRequest(BaseModel):
 @router.post("/send-verification-email", response_model=dict)
 def send_verification_email(
     request: EmailVerificationRequest,
+    background_tasks: BackgroundTasks,
     db: Session = Depends(get_db)
 ):
     """Send email verification link"""
@@ -535,7 +580,7 @@ def send_verification_email(
 
     # Send email
     if settings.EMAIL_ENABLED:
-        send_welcome_email(email, verification_url)
+        background_tasks.add_task(send_welcome_email, email, verification_url)
     else:
         # Dev mode: log the link
         print(f"[DEV] Verification link for {email}: {verification_url}")
@@ -577,17 +622,63 @@ def verify_email(
     user = db.scalar(select(User).where(User.email == email))
     if not user:
         raise HTTPException(status_code=404, detail="User not found")
-    
+
     user.is_verified = True
     user.email_verified_at = datetime.utcnow()
     db.commit()
 
+    # Cache verification status for sync
+    cache_set(rk("email_verified", email), {"verified": True, "email": email}, ttl=300)
+
+    return {
+        "message": "Email verified successfully. You can now log in.",
+        "is_verified": True,
+        "email": user.email
+    }
+
+
+class EmailVerificationStatusRequest(BaseModel):
+    email: EmailStr
+
+
+@router.post("/verification-status", response_model=dict)
+def check_verification_status(
+    request: EmailVerificationStatusRequest,
+    db: Session = Depends(get_db)
+):
+    """Check if an email has been verified (for cross-tab sync)"""
+    from sqlalchemy import select
+
+    # Check cache first for faster response
+    cached = cache_get(rk("email_verified", request.email))
+    if cached and cached.get("verified"):
+        return {
+            "success": True,
+            "data": {
+                "email": request.email,
+                "is_verified": True,
+                "source": "cache"
+            }
+        }
+
+    # Check database
+    user = db.scalar(select(User).where(User.email == request.email))
+    if not user:
+        return {
+            "success": True,
+            "data": {
+                "email": request.email,
+                "is_verified": False,
+                "exists": False
+            }
+        }
+
     return {
         "success": True,
-        "message": "Email verified successfully! You can now log in.",
         "data": {
-            "email": email,
-            "is_verified": True
+            "email": request.email,
+            "is_verified": user.is_verified,
+            "exists": True
         }
     }
 
@@ -661,6 +752,7 @@ def me(authorization: str | None = Header(None), db: Session = Depends(get_db)):
             "is_verified": user.is_verified,
             "auth_provider": user.auth_provider,
             "password_hash": user.password_hash is not None,
+            "mobile_verified": user.mobile_verified_at is not None, # Check if mobile_verified_at is set
         }
     }
 
@@ -677,23 +769,23 @@ def set_password(
     """Set password for users who signed up with Google"""
     if not authorization:
         raise HTTPException(status_code=401, detail="Missing token")
-    
+
     token = authorization.split()[1]
     decoded = decode_token(token)
     user_id = decoded.get("sub")
-    
+
     user = db.query(User).filter(User.id == int(user_id)).first() if user_id else None
     if not user:
         raise HTTPException(status_code=404, detail="User not found")
-    
+
     # Check if user already has a password
     if user.password_hash:
         raise HTTPException(status_code=400, detail="Password already set. Use change-password endpoint.")
-    
+
     # Set the password
     user.password_hash = get_password_hash(payload.new_password)
     db.commit()
-    
+
     return {
         "success": True,
         "message": "Password set successfully! You can now login with email and password.",
@@ -794,22 +886,25 @@ async def login_with_google(
         email_verified = user_info.get("email_verified", False)
         if isinstance(email_verified, str):
             email_verified = email_verified.lower() == 'true'
-        
+
         full_name = user_info.get("name", "")
         name_parts = full_name.split(' ', 1) if full_name else ['', '']
         first_name = name_parts[0] if len(name_parts) > 0 else ''
         last_name = name_parts[1] if len(name_parts) > 1 else ''
-        
+
         user = User(
             email=user_info["email"],
             full_name=full_name or f"{first_name} {last_name}".strip(),
             password_hash=None,
-            is_verified=bool(email_verified),
+            is_verified=True,  # Google users are pre-verified
+            is_active=True,
+            status="active",
             email_verified_at=datetime.utcnow() if email_verified else None,
             role="customer",
             is_admin=False,
             auth_provider="google",
             avatar_url=user_info.get("picture"),
+            mobile_verified_at=None # Initialize mobile_verified_at to None
         )
         db.add(user)
         db.flush()
@@ -824,10 +919,10 @@ async def login_with_google(
     if social_account:
         social_account.profile_data = json.dumps(user_info)
         social_account.updated_at = datetime.utcnow()
-        
+
         if user_info.get("picture") and user.avatar_url != user_info.get("picture"):
             user.avatar_url = user_info.get("picture")
-        
+
         db.commit()
     else:
         social_account = SocialAccount(
@@ -869,7 +964,8 @@ async def login_with_google(
                 "is_admin": user.is_admin,
                 "is_verified": user.is_verified,
                 "auth_provider": user.auth_provider,
-                "password_hash": user.password_hash is not None
+                "password_hash": user.password_hash is not None,
+                "mobile_verified": user.mobile_verified_at is not None, # Check if mobile_verified_at is set
             }
         }
     }
@@ -921,6 +1017,7 @@ async def login_with_facebook(
                 email_verified_at=datetime.utcnow() if user_info["email_verified"] else None,
                 auth_provider="facebook",
                 role="customer",
+                mobile_verified_at=None # Initialize mobile_verified_at to None
             )
             db.add(user)
             db.flush()
@@ -950,7 +1047,8 @@ async def login_with_facebook(
                 "email": user.email,
                 "full_name": user.full_name,
                 "is_admin": user.is_admin,
-                "role": user.role
+                "role": user.role,
+                "mobile_verified": user.mobile_verified_at is not None, # Check if mobile_verified_at is set
             }
         }
     }
@@ -958,7 +1056,7 @@ async def login_with_facebook(
 
 @router.get("/social/accounts", response_model=dict)
 def get_linked_accounts(
-    current_user: User = Depends(get_current_user),
+    current_user: User = Depends(get_current_user_unverified),
     db: Session = Depends(get_db)
 ):
     """Get all linked social accounts"""
@@ -985,7 +1083,7 @@ def get_linked_accounts(
 @router.delete("/social/unlink/{provider}", response_model=dict)
 def unlink_social_account(
     provider: str,
-    current_user: User = Depends(get_current_user),
+    current_user: User = Depends(get_current_user_unverified),
     db: Session = Depends(get_db)
 ):
     """Unlink a social account"""
@@ -1068,7 +1166,7 @@ async def google_callback(
                 email_verified = user_info.get("email_verified", False)
                 if isinstance(email_verified, str):
                     email_verified = email_verified.lower() == 'true'
-                
+
                 user = User(
                     email=user_info["email"],
                     full_name=user_info.get("name", ""),
@@ -1079,6 +1177,7 @@ async def google_callback(
                     is_admin=False,
                     auth_provider="google",
                     avatar_url=user_info.get("picture"),
+                    mobile_verified_at=None # Initialize mobile_verified_at to None
                 )
                 db.add(user)
                 db.flush()
@@ -1117,3 +1216,236 @@ async def google_callback(
     except Exception as e:
         frontend_url = getattr(settings, 'FRONTEND_URL', 'http://localhost:5000')
         return RedirectResponse(url=f"{frontend_url}/login?error=auth_failed")
+
+
+# --- New endpoints for mobile verification ---
+
+@router.post("/send-mobile-otp")
+async def send_mobile_otp_endpoint(
+    request: dict,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user_unverified)
+):
+    """Send OTP to mobile number for verification (via user's email)"""
+    mobile = request.get("mobile")
+    if not mobile:
+        raise HTTPException(status_code=400, detail="Mobile number is required")
+
+    # Ensure mobile number is in E.164 format
+    if not mobile.startswith("+"):
+        mobile = "+91" + mobile # Default to India if no country code
+
+    # Check if mobile is already verified by another user
+    existing_user = db.query(User).filter(
+        User.mobile == mobile,
+        User.mobile_verified_at.isnot(None), # Check if mobile_verified_at is set
+        User.id != current_user.id
+    ).first()
+
+    if existing_user:
+        raise HTTPException(
+            status_code=400,
+            detail="This mobile number is already verified by another user"
+        )
+
+    # Check rate limit for OTP requests
+    allowed, remaining, ttl = rate_limit(f"otp:{mobile}", 5, 300)
+    if not allowed:
+        raise HTTPException(status_code=429, detail=f"OTP limit reached. Try again in {ttl}s")
+
+    # Generate OTP
+    otp_code, message = create_otp(mobile)
+    if not otp_code:
+        raise HTTPException(status_code=500, detail=message or "Failed to generate OTP")
+
+    # Send OTP via email (if user has email)
+    if current_user.email:
+        from ...sms import sms_service
+        email_success, email_message = sms_service.send_otp_email(current_user.email, otp_code)
+        
+        if not email_success and not settings.DEBUG:
+            raise HTTPException(status_code=500, detail=f"Failed to send OTP: {email_message}")
+        
+        return success_response(
+            data={"sent_via": "email", "email": current_user.email},
+            message=f"OTP sent to your email: {current_user.email}"
+        )
+    else:
+        # Fallback: Try SMS (will log in dev mode)
+        sms_success, sms_message = send_otp_sms(mobile, otp_code)
+        
+        return success_response(
+            data={"sent_via": "sms", "mobile": mobile, "dev_otp": otp_code if settings.DEBUG else None},
+            message="OTP sent via SMS" if sms_success else sms_message
+        )
+
+
+@router.post("/verify-mobile-otp")
+async def verify_mobile_otp_endpoint(
+    request: dict,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user_unverified)
+):
+    """Verify mobile OTP and update user's mobile number"""
+    mobile = request.get("mobile")
+    otp = request.get("otp")
+
+    if not mobile or not otp:
+        raise HTTPException(status_code=400, detail="Mobile and OTP are required")
+
+    # Ensure mobile number is in E.164 format
+    if not mobile.startswith("+"):
+        mobile = "+91" + mobile # Default to India if no country code
+
+    # Verify OTP
+    is_valid, message = verify_and_consume_otp(mobile, otp)
+    if not is_valid:
+        raise HTTPException(status_code=400, detail=message)
+
+    # Check if the mobile number is already verified by another user
+    existing_user = db.query(User).filter(
+        User.mobile == mobile,
+        User.mobile_verified_at.isnot(None), # Check if mobile_verified_at is set
+        User.id != current_user.id
+    ).first()
+
+    if existing_user:
+        raise HTTPException(
+            status_code=400,
+            detail="This mobile number is already verified by another user"
+        )
+
+    # Update user's mobile and mark as verified
+    current_user.mobile = mobile
+    current_user.mobile_verified_at = datetime.utcnow()
+    db.commit()
+
+    # Refresh user data to include updated mobile_verified status
+    db.refresh(current_user)
+
+    return success_response(
+        data={"mobile_verified": True},
+        message="Mobile number verified successfully"
+    )
+
+# Profile update endpoint (example, assuming it exists elsewhere or needs to be added)
+@router.put("/profile", response_model=dict)
+async def update_profile(
+    payload: dict, # Using dict for flexibility, Pydantic model recommended
+    current_user: User = Depends(get_current_user_unverified),
+    db: Session = Depends(get_db)
+):
+    """Update user profile information"""
+    if "full_name" in payload:
+        current_user.full_name = payload["full_name"]
+    if "email" in payload and current_user.auth_provider == "email": # Only allow email change if auth_provider is email
+        current_user.email = payload["email"]
+        current_user.is_verified = False # Email needs re-verification
+        current_user.email_verified_at = None
+        # Trigger email verification flow (e.g., send verification email)
+        from ...verification import generate_verification_token
+        from ...email import email_service
+        token = generate_verification_token(current_user.email)
+        frontend_url = settings.FRONTEND_URL or settings.FRONTEND_BASE_URL or "http://localhost:5000"
+        verification_url = f"{frontend_url}/verify-email?token={token}&email={current_user.email}"
+        if settings.EMAIL_ENABLED:
+            email_service.send_welcome_email(current_user.email, verification_url)
+
+    # Add other updatable fields as needed
+
+    db.commit()
+    db.refresh(current_user)
+
+    # Construct user data similar to login/me endpoints
+    name_parts = (current_user.full_name or "").split(' ', 1)
+    first_name = name_parts[0] if len(name_parts) > 0 else ''
+    last_name = name_parts[1] if len(name_parts) > 1 else ''
+
+    user_data = {
+        "id": current_user.id,
+        "uuid": str(current_user.uuid),
+        "email": current_user.email,
+        "mobile": current_user.mobile,
+        "full_name": current_user.full_name,
+        "first_name": first_name,
+        "last_name": last_name,
+        "avatar_url": current_user.avatar_url,
+        "wallet_balance": float(current_user.wallet_balance or 0),
+        "pending_cashback": float(current_user.pending_cashback or 0),
+        "referral_code": current_user.referral_code,
+        "role": current_user.role,
+        "is_admin": current_user.is_admin,
+        "is_verified": current_user.is_verified,
+        "auth_provider": current_user.auth_provider,
+        "password_hash": current_user.password_hash is not None,
+        "mobile_verified": current_user.mobile_verified_at is not None,
+    }
+
+    return success_response(data={"user": user_data}, message="Profile updated successfully")
+
+
+# Endpoint for profile picture upload
+@router.post("/profile/avatar")
+async def upload_avatar(
+    current_user: User = Depends(get_current_user_unverified),
+    db: Session = Depends(get_db),
+    file: UploadFile = File(...)
+):
+    """Upload and update user's avatar"""
+    if not file:
+        raise HTTPException(status_code=400, detail="No file uploaded")
+
+    try:
+        # For now, store a placeholder URL or save file locally
+        # TODO: Implement actual file storage (S3, local storage, etc.)
+        import os
+        from pathlib import Path
+
+        # Create uploads directory if it doesn't exist
+        upload_dir = Path("app/images/avatars")
+        upload_dir.mkdir(parents=True, exist_ok=True)
+
+        # Save file
+        file_path = upload_dir / f"user_{current_user.uuid}_{file.filename}"
+        content = await file.read()
+        with open(file_path, "wb") as f:
+            f.write(content)
+
+        # Update user's avatar_url in the database
+        avatar_url = f"/images/avatars/user_{current_user.uuid}_{file.filename}"
+        current_user.avatar_url = avatar_url
+        db.commit()
+        db.refresh(current_user)
+
+        # Construct user data similar to login/me endpoints
+        name_parts = (current_user.full_name or "").split(' ', 1)
+        first_name = name_parts[0] if len(name_parts) > 0 else ''
+        last_name = name_parts[1] if len(name_parts) > 1 else ''
+
+        user_data = {
+            "id": current_user.id,
+            "uuid": str(current_user.uuid),
+            "email": current_user.email,
+            "mobile": current_user.mobile,
+            "full_name": current_user.full_name,
+            "first_name": first_name,
+            "last_name": last_name,
+            "avatar_url": current_user.avatar_url,
+            "wallet_balance": float(current_user.wallet_balance or 0),
+            "pending_cashback": float(current_user.pending_cashback or 0),
+            "referral_code": current_user.referral_code,
+            "role": current_user.role,
+            "is_admin": current_user.is_admin,
+            "is_verified": current_user.is_verified,
+            "auth_provider": current_user.auth_provider,
+            "password_hash": current_user.password_hash is not None,
+            "mobile_verified": current_user.mobile_verified_at is not None,
+        }
+
+        return success_response(data={"user": user_data}, message="Avatar uploaded successfully")
+
+    except HTTPException:
+        raise # Re-raise HTTPExceptions
+    except Exception as e:
+        print(f"Error uploading avatar: {e}") # Log the error
+        raise HTTPException(status_code=500, detail="An error occurred during avatar upload")

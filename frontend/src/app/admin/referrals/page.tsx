@@ -43,6 +43,7 @@ import {
 } from "lucide-react";
 import Link from "next/link";
 import { LoadingSpinner } from "@/components/common/LoadingSpinner";
+import apiClient from "@/lib/api-client";
 
 interface ReferralUser {
   id: number;
@@ -101,29 +102,24 @@ export default function AdminReferralsPage() {
     return () => window.removeEventListener('resize', checkMobile);
   }, []);
 
+
+
   const fetchData = async () => {
     setLoading(true);
     try {
-      const response = await fetch(
-        `http://localhost:8000/api/v1/admin/referrals?page=${page}&limit=20&search=${search}&level=${levelFilter}`
+      const response = await apiClient.get(
+        `/admin/referrals?page=${page}&limit=20&search=${search}&level=${levelFilter}`
       );
-      const data = await response.json();
-      
+      const data = response.data;
+
       if (data.success) {
         setUsers(data.data?.users || []);
         setStats(data.data?.stats || null);
-        setLevelStats(data.data?.level_stats || generateMockLevelStats());
+        setLevelStats(data.data?.level_stats || []);
         setTotalPages(data.data?.pagination?.total_pages || 1);
-      } else {
-        setUsers(generateMockUsers());
-        setStats(generateMockStats());
-        setLevelStats(generateMockLevelStats());
       }
     } catch (error) {
       console.error("Failed to fetch referrals:", error);
-      setUsers(generateMockUsers());
-      setStats(generateMockStats());
-      setLevelStats(generateMockLevelStats());
     } finally {
       setLoading(false);
     }
@@ -543,7 +539,7 @@ export default function AdminReferralsPage() {
               Referral Details
             </DialogTitle>
           </DialogHeader>
-          
+
           {selectedUser && (
             <div className="space-y-6">
               <div className="grid grid-cols-2 gap-4">

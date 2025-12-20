@@ -52,7 +52,7 @@ export default function AboutPage() {
         <div className="grid gap-8 lg:grid-cols-2">
           <div className="space-y-4 text-muted-foreground">
             <p>
-              Founded in 2020, BIDUA Coupon started with a simple mission: to help
+              Founded in 2020, Leliance  Coupon started with a simple mission: to help
               Indian consumers save money on every online purchase. What began as a
               small coupon aggregation website has grown into India&apos;s most trusted
               platform for deals, coupons, and digital gift cards.

@@ -46,8 +46,8 @@ export default function AdminOrdersPage() {
       });
       
       // Safely handle the response structure
-      const ordersData = data?.data?.orders || data?.orders || [];
-      const paginationData = data?.data?.pagination || data?.pagination || null;
+      const ordersData = (data as any)?.orders || [];
+      const paginationData = (data as any)?.pagination || null;
       
       setOrders(ordersData);
       setPagination(paginationData);

@@ -6,10 +6,10 @@ from typing import Optional, List
 from datetime import datetime, timedelta
 
 from ...database import get_db
-from ...models import Merchant, Offer, Product, OfferClick, OfferView
+from ...models import Merchant, Offer, Product, OfferClick, OfferView, User
 from ...redis_client import redis_client, rk, cache_get, cache_set
 from pydantic import BaseModel
-from ...dependencies import rate_limit_dependency
+from ...dependencies import rate_limit_dependency, get_current_user
 
 router = APIRouter(prefix="/search", tags=["Search"])
 
@@ -37,14 +37,15 @@ def search_all(
     limit: int = Query(20, ge=1, le=100),
     offset: int = Query(0, ge=0),
     db: Session = Depends(get_db),
-    _: dict = Depends(rate_limit_dependency("search", limit=60, window_seconds=60))
+    current_user: User = Depends(get_current_user),
+    _: dict = Depends(rate_limit_dependency("search", limit=50, window_seconds=60))
 ):
     """
     Universal search across merchants, offers, and products.
     Uses PostgreSQL full-text search with ranking.
     """
     results = []
-    
+
     # Search merchants
     if not type or type == "merchant":
         merchants = db.execute(
@@ -71,7 +72,7 @@ def search_all(
             .order_by(desc('rank'))
             .limit(limit // 3)
         ).all()
-        
+
         for m in merchants:
             results.append({
                 "type": "merchant",
@@ -82,7 +83,7 @@ def search_all(
                 "url": f"/merchants/{m.slug}",
                 "relevance": float(m.rank) if m.rank else 0.0
             })
-    
+
     # Search offers
     if not type or type == "offer":
         offers = db.execute(
@@ -117,7 +118,7 @@ def search_all(
             .order_by(desc('rank'))
             .limit(limit // 3)
         ).all()
-        
+
         for o in offers:
             results.append({
                 "type": "offer",
@@ -129,7 +130,7 @@ def search_all(
                 "relevance": float(o.rank) if o.rank else 0.0,
                 "merchant": o.merchant_name
             })
-    
+
     # Search products
     if not type or type == "product":
         products = db.execute(
@@ -159,7 +160,7 @@ def search_all(
             .order_by(desc('rank'))
             .limit(limit // 3)
         ).all()
-        
+
         for p in products:
             results.append({
                 "type": "product",
@@ -171,10 +172,10 @@ def search_all(
                 "relevance": float(p.rank) if p.rank else 0.0,
                 "merchant": p.merchant_name
             })
-    
+
     # Sort by relevance
     results.sort(key=lambda x: x['relevance'], reverse=True)
-    
+
     return {
         "success": True,
         "data": {
@@ -189,21 +190,22 @@ def search_all(
 def autocomplete(
     q: str = Query(..., min_length=2, description="Search query"),
     limit: int = Query(10, ge=1, le=20),
-    db: Session = Depends(get_db)
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user)
 ):
     """
     Autocomplete suggestions for search.
     Returns merchants, popular offers, and products matching the query.
     """
-    
+
     # Check cache first
     cache_key = rk("autocomplete", q.lower())
     cached = cache_get(cache_key)
     if cached:
         return {"success": True, "data": cached}
-    
+
     suggestions = []
-    
+
     # Merchant suggestions
     merchants = db.execute(
         select(Merchant.name, Merchant.slug)
@@ -216,14 +218,14 @@ def autocomplete(
         .order_by(Merchant.name)
         .limit(limit // 2)
     ).all()
-    
+
     for m in merchants:
         suggestions.append({
             "text": m.name,
             "type": "merchant",
             "url": f"/merchants/{m.slug}"
         })
-    
+
     # Product suggestions (popular products)
     products = db.execute(
         select(Product.name, Product.slug)
@@ -236,17 +238,17 @@ def autocomplete(
         .order_by(Product.name)
         .limit(limit // 2)
     ).all()
-    
+
     for p in products:
         suggestions.append({
             "text": p.name,
             "type": "product",
             "url": f"/products/{p.slug}"
         })
-    
+
     # Cache for 5 minutes
     cache_set(cache_key, {"suggestions": suggestions}, 300)
-    
+
     return {
         "success": True,
         "data": {
@@ -260,21 +262,22 @@ def autocomplete(
 def get_trending_offers(
     limit: int = Query(10, ge=1, le=50),
     days: int = Query(7, ge=1, le=30),
-    db: Session = Depends(get_db)
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user)
 ):
     """
     Get trending offers based on click-through rate and recent activity.
     Calculated from clicks and views in the last N days.
     """
-    
+
     # Check cache
     cache_key = rk("trending", "offers", str(days))
     cached = cache_get(cache_key)
     if cached:
         return {"success": True, "data": cached}
-    
+
     cutoff_date = datetime.utcnow() - timedelta(days=days)
-    
+
     # Get offers with click and view counts
     trending = db.execute(
         text("""
@@ -310,7 +313,7 @@ def get_trending_offers(
         """),
         {"cutoff_date": cutoff_date, "limit": limit}
     ).fetchall()
-    
+
     results = [
         {
             "id": row.id,
@@ -331,10 +334,10 @@ def get_trending_offers(
         }
         for row in trending
     ]
-    
+
     # Cache for 1 hour
     cache_set(cache_key, {"offers": results, "period_days": days}, 3600)
-    
+
     return {
         "success": True,
         "data": {
@@ -348,22 +351,23 @@ def get_trending_offers(
 def get_expiring_offers(
     limit: int = Query(20, ge=1, le=50),
     days: int = Query(7, ge=1, le=30),
-    db: Session = Depends(get_db)
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user)
 ):
     """
     Get offers expiring in the next N days.
     Sorted by expiry date (soonest first).
     """
-    
+
     # Check cache
     cache_key = rk("expiring", "offers", str(days))
     cached = cache_get(cache_key)
     if cached:
         return {"success": True, "data": cached}
-    
+
     now = datetime.utcnow()
     cutoff_date = now + timedelta(days=days)
-    
+
     expiring = db.execute(
         select(
             Offer.id,
@@ -389,7 +393,7 @@ def get_expiring_offers(
         .order_by(Offer.expires_at)
         .limit(limit)
     ).all()
-    
+
     results = [
         {
             "id": row.id,
@@ -407,10 +411,10 @@ def get_expiring_offers(
         }
         for row in expiring
     ]
-    
+
     # Cache for 30 minutes
     cache_set(cache_key, {"offers": results, "expires_within_days": days}, 1800)
-    
+
     return {
         "success": True,
         "data": {
@@ -424,23 +428,24 @@ def get_expiring_offers(
 def get_personalized_recommendations(
     user_id: Optional[int] = Query(None, description="User ID for personalization"),
     limit: int = Query(10, ge=1, le=50),
-    db: Session = Depends(get_db)
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user)
 ):
     """
     Get personalized offer recommendations.
     Uses user history if authenticated, otherwise returns popular offers.
     """
-    
+
     if user_id:
         # Check cache for user-specific recommendations
         cache_key = rk("recommendations", "user", str(user_id))
         cached = cache_get(cache_key)
         if cached:
             return {"success": True, "data": cached}
-        
+
         # Get user's click history (last 30 days)
         cutoff = datetime.utcnow() - timedelta(days=30)
-        
+
         user_clicks = db.execute(
             text("""
             SELECT DISTINCT m.id as merchant_id, c.id as category_id
@@ -453,10 +458,10 @@ def get_personalized_recommendations(
             """),
             {"user_id": user_id, "cutoff": cutoff}
         ).fetchall()
-        
+
         merchant_ids = [row.merchant_id for row in user_clicks if row.merchant_id]
         category_ids = [row.category_id for row in user_clicks if row.category_id]
-        
+
         # Get similar offers from same merchants/categories
         query = select(
             Offer.id,
@@ -468,7 +473,7 @@ def get_personalized_recommendations(
             Merchant.slug.label('merchant_slug'),
             Merchant.logo_url.label('merchant_logo')
         ).join(Merchant, Offer.merchant_id == Merchant.id)
-        
+
         if merchant_ids or category_ids:
             query = query.where(
                 and_(
@@ -488,9 +493,9 @@ def get_personalized_recommendations(
                     Merchant.is_active == True
                 )
             )
-        
+
         query = query.order_by(desc(Offer.priority), desc(Offer.created_at)).limit(limit)
-        
+
     else:
         # No user ID, return popular offers
         query = select(
@@ -508,9 +513,9 @@ def get_personalized_recommendations(
                 Merchant.is_active == True
             )
         ).order_by(desc(Offer.priority), desc(Offer.created_at)).limit(limit)
-    
+
     recommendations = db.execute(query).all()
-    
+
     results = [
         {
             "id": row.id,
@@ -526,11 +531,11 @@ def get_personalized_recommendations(
         }
         for row in recommendations
     ]
-    
+
     # Cache for 15 minutes
     if user_id:
         cache_set(cache_key, {"offers": results, "personalized": True}, 900)
-    
+
     return {
         "success": True,
         "data": {

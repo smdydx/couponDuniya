@@ -8,7 +8,7 @@ import hmac
 import hashlib
 
 from ...database import get_db
-from ...dependencies import get_current_user
+from ...dependencies import get_current_user_unverified
 from ...models import User, Product, ProductVariant, Order, OrderItem, PromoCode, Payment, WalletBalance
 from ...schemas.cart import (
     CartValidateRequest,
@@ -37,14 +37,14 @@ def calculate_promo_discount(
 ) -> tuple[float, PromoCodeInfo]:
     """Calculate discount from promo code."""
     discount_amount = 0.0
-    
+
     if promo.discount_type == "percentage":
         discount_amount = subtotal * (promo.discount_value / 100)
         if promo.max_discount:
             discount_amount = min(discount_amount, float(promo.max_discount))
     else:  # fixed
         discount_amount = float(promo.discount_value)
-    
+
     promo_info = PromoCodeInfo(
         code=promo.code,
         discount_type=promo.discount_type,
@@ -53,7 +53,7 @@ def calculate_promo_discount(
         is_valid=True,
         message=f"Promo code applied: ₹{discount_amount:.2f} discount"
     )
-    
+
     return discount_amount, promo_info
 
 
@@ -61,57 +61,57 @@ def calculate_promo_discount(
 def validate_cart(
     request: CartValidateRequest,
     db: Session = Depends(get_db),
-    current_user: User = Depends(get_current_user)
+    current_user: User = Depends(get_current_user_unverified)
 ):
     """Validate cart items, check stock, apply promo code, calculate totals."""
     validated_items = []
     errors = []
     subtotal = 0.0
-    
+
     # Validate each item
     for item in request.items:
         product = db.query(Product).filter(Product.id == item.product_id).first()
-        
+
         if not product:
             errors.append(f"Product {item.product_id} not found")
             continue
-        
+
         if not product.is_active:
             errors.append(f"{product.name} is no longer available")
             continue
-        
+
         # Check variant if specified
         variant = None
         variant_name = None
         unit_price = float(product.price)
-        
+
         if item.variant_id:
             variant = db.query(ProductVariant).filter(
                 ProductVariant.id == item.variant_id,
                 ProductVariant.product_id == product.id
             ).first()
-            
+
             if not variant:
                 errors.append(f"Variant {item.variant_id} not found for {product.name}")
                 continue
-            
+
             if not variant.is_available:
                 errors.append(f"{product.name} - {variant.name} is unavailable")
                 continue
-            
+
             variant_name = variant.name
             unit_price = float(variant.price)
-        
+
         # Check stock
         stock_available = variant.stock if variant else product.stock
         is_available = stock_available >= item.quantity
-        
+
         if not is_available:
             errors.append(f"{product.name} - only {stock_available} in stock")
-        
+
         item_subtotal = unit_price * item.quantity
         subtotal += item_subtotal
-        
+
         validated_items.append(CartItemValidated(
             product_id=product.id,
             product_name=product.name,
@@ -124,17 +124,17 @@ def validate_cart(
             stock_available=stock_available,
             merchant_name=product.merchant.name if product.merchant else "Unknown"
         ))
-    
+
     # Apply promo code if provided
     discount_amount = 0.0
     promo_info = None
-    
+
     if request.promo_code:
         promo = db.query(PromoCode).filter(
             PromoCode.code == request.promo_code.upper(),
             PromoCode.is_active == True
         ).first()
-        
+
         if not promo:
             promo_info = PromoCodeInfo(
                 code=request.promo_code,
@@ -185,19 +185,19 @@ def validate_cart(
                 )
             else:
                 discount_amount, promo_info = calculate_promo_discount(subtotal, promo)
-    
+
     # Apply wallet
     wallet_used = min(request.wallet_amount or 0, subtotal - discount_amount)
-    
+
     # Calculate tax (18% GST on digital products)
     taxable_amount = subtotal - discount_amount
     tax_amount = taxable_amount * 0.18
-    
+
     # Final total
     total_amount = subtotal - discount_amount - wallet_used + tax_amount
-    
+
     is_valid = len(errors) == 0 and all(item.is_available for item in validated_items)
-    
+
     return CartValidateResponse(
         items=validated_items,
         subtotal=subtotal,
@@ -212,13 +212,13 @@ def validate_cart(
 
 
 @router.get("/", response_model=dict)
-def get_cart_state(current_user: User = Depends(get_current_user)):
+def get_cart_state(current_user: User = Depends(get_current_user_unverified)):
     """Return the user's cart stored in Redis."""
     return {"success": True, "data": redis_get_cart(current_user.id)}
 
 
 @router.post("/add", response_model=dict)
-def add_to_cart(item: Dict, current_user: User = Depends(get_current_user)):
+def add_to_cart(item: Dict, current_user: User = Depends(get_current_user_unverified)):
     """Add item to cart stored in Redis. Expect variant_id and quantity."""
     if "variant_id" not in item or "quantity" not in item:
         raise HTTPException(status_code=400, detail="variant_id and quantity required")
@@ -230,7 +230,7 @@ def add_to_cart(item: Dict, current_user: User = Depends(get_current_user)):
 
 
 @router.post("/update", response_model=dict)
-def update_cart_item(item: Dict, current_user: User = Depends(get_current_user)):
+def update_cart_item(item: Dict, current_user: User = Depends(get_current_user_unverified)):
     """Update quantity for an item."""
     if "variant_id" not in item or "quantity" not in item:
         raise HTTPException(status_code=400, detail="variant_id and quantity required")
@@ -239,7 +239,7 @@ def update_cart_item(item: Dict, current_user: User = Depends(get_current_user))
 
 
 @router.post("/remove", response_model=dict)
-def remove_cart_item(item: Dict, current_user: User = Depends(get_current_user)):
+def remove_cart_item(item: Dict, current_user: User = Depends(get_current_user_unverified)):
     """Remove an item."""
     if "variant_id" not in item:
         raise HTTPException(status_code=400, detail="variant_id required")
@@ -248,7 +248,7 @@ def remove_cart_item(item: Dict, current_user: User = Depends(get_current_user))
 
 
 @router.post("/clear", response_model=dict)
-def clear_cart_items(current_user: User = Depends(get_current_user)):
+def clear_cart_items(current_user: User = Depends(get_current_user_unverified)):
     """Clear cart."""
     clear_cart(current_user.id)
     return {"success": True, "data": redis_get_cart(current_user.id)}
@@ -256,31 +256,40 @@ def clear_cart_items(current_user: User = Depends(get_current_user)):
 
 @router.post("/checkout", response_model=CheckoutResponse)
 def checkout(
-    request: CheckoutRequest,
+    payload: CheckoutRequest,
     db: Session = Depends(get_db),
-    current_user: User = Depends(get_current_user)
+    current_user: User = Depends(get_current_user_unverified)
 ):
-    """Create order and initiate payment."""
+    """Create order and initiate payment"""
+    # Only check if user account is active
+    # Email and mobile verification are NOT required for checkout
+    # This allows better UX for users who registered via social login or OTP
+    if not current_user.is_active:
+        raise HTTPException(
+            status_code=403,
+            detail="Your account is not active. Please contact support."
+        )
+    
     # First validate cart
     validation = validate_cart(
         CartValidateRequest(
-            items=request.items,
-            promo_code=request.promo_code,
-            wallet_amount=request.wallet_amount
+            items=payload.items,
+            promo_code=payload.promo_code,
+            wallet_amount=payload.wallet_amount
         ),
         db,
         current_user
     )
-    
+
     if not validation.is_valid:
         error_msg = "Cart validation failed: " + "; ".join(validation.errors) if validation.errors else "Cart validation failed"
         raise HTTPException(status_code=400, detail=error_msg)
-    
+
     # Generate order number
     import uuid
     order_uuid = str(uuid.uuid4())  # Convert to string for SQLite
     order_number = f"ORD-{datetime.utcnow().strftime('%Y%m%d')}-{str(uuid.uuid4())[:8].upper()}"
-    
+
     # Create order
     order = Order(
         uuid=order_uuid,
@@ -291,15 +300,15 @@ def checkout(
         wallet_used=Decimal(str(validation.wallet_used)),
         tax_amount=Decimal(str(validation.tax_amount)),
         total_amount=Decimal(str(validation.total_amount)),
-        promo_code=request.promo_code,
+        promo_code=payload.promo_code,
         status="pending",
         payment_status="pending",
         fulfillment_status="pending"
     )
-    
+
     db.add(order)
     db.flush()
-    
+
     # Create order items
     for item in validation.items:
         order_item = OrderItem(
@@ -314,38 +323,38 @@ def checkout(
             fulfillment_status="pending"
         )
         db.add(order_item)
-    
+
     # Deduct wallet if used
     if validation.wallet_used > 0:
         wallet = db.query(WalletBalance).filter(
             WalletBalance.user_id == current_user.id
         ).first()
-        
+
         if not wallet or float(wallet.balance) < validation.wallet_used:
             raise HTTPException(status_code=400, detail="Insufficient wallet balance")
-        
+
         wallet.balance = Decimal(str(float(wallet.balance) - validation.wallet_used))
-    
+
     # Update promo code usage
-    if request.promo_code and validation.promo_code and validation.promo_code.is_valid:
-        promo = db.query(PromoCode).filter(PromoCode.code == request.promo_code.upper()).first()
+    if payload.promo_code and validation.promo_code and validation.promo_code.is_valid:
+        promo = db.query(PromoCode).filter(PromoCode.code == payload.promo_code.upper()).first()
         if promo:
             promo.usage_count += 1
-    
+
     db.commit()
     db.refresh(order)
-    
+
     # Create Razorpay order if payment required
     payment_details = None
     payment_required = validation.total_amount
-    
+
     if payment_required > 0:
         # Create Razorpay order using SDK
         import razorpay
-        
+
         try:
             razorpay_client = razorpay.Client(auth=(settings.RAZORPAY_KEY_ID, settings.RAZORPAY_KEY_SECRET))
-            
+
             razorpay_order = razorpay_client.order.create({
                 "amount": int(payment_required * 100),  # Convert to paisa
                 "currency": "INR",
@@ -355,9 +364,9 @@ def checkout(
                     "user_id": str(current_user.id)
                 }
             })
-            
+
             razorpay_order_id = razorpay_order["id"]
-            
+
             payment = Payment(
                 order_id=order.id,
                 user_id=current_user.id,
@@ -369,7 +378,7 @@ def checkout(
             )
             db.add(payment)
             db.commit()
-            
+
             payment_details = PaymentDetails(
                 order_id=razorpay_order_id,
                 amount=int(payment_required * 100),  # Convert to paisa
@@ -390,7 +399,7 @@ def checkout(
         order.payment_status = "completed"
         order.status = "paid"
         db.commit()
-    
+
     return CheckoutResponse(
         success=True,
         order_id=order.id,
@@ -407,7 +416,7 @@ def checkout(
 def verify_payment(
     request: PaymentVerificationRequest,
     db: Session = Depends(get_db),
-    current_user: User = Depends(get_current_user)
+    current_user: User = Depends(get_current_user_unverified)
 ):
     """Verify Razorpay payment and update order status."""
     # Get order
@@ -415,19 +424,19 @@ def verify_payment(
         Order.id == request.order_id,
         Order.user_id == current_user.id
     ).first()
-    
+
     if not order:
         raise HTTPException(status_code=404, detail="Order not found")
-    
+
     # Get payment record
     payment = db.query(Payment).filter(
         Payment.order_id == order.id,
         Payment.gateway_order_id == request.razorpay_order_id
     ).first()
-    
+
     if not payment:
         raise HTTPException(status_code=404, detail="Payment record not found")
-    
+
     # Verify signature
     message = f"{request.razorpay_order_id}|{request.razorpay_payment_id}"
     expected_signature = hmac.new(
@@ -435,16 +444,16 @@ def verify_payment(
         message.encode(),
         hashlib.sha256
     ).hexdigest()
-    
+
     if expected_signature != request.razorpay_signature:
         raise HTTPException(status_code=400, detail="Invalid payment signature")
-    
+
     # Update payment
     payment.gateway_payment_id = request.razorpay_payment_id
     payment.gateway_signature = request.razorpay_signature
     payment.status = "completed"
     payment.paid_at = datetime.utcnow()
-    
+
     # Store payment response
     from ...models import PaymentResponse
     payment_response = PaymentResponse(
@@ -462,39 +471,47 @@ def verify_payment(
         }
     )
     db.add(payment_response)
-    
+
     # Update order
     order.payment_status = "completed"
     order.status = "paid"
-    
+
     db.commit()
     db.refresh(order)
-    
-    # Send order confirmation email
-    if current_user.email:
-        items = db.query(OrderItem).filter(OrderItem.order_id == order.id).all()
-        items_data = [{
-            'product_name': item.product_name,
-            'quantity': item.quantity,
-            'unit_price': float(item.unit_price),
-            'subtotal': float(item.subtotal)
-        } for item in items]
-        
-        send_order_confirmation(
-            current_user.email,
-            order.order_number,
-            float(order.total_amount),
-            items_data
-        )
-    
-    # Send SMS notification
-    if current_user.mobile:
-        send_order_notification(
-            current_user.mobile,
-            order.order_number,
-            float(order.total_amount)
-        )
-    
+
+    # Send order confirmation email (only if email exists)
+    try:
+        if current_user.email and settings.EMAIL_ENABLED:
+            items = db.query(OrderItem).filter(OrderItem.order_id == order.id).all()
+            items_data = [{
+                'product_name': item.product_name,
+                'quantity': item.quantity,
+                'unit_price': float(item.unit_price),
+                'subtotal': float(item.subtotal)
+            } for item in items]
+
+            send_order_confirmation(
+                current_user.email,
+                order.order_number,
+                float(order.total_amount),
+                items_data
+            )
+    except Exception as e:
+        # Don't fail checkout if email sending fails
+        print(f"Failed to send order confirmation email: {e}")
+
+    # Send SMS notification (only if mobile exists)
+    try:
+        if current_user.mobile and settings.SMS_ENABLED:
+            send_order_notification(
+                current_user.mobile,
+                order.order_number,
+                float(order.total_amount)
+            )
+    except Exception as e:
+        # Don't fail checkout if SMS sending fails
+        print(f"Failed to send order notification SMS: {e}")
+
     return PaymentVerificationResponse(
         success=True,
         order_number=order.order_number,

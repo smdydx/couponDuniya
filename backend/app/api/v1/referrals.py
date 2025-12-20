@@ -2,7 +2,7 @@ from fastapi import APIRouter, Depends, HTTPException, Query
 from sqlalchemy.orm import Session
 from ...database import get_db
 from ...models import User, Referral
-from ...dependencies import get_current_user
+from ...dependencies import get_current_user, get_current_user_unverified
 from ...gamification import (
     BADGES,
     REWARDS,
@@ -18,7 +18,7 @@ from ...events import publish  # generic publish helper
 router = APIRouter(prefix="/referrals", tags=["Engagement"])
 
 @router.get("/my-code", response_model=dict)
-def my_code(user: User = Depends(get_current_user)):
+def my_code(user: User = Depends(get_current_user_unverified)):
     return {
         "success": True,
         "data": {
@@ -45,7 +45,7 @@ def leaderboard(limit: int = Query(10, ge=1, le=100), db: Session = Depends(get_
     return {"success": True, "data": {"rows": leaderboard_rows}}
 
 @router.post("/", response_model=dict)
-def create_referral(referral_code: str, db: Session = Depends(get_db), user: User = Depends(get_current_user)):
+def create_referral(referral_code: str, db: Session = Depends(get_db), user: User = Depends(get_current_user_unverified)):
     # Find referrer by code
     referrer = db.query(User).filter(User.referral_code == referral_code).first()
     if not referrer:
@@ -68,7 +68,7 @@ def create_referral(referral_code: str, db: Session = Depends(get_db), user: Use
     return {"success": True, "data": {"referral_id": r.id, "counters": counters, "new_badges": awarded}}
 
 @router.get("/my-badges", response_model=dict)
-def my_badges(user: User = Depends(get_current_user)):
+def my_badges(user: User = Depends(get_current_user_unverified)):
     return {"success": True, "data": {"badges": list_user_badges(user.id), "definitions": BADGES}}
 
 @router.get("/badges", response_model=dict)
@@ -80,7 +80,7 @@ def rewards_catalog():
     return {"success": True, "data": REWARDS}
 
 @router.get("/my-rewards", response_model=dict)
-def my_rewards(user: User = Depends(get_current_user)):
+def my_rewards(user: User = Depends(get_current_user_unverified)):
     return {"success": True, "data": {"rewards": list_user_rewards(user.id)}}
 
 @router.post("/rewards/redeem", response_model=dict)

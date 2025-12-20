@@ -78,8 +78,8 @@ function TreeContent() {
     setLoading(true);
     try {
       const endpoint = rootUserId 
-        ? `http://localhost:8000/api/v1/admin/referrals/tree/${rootUserId}?depth=${viewDepth}`
-        : `http://localhost:8000/api/v1/admin/referrals/tree?depth=${viewDepth}`;
+        ? `https://api.leliance.com/api/v1/admin/referrals/tree/${rootUserId}?depth=${viewDepth}`
+        : `https://api.leliance.com/api/v1/admin/referrals/tree?depth=${viewDepth}`;
       
       const response = await fetch(endpoint);
       const data = await response.json();

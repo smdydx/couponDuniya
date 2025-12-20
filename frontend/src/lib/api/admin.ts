@@ -15,8 +15,30 @@ export interface Merchant {
   slug: string;
   description?: string;
   logo_url?: string;
+  banner_url?: string;
   is_active: boolean;
   is_featured?: boolean;
+  is_verified?: boolean;
+  business_name?: string;
+  business_email?: string;
+  business_phone?: string;
+  business_address?: string;
+  business_city?: string;
+  business_state?: string;
+  business_pincode?: string;
+  business_country?: string;
+  gst_number?: string;
+  pan_number?: string;
+  bank_account_name?: string;
+  bank_account_number?: string;
+  bank_ifsc_code?: string;
+  bank_name?: string;
+  website_url?: string;
+  affiliate_url?: string;
+  tracking_url?: string;
+  commission_rate?: number;
+  cashback_rate?: number;
+  platform_commission?: number;
   created_at?: string;
 }
 
@@ -36,6 +58,7 @@ export interface Offer {
 export interface Product {
   id: number;
   merchant_id: number;
+  category_id?: number;
   merchant_name?: string;
   name: string;
   slug: string;
@@ -115,8 +138,7 @@ const adminApi = {
   getDashboard: async (): Promise<DashboardStats> => {
     try {
       const response = await apiClient.get('/admin/analytics/dashboard');
-      console.log("Dashboard response:", response.data);
-
+      
       if (response.data?.data) {
         return response.data.data;
       } else if (response.data) {
@@ -125,9 +147,21 @@ const adminApi = {
 
       throw new Error("Invalid response format");
     } catch (error: any) {
+      // Check for verification error
+      if (error.response?.data?.error?.message?.includes("not verified")) {
+        console.error("❌ Admin account is not verified. Please verify your account first.");
+        throw new Error("ACCOUNT_NOT_VERIFIED");
+      }
+      
+      // Check for 403 - unauthorized
+      if (error.response?.status === 403) {
+        console.error("❌ Access denied. Admin privileges required.");
+        throw new Error("ACCESS_DENIED");
+      }
+
       console.error("Dashboard API error:", error.message, error.response?.data);
 
-      // Return empty data structure on error instead of throwing
+      // Return empty data structure for other errors
       return {
         orders: { total: 0, today: 0 },
         revenue: { total: 0, today: 0 },
@@ -147,16 +181,6 @@ const adminApi = {
   getTopMerchants: async (limit: number = 10) => {
     const response = await apiClient.get(`/admin/analytics/top-merchants?limit=${limit}`);
     return response.data?.data || response.data;
-  },
-
-  getOffers: async (params?: { page?: number; limit?: number; search?: string; merchant_id?: number; is_active?: boolean }) => {
-    try {
-      const response = await apiClient.get('/admin/offers', { params });
-      return response.data?.data || response.data;
-    } catch (error: any) {
-      console.error("Get offers error:", error.message, error.response?.data);
-      return { offers: [], pagination: { page: 1, per_page: 20, total_items: 0, total_pages: 0 } };
-    }
   },
 
   getMerchants: async (params: { page?: number; limit?: number; search?: string; is_active?: boolean } = {}): Promise<{ merchants: Merchant[]; pagination: Pagination }> => {
@@ -344,6 +368,284 @@ const adminApi = {
     const response = await apiClient.get('/admin/gift-cards/stats');
     return response.data?.data || response.data;
   },
+
+  // Cashback APIs
+  getCashback: async (params: { page?: number; limit?: number; status?: string } = {}): Promise<{ cashback_events: CashbackEvent[]; pagination: Pagination }> => {
+    const queryParams = new URLSearchParams();
+    if (params.page) queryParams.append('page', String(params.page));
+    if (params.limit) queryParams.append('limit', String(params.limit));
+    if (params.status) queryParams.append('status', params.status);
+
+    const response = await apiClient.get(`/admin/cashback?${queryParams.toString()}`);
+    const data = response.data;
+    if (data?.data?.cashback_events && data?.data?.pagination) {
+      return { cashback_events: data.data.cashback_events, pagination: data.data.pagination };
+    }
+    if (data?.cashback_events && data?.pagination) {
+      return { cashback_events: data.cashback_events, pagination: data.pagination };
+    }
+    return { cashback_events: [], pagination: { current_page: 1, total_pages: 1, total_items: 0, per_page: 20 } };
+  },
+
+  confirmCashback: async (id: number): Promise<void> => {
+    await apiClient.patch(`/admin/cashback/${id}/confirm`);
+  },
+
+  rejectCashback: async (id: number): Promise<void> => {
+    await apiClient.patch(`/admin/cashback/${id}/reject`);
+  },
+
+  // Banner APIs
+  getBanners: async (params: { page?: number; limit?: number; banner_type?: string } = {}): Promise<{ banners: Banner[]; pagination: Pagination }> => {
+    const queryParams = new URLSearchParams();
+    if (params.page) queryParams.append('page', String(params.page));
+    if (params.limit) queryParams.append('limit', String(params.limit));
+    if (params.banner_type) queryParams.append('banner_type', params.banner_type);
+
+    const response = await apiClient.get(`/admin/banners?${queryParams.toString()}`);
+    const data = response.data;
+    if (data?.data?.banners && data?.data?.pagination) {
+      return { banners: data.data.banners, pagination: data.data.pagination };
+    }
+    if (data?.banners && data?.pagination) {
+      return { banners: data.banners, pagination: data.pagination };
+    }
+    return { banners: [], pagination: { current_page: 1, total_pages: 1, total_items: 0, per_page: 20 } };
+  },
+
+  createBanner: async (data: Omit<Banner, 'id' | 'created_at'>): Promise<Banner> => {
+    const response = await apiClient.post('/admin/banners', data);
+    return response.data?.data || response.data;
+  },
+
+  updateBanner: async (id: number, data: Partial<Banner>): Promise<Banner> => {
+    const response = await apiClient.put(`/admin/banners/${id}`, data);
+    return response.data?.data || response.data;
+  },
+
+  deleteBanner: async (id: number): Promise<void> => {
+    await apiClient.delete(`/admin/banners/${id}`);
+  },
+
+  reorderBanner: async (id: number, order_index: number): Promise<void> => {
+    await apiClient.patch(`/admin/banners/${id}/reorder`, { order_index });
+  },
+
+  // Category APIs
+  getCategories: async (params: { page?: number; limit?: number; search?: string } = {}): Promise<{ categories: Category[]; pagination: Pagination }> => {
+    const queryParams = new URLSearchParams();
+    if (params.page) queryParams.append('page', String(params.page));
+    if (params.limit) queryParams.append('limit', String(params.limit));
+    if (params.search) queryParams.append('search', params.search);
+
+    const response = await apiClient.get(`/categories?${queryParams.toString()}`);
+    const data = response.data;
+    if (data?.data?.categories && data?.data?.pagination) {
+      return { categories: data.data.categories, pagination: data.data.pagination };
+    }
+    if (data?.categories && data?.pagination) {
+      return { categories: data.categories, pagination: data.pagination };
+    }
+    if (Array.isArray(data?.data)) {
+      return { categories: data.data, pagination: { current_page: 1, total_pages: 1, total_items: data.data.length, per_page: 100 } };
+    }
+    return { categories: [], pagination: { current_page: 1, total_pages: 1, total_items: 0, per_page: 20 } };
+  },
+
+  createCategory: async (data: { name: string; slug: string; description?: string; icon_name?: string; is_active?: boolean }): Promise<Category> => {
+    const response = await apiClient.post('/admin/categories', data);
+    return response.data?.data || response.data;
+  },
+
+  updateCategory: async (id: number, data: { name?: string; slug?: string; description?: string; icon_name?: string; is_active?: boolean }): Promise<Category> => {
+    const response = await apiClient.put(`/admin/categories/${id}`, data);
+    return response.data?.data || response.data;
+  },
+
+  // Product Variants
+  addProductVariant: async (productId: number, data: { sku: string; name: string; price: number; stock: number; is_available?: boolean }): Promise<ProductVariant> => {
+    const response = await apiClient.post(`/admin/products/${productId}/variants`, data);
+    return response.data?.data || response.data;
+  },
+
+  // Complete withdrawal
+  completeWithdrawal: async (id: number, data: { transaction_id?: string; admin_notes?: string }): Promise<void> => {
+    await apiClient.patch(`/admin/withdrawals/${id}/complete`, data);
+  },
+
+  // Upload APIs
+  uploadImage: async (file: File, category: string = 'general'): Promise<{ url: string; filename: string }> => {
+    const formData = new FormData();
+    formData.append('file', file);
+    formData.append('category', category);
+    const response = await apiClient.post('/admin/upload/image', formData, {
+      headers: { 'Content-Type': 'multipart/form-data' }
+    });
+    return response.data?.data || response.data;
+  },
+
+  deleteImage: async (category: string, filename: string): Promise<void> => {
+    await apiClient.delete(`/admin/upload/image/${category}/${filename}`);
+  },
+
+  // Invalidate cache
+  invalidateMerchantCache: async (slug: string): Promise<void> => {
+    await apiClient.post(`/admin/merchants/${slug}/invalidate`);
+  },
+
+  // Merchant Verification APIs
+  getPendingMerchantApplications: async (params: { page?: number; limit?: number; status?: string } = {}): Promise<{ applications: MerchantApplication[]; pagination: Pagination }> => {
+    const queryParams = new URLSearchParams();
+    if (params.page) queryParams.append('page', String(params.page));
+    if (params.limit) queryParams.append('limit', String(params.limit));
+    if (params.status) queryParams.append('status', params.status || 'pending');
+
+    const response = await apiClient.get(`/merchants/admin/pending-applications?${queryParams.toString()}`);
+    const data = response.data;
+    if (data?.data?.applications && data?.data?.pagination) {
+      return { applications: data.data.applications, pagination: data.data.pagination };
+    }
+    return { applications: [], pagination: { current_page: 1, total_pages: 1, total_items: 0, per_page: 20 } };
+  },
+
+  approveMerchantApplication: async (merchantId: number, notes?: string): Promise<void> => {
+    await apiClient.post(`/merchants/admin/verify/${merchantId}`, { action: 'approve', notes });
+  },
+
+  rejectMerchantApplication: async (merchantId: number, notes?: string): Promise<void> => {
+    await apiClient.post(`/merchants/admin/verify/${merchantId}`, { action: 'reject', notes });
+  },
+
+  // KYC APIs
+  getKYCRequests: async (params: { page?: number; limit?: number; status?: string } = {}): Promise<{ kyc_requests: KYCRequest[]; pagination: Pagination }> => {
+    const queryParams = new URLSearchParams();
+    if (params.page) queryParams.append('page', String(params.page));
+    if (params.limit) queryParams.append('limit', String(params.limit));
+    if (params.status) queryParams.append('status', params.status || 'pending');
+
+    const response = await apiClient.get(`/admin/kyc/pending?${queryParams.toString()}`);
+    const data = response.data;
+    if (data?.data?.kyc_requests && data?.data?.pagination) {
+      return { kyc_requests: data.data.kyc_requests, pagination: data.data.pagination };
+    }
+    return { kyc_requests: [], pagination: { current_page: 1, total_pages: 1, total_items: 0, per_page: 20 } };
+  },
+
+  verifyKYCRequest: async (kycId: number, action: 'approve' | 'reject', notes?: string): Promise<void> => {
+    await apiClient.post(`/admin/kyc/verify/${kycId}`, { action, notes });
+  },
+
+  getKYCStats: async (): Promise<KYCStats> => {
+    const response = await apiClient.get('/admin/kyc/stats');
+    return response.data?.data || { pending: 0, approved: 0, rejected: 0, total: 0 };
+  },
 };
+
+
+export interface KYCRequest {
+  id: number;
+  user_id: number;
+  user?: {
+    id: number;
+    email: string;
+    full_name?: string;
+    mobile?: string;
+  };
+  pan_number?: string;
+  pan_verified: boolean;
+  aadhaar_number?: string;
+  aadhaar_verified: boolean;
+  account_holder_name?: string;
+  account_number?: string;
+  ifsc_code?: string;
+  bank_name?: string;
+  upi_id?: string;
+  status: string;
+  submitted_at?: string;
+  verified_at?: string;
+}
+
+export interface KYCStats {
+  pending: number;
+  approved: number;
+  rejected: number;
+  total: number;
+}
+export interface CashbackEvent {
+  id: number;
+  user_id: number;
+  user_email?: string;
+  order_id?: number;
+  amount: number;
+  status: string;
+  created_at: string;
+  confirmed_at?: string;
+}
+
+export interface Banner {
+  id: number;
+  title: string;
+  banner_type: string;
+  image_url?: string;
+  brand_name?: string;
+  badge_text?: string;
+  badge_color?: string;
+  headline?: string;
+  description?: string;
+  code?: string;
+  style_metadata?: string;
+  link_url?: string;
+  is_active: boolean;
+  order_index: number;
+  created_at?: string;
+}
+
+export interface Category {
+  id: number;
+  name: string;
+  slug: string;
+  description?: string;
+  icon_name?: string;
+  is_active: boolean;
+  created_at?: string;
+}
+
+export interface ProductVariant {
+  id: number;
+  product_id: number;
+  sku: string;
+  name: string;
+  price: number;
+  stock: number;
+  is_available: boolean;
+}
+
+export interface MerchantApplication {
+  id: number;
+  merchant: {
+    id: number;
+    name: string;
+    slug: string;
+    status: string;
+    is_verified: boolean;
+    is_active: boolean;
+  };
+  business_name: string;
+  business_email: string;
+  business_phone: string;
+  business_address: string;
+  business_city: string;
+  business_state: string;
+  business_pincode: string;
+  gst_number?: string;
+  pan_number?: string;
+  website_url?: string;
+  user?: {
+    id: number;
+    email: string;
+    full_name?: string;
+  };
+  created_at: string;
+}
 
 export default adminApi;

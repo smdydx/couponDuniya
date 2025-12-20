@@ -4,11 +4,12 @@ export interface User {
   uuid?: string;
   email: string;
   mobile?: string;
+  mobile_verified?: boolean;
   full_name?: string;
   first_name?: string;
   last_name?: string;
   avatar_url?: string;
-  wallet_balance: number;
+  wallet_balance?: number;
   pending_cashback?: number;
   referral_code?: string;
   role: string;
@@ -17,6 +18,9 @@ export interface User {
   created_at?: string;
   auth_provider?: string; // Added to track Google sign-up
   password_hash?: boolean; // Added to indicate if a password is set
+  date_of_birth?: string;
+  gender?: 'male' | 'female' | 'other';
+  kyc_status?: string;
 }
 
 export interface UserProfile extends User {
@@ -36,8 +40,9 @@ export interface LoginCredentials {
 export interface RegisterData {
   email: string;
   password: string;
-  first_name: string;
-  last_name: string;
+  first_name?: string;
+  last_name?: string;
+  full_name?: string;
   mobile?: string;
   referral_code?: string;
 }
@@ -47,6 +52,19 @@ export interface AuthResponse {
   access_token: string;
   refresh_token: string;
   token_type: string;
+}
+
+export interface RegisterResponse {
+  message: string;
+  data: {
+    user_id: number;
+    uuid: string;
+    email: string;
+    mobile?: string;
+    referral_code?: string;
+    requires_verification: boolean;
+    dev_verification_token?: string;
+  };
 }
 
 // Merchant Types
@@ -68,6 +86,7 @@ export interface Merchant {
   seo_title?: string;
   seo_description?: string;
   total_offers?: number;
+  offers_count?: number;
   created_at: string;
   updated_at: string;
 }
@@ -128,6 +147,7 @@ export interface Product {
   category_id?: number;
   category?: Category;
   is_bestseller: boolean;
+  is_featured: boolean;
   is_active: boolean;
   variants: ProductVariant[];
   terms_conditions?: string;
@@ -140,12 +160,16 @@ export interface Product {
 export interface ProductVariant {
   id: number;
   product_id: number;
-  denomination: number;
-  selling_price: number;
-  cost_price: number;
-  discount_percentage: number;
+  sku: string;
+  name: string;
+  price: number;  // Base price field
+  denomination?: number | null;  // Original price (for gift cards)
+  selling_price?: number | null;  // Actual selling price
+  stock: number;
   is_available: boolean;
-  stock_quantity?: number;
+  cost_price?: number;  // Optional, for backward compatibility
+  discount_percentage?: number;  // Optional, for backward compatibility
+  stock_quantity?: number;  // Optional, for backward compatibility
 }
 
 // Cart Types

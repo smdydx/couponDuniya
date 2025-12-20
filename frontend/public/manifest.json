@@ -1,6 +1,6 @@
 {
-  "name": "BIDUA Coupons",
-  "short_name": "BIDUA",
+  "name": "Leliance  Coupons",
+  "short_name": "Leliance ",
   "description": "Save with verified coupons, cashback offers and discounted gift cards.",
   "start_url": "/",
   "scope": "/",
@@ -11,13 +11,15 @@
   "icons": [
     {
       "src": "/images/logos/icon.png",
-      "sizes": "192x192",
-      "type": "image/png"
+      "sizes": "any",
+      "type": "image/png",
+      "purpose": "any"
     },
     {
       "src": "/images/logos/logo.png",
-      "sizes": "512x512",
-      "type": "image/png"
+      "sizes": "any",
+      "type": "image/png",
+      "purpose": "any maskable"
     }
   ]
 }

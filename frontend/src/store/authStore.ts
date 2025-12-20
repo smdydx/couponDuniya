@@ -22,6 +22,7 @@ interface AuthState {
   setError: (error: string) => void;
   clearError: () => void;
   refreshAccessToken: () => Promise<void>;
+  checkAuth: () => Promise<boolean>;
 }
 
 export const useAuthStore = createWithEqualityFn<AuthState>()(
@@ -38,13 +39,13 @@ export const useAuthStore = createWithEqualityFn<AuthState>()(
         set({ isLoading: true, error: null });
         try {
           const response: AuthResponse = await authAPI.login(credentials);
-          
+
           // Ensure user object has proper role
           const user = {
             ...response.user,
             is_admin: response.user.role === 'admin' || response.user.is_admin,
           };
-          
+
           set({
             user,
             accessToken: response.access_token,
@@ -53,7 +54,7 @@ export const useAuthStore = createWithEqualityFn<AuthState>()(
             isLoading: false,
             error: null,
           });
-          
+
           // Return user object so login page can handle redirect
           return user;
         } catch (error) {
@@ -68,14 +69,16 @@ export const useAuthStore = createWithEqualityFn<AuthState>()(
       register: async (data: RegisterData) => {
         set({ isLoading: true, error: null });
         try {
-          const response: AuthResponse = await authAPI.register(data);
+          // Backend now returns RegisterResponse, not AuthResponse
+          // We don't log them in yet, they need to verify email
+          await authAPI.register(data);
+
           set({
-            user: response.user,
-            accessToken: response.access_token,
-            refreshToken: response.refresh_token,
-            isAuthenticated: true,
             isLoading: false,
+            error: null,
           });
+
+          // We don't set user/tokens here anymore
         } catch (error) {
           set({
             error: error instanceof Error ? error.message : 'Registration failed',
@@ -86,6 +89,10 @@ export const useAuthStore = createWithEqualityFn<AuthState>()(
       },
 
       logout: () => {
+        // Clear manual tokens that might be used by Google Auth or legacy clients
+        localStorage.removeItem('access_token');
+        localStorage.removeItem('refresh_token');
+
         set({
           user: null,
           accessToken: null,
@@ -146,6 +153,30 @@ export const useAuthStore = createWithEqualityFn<AuthState>()(
           });
         } catch {
           get().logout();
+        }
+      },
+
+      checkAuth: async () => {
+        const { accessToken, isAuthenticated } = get();
+        if (!accessToken) {
+          return false;
+        }
+        if (isAuthenticated) {
+          return true;
+        }
+        set({ isLoading: true });
+        try {
+          const user = await authAPI.getProfile();
+          set({
+            user,
+            isAuthenticated: true,
+            isLoading: false,
+          });
+          return true;
+        } catch {
+          get().logout();
+          set({ isLoading: false });
+          return false;
         }
       },
     }),

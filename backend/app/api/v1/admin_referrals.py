@@ -17,75 +17,53 @@ def get_referral_users(
     db: Session = Depends(get_db),
     admin: User = Depends(get_current_admin_user)
 ):
-    """Get paginated list of users with referral data including left/right child structure"""
+    """Get paginated list of users with referral data using Stored Procedure"""
+    from sqlalchemy import text
     
-    query = db.query(User)
+    # Calculate offset
+    offset = (page - 1) * limit
     
-    if search:
-        query = query.filter(
-            (User.email.contains(search)) |
-            (User.full_name.contains(search)) |
-            (User.referral_code.contains(search))
-        )
-    
-    total = query.count()
-    users = query.offset((page - 1) * limit).limit(limit).all()
+    # Call Stored Procedure
+    result = db.execute(
+        text("SELECT * FROM get_admin_referrals(:limit, :offset, :search, :level)"),
+        {"limit": limit, "offset": offset, "search": search, "level": level}
+    ).all()
     
     user_data = []
-    for user in users:
-        # Get referral stats
-        total_referrals = db.query(Referral).filter(Referral.referrer_user_id == user.id).count()
-        
-        # Get referred by
-        referred_by_rel = db.query(Referral).filter(Referral.referred_user_id == user.id).first()
-        referred_by = None
-        if referred_by_rel:
-            referrer = db.query(User).filter(User.id == referred_by_rel.referrer_user_id).first()
-            referred_by = {"id": referrer.id, "name": referrer.full_name} if referrer else None
-        
-        # Binary tree children (left and right)
-        children = db.query(Referral).filter(Referral.referrer_user_id == user.id).limit(2).all()
-        left_child = None
-        right_child = None
-        
-        if len(children) > 0:
-            left_user = db.query(User).filter(User.id == children[0].referred_user_id).first()
-            if left_user:
-                left_child = {"id": left_user.id, "name": left_user.full_name}
-        
-        if len(children) > 1:
-            right_user = db.query(User).filter(User.id == children[1].referred_user_id).first()
-            if right_user:
-                right_child = {"id": right_user.id, "name": right_user.full_name}
-        
-        user_data.append({
-            "id": user.id,
-            "email": user.email,
-            "full_name": user.full_name,
-            "referral_code": user.referral_code,
-            "referred_by_id": referred_by_rel.referrer_user_id if referred_by_rel else None,
-            "referred_by_name": referred_by["name"] if referred_by else None,
-            "total_referrals": total_referrals,
-            "active_referrals": total_referrals,
-            "total_earnings": 0,
-            "current_level": 1,
-            "left_child_id": left_child["id"] if left_child else None,
-            "right_child_id": right_child["id"] if right_child else None,
-            "left_child_name": left_child["name"] if left_child else None,
-            "right_child_name": right_child["name"] if right_child else None,
-            "created_at": user.created_at.isoformat() if user.created_at else None,
-        })
+    total = 0
     
-    # Calculate stats
+    if result:
+        total = result[0].items_total
+        
+        for row in result:
+            user_data.append({
+                "id": row.id,
+                "email": row.email,
+                "full_name": row.full_name,
+                "referral_code": row.referral_code,
+                "referred_by_id": row.referred_by_id,
+                "referred_by_name": row.referred_by_name,
+                "total_referrals": row.total_referrals,
+                "active_referrals": row.active_referrals,
+                "total_earnings": float(row.total_earnings) if row.total_earnings else 0,
+                "current_level": 1, # Placeholder, calculation requires more complex logic
+                "left_child_id": row.left_child_id,
+                "right_child_id": row.right_child_id,
+                "left_child_name": row.left_child_name,
+                "right_child_name": row.right_child_name,
+                "created_at": row.created_at.isoformat() if row.created_at else None,
+            })
+    
+    # Stats (Simplified queries for speed)
     total_users = db.query(User).count()
-    users_with_referrals = db.query(User).join(Referral, User.id == Referral.referrer_user_id).distinct().count()
+    users_with_referrals = db.query(func.count(func.distinct(Referral.referrer_user_id))).scalar() or 0
     
-    # Generate level stats for 50 levels
+    # Generate level stats for 50 levels (Dynamic based on real data would be better but keeping structure)
     level_stats = []
     for level in range(1, 51):
         level_stats.append({
             "level": level,
-            "user_count": max(0, int(1000 / (1.5 ** (level - 1)))),
+            "user_count": max(0, int(1000 / (1.5 ** (level - 1)))), # Dummy distribution as placeholder
             "total_earnings": max(0, int(50000 / (1.3 ** (level - 1)))),
             "commission_rate": max(0.5, 10 - (level - 1) * 0.2)
         })
@@ -106,7 +84,7 @@ def get_referral_users(
                 "page": page,
                 "limit": limit,
                 "total": total,
-                "total_pages": (total + limit - 1) // limit
+                "total_pages": (total + limit - 1) // limit if limit > 0 else 1
             }
         }
     }

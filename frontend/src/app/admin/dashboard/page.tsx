@@ -72,51 +72,52 @@ export default function AdminDashboard() {
   const [mounted, setMounted] = useState(false);
   const [recentMerchants, setRecentMerchants] = useState<RecentMerchant[]>([]);
   const [recentOffers, setRecentOffers] = useState<RecentOffer[]>([]);
+  const [pendingApplicationsCount, setPendingApplicationsCount] = useState(0);
 
   const { user, accessToken, isAuthenticated } = useAuthStore();
 
   const fetchDashboardData = useCallback(async () => {
     try {
-      console.log("📊 Fetching dashboard data...");
-      const [statsResponse, merchantsResponse, offersResponse] = await Promise.allSettled([
+      // Check if we have a valid token before making requests
+      const { accessToken: currentToken, user: currentUser } = useAuthStore.getState();
+      if (!currentToken) {
+        router.push("/login");
+        return;
+      }
+
+      // Silently fetch data without verification checks
+      const [statsResponse, merchantsResponse, offersResponse, pendingAppsResponse] = await Promise.allSettled([
         adminApiClient.get("/analytics/dashboard"),
         adminApiClient.get("/merchants", { params: { limit: 5 } }),
         adminApiClient.get("/offers", { params: { limit: 5 } }),
+        adminApiClient.get("/merchants/admin/pending-applications", { params: { limit: 100, status: 'pending' } }),
       ]);
 
-      console.log("✅ Stats response:", statsResponse);
-      console.log("✅ Merchants response:", merchantsResponse);
-      console.log("✅ Offers response:", offersResponse);
+      // Handle 403 errors silently - redirect to login
+      if (statsResponse.status === "rejected" && statsResponse.reason?.response?.status === 403) {
+        useAuthStore.setState({ user: null, accessToken: null, isAuthenticated: false });
+        router.push("/login");
+        return;
+      }
 
       if (statsResponse.status === "fulfilled") {
         const statsData = statsResponse.value.data;
-        console.log("📊 Stats data received:", statsData);
 
         if (statsData?.data) {
-          console.log("✅ Setting stats from statsData.data:", statsData.data);
           setStats(statsData.data);
         } else if (statsData && typeof statsData === 'object' && 'orders' in statsData) {
-          console.log("✅ Setting stats directly:", statsData);
           setStats(statsData);
         } else if (statsData?.success === false) {
-          console.error("❌ Stats API returned error:", statsData.error);
           setStats(defaultStats);
         } else {
-          console.warn("⚠️ Unexpected stats data format, using defaults");
           setStats(defaultStats);
         }
       } else {
-        console.error("❌ Stats fetch failed:", statsResponse.reason);
-        if (statsResponse.reason?.response) {
-          console.error("Response data:", statsResponse.reason.response.data);
-          console.error("Response status:", statsResponse.reason.response.status);
-        }
         setStats(defaultStats);
       }
 
       if (merchantsResponse.status === "fulfilled") {
         const merchantsData = merchantsResponse.value.data;
-        console.log("🏪 Merchants data:", merchantsData);
         const merchantsList = merchantsData?.merchants || merchantsData?.data?.merchants || merchantsData?.data || [];
         setRecentMerchants(Array.isArray(merchantsList) ? merchantsList.slice(0, 5) : []);
       }
@@ -124,7 +125,6 @@ export default function AdminDashboard() {
       if (offersResponse.status === "fulfilled") {
         try {
           const offersData = offersResponse.value.data;
-          console.log("🏷️ Offers data:", offersData);
           const offersList = offersData?.offers || offersData?.data?.offers || offersData?.data || [];
           const offersArray = Array.isArray(offersList) ? offersList : [];
           setRecentOffers(offersArray.slice(0, 5).map((o: any) => ({
@@ -134,12 +134,25 @@ export default function AdminDashboard() {
             merchant_name: o.merchant_name || o.merchant?.name || "Unknown",
           })));
         } catch (error) {
-          console.error("Error processing offers:", error);
           setRecentOffers([]);
         }
       }
+
+      if (pendingAppsResponse.status === "fulfilled") {
+        try {
+          const pendingData = pendingAppsResponse.value.data;
+          // Extract total from the correct path in response
+          const totalPending = pendingData?.data?.pagination?.total_items ||
+            pendingData?.pagination?.total_items ||
+            pendingData?.data?.applications?.length ||
+            0;
+          setPendingApplicationsCount(totalPending);
+        } catch (error) {
+          console.error("Error parsing pending applications:", error);
+          setPendingApplicationsCount(0);
+        }
+      }
     } catch (error) {
-      console.error("❌ Failed to fetch dashboard data:", error);
       setStats(defaultStats);
     } finally {
       setLoading(false);
@@ -153,37 +166,35 @@ export default function AdminDashboard() {
   useEffect(() => {
     if (!mounted) return;
 
-    const checkAuth = () => {
-      console.log("🔐 Admin auth check:", { 
-        hasToken: !!accessToken, 
-        hasUser: !!user,
-        isAuthenticated,
-        userRole: user?.role,
-        isAdmin: user?.is_admin
-      });
+    const checkAuth = async () => {
+      // If no user data, wait a bit for store hydration
+      if (!user && !accessToken) {
+        await new Promise(resolve => setTimeout(resolve, 500));
+      }
 
-      if (!isAuthenticated || !accessToken || !user) {
-        console.log("❌ No auth found, redirecting to login");
+      // Check again after waiting
+      const currentState = useAuthStore.getState();
+      const currentUser = currentState.user;
+      const currentToken = currentState.accessToken;
+      const currentAuth = currentState.isAuthenticated;
+
+      if (!currentAuth || !currentToken || !currentUser) {
         router.push("/login");
         return;
       }
 
-      const isAdminUser = user.is_admin === true || user.role === 'admin';
+      const isAdminUser = currentUser.is_admin === true || currentUser.role === 'admin';
 
       if (!isAdminUser) {
-        console.log("❌ Access denied - User is not admin");
-        alert("Access denied. Admin privileges required.");
         router.push("/");
         return;
       }
 
-      console.log("✅ Admin access granted - loading dashboard data");
       setAuthChecked(true);
     };
 
-    const timer = setTimeout(checkAuth, 100);
-    return () => clearTimeout(timer);
-  }, [mounted, isAuthenticated, accessToken, user, router]);
+    checkAuth();
+  }, [mounted, router, accessToken, isAuthenticated, user]);
 
   useEffect(() => {
     if (authChecked) {
@@ -288,13 +299,27 @@ export default function AdminDashboard() {
 
   return (
     <div className="space-y-8 p-4 sm:p-6 lg:p-8">
-      <div className="flex flex-col gap-2">
-        <h1 className="text-3xl sm:text-4xl font-bold bg-gradient-to-r from-purple-600 via-blue-600 to-indigo-600 bg-clip-text text-transparent">
-          Admin Dashboard
-        </h1>
-        <p className="text-gray-500">
-          Welcome back! Here&apos;s your platform overview for today
-        </p>
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+        <div className="flex flex-col gap-2">
+          <h1 className="text-3xl sm:text-4xl font-bold bg-gradient-to-r from-purple-600 via-blue-600 to-indigo-600 bg-clip-text text-transparent">
+            Admin Dashboard
+          </h1>
+          <p className="text-gray-500">
+            Welcome back! Here&apos;s your platform overview for today
+          </p>
+        </div>
+        <Button
+          variant="outline"
+          onClick={() => {
+            setLoading(true);
+            fetchDashboardData();
+          }}
+          className="gap-2 self-start sm:self-auto"
+          disabled={loading}
+        >
+          <RefreshCw className={`h-4 w-4 ${loading ? 'animate-spin' : ''}`} />
+          Refresh Data
+        </Button>
       </div>
 
       <div className="grid gap-3 sm:gap-4 grid-cols-1 sm:grid-cols-2 lg:grid-cols-4">
@@ -441,7 +466,29 @@ export default function AdminDashboard() {
         </Card>
       </div>
 
-      <div className="grid gap-3 sm:gap-4 lg:grid-cols-3">
+      <div className="grid gap-3 sm:gap-4 lg:grid-cols-4">
+        <Card className="border-0 shadow-xl overflow-hidden">
+          <CardHeader className="bg-gradient-to-r from-rose-500 to-red-500 text-white">
+            <CardTitle className="flex items-center gap-2 text-lg">
+              <Store className="h-5 w-5" />
+              Seller Applications
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="p-6 bg-gradient-to-br from-rose-50 to-red-50">
+            <div className="space-y-4">
+              <div className="flex items-center justify-between p-3 bg-white rounded-lg shadow-sm">
+                <span className="text-gray-600 font-medium">Pending Review</span>
+                <span className="text-2xl font-bold text-rose-600">{pendingApplicationsCount}</span>
+              </div>
+              <Link href="/admin/merchants?tab=verification">
+                <Button className="w-full bg-gradient-to-r from-rose-500 to-red-500 hover:from-rose-600 hover:to-red-600 shadow-lg">
+                  Review Applications <ArrowRight className="h-4 w-4 ml-2" />
+                </Button>
+              </Link>
+            </div>
+          </CardContent>
+        </Card>
+
         <Card className="border-0 shadow-xl overflow-hidden">
           <CardHeader className="bg-gradient-to-r from-orange-500 to-amber-500 text-white">
             <CardTitle className="flex items-center gap-2 text-lg">
@@ -540,8 +587,8 @@ export default function AdminDashboard() {
                   {recentMerchants.map((merchant) => (
                     <div key={merchant.id} className="flex items-center gap-3 p-3 bg-white rounded-lg shadow-sm hover:shadow-md transition-shadow">
                       {merchant.logo_url ? (
-                        <img 
-                          src={merchant.logo_url} 
+                        <img
+                          src={merchant.logo_url}
                           alt={merchant.name}
                           className="w-12 h-12 rounded-lg object-contain border bg-white"
                           onError={(e) => {
@@ -584,8 +631,8 @@ export default function AdminDashboard() {
                   {recentOffers.map((offer) => (
                     <div key={offer.id} className="flex items-center gap-3 p-3 bg-white rounded-lg shadow-sm hover:shadow-md transition-shadow">
                       {offer.image_url ? (
-                        <img 
-                          src={offer.image_url} 
+                        <img
+                          src={offer.image_url}
                           alt={offer.title}
                           className="w-12 h-12 rounded-lg object-cover border"
                           onError={(e) => {
@@ -614,19 +661,6 @@ export default function AdminDashboard() {
           )}
         </div>
       )}
-      {/* Logout button added here */}
-      <div className="flex justify-center mt-8">
-        <Button
-          onClick={() => {
-            useAuthStore.setState({ user: null, accessToken: null, isAuthenticated: false });
-            router.push("/login");
-          }}
-          variant="destructive"
-          className="px-6 py-3 text-lg font-semibold shadow-md hover:shadow-lg"
-        >
-          Logout
-        </Button>
-      </div>
     </div>
   );
 }

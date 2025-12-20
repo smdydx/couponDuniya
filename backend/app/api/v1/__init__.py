@@ -10,4 +10,5 @@ from . import (
     admin,
     admin_referrals,
     health,
+    seller,
 )

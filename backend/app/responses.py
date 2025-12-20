@@ -146,3 +146,30 @@ def list_response(
         "timestamp": datetime.utcnow().isoformat(),
         "request_id": request_id
     }
+
+
+def error_response(
+    message: str = "An error occurred",
+    error_code: Optional[str] = None,
+    details: Optional[Any] = None,
+    request_id: Optional[str] = None
+) -> dict:
+    """Create a standardized error response.
+    
+    Args:
+        message: Human-readable error message
+        error_code: Machine-readable error code
+        details: Additional error details
+        request_id: Request ID for tracing
+        
+    Returns:
+        Dictionary with standardized error structure
+    """
+    return {
+        "success": False,
+        "message": message,
+        "error_code": error_code,
+        "details": details,
+        "timestamp": datetime.utcnow().isoformat(),
+        "request_id": request_id
+    }

@@ -1,9 +1,13 @@
-from fastapi import APIRouter, Header, HTTPException, Request, Depends, Query, Form
+from fastapi import APIRouter, Header, HTTPException, Request, Depends, Query, Form, UploadFile, File
 from sqlalchemy.orm import Session
 from sqlalchemy import select, func, desc, and_, or_
 from datetime import datetime, timedelta
+from decimal import Decimal
 from typing import Optional
 from math import ceil
+import csv
+import io
+import re
 
 from ...redis_client import cache_invalidate, cache_invalidate_prefix, rk, redis_client, publish
 from ...database import get_db
@@ -26,6 +30,7 @@ class MerchantPayload(BaseModel):
     logo_url: str | None = None
     is_active: bool = True
     is_featured: bool = False
+    is_verified: bool = False
 
 
 class OfferPayload(BaseModel):
@@ -39,12 +44,30 @@ class OfferPayload(BaseModel):
 
 class ProductPayload(BaseModel):
     merchant_id: int
+    category_id: int | None = None
     name: str = Field(..., min_length=1)
     slug: str = Field(..., min_length=1)
+    description: str | None = None
     image_url: str | None = None
     price: float = Field(..., gt=0)
     stock: int = Field(default=0, ge=0)
     is_active: bool = True
+    is_featured: bool = False
+    is_bestseller: bool = False
+
+
+class ProductUpdatePayload(BaseModel):
+    merchant_id: int | None = None
+    category_id: int | None = None
+    name: str | None = None
+    slug: str | None = None
+    description: str | None = None
+    image_url: str | None = None
+    price: float | None = None
+    stock: int | None = None
+    is_active: bool | None = None
+    is_featured: bool | None = None
+    is_bestseller: bool | None = None
 
 
 class ProductVariantPayload(BaseModel):
@@ -77,7 +100,8 @@ def create_merchant(
         description=payload.description,
         logo_url=payload.logo_url,
         is_active=payload.is_active,
-        is_featured=payload.is_featured
+        is_featured=payload.is_featured,
+        is_verified=payload.is_verified
     )
     db.add(merchant)
     db.commit()
@@ -197,6 +221,8 @@ def update_merchant(
     merchant.description = payload.description
     merchant.logo_url = payload.logo_url
     merchant.is_active = payload.is_active
+    merchant.is_featured = payload.is_featured
+    merchant.is_verified = payload.is_verified
 
     db.commit()
     db.refresh(merchant)
@@ -329,32 +355,26 @@ def delete_offer(
 
 @router.post("/products", dependencies=[Depends(require_admin)])
 def create_admin_product(
-    merchant_id: int = Form(...),
-    category_id: int = Form(None),
-    name: str = Form(...),
-    slug: str = Form(...),
-    description: str = Form(None),
-    image_url: str = Form(None),
-    price: float = Form(...),
-    stock: int = Form(0),
-    is_active: bool = Form(True),
+    payload: ProductPayload,
     db: Session = Depends(get_db)
 ):
     """Create a new product"""
-    existing = db.scalar(select(Product).where(Product.slug == slug))
+    existing = db.scalar(select(Product).where(Product.slug == payload.slug))
     if existing:
-        raise HTTPException(status_code=400, detail=f"Product with slug '{slug}' already exists")
+        raise HTTPException(status_code=400, detail=f"Product with slug '{payload.slug}' already exists")
 
     product = Product(
-        merchant_id=merchant_id,
-        category_id=category_id,
-        name=name,
-        slug=slug,
-        description=description,
-        image_url=image_url,
-        price=price,
-        stock=stock,
-        is_active=is_active
+        merchant_id=payload.merchant_id,
+        category_id=payload.category_id,
+        name=payload.name,
+        slug=payload.slug,
+        description=payload.description,
+        image_url=payload.image_url,
+        price=payload.price,
+        stock=payload.stock,
+        is_active=payload.is_active,
+        is_featured=payload.is_featured,
+        is_bestseller=payload.is_bestseller
     )
     db.add(product)
     db.commit()
@@ -372,15 +392,7 @@ def create_admin_product(
 @router.put("/products/{id}", dependencies=[Depends(require_admin)])
 def update_admin_product(
     id: int,
-    merchant_id: int = Form(None),
-    category_id: int = Form(None),
-    name: str = Form(None),
-    slug: str = Form(None),
-    description: str = Form(None),
-    image_url: str = Form(None),
-    price: float = Form(None),
-    stock: int = Form(None),
-    is_active: bool = Form(None),
+    payload: ProductUpdatePayload,
     db: Session = Depends(get_db)
 ):
     """Update a product"""
@@ -388,29 +400,33 @@ def update_admin_product(
     if not product:
         raise HTTPException(status_code=404, detail="Product not found")
 
-    if slug and slug != product.slug:
-        existing = db.scalar(select(Product).where((Product.slug == slug) & (Product.id != id)))
+    if payload.slug and payload.slug != product.slug:
+        existing = db.scalar(select(Product).where((Product.slug == payload.slug) & (Product.id != id)))
         if existing:
-            raise HTTPException(status_code=400, detail=f"Product with slug '{slug}' already exists")
+            raise HTTPException(status_code=400, detail=f"Product with slug '{payload.slug}' already exists")
 
-    if merchant_id is not None:
-        product.merchant_id = merchant_id
-    if category_id is not None:
-        product.category_id = category_id
-    if name is not None:
-        product.name = name
-    if slug is not None:
-        product.slug = slug
-    if description is not None:
-        product.description = description
-    if image_url is not None:
-        product.image_url = image_url
-    if price is not None:
-        product.price = price
-    if stock is not None:
-        product.stock = stock
-    if is_active is not None:
-        product.is_active = is_active
+    if payload.merchant_id is not None:
+        product.merchant_id = payload.merchant_id
+    if payload.category_id is not None:
+        product.category_id = payload.category_id
+    if payload.name is not None:
+        product.name = payload.name
+    if payload.slug is not None:
+        product.slug = payload.slug
+    if payload.description is not None:
+        product.description = payload.description
+    if payload.image_url is not None:
+        product.image_url = payload.image_url
+    if payload.price is not None:
+        product.price = payload.price
+    if payload.stock is not None:
+        product.stock = payload.stock
+    if payload.is_active is not None:
+        product.is_active = payload.is_active
+    if payload.is_featured is not None:
+        product.is_featured = payload.is_featured
+    if payload.is_bestseller is not None:
+        product.is_bestseller = payload.is_bestseller
 
     db.commit()
     db.refresh(product)
@@ -1092,21 +1108,16 @@ def analytics_dashboard(
         logger.info(f"Available products: {available_products}")
 
         # Redis stats
+        from ...redis_client import redis_stats as get_redis_stats
         try:
-            redis_info = redis_client.info()
-            redis_stats = {
-                "connected": True,
-                "keys_count": redis_client.dbsize(),
-                "memory_used": redis_info.get("used_memory_human", "N/A"),
-                "connected_clients": redis_info.get("connected_clients", 0),
-            }
+            redis_stats = get_redis_stats()
             logger.info(f"Redis stats: {redis_stats}")
         except Exception as redis_err:
             logger.error(f"Redis connection error: {redis_err}")
             redis_stats = {
                 "connected": False,
                 "keys_count": 0,
-                "memory_used": "N/A",
+                "memory_used": "0 MB",
                 "connected_clients": 0,
             }
 
@@ -1703,11 +1714,15 @@ def gift_card_statistics(
     total_value = db.scalar(
         select(func.coalesce(func.sum(GiftCard.initial_value), 0))
         .where(GiftCard.is_active == True)
-    ) or 0.0
+    ) or Decimal('0')
 
     redeemed_value = db.scalar(
         select(func.coalesce(func.sum(GiftCard.initial_value - GiftCard.remaining_value), 0))
-    ) or 0.0
+    ) or Decimal('0')
+
+    # Coerce to Decimal safely (handles Decimal, int, float, None)
+    total_value = Decimal(str(total_value))
+    redeemed_value = Decimal(str(redeemed_value))
 
     assigned_cards = db.scalar(
         select(func.count())
@@ -1725,4 +1740,267 @@ def gift_card_statistics(
             "redeemed_value": float(redeemed_value),
             "available_value": float(total_value - redeemed_value)
         }
+    }
+
+
+def _generate_slug(text: str) -> str:
+    """Generate a URL-friendly slug from text"""
+    # Convert to lowercase and replace non-alphanumeric chars with hyphens
+    slug = re.sub(r'[^a-z0-9]+', '-', text.lower()).strip('-')
+    return slug or "untitled"
+
+
+@router.post("/products/bulk", response_model=dict)
+async def bulk_upload_products(
+    file: UploadFile = File(...),
+    db: Session = Depends(get_db),
+    _: bool = Depends(require_admin)
+):
+    """Bulk upload products from CSV"""
+    if not file.filename.lower().endswith('.csv'):
+        raise HTTPException(status_code=400, detail="Only CSV files are supported")
+
+    content = await file.read()
+    try:
+        decoded_content = content.decode('utf-8-sig')
+        reader = csv.DictReader(io.StringIO(decoded_content))
+        rows = list(reader)
+    except Exception as e:
+        raise HTTPException(status_code=400, detail=f"Invalid CSV file: {str(e)}")
+
+    results = {
+        "total": len(rows),
+        "created": 0,
+        "errors": []
+    }
+
+    merchants = {m.name.lower(): m for m in db.scalars(select(Merchant)).all()}
+    categories = {c.name.lower(): c for c in db.scalars(select(Category)).all()}
+
+    for i, row in enumerate(rows):
+        row_num = i + 2
+        try:
+            name = row.get('name')
+            if not name:
+                results['errors'].append(f"Row {row_num}: Missing 'name'")
+                continue
+
+            merchant_name = row.get('merchant')
+            if not merchant_name:
+                results['errors'].append(f"Row {row_num}: Missing 'merchant'")
+                continue
+
+            merchant = merchants.get(merchant_name.lower())
+            if not merchant:
+                results['errors'].append(f"Row {row_num}: Merchant '{merchant_name}' not found")
+                continue
+
+            cat_name = row.get('category')
+            category_id = None
+            if cat_name:
+                category = categories.get(cat_name.lower())
+                if not category:
+                    slug = _generate_slug(cat_name)
+                    original_slug = slug
+                    counter = 1
+                    while slug in [c.slug for c in categories.values()]:
+                        slug = f"{original_slug}-{counter}"
+                        counter += 1
+                    
+                    category = Category(name=cat_name, slug=slug, is_active=True)
+                    db.add(category)
+                    db.flush()
+                    categories[cat_name.lower()] = category
+                
+                category_id = category.id
+
+            slug = row.get('slug') or _generate_slug(name)
+            existing = db.scalar(select(Product).where(Product.slug == slug))
+            if existing:
+                original_slug = slug
+                counter = 1
+                while db.scalar(select(Product).where(Product.slug == slug)):
+                    slug = f"{original_slug}-{counter}"
+                    counter += 1
+
+            product = Product(
+                merchant_id=merchant.id,
+                category_id=category_id,
+                name=name,
+                slug=slug,
+                description=row.get('description'),
+                image_url=row.get('image_url'),
+                price=float(row.get('price', 0) or 0),
+                stock=int(row.get('stock', 0) or 0),
+                is_active=str(row.get('is_active', 'true')).lower() == 'true',
+                is_featured=str(row.get('is_featured', 'false')).lower() == 'true',
+                is_bestseller=str(row.get('is_bestseller', 'false')).lower() == 'true'
+            )
+            db.add(product)
+            results['created'] += 1
+
+        except Exception as e:
+            results['errors'].append(f"Row {row_num}: {str(e)}")
+
+    db.commit()
+    cache_invalidate_prefix(rk("cache", "products"))
+    return {"success": True, "data": results}
+
+
+@router.post("/merchants/bulk", response_model=dict)
+async def bulk_upload_merchants(
+    file: UploadFile = File(...),
+    db: Session = Depends(get_db),
+    _: bool = Depends(require_admin)
+):
+    """Bulk upload merchants from CSV"""
+    if not file.filename.lower().endswith('.csv'):
+        raise HTTPException(status_code=400, detail="Only CSV files are supported")
+
+    content = await file.read()
+    try:
+        decoded_content = content.decode('utf-8-sig')
+        reader = csv.DictReader(io.StringIO(decoded_content))
+        rows = list(reader)
+    except Exception as e:
+        raise HTTPException(status_code=400, detail=f"Invalid CSV file: {str(e)}")
+
+    results = {
+        "total": len(rows),
+        "created": 0,
+        "errors": []
+    }
+
+    existing_slugs = set(db.scalars(select(Merchant.slug)).all())
+
+    for i, row in enumerate(rows):
+        row_num = i + 2
+        try:
+            name = row.get('name')
+            if not name:
+                results['errors'].append(f"Row {row_num}: Missing 'name'")
+                continue
+
+            slug = row.get('slug') or _generate_slug(name)
+            if slug in existing_slugs:
+                 original_slug = slug
+                 counter = 1
+                 while slug in existing_slugs:
+                     slug = f"{original_slug}-{counter}"
+                     counter += 1
+            existing_slugs.add(slug)
+
+            merchant = Merchant(
+                name=name,
+                slug=slug,
+                website_url=row.get('website_url'),
+                affiliate_url=row.get('affiliate_url'),
+                description=row.get('description'),
+                is_active=str(row.get('is_active', 'true')).lower() == 'true',
+                is_featured=str(row.get('is_featured', 'false')).lower() == 'true',
+                is_verified=str(row.get('is_verified', 'false')).lower() == 'true'
+            )
+            db.add(merchant)
+            results['created'] += 1
+
+        except Exception as e:
+            results['errors'].append(f"Row {row_num}: {str(e)}")
+
+    db.commit()
+    cache_invalidate_prefix(rk("cache", "merchants"))
+    return {"success": True, "data": results}
+
+
+@router.post("/gift-cards/bulk", response_model=dict)
+async def bulk_upload_gift_cards(
+    file: UploadFile = File(...),
+    db: Session = Depends(get_db),
+    _: bool = Depends(require_admin)
+):
+    """Bulk upload gift card codes"""
+    if not file.filename.lower().endswith('.csv'):
+        raise HTTPException(status_code=400, detail="Only CSV files are supported")
+
+    content = await file.read()
+    try:
+        decoded_content = content.decode('utf-8-sig')
+        reader = csv.DictReader(io.StringIO(decoded_content))
+        rows = list(reader)
+    except Exception as e:
+        raise HTTPException(status_code=400, detail=f"Invalid CSV file: {str(e)}")
+
+    results = {
+        "total": len(rows),
+        "created": 0,
+        "errors": []
+    }
+
+    for i, row in enumerate(rows):
+        row_num = i + 2
+        try:
+            code = row.get('code')
+            if not code:
+                results['errors'].append(f"Row {row_num}: Missing 'code'")
+                continue
+
+            if db.scalar(select(GiftCard).where(GiftCard.code == code)):
+                results['errors'].append(f"Row {row_num}: Code '{code}' already exists")
+                continue
+
+            value = float(row.get('value', 0) or 0)
+            expires_in = int(row.get('expires_in_days', 0) or 0)
+            expires_at = datetime.utcnow() + timedelta(days=expires_in) if expires_in > 0 else None
+
+            card = GiftCard(
+                code=code,
+                initial_value=value,
+                remaining_value=value,
+                expires_at=expires_at,
+                is_active=True
+            )
+            db.add(card)
+            results['created'] += 1
+
+        except Exception as e:
+            results['errors'].append(f"Row {row_num}: {str(e)}")
+
+    db.commit()
+    return {"success": True, "data": results}# Add at the end of admin.py file
+
+class AdminSettings(BaseModel):
+    site_name: str | None = None
+    site_description: str | None = None
+
+
+# In-memory settings storage (could be database table in future)
+_settings_cache = {
+    "site_name": "BIDUA Coupons",
+    "site_description": "Save with Coupons, Cashback & Gift Cards"
+}
+
+
+@router.get("/settings")
+def get_admin_settings(_: bool = Depends(require_admin)):
+    """Get admin settings"""
+    return {
+        "success": True,
+        "data": _settings_cache
+    }
+
+
+@router.post("/settings")
+def update_admin_settings(
+    settings: AdminSettings,
+    _: bool = Depends(require_admin)
+):
+    """Update admin settings"""
+    if settings.site_name is not None:
+        _settings_cache["site_name"] = settings.site_name
+    if settings.site_description is not None:
+        _settings_cache["site_description"] = settings.site_description
+    
+    return {
+        "success": True,
+        "message": "Settings updated successfully",
+        "data": _settings_cache
     }

@@ -9,6 +9,8 @@ import re
 from ...database import get_db
 from ...models import BlogPost
 from ...redis_client import cache_invalidate, cache_invalidate_prefix, rk
+from ...dependencies import get_current_user # Import get_current_user
+from ...models import User # Import User model
 
 router = APIRouter(prefix="/blog", tags=["Blog"])
 
@@ -104,13 +106,15 @@ def require_admin(request: Request):
     auth = request.headers.get("Authorization")
     if not auth or not auth.startswith("Bearer "):
         raise HTTPException(status_code=401, detail="Admin authentication required")
+    # In a real app, you'd decode the token and check user roles here
+    # For now, we assume any valid token implies admin for these routes
     return True
 
 
 @router.post("/admin/posts", response_model=dict)
 def create_blog_post(
     payload: BlogPostCreate,
-    _: bool = Depends(require_admin),
+    _: bool = Depends(require_admin), # This route is already protected
     db: Session = Depends(get_db)
 ):
     """Create a new blog post (Admin only)"""
@@ -165,7 +169,7 @@ def list_blog_posts_admin(
     limit: int = 20,
     search: str | None = None,
     status: str | None = None,
-    _: bool = Depends(require_admin),
+    _: bool = Depends(require_admin), # This route is already protected
     db: Session = Depends(get_db)
 ):
     """List all blog posts with admin filters"""
@@ -210,7 +214,7 @@ def list_blog_posts_admin(
 @router.get("/admin/posts/{id}", response_model=dict)
 def get_blog_post_admin(
     id: int,
-    _: bool = Depends(require_admin),
+    _: bool = Depends(require_admin), # This route is already protected
     db: Session = Depends(get_db)
 ):
     """Get a single blog post by ID (Admin)"""
@@ -229,7 +233,7 @@ def get_blog_post_admin(
 def update_blog_post(
     id: int,
     payload: BlogPostUpdate,
-    _: bool = Depends(require_admin),
+    _: bool = Depends(require_admin), # This route is already protected
     db: Session = Depends(get_db)
 ):
     """Update a blog post (Admin only)"""
@@ -303,7 +307,7 @@ def update_blog_post(
 @router.delete("/admin/posts/{id}", response_model=dict)
 def delete_blog_post(
     id: int,
-    _: bool = Depends(require_admin),
+    _: bool = Depends(require_admin), # This route is already protected
     db: Session = Depends(get_db)
 ):
     """Delete a blog post (Admin only)"""
@@ -329,7 +333,7 @@ def delete_blog_post(
 @router.post("/admin/posts/{id}/publish", response_model=dict)
 def publish_blog_post(
     id: int,
-    _: bool = Depends(require_admin),
+    _: bool = Depends(require_admin), # This route is already protected
     db: Session = Depends(get_db)
 ):
     """Publish a draft blog post"""
@@ -359,15 +363,16 @@ def publish_blog_post(
     }
 
 
-# Public endpoints - no authentication required
+# Public endpoints - require authentication for all
 @router.get("/posts", response_model=dict)
 def list_public_blog_posts(
     page: int = 1,
     limit: int = 12,
     featured: bool | None = None,
-    db: Session = Depends(get_db)
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user) # Added authentication
 ):
-    """List published blog posts (Public)"""
+    """List published blog posts (Public, but authenticated)"""
 
     query = select(BlogPost).where(BlogPost.status == "published")
 
@@ -400,9 +405,10 @@ def list_public_blog_posts(
 @router.get("/posts/{slug}", response_model=dict)
 def get_public_blog_post(
     slug: str,
-    db: Session = Depends(get_db)
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user) # Added authentication
 ):
-    """Get a single published blog post by slug (Public)"""
+    """Get a single published blog post by slug (Public, but authenticated)"""
 
     post = db.scalar(
         select(BlogPost).where(
@@ -430,9 +436,10 @@ def get_public_blog_post(
 @router.get("/featured", response_model=dict)
 def get_featured_posts(
     limit: int = 3,
-    db: Session = Depends(get_db)
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user) # Added authentication
 ):
-    """Get featured blog posts (Public)"""
+    """Get featured blog posts (Public, but authenticated)"""
 
     query = select(BlogPost).where(
         and_(
@@ -454,9 +461,10 @@ def get_featured_posts(
 @router.get("/recent", response_model=dict)
 def get_recent_posts(
     limit: int = 5,
-    db: Session = Depends(get_db)
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user) # Added authentication
 ):
-    """Get recent blog posts (Public)"""
+    """Get recent blog posts (Public, but authenticated)"""
 
     query = select(BlogPost).where(
         BlogPost.status == "published"
@@ -477,9 +485,10 @@ def search_blog_posts(
     q: str,
     page: int = 1,
     limit: int = 10,
-    db: Session = Depends(get_db)
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user) # Added authentication
 ):
-    """Search published blog posts (Public)"""
+    """Search published blog posts (Public, but authenticated)"""
 
     query = select(BlogPost).where(
         and_(

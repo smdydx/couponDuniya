@@ -16,12 +16,12 @@ const faqCategories = [
     title: "General",
     faqs: [
       {
-        question: "What is BIDUA Coupon?",
+        question: "What is Leliance  Coupon?",
         answer:
-          "BIDUA Coupon is India's leading platform for coupons, deals, cashback, and digital gift cards. We help millions of users save money on their online purchases by providing verified coupon codes and exclusive deals from over 500 partner merchants.",
+          "Leliance  Coupon is India's leading platform for coupons, deals, cashback, and digital gift cards. We help millions of users save money on their online purchases by providing verified coupon codes and exclusive deals from over 500 partner merchants.",
       },
       {
-        question: "Is BIDUA Coupon free to use?",
+        question: "Is Leliance  Coupon free to use?",
         answer:
           "Yes! Using our coupons and deals is completely free. We earn a commission from merchants when you make a purchase using our links, which allows us to offer you cashback rewards.",
       },
@@ -194,7 +194,7 @@ export default function FAQPage() {
           </p>
           <div className="flex flex-wrap justify-center gap-4">
             <Button asChild>
-              <Link href="mailto:support@biduacoupon.com">Email Support</Link>
+              <Link href="mailto:support@Leliance coupon.com">Email Support</Link>
             </Button>
             <Button variant="outline" asChild>
               <Link href="tel:+911800123456">Call: 1800-123-456</Link>

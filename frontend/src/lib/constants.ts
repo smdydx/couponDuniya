@@ -4,7 +4,7 @@ export const API_BASE_URL = typeof window === 'undefined'
   ? (process.env.NEXT_PUBLIC_API_URL || 'http://127.0.0.1:8000/api/v1')
   : '/api';
 
-export const SITE_NAME = 'BIDUA Coupons';
+export const SITE_NAME = 'Leliance Coupons';
 export const SITE_DESCRIPTION = 'Save money with verified coupons, cashback offers, and discounted gift cards';
 
 export const CASHBACK_TYPES = {
@@ -75,9 +75,12 @@ export const ROUTES = {
   home: '/',
   login: '/login',
   register: '/register',
+  verifyEmail: '/verify-email',
   forgotPassword: '/forgot-password',
   resetPassword: '/reset-password',
   verifyOtp: '/verify-otp',
+  setPassword: '/set-password',
+  becomeSeller: '/become-seller',
   merchants: '/merchants',
   merchantDetail: (slug: string) => `/merchants/${slug}`,
   coupons: '/coupons',
@@ -107,6 +110,7 @@ export const ROUTES = {
     users: '/admin/users',
     analytics: '/admin/analytics',
     withdrawals: '/admin/withdrawals',
+    cashback: '/admin/cashback',
     queues: '/admin/queues',
     giftCards: '/admin/gift-cards',
     cms: '/admin/cms',

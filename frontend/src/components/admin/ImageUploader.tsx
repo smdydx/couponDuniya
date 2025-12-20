@@ -24,10 +24,21 @@ function getBackendUrl(): string {
       return `https://${hostname.replace('-00-', '-8000-00-')}`;
     }
   }
-  return process.env.NEXT_PUBLIC_API_URL?.replace('/api/v1', '') || 'http://localhost:8000';
+  return process.env.NEXT_PUBLIC_API_URL?.replace('/api/v1', '') || 'https://api.leliance.com';
 }
 
-const API_BASE = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000/api/v1";
+function getDisplayUrl(url: string): string {
+  if (!url) return '';
+  if (url.startsWith('http://') || url.startsWith('https://')) {
+    return url;
+  }
+  if (url.startsWith('/images/') || url.startsWith('/uploads/')) {
+    return `${getBackendUrl()}${url}`;
+  }
+  return url;
+}
+
+const API_BASE = process.env.NEXT_PUBLIC_API_URL || "https://api.leliance.com/api/v1";
 
 export function ImageUploader({
   value,
@@ -112,10 +123,7 @@ export function ImageUploader({
       }
 
       const data = await response.json();
-      const backendUrl = getBackendUrl();
-      const imageUrl = data.data.type === "local" 
-        ? `${backendUrl}${data.data.url}` 
-        : data.data.url;
+      const imageUrl = data.data.url;
       onChange(imageUrl);
     } catch (err: any) {
       setError(err.message || "Failed to upload image");
@@ -175,7 +183,7 @@ export function ImageUploader({
         <div className="relative group">
           <div className={cn("relative overflow-hidden rounded-lg border bg-white flex items-center justify-center", aspectClasses[aspectRatio])}>
             <img
-              src={value}
+              src={getDisplayUrl(value)}
               alt="Uploaded image"
               className={`rounded-lg ${
                 aspectRatio === "banner" ? "h-full w-full object-cover" : "max-h-full max-w-full object-contain p-2"

@@ -16,7 +16,7 @@ from ...schemas.wallet_transaction import (
     WithdrawalStatusUpdate,
     CashbackConversionRequest
 )
-from ...dependencies import get_current_user
+from ...dependencies import get_current_user, get_current_user_unverified
 from ...queue import push_email_job, push_sms_job
 from ...config import get_settings
 from ...redis_client import redis_client
@@ -38,7 +38,7 @@ def release_lock(key: str):
 
 @router.get("/", response_model=dict)
 def get_wallet_summary(
-    current_user: User = Depends(get_current_user),
+    current_user: User = Depends(get_current_user_unverified),
     db: Session = Depends(get_db)
 ):
     """Get wallet balance and summary"""
@@ -79,7 +79,7 @@ def get_wallet_summary(
 @router.get("/transactions", response_model=dict)
 def list_wallet_transactions(
     filters: WalletTransactionFilters = Depends(),
-    current_user: User = Depends(get_current_user),
+    current_user: User = Depends(get_current_user_unverified),
     db: Session = Depends(get_db)
 ):
     """Get paginated wallet transaction history"""
@@ -352,7 +352,7 @@ def list_withdrawals(
     status_filter: Optional[str] = None,
     page: int = 1,
     limit: int = 20,
-    current_user: User = Depends(get_current_user),
+    current_user: User = Depends(get_current_user_unverified),
     db: Session = Depends(get_db)
 ):
     """Get user's withdrawal history"""

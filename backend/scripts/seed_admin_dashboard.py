@@ -1,4 +1,3 @@
-
 """
 Seed script to add test data for admin dashboard
 """
@@ -9,18 +8,14 @@ from datetime import datetime, timedelta
 # Add backend to path
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
-from sqlalchemy import create_engine
-from sqlalchemy.orm import sessionmaker
 from app.models import User, Merchant, Offer, Product, Order, WalletBalance
-from app.database import Base
+from app.database import SessionLocal, engine, Base
 from app.security import get_password_hash
 
-# Database URL
-DATABASE_URL = "sqlite:///./coupons.db"
+# Create tables if they don't exist
+Base.metadata.create_all(bind=engine)
 
-# Create engine and session
-engine = create_engine(DATABASE_URL, connect_args={"check_same_thread": False})
-SessionLocal = sessionmaker(bind=engine)
+# Create session
 db = SessionLocal()
 
 def seed_data():

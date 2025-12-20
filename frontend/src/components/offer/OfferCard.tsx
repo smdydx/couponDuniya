@@ -37,11 +37,11 @@ export function OfferCard({ offer, onClickTrack }: OfferCardProps) {
   };
 
   return (
-    <Card className="group relative overflow-hidden transition-all duration-300 hover:shadow-xl hover:shadow-purple-100 hover:border-purple-300 border border-gray-100 h-full flex flex-col bg-white rounded-xl">
+    <Card className="group relative overflow-hidden transition-all duration-300 hover:shadow-2xl hover:shadow-white hover:border-purple-300 border border-gray-100 h-full flex flex-col bg-white rounded-xl">
       {/* Badges */}
       <div className="absolute right-2 top-2 z-10 flex flex-col gap-1">
         {offer.is_exclusive && (
-          <Badge variant="exclusive" className="text-[9px] font-semibold shadow-lg backdrop-blur-sm bg-gradient-to-r from-purple-600 to-indigo-600 px-2 py-0.5 border-0">
+          <Badge variant="exclusive" className="text-[9px] font-semibold shadow-lg backdrop-blur-sm bg-gradient-to-r from-purple-600 to-indigo-600 text-white px-2 py-0.5 border-0">
             Exclusive
           </Badge>
         )}
@@ -55,13 +55,13 @@ export function OfferCard({ offer, onClickTrack }: OfferCardProps) {
 
       <CardHeader className="p-0">
         {/* Offer/Merchant Image - Full Display without Cropping */}
-        <div className="relative w-full aspect-square overflow-hidden bg-gradient-to-br from-gray-50 via-white to-gray-50 rounded-t-xl">
-          <div className="w-full h-full p-3 sm:p-4 flex items-center justify-center">
-            {offer.merchant?.logo_url ? (
+        <div className="relative w-full aspect-video overflow-hidden bg-gradient-to-br from-gray-50 via-white to-gray-50 rounded-t-xl">
+          <div className="w-full h-full p-2 sm:p-2.5 flex items-center justify-center">
+            {offer.image_url || offer.merchant?.logo_url ? (
               <img
-                src={offer.merchant.logo_url}
-                alt={offer.merchant.name}
-                className="max-w-full max-h-full object-contain transition-transform duration-300 group-hover:scale-110"
+                src={offer.image_url || offer.merchant?.logo_url || ""}
+                alt={offer.merchant?.name || offer.title}
+                className="max-w-full max-h-full object-contain transition-transform duration-300 group-hover:scale-110 rounded-lg"
                 onError={(e) => {
                   const target = e.currentTarget;
                   target.style.display = 'none';
@@ -85,40 +85,40 @@ export function OfferCard({ offer, onClickTrack }: OfferCardProps) {
         </div>
       </CardHeader>
 
-      <CardContent className="p-3 sm:p-4 flex-1 flex flex-col gap-1.5 sm:gap-2 border-t border-gray-100">
+      <CardContent className="p-2 sm:p-2.5 flex-1 flex flex-col gap-1 sm:gap-1.5 border-t border-gray-100">
         {/* Merchant Name */}
         {offer.merchant && (
           <Link
             href={ROUTES.merchantDetail(offer.merchant.slug)}
-            className="text-[10px] sm:text-[11px] text-gray-500 hover:text-purple-600 font-medium truncate block transition-colors"
+            className="text-[9px] sm:text-[10px] text-gray-500 hover:text-purple-600 font-medium truncate block transition-colors"
           >
             {offer.merchant.name}
           </Link>
         )}
 
         {/* Offer Title */}
-        <h3 className="font-semibold text-[11px] sm:text-xs leading-tight line-clamp-2 group-hover:text-purple-600 transition-colors min-h-[28px] sm:min-h-[32px] text-gray-800">
+        <h3 className="font-semibold text-[10px] sm:text-[11px] leading-tight line-clamp-2 group-hover:text-purple-600 transition-colors min-h-[24px] sm:min-h-[28px] text-gray-800">
           {offer.title}
         </h3>
 
         {/* Description */}
         {offer.description && (
-          <p className="text-[9px] sm:text-[10px] text-gray-500 line-clamp-2 leading-relaxed hidden sm:block">
+          <p className="text-[8px] sm:text-[9px] text-gray-500 line-clamp-1 leading-relaxed hidden sm:block">
             {offer.description}
           </p>
         )}
 
         {/* Cashback/Discount Info */}
-        <div className="flex flex-wrap gap-1 sm:gap-1.5 mt-auto">
+        <div className="flex flex-wrap gap-0.5 sm:gap-1 mt-auto">
           {offer.discount_value && (
-            <Badge variant="info" className="text-[9px] sm:text-[10px] px-1.5 sm:px-2 py-0.5 font-semibold shadow-sm bg-gradient-to-r from-blue-500 to-cyan-500 text-white border-0">
+            <Badge variant="info" className="text-[8px] sm:text-[9px] px-1 sm:px-1.5 py-0 font-semibold shadow-sm bg-gradient-to-r from-blue-500 to-cyan-500 text-white border-0">
               {offer.discount_type === "percentage"
                 ? `${offer.discount_value}% OFF`
                 : `${formatCurrency(offer.discount_value)} OFF`}
             </Badge>
           )}
           {offer.cashback_value && (
-            <Badge className="bg-gradient-to-r from-purple-500 to-indigo-500 text-white hover:from-purple-600 hover:to-indigo-600 text-[9px] sm:text-[10px] px-1.5 sm:px-2 py-0.5 font-semibold shadow-sm border-0">
+            <Badge className="bg-gradient-to-r from-purple-500 to-indigo-500 text-white hover:from-purple-600 hover:to-indigo-600 text-[8px] sm:text-[9px] px-1 sm:px-1.5 py-0 font-semibold shadow-sm border-0">
               {offer.cashback_type === "percentage"
                 ? `${offer.cashback_value}% Cashback`
                 : `${formatCurrency(offer.cashback_value)} Cashback`}
@@ -127,51 +127,52 @@ export function OfferCard({ offer, onClickTrack }: OfferCardProps) {
         </div>
       </CardContent>
 
-      <CardFooter className="p-2 sm:p-3 pt-0">
+      <CardFooter className="p-1.5 sm:p-2 pt-0">
         {showCode && offer.offer_type === "code" && offer.coupon_code ? (
-          <div className="w-full space-y-2">
-            <div className="flex items-center gap-1.5 sm:gap-2 p-1.5 sm:p-2 bg-gradient-to-r from-purple-50 to-indigo-50 border-2 border-dashed border-purple-300 rounded-lg">
-              <code className="flex-1 text-center font-bold text-[10px] sm:text-[11px] text-purple-700 tracking-wider">
+          <div className="w-full space-y-1">
+            <div className="flex items-center gap-1 sm:gap-1.5 p-1 sm:p-1.5 bg-gradient-to-r from-purple-50 to-indigo-50 border-2 border-dashed border-purple-300 rounded-lg">
+              <code className="flex-1 text-center font-bold text-[8px] sm:text-[9px] text-purple-700 tracking-wider">
                 {offer.coupon_code}
               </code>
               <Button
                 size="sm"
                 variant="outline"
                 onClick={handleCopyCode}
-                className="shrink-0 h-6 sm:h-7 text-[9px] sm:text-[10px] px-1.5 sm:px-2 border-purple-300 hover:bg-purple-100"
+                className="shrink-0 h-5 sm:h-6 text-[8px] sm:text-[9px] px-1 sm:px-1.5 border-purple-300 hover:bg-purple-100"
               >
                 {copied ? (
                   <>
-                    <Check className="h-2.5 w-2.5 sm:h-3 sm:w-3 mr-0.5 sm:mr-1" />
-                    Copied
+                    <Check className="h-2 w-2 sm:h-2.5 sm:w-2.5 mr-0 sm:mr-0.5" />
+                    <span className="hidden sm:inline">Copied</span>
                   </>
                 ) : (
                   <>
-                    <Copy className="h-2.5 w-2.5 sm:h-3 sm:w-3 mr-0.5 sm:mr-1" />
-                    Copy
+                    <Copy className="h-2 w-2 sm:h-2.5 sm:w-2.5 mr-0 sm:mr-0.5" />
+                    <span className="hidden sm:inline">Copy</span>
                   </>
                 )}
               </Button>
             </div>
             <Button
-              className="w-full gap-1 sm:gap-1.5 font-semibold text-[10px] sm:text-[11px] h-8 sm:h-9 bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-700 hover:to-indigo-700 shadow-md"
+              className="w-full gap-0.5 sm:gap-1 font-semibold text-[8px] sm:text-[9px] h-7 sm:h-8 bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-700 hover:to-indigo-700 shadow-md"
               onClick={() => window.open(offer.affiliate_url, "_blank")}
             >
               Go to Store
-              <ExternalLink className="h-2.5 w-2.5 sm:h-3 sm:w-3" />
+              <ExternalLink className="h-2 w-2 sm:h-2.5 sm:w-2.5" />
             </Button>
           </div>
         ) : (
-          <Button className="w-full gap-1 sm:gap-1.5 font-semibold text-[10px] sm:text-[11px] h-8 sm:h-9 bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-700 hover:to-indigo-700 shadow-md transition-all duration-300 hover:shadow-lg" onClick={handleClick}>
+          <Button className="w-full gap-0.5 sm:gap-1 font-semibold text-[8px] sm:text-[9px] h-7 sm:h-8 bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-700 hover:to-indigo-700 shadow-md transition-all duration-300 hover:shadow-lg" onClick={handleClick}>
             {offer.offer_type === "code" ? (
               <>
-                <Tag className="h-2.5 w-2.5 sm:h-3 sm:w-3" />
-                Get Code
+                <Tag className="h-2 w-2 sm:h-2.5 sm:w-2.5" />
+                <span className="hidden sm:inline">Get Code</span>
+                <span className="sm:hidden">Code</span>
               </>
             ) : (
               <>
                 Get Deal
-                <ExternalLink className="h-2.5 w-2.5 sm:h-3 sm:w-3" />
+                <ExternalLink className="h-2 w-2 sm:h-2.5 sm:w-2.5" />
               </>
             )}
           </Button>

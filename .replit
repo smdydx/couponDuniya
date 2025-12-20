@@ -1,10 +1,11 @@
-modules = ["nodejs-20", "python-3.11", "bash", "web"]
+modules = ["nodejs-20", "python-3.11", "web", "postgresql-16"]
 [agent]
 expertMode = true
+integrations = ["twilio:1.0.0"]
 
 [nix]
 channel = "stable-25_05"
-packages = ["cargo", "freetype", "gcc", "glibc", "lcms2", "libiconv", "libimagequant", "libjpeg", "libtiff", "libwebp", "libxcrypt", "openjpeg", "postgresql", "rustc", "tcl", "tk", "zlib"]
+packages = ["cargo", "freetype", "gcc", "glibc", "jq", "lcms2", "libiconv", "libimagequant", "libjpeg", "libpq", "libtiff", "libwebp", "libxcrypt", "openjpeg", "postgresql", "rustc", "tcl", "tk", "zlib"]
 
 [userenv]
 
@@ -19,8 +20,7 @@ SMS_ENABLED = "False"
 EMAIL_ENABLED = "False"
 DEBUG = "True"
 APP_NAME = "CouponAli API"
-DATABASE_URL = "sqlite:///./couponali.db"
-NEXT_PUBLIC_API_URL = "/backend-api"
+NEXT_PUBLIC_API_URL = "http://127.0.0.1:8000"
 GOOGLE_REDIRECT_URI = "https://b9783ea6-b2c7-4447-9b9b-72c7de8af1ea-00-2kvvw7zoy5j1u.riker.replit.dev/backend-api/social/google/callback"
 FRONTEND_URL = "https://b9783ea6-b2c7-4447-9b9b-72c7de8af1ea-00-2kvvw7zoy5j1u.riker.replit.dev"
 
@@ -49,20 +49,20 @@ outputType = "webview"
 
 [[workflows.workflow.tasks]]
 task = "shell.exec"
-args = "cd frontend && npm run dev"
+args = "cd frontend && pnpm run dev"
 waitForPort = 5000
 
 [[workflows.workflow]]
 name = "Backend"
 author = "agent"
 
-[[workflows.workflow.tasks]]
-task = "shell.exec"
-args = "cd backend && uvicorn app.main:app --host 0.0.0.0 --port 8000 --reload"
-waitForPort = 8000
-
 [workflows.workflow.metadata]
 outputType = "console"
+
+[[workflows.workflow.tasks]]
+task = "shell.exec"
+args = "cd backend && python -m uvicorn app.main:app --host 0.0.0.0 --port 8000 --reload"
+waitForPort = 8000
 
 [[ports]]
 localPort = 5000
@@ -72,15 +72,8 @@ externalPort = 80
 localPort = 8000
 externalPort = 8000
 
-[[ports]]
-localPort = 38079
-externalPort = 3001
-
-[[ports]]
-localPort = 43687
-externalPort = 3000
-
 [deployment]
 deploymentTarget = "static"
 build = ["bash", "-c", "cd frontend && npm run build && npm run export || npx next build"]
 publicDir = "frontend/out"
+run = ["sh", "-c", "cd backend && uvicorn app.main:app --host 0.0.0.0 --port 8000 --workers 4"]

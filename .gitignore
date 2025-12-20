@@ -177,6 +177,9 @@ Thumbs.db
 .idea/
 *.sublime-*
 
+# Replit agent state files
+.local/
+
 # Logs
 logs/
 *.log
@@ -187,4 +190,4 @@ yarn-error.log*
 # Temporary files
 tmp/
 temp/
-*.tmp
+*.tmp.local/
