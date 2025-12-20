@@ -118,11 +118,11 @@ export function Footer() {
               </li>
               <li>
                 <a
-                  href="mailto:support@biduacoupons.com"
+                  href="mailto:support@Leliance coupons.com"
                   className="flex items-center gap-2 text-muted-foreground hover:text-primary"
                 >
                   <Mail className="h-4 w-4" />
-                  support@biduacoupons.com
+                  support@Leliance coupons.com
                 </a>
               </li>
             </ul>

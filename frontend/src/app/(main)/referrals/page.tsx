@@ -87,7 +87,7 @@ export default function ReferralsPage() {
   };
 
   const handleShare = (platform: string) => {
-    const message = `Sign up on BIDUA Coupons using my referral code ${referralCode} and get ₹25 bonus! ${referralLink}`;
+    const message = `Sign up on Leliance  Coupons using my referral code ${referralCode} and get ₹25 bonus! ${referralLink}`;
 
     switch (platform) {
       case "whatsapp":

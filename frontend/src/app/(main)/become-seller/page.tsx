@@ -261,7 +261,7 @@ export default function BecomeSellerPage() {
                   Join 500+ Sellers
                 </Badge>
                 <h1 className="text-4xl font-bold tracking-tight sm:text-5xl md:text-6xl drop-shadow-lg">
-                  Sell on BIDUA
+                  Sell on Leliance
                 </h1>
                 <p className="mt-6 text-lg text-white/90 sm:text-xl">
                   Partner with us to reach millions of customers. List your coupons, deals, and offers on India's fastest growing cashback platform.
@@ -395,7 +395,7 @@ export default function BecomeSellerPage() {
               </div>
               <CardTitle className="text-2xl font-bold">Seller Registration</CardTitle>
               <CardDescription className="text-purple-100">
-                Complete 3 steps to start selling on BIDUA
+                Complete 3 steps to start selling on Leliance
               </CardDescription>
             </div>
 

@@ -16,9 +16,9 @@ export default function PrivacyPage() {
           <section>
             <h2 className="text-xl font-semibold">1. Introduction</h2>
             <p className="text-muted-foreground">
-              BIDUA Industries Pvt. Ltd. (&quot;we,&quot; &quot;our,&quot; or &quot;us&quot;) is committed to
+              Leliance  Industries Pvt. Ltd. (&quot;we,&quot; &quot;our,&quot; or &quot;us&quot;) is committed to
               protecting your privacy. This Privacy Policy explains how we collect,
-              use, disclose, and safeguard your information when you use the BIDUA
+              use, disclose, and safeguard your information when you use the Leliance
               Coupon platform.
             </p>
           </section>
@@ -128,7 +128,7 @@ export default function PrivacyPage() {
                 <li>Withdraw consent for data processing</li>
               </ul>
               <p>
-                To exercise these rights, contact us at privacy@biduacoupon.com.
+                To exercise these rights, contact us at privacy@Leliance coupon.com.
               </p>
             </div>
           </section>
@@ -185,8 +185,8 @@ export default function PrivacyPage() {
             <div className="text-muted-foreground">
               <p>For privacy-related inquiries, contact our Data Protection Officer:</p>
               <p className="mt-2">
-                BIDUA Industries Pvt. Ltd.<br />
-                Email: privacy@biduacoupon.com<br />
+                Leliance  Industries Pvt. Ltd.<br />
+                Email: privacy@Leliance coupon.com<br />
                 Phone: 1800-123-456<br />
                 Address: 123 Tech Park, Bangalore, Karnataka 560001
               </p>
@@ -202,7 +202,7 @@ export default function PrivacyPage() {
               </p>
               <p className="mt-2">
                 Name: Rajesh Kumar<br />
-                Email: grievance@biduacoupon.com<br />
+                Email: grievance@Leliance coupon.com<br />
                 Response Time: Within 24 hours on working days
               </p>
             </div>

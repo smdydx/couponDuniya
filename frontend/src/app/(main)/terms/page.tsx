@@ -16,7 +16,7 @@ export default function TermsPage() {
           <section>
             <h2 className="text-xl font-semibold">1. Acceptance of Terms</h2>
             <p className="text-muted-foreground">
-              By accessing and using BIDUA Coupon (&quot;the Platform&quot;), you accept and
+              By accessing and using Leliance  Coupon (&quot;the Platform&quot;), you accept and
               agree to be bound by the terms and provision of this agreement. If you
               do not agree to abide by these terms, please do not use this service.
             </p>
@@ -25,7 +25,7 @@ export default function TermsPage() {
           <section>
             <h2 className="text-xl font-semibold">2. Description of Service</h2>
             <p className="text-muted-foreground">
-              BIDUA Coupon provides a platform for users to discover coupon codes,
+              Leliance  Coupon provides a platform for users to discover coupon codes,
               deals, cashback offers, and purchase digital gift cards. We act as an
               intermediary between users and merchant partners. We do not guarantee
               the availability, accuracy, or validity of any coupon or deal listed on
@@ -104,8 +104,8 @@ export default function TermsPage() {
           <section>
             <h2 className="text-xl font-semibold">8. Intellectual Property</h2>
             <p className="text-muted-foreground">
-              All content on BIDUA Coupon, including logos, text, graphics, and
-              software, is the property of BIDUA Industries or its licensors and is
+              All content on Leliance  Coupon, including logos, text, graphics, and
+              software, is the property of Leliance  Industries or its licensors and is
               protected by intellectual property laws. You may not use, reproduce,
               or distribute any content without prior written permission.
             </p>
@@ -114,7 +114,7 @@ export default function TermsPage() {
           <section>
             <h2 className="text-xl font-semibold">9. Limitation of Liability</h2>
             <p className="text-muted-foreground">
-              BIDUA Coupon and its affiliates shall not be liable for any indirect,
+              Leliance  Coupon and its affiliates shall not be liable for any indirect,
               incidental, special, consequential, or punitive damages arising from
               your use of the platform. Our total liability shall not exceed the
               amount you paid us in the 12 months preceding the claim.
@@ -153,8 +153,8 @@ export default function TermsPage() {
             <div className="text-muted-foreground">
               <p>For questions about these terms, contact us at:</p>
               <p className="mt-2">
-                BIDUA Industries Pvt. Ltd.<br />
-                Email: legal@biduacoupon.com<br />
+                Leliance  Industries Pvt. Ltd.<br />
+                Email: legal@Leliance coupon.com<br />
                 Address: 123 Tech Park, Bangalore, Karnataka 560001
               </p>
             </div>
