@@ -1,4 +1,4 @@
-from fastapi import APIRouter, HTTPException, status, Header, Depends, UploadFile, File
+from fastapi import APIRouter, HTTPException, status, Header, Depends, UploadFile, File, BackgroundTasks
 from fastapi.responses import RedirectResponse
 from sqlalchemy.orm import Session
 from sqlalchemy import select
@@ -131,6 +131,8 @@ class RegisterRequest(BaseModel):
     email: EmailStr | None = None
     mobile: str | None = None
     password: str
+    first_name: str | None = None
+    last_name: str | None = None
     full_name: str | None = None
     referral_code: str | None = None
 
@@ -183,7 +185,7 @@ def error_response(message: str, status_code: int = 400):
 
 
 @router.post("/register", status_code=status.HTTP_201_CREATED, response_model=RegisterResponse)
-def register(payload: RegisterRequest, db: Session = Depends(get_db)):
+def register(payload: RegisterRequest, background_tasks: BackgroundTasks, db: Session = Depends(get_db)):
     """Register new user with email/mobile and password."""
     from ...verification import generate_verification_token
     from ...email import email_service
@@ -208,7 +210,9 @@ def register(payload: RegisterRequest, db: Session = Depends(get_db)):
         email=payload.email,
         mobile=payload.mobile,
         password_hash=get_password_hash(payload.password),
-        full_name=payload.full_name or "User",
+        first_name=payload.first_name,
+        last_name=payload.last_name,
+        full_name=payload.full_name or f"{payload.first_name or ''} {payload.last_name or ''}".strip() or "User",
         is_active=True,
         is_verified=False,  # Email needs verification
         status="active",  # But account is active for login
@@ -248,7 +252,8 @@ def register(payload: RegisterRequest, db: Session = Depends(get_db)):
         frontend_url = settings.FRONTEND_URL or settings.FRONTEND_BASE_URL or "http://localhost:5000"
         verification_url = f"{frontend_url}/verify-email?token={verification_token}"
 
-        email_service.send_welcome_email(user.email, verification_url)
+        # Send email in background to prevent timeout
+        background_tasks.add_task(email_service.send_welcome_email, user.email, verification_url)
 
     return RegisterResponse(
         message="Registration successful! Please check your email to verify your account before logging in.",
@@ -548,6 +553,7 @@ class EmailVerificationRequest(BaseModel):
 @router.post("/send-verification-email", response_model=dict)
 def send_verification_email(
     request: EmailVerificationRequest,
+    background_tasks: BackgroundTasks,
     db: Session = Depends(get_db)
 ):
     """Send email verification link"""
@@ -574,7 +580,7 @@ def send_verification_email(
 
     # Send email
     if settings.EMAIL_ENABLED:
-        send_welcome_email(email, verification_url)
+        background_tasks.add_task(send_welcome_email, email, verification_url)
     else:
         # Dev mode: log the link
         print(f"[DEV] Verification link for {email}: {verification_url}")

@@ -526,6 +526,7 @@ function ProfileContent() {
                   <Input
                     id="email"
                     type="email"
+                    value={user?.email || ""}
                     {...register("email")}
                     disabled
                   />

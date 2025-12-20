@@ -54,6 +54,19 @@ export interface AuthResponse {
   token_type: string;
 }
 
+export interface RegisterResponse {
+  message: string;
+  data: {
+    user_id: number;
+    uuid: string;
+    email: string;
+    mobile?: string;
+    referral_code?: string;
+    requires_verification: boolean;
+    dev_verification_token?: string;
+  };
+}
+
 // Merchant Types
 export interface Merchant {
   id: number;

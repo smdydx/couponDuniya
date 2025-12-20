@@ -119,8 +119,8 @@ export default function BecomeSellerPage() {
       const response = await apiClient.post('/merchants/apply', formData);
       if (response.data.success) {
         toast.success("Application submitted successfully! We'll review it shortly.");
-        checkMerchantStatus();
-        setShowForm(false);
+        await checkMerchantStatus();
+        // Form will be replaced by status view automatically
       }
     } catch (error: any) {
       toast.error(error?.response?.data?.detail || "Failed to submit application");
@@ -271,7 +271,23 @@ export default function BecomeSellerPage() {
                     <Button
                       size="lg"
                       className="bg-white text-purple-700 hover:bg-white/90 font-semibold shadow-lg shadow-purple-500/30"
-                      onClick={() => setShowForm(true)}
+                      onClick={() => {
+                        setFormData({
+                          business_name: "",
+                          business_email: "",
+                          business_phone: "",
+                          business_address: "",
+                          business_city: "",
+                          business_state: "",
+                          business_pincode: "",
+                          gst_number: "",
+                          pan_number: "",
+                          website_url: "",
+                          description: ""
+                        });
+                        setCurrentStep(1);
+                        setShowForm(true);
+                      }}
                     >
                       Start Selling
                       <ArrowRight className="ml-2 h-5 w-5" />
@@ -327,7 +343,23 @@ export default function BecomeSellerPage() {
                   <Button
                     size="lg"
                     className="bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-700 hover:to-indigo-700 text-white shadow-lg shadow-purple-500/30"
-                    onClick={() => setShowForm(true)}
+                    onClick={() => {
+                      setFormData({
+                        business_name: "",
+                        business_email: "",
+                        business_phone: "",
+                        business_address: "",
+                        business_city: "",
+                        business_state: "",
+                        business_pincode: "",
+                        gst_number: "",
+                        pan_number: "",
+                        website_url: "",
+                        description: ""
+                      });
+                      setCurrentStep(1);
+                      setShowForm(true);
+                    }}
                   >
                     Get Started Now
                     <ArrowRight className="ml-2 h-5 w-5" />
@@ -380,8 +412,8 @@ export default function BecomeSellerPage() {
                   <div key={step} className="relative z-10 flex flex-col items-center">
                     <div
                       className={`w-10 h-10 rounded-full flex items-center justify-center font-bold transition-all duration-300 ${currentStep >= step
-                          ? "bg-purple-600 text-white shadow-lg shadow-purple-200"
-                          : "bg-white border-2 border-gray-200 text-gray-400"
+                        ? "bg-purple-600 text-white shadow-lg shadow-purple-200"
+                        : "bg-white border-2 border-gray-200 text-gray-400"
                         }`}
                     >
                       {currentStep > step ? <CheckCircle className="h-6 w-6" /> : step}

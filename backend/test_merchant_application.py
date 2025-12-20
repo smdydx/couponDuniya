@@ -1,67 +1,60 @@
+#!/usr/bin/env python3
 """
-Debug script to test merchant application endpoint directly
+Script to test merchant application submission
 """
+import sys
+from pathlib import Path
 import requests
 import json
 
-# Test endpoint
-BASE_URL = "http://localhost:8000/api/v1"
-
-def test_merchant_application():
-    print("=" * 50)
-    print("Testing Merchant Application Endpoint")
-    print("=" * 50)
-    
-    # Sample application data
-    application_data = {
-        "business_name": "Test Business",
-        "business_email": "test@business.com",
+# Test data for merchant application
+test_applications = [
+    {
+        "business_name": "Test Business 1",
+        "business_email": "test1@example.com",
         "business_phone": "9876543210",
         "business_address": "123 Test Street",
         "business_city": "Mumbai",
         "business_state": "Maharashtra",
         "business_pincode": "400001",
-        "gst_number": "",
-        "pan_number": "",
-        "website_url": "",
-        "description": ""
+        "gst_number": "22AAAAA0000A1Z5",
+        "pan_number": "ABCDE1234F",
+        "website_url": "https://test1.com",
+        "description": "Test business description 1"
+    },
+    {
+        "business_name": "Test Business 2",
+        "business_email": "test2@example.com",
+        "business_phone": "9876543211",
+        "business_address": "456 Test Avenue",
+        "business_city": "Delhi",
+        "business_state": "Delhi",
+        "business_pincode": "110001",
+        "gst_number": "07BBBBB0000B1Z5",
+        "pan_number": "FGHIJ5678K",
+        "website_url": "https://test2.com",
+        "description": "Test business description 2"
     }
+]
+
+def main():
+    print("\n" + "="*80)
+    print("MERCHANT APPLICATION TEST")
+    print("="*80 + "\n")
     
-    # You need to replace this with an actual auth token
-    # Get it from the browser's localStorage or by logging in
-    auth_token = input("Enter your authentication token (from browser localStorage): ")
-    
-    headers = {
-        "Authorization": f"Bearer {auth_token}",
-        "Content-Type": "application/json"
-    }
-    
-    print("\nSending request to:", f"{BASE_URL}/merchants/apply")
-    print("Data:", json.dumps(application_data, indent=2))
-    
-    try:
-        response = requests.post(
-            f"{BASE_URL}/merchants/apply",
-            json=application_data,
-            headers=headers
-        )
-        
-        print(f"\nStatus Code: {response.status_code}")
-        print("Response:")
-        print(json.dumps(response.json(), indent=2))
-        
-        if response.status_code == 400:
-            print("\n⚠️  400 Bad Request Error Detected!")
-            print("This usually means:")
-            print("1. You already have a pending application")
-            print("2. You are already a verified merchant")
-            print("3. Validation error in the submitted data")
-            
-    except requests.exceptions.RequestException as e:
-        print(f"\n❌ Request failed: {e}")
-    except json.JSONDecodeError:
-        print(f"\n❌ Response is not valid JSON:")
-        print(response.text)
+    # You need to provide valid auth tokens for testing
+    print("This script requires valid authentication tokens to test.")
+    print("Please test manually by:")
+    print("1. Creating 2 different user accounts")
+    print("2. Logging in as User 1 and submitting a merchant application")
+    print("3. Checking the admin panel - you should see 1 pending application")
+    print("4. Logging in as User 2 and submitting another merchant application")
+    print("5. Checking the admin panel - you should see 2 pending applications")
+    print("\nIf you only see 1 application after step 5, there's a bug.")
+    print("\nTest data you can use:")
+    for i, app in enumerate(test_applications, 1):
+        print(f"\nApplication {i}:")
+        print(json.dumps(app, indent=2))
 
 if __name__ == "__main__":
-    test_merchant_application()
+    main()

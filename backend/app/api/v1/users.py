@@ -133,6 +133,7 @@ def update_profile(
             "message": "Profile updated successfully",
             "data": {
                 "id": current_user.id,
+                "email": current_user.email,
                 "first_name": current_user.first_name,
                 "last_name": current_user.last_name,
                 "full_name": current_user.full_name,

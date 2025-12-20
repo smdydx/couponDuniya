@@ -289,10 +289,15 @@ async def apply_as_merchant(
     
     # 1. Cleanup existing merchant associated with this user (if not already a fully verified/active merchant)
     existing_merchants = db.scalars(select(Merchant).where(Merchant.user_id == current_user.id)).all()
+    log.info(f"Found {len(existing_merchants)} existing merchant records for user {current_user.id}")
+    
     for em in existing_merchants:
         if not em.is_active or em.status != MerchantStatus.APPROVED.value:
             # Delete unfinished/pending/rejected merchant data to allow fresh start
+            log.info(f"Deleting existing merchant: id={em.id}, status={em.status}, is_active={em.is_active} for user {current_user.id}")
             db.delete(em)
+        else:
+            log.info(f"Keeping approved/active merchant: id={em.id}, status={em.status}, is_active={em.is_active} for user {current_user.id}")
     
     # 2. Reset user's merchant state for fresh application
     current_user.merchant_verification_status = MerchantVerificationStatus.NOT_APPLIED.value
@@ -300,6 +305,7 @@ async def apply_as_merchant(
     current_user.is_merchant = False
     current_user.merchant_id = None
     db.flush() # Sync state before new object creation
+    log.info(f"Reset merchant state for user {current_user.id}")
     
     try:
         # Generate slug and handle collisions
@@ -429,18 +435,47 @@ def get_pending_merchant_applications(
     admin_user: User = Depends(require_admin)
 ):
     """Admin: Get list of pending merchant applications"""
+    import logging
+    log = logging.getLogger(__name__)
+    
     query = select(Merchant).where(Merchant.verification_status == status)
     
     total = db.scalar(select(func.count()).select_from(query.subquery()))
     offset = (page - 1) * limit
     merchants = db.scalars(query.order_by(Merchant.created_at.desc()).offset(offset).limit(limit)).all()
     
+    log.info(f"Fetching pending applications: status={status}, page={page}, total={total}, found={len(merchants)}")
+    
     applications = []
     for m in merchants:
         user = db.get(User, m.user_id) if m.user_id else None
-        applications.append({
+        
+        # Build complete application data
+        app_data = {
             "id": m.id,
-            "merchant": m.to_dict(),
+            "merchant": {
+                "id": m.id,
+                "name": m.name,
+                "slug": m.slug,
+                "logo_url": m.logo_url,
+                "banner_url": m.banner_url,
+                "description": m.description,
+                "business_name": m.business_name,
+                "business_email": m.business_email,
+                "business_phone": m.business_phone,
+                "business_address": m.business_address,
+                "business_city": m.business_city,
+                "business_state": m.business_state,
+                "business_pincode": m.business_pincode,
+                "gst_number": m.gst_number,
+                "pan_number": m.pan_number,
+                "website_url": m.website_url,
+                "status": m.status,
+                "verification_status": m.verification_status,
+                "is_active": m.is_active,
+                "is_verified": m.is_verified,
+                "created_at": m.created_at.isoformat() if m.created_at else None,
+            },
             "business_name": m.business_name,
             "business_email": m.business_email,
             "business_phone": m.business_phone,
@@ -451,11 +486,22 @@ def get_pending_merchant_applications(
             "gst_number": m.gst_number,
             "pan_number": m.pan_number,
             "website_url": m.website_url,
-            "user": user.to_dict() if user else None,
+            "user": {
+                "id": user.id,
+                "email": user.email,
+                "mobile": user.mobile,
+                "full_name": user.full_name,
+                "is_merchant": user.is_merchant,
+                "merchant_verified": user.merchant_verified,
+                "merchant_verification_status": user.merchant_verification_status,
+            } if user else None,
             "created_at": m.created_at.isoformat() if m.created_at else None
-        })
+        }
+        
+        applications.append(app_data)
+        log.info(f"Added application: id={m.id}, business={m.business_name}, user={user.email if user else 'N/A'}")
     
-    return {
+    response = {
         "success": True,
         "data": {
             "applications": applications,
@@ -467,6 +513,9 @@ def get_pending_merchant_applications(
             }
         }
     }
+    
+    log.info(f"Returning {len(applications)} applications out of {total} total")
+    return response
 
 
 @router.post("/admin/verify/{merchant_id}")

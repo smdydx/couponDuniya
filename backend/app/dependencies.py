@@ -50,8 +50,8 @@ def get_current_user(
                 detail="User account is inactive"
             )
 
-        # Updated the condition to check for mobile_verified_at instead of mobile_verified
-        if not user.is_verified or not user.mobile_verified_at:
+        # Only check is_verified (email verification)
+        if not user.is_verified:
             raise HTTPException(
                 status_code=status.HTTP_403_FORBIDDEN,
                 detail="User account is not verified"
@@ -79,45 +79,6 @@ def require_admin(current_user: User = Depends(get_current_user)) -> User:
             detail="Admin access required"
         )
     return current_user
-
-# This function definition is redundant and likely a mistake in the original code,
-# as get_current_user is defined twice. We will keep the first definition and
-# assume this one was meant for a different purpose or is a leftover.
-# If this was intended to be different, further clarification would be needed.
-# For now, we will leave it as is but note its redundancy.
-def get_current_user(db: Session = Depends(get_db), authorization: str | None = Header(None)):
-    """Extract user from JWT token"""
-    if not authorization or not authorization.startswith("Bearer "):
-        raise HTTPException(status_code=401, detail="Not authenticated")
-
-    token = authorization.replace("Bearer ", "")
-
-    try:
-        payload = jwt.decode(token, settings.SECRET_KEY, algorithms=[settings.JWT_ALGORITHM])
-        user_id_str = payload.get("sub")
-        if user_id_str is None:
-            raise HTTPException(status_code=401, detail="Invalid token")
-        # Convert user_id to integer (JWT stores it as string)
-        try:
-            user_id = int(user_id_str)
-        except (ValueError, TypeError):
-            raise HTTPException(status_code=401, detail="Invalid user ID in token")
-    except JWTError as e:
-        raise HTTPException(status_code=401, detail=f"Invalid token: {str(e)}")
-
-    user = db.scalar(select(User).where(User.id == user_id))
-    if not user:
-        raise HTTPException(status_code=401, detail="User not found")
-
-    # Assuming this second get_current_user also needs the verification check
-    # If this is intended to be a different function, it needs to be renamed.
-    if not user.is_verified or not user.mobile_verified_at:
-        raise HTTPException(
-            status_code=status.HTTP_403_FORBIDDEN,
-            detail="User account is not verified"
-        )
-
-    return user
 
 def get_current_user_unverified(db: Session = Depends(get_db), authorization: str | None = Header(None)):
     """Extract user from JWT token without requiring mobile verification.

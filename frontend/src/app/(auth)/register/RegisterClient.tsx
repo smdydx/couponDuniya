@@ -41,7 +41,8 @@ export default function RegisterClient() {
     try {
       const { confirm_password, ...registerData } = data;
       await registerUser(registerData);
-      router.push(ROUTES.home);
+      // Redirect to verification page instead of home
+      router.push(`/verify-email?email=${encodeURIComponent(registerData.email)}`);
     } catch (err) {
       // Error is handled by store
     }
@@ -214,10 +215,10 @@ export default function RegisterClient() {
             </div>
           </div>
 
-          <Button 
+          <Button
             type="button"
-            variant="outline" 
-            className="w-full flex items-center justify-center gap-2" 
+            variant="outline"
+            className="w-full flex items-center justify-center gap-2"
             onClick={() => {
               const clientId = "433927974317-omujf5cn8ndhtdrofprnv9sb0uo3irl1.apps.googleusercontent.com";
               // Use current host for redirect
@@ -225,9 +226,9 @@ export default function RegisterClient() {
               const scope = "openid email profile";
               const responseType = "id_token token";
               const nonce = Math.random().toString(36).substring(7);
-              
+
               const authUrl = `https://accounts.google.com/o/oauth2/v2/auth?client_id=${clientId}&redirect_uri=${redirectUri}&response_type=${responseType}&scope=${scope}&nonce=${nonce}`;
-              
+
               window.location.href = authUrl;
             }}
           >

@@ -19,7 +19,8 @@ interface RegisterFormData {
   mobile?: string;
   password: string;
   confirm_password: string;
-  full_name: string;
+  first_name: string;
+  last_name: string;
   referral_code?: string;
 }
 
@@ -28,7 +29,7 @@ function AuthForm() {
   const searchParams = useSearchParams();
   const referralCode = searchParams.get("ref");
   const initialTab = searchParams.get("tab") === "signup" ? "signup" : "login";
-  
+
   const [activeTab, setActiveTab] = useState<"login" | "signup">(initialTab);
   const [showPassword, setShowPassword] = useState(false);
   const [acceptTerms, setAcceptTerms] = useState(false);
@@ -74,7 +75,8 @@ function AuthForm() {
     setRegisterError(null);
     try {
       const { confirm_password, ...registerData } = data;
-      await authAPI.register({ ...registerData, full_name: registerData.full_name });
+      // Send separate first_name/last_name to backend
+      await authAPI.register(registerData);
       const emailParam = encodeURIComponent(registerData.email || "");
       router.replace(`${ROUTES.verifyEmail}?email=${emailParam}`);
     } catch (err: any) {
@@ -101,22 +103,20 @@ function AuthForm() {
           <button
             type="button"
             onClick={() => { setActiveTab("login"); clearError(); }}
-            className={`flex-1 py-2.5 text-sm font-medium rounded-lg transition-all duration-200 ${
-              activeTab === "login"
-                ? "bg-white text-purple-600 shadow-sm"
-                : "text-gray-500 hover:text-purple-600"
-            }`}
+            className={`flex-1 py-2.5 text-sm font-medium rounded-lg transition-all duration-200 ${activeTab === "login"
+              ? "bg-white text-purple-600 shadow-sm"
+              : "text-gray-500 hover:text-purple-600"
+              }`}
           >
             Login
           </button>
           <button
             type="button"
             onClick={() => { setActiveTab("signup"); clearError(); setRegisterError(null); }}
-            className={`flex-1 py-2.5 text-sm font-medium rounded-lg transition-all duration-200 ${
-              activeTab === "signup"
-                ? "bg-white text-purple-600 shadow-sm"
-                : "text-gray-500 hover:text-purple-600"
-            }`}
+            className={`flex-1 py-2.5 text-sm font-medium rounded-lg transition-all duration-200 ${activeTab === "signup"
+              ? "bg-white text-purple-600 shadow-sm"
+              : "text-gray-500 hover:text-purple-600"
+              }`}
           >
             Sign Up
           </button>
@@ -221,17 +221,31 @@ function AuthForm() {
                 </div>
               )}
 
-              <div className="space-y-1">
-                <Label htmlFor="full_name" className="text-gray-700 text-sm">Full Name</Label>
-                <Input
-                  id="full_name"
-                  placeholder="John Doe"
-                  className="h-10 border-purple-200 focus:border-purple-500 focus:ring-purple-500"
-                  {...registerForm.register("full_name", { required: "Full name is required" })}
-                />
-                {registerForm.formState.errors.full_name && (
-                  <p className="text-xs text-red-500">{registerForm.formState.errors.full_name.message}</p>
-                )}
+              <div className="grid grid-cols-2 gap-4">
+                <div className="space-y-1">
+                  <Label htmlFor="first_name" className="text-gray-700 text-sm">First Name</Label>
+                  <Input
+                    id="first_name"
+                    placeholder="John"
+                    className="h-10 border-purple-200 focus:border-purple-500 focus:ring-purple-500"
+                    {...registerForm.register("first_name", { required: "First name is required" })}
+                  />
+                  {registerForm.formState.errors.first_name && (
+                    <p className="text-xs text-red-500">{registerForm.formState.errors.first_name.message}</p>
+                  )}
+                </div>
+                <div className="space-y-1">
+                  <Label htmlFor="last_name" className="text-gray-700 text-sm">Last Name</Label>
+                  <Input
+                    id="last_name"
+                    placeholder="Doe"
+                    className="h-10 border-purple-200 focus:border-purple-500 focus:ring-purple-500"
+                    {...registerForm.register("last_name", { required: "Last name is required" })}
+                  />
+                  {registerForm.formState.errors.last_name && (
+                    <p className="text-xs text-red-500">{registerForm.formState.errors.last_name.message}</p>
+                  )}
+                </div>
               </div>
 
               <div className="space-y-1">

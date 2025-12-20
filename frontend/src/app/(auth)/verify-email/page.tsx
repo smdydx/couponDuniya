@@ -99,8 +99,9 @@ function VerifyEmailForm() {
     email: email || "",
     enabled: status === "waiting" && !!email,
     onVerified: () => {
+      console.log("[VerifyEmail] onVerified callback triggered");
       setStatus("success");
-      setMessage("Your email has been verified! You can now continue in your original tab.");
+      setMessage("Your email has been verified! Redirecting to login...");
       // Clear the timer
       setTimer(0);
 
@@ -108,6 +109,12 @@ function VerifyEmailForm() {
       if (user) {
         updateUser({ is_verified: true });
       }
+
+      // Redirect to login page after 2 seconds
+      setTimeout(() => {
+        console.log("[VerifyEmail] Redirecting to login page");
+        router.push(ROUTES.login);
+      }, 2000);
     },
   });
 
@@ -319,7 +326,13 @@ function VerifyEmailForm() {
       <CardContent className="px-6 pb-6">
         {status === "success" && (
           <>
-            <p className="text-sm text-gray-600 mb-4">You can now close this tab and return to your original window, or go to login below.</p>
+            <div className="bg-green-50 border border-green-200 rounded-lg p-4 mb-4">
+              <p className="text-sm text-green-800 font-medium mb-2">✓ Email Verified Successfully!</p>
+              <p className="text-sm text-green-700">
+                If you have other tabs open waiting for verification, they will automatically redirect to the login page.
+              </p>
+            </div>
+            <p className="text-sm text-gray-600 mb-4">You can close this tab or click below to go to login.</p>
             <Button
               onClick={() => router.replace(ROUTES.login)}
               className="w-full h-12 bg-gradient-to-r from-green-500 to-emerald-500 hover:from-green-600 hover:to-emerald-600 shadow-lg shadow-green-100"
