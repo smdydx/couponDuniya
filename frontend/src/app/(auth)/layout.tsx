@@ -19,7 +19,7 @@ export default function AuthLayout({
           <div className="absolute top-1/2 left-1/3 w-28 h-16 bg-purple-300/10 rounded-xl -rotate-12 animate-float-slow blur-sm"></div>
           <div className="absolute bottom-1/3 right-1/4 w-44 h-28 bg-purple-600/15 rounded-lg rotate-6 animate-float-medium blur-sm"></div>
           <div className="absolute top-20 right-1/3 w-24 h-14 bg-indigo-400/20 rounded-xl rotate-12 animate-float-fast blur-sm"></div>
-          
+
           <div className="absolute top-1/3 left-20 w-20 h-12 bg-gradient-to-r from-purple-400/20 to-indigo-400/20 rounded-lg rotate-45 animate-coupon-1">
             <div className="absolute left-0 top-1/2 -translate-y-1/2 w-3 h-3 bg-purple-900 rounded-full -ml-1.5"></div>
             <div className="absolute right-0 top-1/2 -translate-y-1/2 w-3 h-3 bg-purple-900 rounded-full -mr-1.5"></div>
@@ -41,11 +41,15 @@ export default function AuthLayout({
         </div>
 
         <div className="container relative z-10 flex min-h-screen flex-col items-center justify-center py-6 px-4">
-          <Link href={ROUTES.home} className="mb-6 flex items-center gap-3 group flex-shrink-0">
-            <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-gradient-to-br from-purple-500 to-indigo-600 text-xl font-bold text-white shadow-lg group-hover:scale-105 transition-all duration-300 shadow-purple-500/30">
-              BC
+          <Link href={ROUTES.home} className="mb-6 flex items-center justify-center gap-3 group flex-shrink-0">
+            <div className="relative h-14 w-auto">
+              <img
+                src="/images/logos/logo.png"
+                alt={SITE_NAME}
+                className="h-full w-auto object-contain drop-shadow-lg group-hover:scale-105 transition-all duration-300"
+                style={{ maxHeight: '70px', maxWidth: '240px' }}
+              />
             </div>
-            <span className="text-2xl font-bold text-white tracking-tight drop-shadow-lg">{SITE_NAME}</span>
           </Link>
           <div className="w-full max-w-md">
             {children}

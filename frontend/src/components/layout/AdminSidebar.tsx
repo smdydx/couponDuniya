@@ -137,7 +137,7 @@ export function AdminSidebar({ isOpen, onToggle }: AdminSidebarProps) {
       <div className="flex h-16 items-center justify-between border-b px-4">
         <Link href={ROUTES.admin.dashboard} className="flex items-center gap-2">
           <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary text-primary-foreground text-sm font-bold">
-            BC
+            LC
           </div>
           <span className={cn("font-bold transition-opacity", !isOpen && "lg:hidden")}>Admin</span>
         </Link>

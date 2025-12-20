@@ -6,7 +6,7 @@ export async function GET(request: NextRequest) {
     const searchParams = request.nextUrl.searchParams;
     const queryString = searchParams.toString();
     
-    const backendUrl = `http://127.0.0.1:8000/api/v1/homepage/?${queryString}`;
+    const backendUrl = `https://api.leliance.com/api/v1/homepage/?${queryString}`;
     
     // Get authorization token from request headers
     const authHeader = request.headers.get('authorization');

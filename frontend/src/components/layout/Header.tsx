@@ -63,12 +63,15 @@ export function Header() {
           {/* Mobile Menu removed in favor of bottom More tab */}
 
           {/* Logo */}
-          <Link href={ROUTES.home} className="flex items-center gap-2">
-            <img
-              src="/images/logos/logo.png"
-              alt={SITE_NAME}
-              className="h-8 w-auto"
-            />
+          <Link href={ROUTES.home} className="flex items-center gap-2 shrink-0">
+            <div className="relative h-10 w-auto">
+              <img
+                src="/images/logos/logo.png"
+                alt={SITE_NAME}
+                className="h-full w-auto object-contain"
+                style={{ maxHeight: '60px', maxWidth: '180px' }}
+              />
+            </div>
           </Link>
 
           {/* Search Bar - Removed */}

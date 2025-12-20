@@ -24,7 +24,7 @@ function getBackendUrl(): string {
       return `https://${hostname.replace('-00-', '-8000-00-')}`;
     }
   }
-  return process.env.NEXT_PUBLIC_API_URL?.replace('/api/v1', '') || 'http://localhost:8000';
+  return process.env.NEXT_PUBLIC_API_URL?.replace('/api/v1', '') || 'https://api.leliance.com';
 }
 
 function getDisplayUrl(url: string): string {
@@ -38,7 +38,7 @@ function getDisplayUrl(url: string): string {
   return url;
 }
 
-const API_BASE = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000/api/v1";
+const API_BASE = process.env.NEXT_PUBLIC_API_URL || "https://api.leliance.com/api/v1";
 
 export function ImageUploader({
   value,

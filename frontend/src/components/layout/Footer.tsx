@@ -13,10 +13,11 @@ export function Footer() {
           {/* Company Info */}
           <div>
             <div className="flex items-center gap-2 mb-4">
-              <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-primary text-primary-foreground font-bold">
-                BC
-              </div>
-              <span className="text-xl font-bold">{SITE_NAME}</span>
+              <img
+                src="/images/logos/logo.png"
+                alt={SITE_NAME}
+                className="h-10 w-auto"
+              />
             </div>
             <p className="text-sm text-muted-foreground mb-4">
               Save money with verified coupons, earn cashback on every purchase, and buy
@@ -118,11 +119,11 @@ export function Footer() {
               </li>
               <li>
                 <a
-                  href="mailto:support@Leliance coupons.com"
+                  href="mailto:support@leliance.com"
                   className="flex items-center gap-2 text-muted-foreground hover:text-primary"
                 >
                   <Mail className="h-4 w-4" />
-                  support@Leliance coupons.com
+                  support@leliance.com
                 </a>
               </li>
             </ul>
@@ -145,6 +146,6 @@ export function Footer() {
           </div>
         </div>
       </div>
-    </footer>
+    </footer >
   );
 }
