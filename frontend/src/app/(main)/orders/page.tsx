@@ -103,10 +103,10 @@ export default function OrdersPage() {
                                 <Badge className={status.color}>{status.label}</Badge>
                               </div>
                               <p className="text-sm text-muted-foreground">
-                                Placed on {new Date(order.created_at).toLocaleDateString('en-US', { 
-                                  year: 'numeric', 
-                                  month: 'short', 
-                                  day: 'numeric' 
+                                Placed on {new Date(order.created_at).toLocaleDateString('en-US', {
+                                  year: 'numeric',
+                                  month: 'short',
+                                  day: 'numeric'
                                 })}
                               </p>
                             </div>
@@ -114,7 +114,7 @@ export default function OrdersPage() {
 
                           <div className="flex items-center justify-between sm:flex-col sm:items-end sm:gap-1">
                             <span className="text-lg font-semibold">
-                              {formatCurrency(order.total_amount || order.final_amount || 0)}
+                              {formatCurrency(order.final_amount || 0)}
                             </span>
                             <div className="flex items-center gap-1 text-sm text-primary">
                               View Details

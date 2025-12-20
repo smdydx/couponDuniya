@@ -339,11 +339,7 @@ export default function HomePage() {
               Browse Gift Cards
             </Button>
           </div>
-          <div className="mt-8 p-4 bg-yellow-50 border border-yellow-200 rounded-lg">
-            <p className="text-xs text-yellow-800">
-              <strong>Developers:</strong> Run <code className="bg-yellow-100 px-2 py-1 rounded">python backend/scripts/seed_homepage_data.py</code> to populate sample data
-            </p>
-          </div>
+          
         </div>
       </div>
     );

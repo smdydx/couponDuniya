@@ -45,17 +45,17 @@ export function VariantSelector({
       <div className="rounded-lg bg-muted/50 p-4">
         <div className="flex items-baseline gap-2 flex-wrap">
           <span className="text-2xl sm:text-3xl font-bold text-primary">
-            {formatCurrency(selectedVariant.selling_price)}
+            {formatCurrency(selectedVariant.selling_price || 0)}
           </span>
           <span className="text-base sm:text-lg text-muted-foreground line-through">
-            {formatCurrency(selectedVariant.denomination)}
+            {formatCurrency(selectedVariant.denomination || 0)}
           </span>
           <Badge variant="success" className="ml-auto">
             {selectedVariant.discount_percentage}% OFF
           </Badge>
         </div>
         <p className="mt-2 text-xs sm:text-sm text-muted-foreground">
-          Face value: {formatCurrency(selectedVariant.denomination)}
+          Face value: {formatCurrency(selectedVariant.denomination || 0)}
         </p>
       </div>
 
@@ -83,10 +83,10 @@ export function VariantSelector({
                 )}
               >
                 <div className="text-base sm:text-lg font-bold">
-                  {formatCurrency(variant.denomination)}
+                  {formatCurrency(variant.denomination || 0)}
                 </div>
                 <div className="mt-1 text-xs text-muted-foreground">
-                  Pay {formatCurrency(variant.selling_price)}
+                  Pay {formatCurrency(variant.selling_price || 0)}
                 </div>
                 {isSelected && (
                   <CheckCircle className="absolute right-2 top-2 h-4 w-4 sm:h-5 sm:w-5 text-primary" />
@@ -156,23 +156,23 @@ export function VariantSelector({
           <div className="flex items-center justify-between">
             <span className="text-xs sm:text-sm text-muted-foreground">Total Amount:</span>
             <span className="text-lg sm:text-xl font-bold">
-              {formatCurrency(selectedVariant.selling_price * quantity)}
+              {formatCurrency((selectedVariant.selling_price || 0) * quantity)}
             </span>
           </div>
           {calculateDiscount(
-            selectedVariant.denomination * quantity,
-            selectedVariant.selling_price * quantity
+            (selectedVariant.denomination || 0) * quantity,
+            (selectedVariant.selling_price || 0) * quantity
           ) > 0 && (
-            <div className="flex items-center justify-between text-xs sm:text-sm">
-              <span className="text-muted-foreground">You Save:</span>
-              <span className="font-semibold text-green-600">
-                {formatCurrency(
-                  selectedVariant.denomination * quantity -
-                    selectedVariant.selling_price * quantity
-                )}
-              </span>
-            </div>
-          )}
+              <div className="flex items-center justify-between text-xs sm:text-sm">
+                <span className="text-muted-foreground">You Save:</span>
+                <span className="font-semibold text-green-600">
+                  {formatCurrency(
+                    (selectedVariant.denomination || 0) * quantity -
+                    (selectedVariant.selling_price || 0) * quantity
+                  )}
+                </span>
+              </div>
+            )}
         </div>
       )}
     </div>

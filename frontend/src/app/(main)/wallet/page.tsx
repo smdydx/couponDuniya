@@ -96,7 +96,7 @@ export default function WalletPage() {
         amount,
         method,
       };
-      
+
       if (method === "upi") {
         payload.upi_id = details.upi_id;
       } else if (method === "bank_transfer") {
@@ -179,22 +179,21 @@ export default function WalletPage() {
                     <div>
                       <p className="font-medium">
                         ₹{withdrawal.amount} via{" "}
-                        {withdrawal.method?.toUpperCase() || withdrawal.withdrawal_method?.toUpperCase()}
+                        {withdrawal.withdrawal_method?.toUpperCase()}
                       </p>
                       <p className="text-sm text-muted-foreground">
                         {new Date(withdrawal.created_at).toLocaleDateString()}
                       </p>
                     </div>
                     <span
-                      className={`rounded-full px-3 py-1 text-xs font-medium ${
-                        withdrawal.status === "approved"
+                      className={`rounded-full px-3 py-1 text-xs font-medium ${withdrawal.status === "completed"
                           ? "bg-green-100 text-green-800"
                           : withdrawal.status === "pending"
-                          ? "bg-yellow-100 text-yellow-800"
-                          : withdrawal.status === "rejected"
-                          ? "bg-red-100 text-red-800"
-                          : "bg-gray-100 text-gray-800"
-                      }`}
+                            ? "bg-yellow-100 text-yellow-800"
+                            : withdrawal.status === "rejected"
+                              ? "bg-red-100 text-red-800"
+                              : "bg-gray-100 text-gray-800"
+                        }`}
                     >
                       {withdrawal.status}
                     </span>
